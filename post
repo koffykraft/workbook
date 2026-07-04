@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Post Preview</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
+        /* Setup 1:1 Square Aspect Ratio for Instagram */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .instagram-post {
+            width: 1080px;
+            height: 1080px;
+            background-color: #FAF8F5; /* Warm, calming off-white */
+            box-sizing: border-box;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 90px;
+            overflow: hidden;
+        }
+
+        /* Top Branding */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #3E3835;
+        }
+
+        .location {
+            font-size: 18px;
+            color: #8C827D;
+            letter-spacing: 1px;
+        }
+
+        /* Main Typography Block */
+        .content-main {
+            max-width: 800px;
+            margin-top: -40px;
+        }
+
+        .tagline {
+            font-size: 22px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #C05A46; /* Soft cherry red tone */
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 64px;
+            font-weight: 400;
+            line-height: 1.2;
+            color: #24201F;
+            margin: 0 0 30px 0;
+        }
+
+        p {
+            font-size: 28px;
+            line-height: 1.6;
+            color: #5C534E;
+            margin: 0;
+        }
+
+        /* Interactive Visual Element (Mock Interface Peek) */
+        .ui-preview {
+            background: #FFFFFF;
+            border: 1px solid #EAE5E0;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(62, 56, 53, 0.04);
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .cherry-dot {
+            width: 80px;
+            height: 80px;
+            background-color: #A33B26;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            box-shadow: 0 8px 20px rgba(163, 59, 38, 0.2);
+        }
+
+        .ui-text h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            margin: 0 0 8px 0;
+            color: #24201F;
+        }
+
+        .ui-text p {
+            font-size: 22px;
+            color: #7A706A;
+        }
+
+        /* Bottom Footer */
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #EAE5E0;
+            padding-top: 40px;
+        }
+
+        .project-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-style: italic;
+            color: #3E3835;
+        }
+
+        .cta {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #24201F;
+            background: #EAE5E0;
+            padding: 14px 28px;
+            border-radius: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1080x1080 Square Container -->
+    <div class="instagram-post">
+        
+        <div class="header">
+            <span class="brand">Buna Library</span>
+            <span class="location">Kerala, India</span>
+        </div>
+
+        <div class="content-main">
+            <div class="tagline">Coffee Science, Uncomplicated</div>
+            <h1>Understand the coffee cherry without the stress.</h1>
+            <p>A calm, visual exploration of ripeness, mucilage, and fermentation. Designed for curious minds who want to skip the technical jargon and simply explore.</p>
+        </div>
+
+        <div class="ui-preview">
+            <div class="cherry-dot">🍒</div>
+            <div class="ui-text">
+                <h2>Coffee Cherry Project</h2>
+                <p>An open landscape archive tracking the fruit and its traces.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span class="project-name">by Koffy Kraft</span>
+            <span class="cta">Link in Bio →</span>
+        </div>
+
+    </div>
+
+</body>
+</html>
