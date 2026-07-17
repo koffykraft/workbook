@@ -1,77 +1,389 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Citane Design System</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171512">
+<title>KoffyKraft Roast Timer v4 - A4 Print</title>
 <style>
-:root{--bg:#f7f4ee;--paper:#fffdf8;--ink:#222;--muted:#666;--line:#d8d0c2;--accent:#111;--yellow:#fff2b8;--soft:#f0eadf;}
-*{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
-header{background:#111;color:white;padding:18px 24px} header h1{margin:0;font-size:24px} header p{margin:6px 0 0;color:#ddd}
-nav{display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;background:#e8dfd0;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}
-nav button,.btn{border:1px solid #111;background:#111;color:white;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px}
-nav button.secondary,.btn.secondary{background:white;color:#111}.wrap{max-width:1200px;margin:0 auto;padding:18px}.section{display:none}.section.active{display:block}
-.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
-h2{margin:0 0 14px;font-size:22px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-label{display:block;font-weight:bold;font-size:13px;margin-bottom:5px} input,select,textarea{width:100%;padding:9px;border:1px solid #b8ad9d;border-radius:8px;background:white;font-size:14px} textarea{min-height:80px}.yellow{background:var(--yellow)}
-table{width:100%;border-collapse:collapse;background:white} th,td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top;font-size:13px} th{background:#e8dfd0}.muted{color:var(--muted);font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.protocol h3{border-bottom:1px solid var(--line);padding-bottom:5px;margin-top:22px}.protocol p{margin:6px 0}.small{font-size:12px}.print-only{display:none}
-@media(max-width:800px){.grid,.grid3{grid-template-columns:1fr}nav{position:static}}
-@media print{nav,header,.actions,.no-print{display:none!important}.section{display:none!important}.section.active{display:block!important}.wrap{padding:0}.card{border:none;box-shadow:none}.print-only{display:block}body{background:white}.card{page-break-inside:avoid}}
+:root{
+  --bg:#f4f0e8;--card:#fffaf3;--ink:#211c17;--muted:#746c63;--line:#d8cec2;
+  --dark:#171512;--accent:#8b4b2e;--turn:#537184;--yellow:#d8ad2f;
+  --maillard:#aa6938;--fc:#a64031;--sc:#692724;--drop:#202020;--ok:#58704f;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+button,input,textarea{font:inherit}
+.app{max-width:760px;margin:auto;padding:env(safe-area-inset-top) 12px calc(92px + env(safe-area-inset-bottom))}
+header{padding:16px 4px 10px}
+.kicker{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{font-size:clamp(2rem,8vw,3.5rem);line-height:.94;margin:.18em 0 .16em}
+.sub{margin:0;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0;box-shadow:0 7px 22px rgba(44,32,22,.05)}
+.card h2{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;margin:0 0 12px;color:var(--accent)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:5px}
+label{font-size:.73rem;color:var(--muted);font-weight:700}
+input,textarea{width:100%;border:1px solid var(--line);background:white;border-radius:11px;padding:11px 12px;min-height:44px;color:var(--ink)}
+textarea{min-height:70px;resize:vertical}
+.chips{display:flex;gap:7px;overflow:auto;padding:8px 0 1px;scrollbar-width:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:#eee7dd;border-radius:999px;padding:8px 11px;font-size:.8rem;cursor:pointer}
+.key{background:#211c17;color:white;border-radius:12px;padding:11px 12px;font-weight:700;letter-spacing:.04em;word-break:break-word}
+.timer-card{background:var(--dark);color:white;border-color:var(--dark);position:sticky;top:6px;z-index:10}
+.timer{font-variant-numeric:tabular-nums;font-size:clamp(3rem,15vw,6rem);font-weight:700;letter-spacing:-.05em;text-align:center;line-height:1}
+.timer-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
+.btn{border:0;border-radius:12px;min-height:48px;padding:10px 13px;font-weight:700;cursor:pointer}
+.btn.primary{background:white;color:#181512}.btn.secondary{background:#38322d;color:white}.btn.ghost{background:#ece4da;color:var(--ink)}.btn.danger{background:#8e3029;color:white}
+.temp-now{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-bottom:12px}
+.temp-now input{font-size:1.45rem;font-weight:700;text-align:center}
+.event-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.event{color:white;border:0;border-radius:13px;min-height:68px;padding:8px 5px;font-weight:700;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;position:relative;overflow:hidden}
+.event small{font-size:.67rem;font-weight:400;opacity:.9}
+.event.confirmed{animation:tapFlash .42s ease}
+.event.confirmed::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;background:rgba(255,255,255,.22);font-size:2rem;animation:checkFade .42s ease forwards}
+@keyframes tapFlash{0%{transform:scale(1)}45%{transform:scale(.94)}100%{transform:scale(1)}}
+@keyframes checkFade{0%{opacity:0}35%{opacity:1}100%{opacity:0}}
+.turn{background:var(--turn)}.yellow{background:var(--yellow);color:#302500}.maillard{background:var(--maillard)}.fc{background:var(--fc)}.sc{background:var(--sc)}.drop{background:var(--drop)}
+.tile-head{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+.tile{border:1px solid var(--line);background:white;border-radius:12px;min-height:55px;font-weight:700;font-size:1.03rem;position:relative}
+.tile.done{background:#2e2924;color:white;border-color:#2e2924;animation:tapFlash .3s ease}
+.tile.done::after{content:attr(data-time);display:block;font-size:.6rem;font-weight:400;margin-top:2px}
+.log{display:flex;flex-direction:column;gap:7px}
+.log-item{display:grid;grid-template-columns:67px 1fr auto;gap:8px;padding:9px;border:1px solid var(--line);border-radius:10px;background:white;align-items:start}
+.log-time{font-weight:700;font-variant-numeric:tabular-nums}
+.pill{font-size:.66rem;padding:4px 7px;border-radius:99px;background:#ece5db}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.metric{background:white;border:1px solid var(--line);border-radius:11px;padding:9px}
+.metric b{display:block;font-size:1.05rem}.metric span{font-size:.65rem;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,20px);background:#1f1b17;color:white;padding:10px 14px;border-radius:999px;font-size:.82rem;opacity:0;pointer-events:none;transition:.22s;z-index:40}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.bottom{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(760px,100%);padding:9px 12px calc(9px + env(safe-area-inset-bottom));background:rgba(244,240,232,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);gap:8px;z-index:20}
+@media(max-width:520px){
+  .event-grid{grid-template-columns:repeat(2,1fr)}
+  .tiles{grid-template-columns:repeat(4,1fr)}
+  .summary{grid-template-columns:1fr 1fr}
+}
+
+.print-sheet{display:none}
+@page{size:A4 portrait;margin:12mm}
+@media print{
+  body{background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif}
+  .app,.bottom,.toast{display:none!important}
+  .print-sheet{display:block!important;width:100%;font-size:10pt}
+  .print-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #000;padding-bottom:6mm;margin-bottom:5mm}
+  .print-head h1{font-size:24pt;margin:0;letter-spacing:.02em}
+  .print-head p{margin:1mm 0 0;color:#444}
+  .print-key{font-weight:700;font-size:11pt;text-align:right}
+  .print-grid{display:grid;grid-template-columns:1fr 1fr;gap:4mm 8mm;margin-bottom:5mm}
+  .print-box{border:1px solid #777;padding:3mm;min-height:15mm}
+  .print-box strong{display:block;font-size:8pt;text-transform:uppercase;color:#555;margin-bottom:1mm}
+  .print-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;margin:4mm 0}
+  .print-metric{border:1px solid #777;padding:3mm;text-align:center}
+  .print-metric b{display:block;font-size:14pt}
+  .print-section{margin-top:5mm}
+  .print-section h2{font-size:11pt;text-transform:uppercase;border-bottom:1px solid #000;padding-bottom:1.5mm;margin:0 0 2mm}
+  .print-table{width:100%;border-collapse:collapse;font-size:8.5pt}
+  .print-table th,.print-table td{border:1px solid #999;padding:1.6mm 2mm;text-align:left}
+  .print-table th{background:#eee}
+  .print-notes{border:1px solid #777;min-height:22mm;padding:3mm;white-space:pre-wrap}
+  .page-break{break-before:page}
+}
 </style>
 </head>
 <body>
-<header><h1>Citane Design System</h1><p>Protocol builder, batch record, sensory log and CSV export. No hidden inference.</p></header>
-<nav>
-<button onclick="show('builder')">Session Builder</button><button onclick="show('protocol')">Generated Protocol</button><button onclick="show('batch')">Print Batch Record</button><button onclick="show('sensory')">Sensory Entry</button><button onclick="show('logs')">Logs</button><button onclick="show('libraries')">Libraries</button>
-</nav>
-<div class="wrap">
-<section id="builder" class="section active"><div class="card"><h2>Session Builder</h2><div class="grid">
-<div><label>Batch ID</label><input id="batchId" class="yellow" placeholder="CIT-2026-001"></div><div><label>Date</label><input id="date" class="yellow" type="date"></div>
-<div><label>Estate / Block</label><input id="estate" class="yellow" placeholder="Karavaloor block... "></div><div><label>Operator</label><input id="operator" class="yellow"></div>
-<div><label>Leaf Type</label><select id="leafType" class="yellow"></select></div><div><label>Process Family</label><select id="processFamily" class="yellow"></select></div>
-<div><label>Drying Method</label><select id="dryingMethod" class="yellow"></select></div><div><label>Brew Method</label><select id="brewMethod" class="yellow"></select></div>
-<div><label>Enzyme Assist</label><select id="enzymeAssist" class="yellow"></select></div><div><label>Intended Expression</label><select id="intended" class="yellow"><option>Reference Tasting</option><option>Warm Service</option><option>Cold Service</option><option>Milk Trial</option><option>RTD Trial</option><option>Concentrate</option><option>Decoction</option><option>Sensory Evaluation</option><option>Experimental</option></select></div>
-<div><label>Fresh Weight g</label><input id="freshWeight" class="yellow" type="number" step="0.1"></div><div><label>Expected Dry Weight g</label><input id="dryWeight" class="yellow" type="number" step="0.1"></div>
-</div><label style="margin-top:12px">Notes</label><textarea id="notes" class="yellow"></textarea><div class="actions"><button class="btn" onclick="generateProtocol();show('protocol')">Generate Protocol</button><button class="btn secondary" onclick="prepareBatch();show('batch')">Prepare Batch Record</button><button class="btn secondary" onclick="saveSession()">Save Session</button><button class="btn secondary" onclick="clearBuilder()">Clear</button></div><p class="muted">Planned yield: <span id="yieldPct"> </span></p></div></section>
-<section id="protocol" class="section"><div class="card protocol print-target"><h2>Generated Protocol</h2><div id="protocolContent" class="muted">Generate a protocol from Session Builder.</div><div class="actions no-print"><button class="btn" onclick="printCurrent()">Print Protocol</button></div></div></section>
-<section id="batch" class="section"><div class="card print-target"><h2>Batch Flow Record</h2><div id="batchContent"></div><div class="actions no-print"><button class="btn" onclick="printCurrent()">Print Batch Record</button></div></div></section>
-<section id="sensory" class="section"><div class="card"><h2>Sensory Entry Form</h2><div class="grid3">
-<div><label>Sensory ID</label><input id="sensoryId" class="yellow"></div><div><label>Batch ID</label><input id="sensoryBatch" class="yellow"></div><div><label>Date</label><input id="sensoryDate" class="yellow" type="date"></div>
-<div><label>Taster</label><input id="taster" class="yellow"></div><div><label>Brew Method</label><select id="sensoryBrew" class="yellow"></select></div><div><label>Evaluation Temp</label><select id="evalTemp" class="yellow"><option>Hot</option><option>Warm</option><option>Room Temp</option><option>Chilled</option><option>Milk</option><option>Reheated</option></select></div>
-<div><label>Dose g</label><input id="dose" class="yellow" type="number" step="0.1"></div><div><label>Water ml</label><input id="water" class="yellow" type="number"></div><div><label>Time min</label><input id="timeMin" class="yellow" type="number" step="0.1"></div>
-<div><label>Leaf Condition</label><input id="leafCondition" class="yellow" placeholder="freshly dried, rested 7 d..."></div><div><label>Aroma Persistence</label><input id="aromaPersistence" class="yellow" placeholder="short, moderate, lingering..."></div><div><label>Stability Observation</label><input id="stabilityObservation" class="yellow"></div>
-</div><h3>Scores 0 to 5</h3><div class="grid3" id="scoreGrid"></div><label style="margin-top:12px">Decision</label><select id="decision" class="yellow"><option>Repeat</option><option>Tweak</option><option>Abandon</option><option>Hold</option><option>RTD Trial</option><option>Milk Trial</option></select><label style="margin-top:12px">Notes</label><textarea id="sensoryNotes" class="yellow"></textarea><div class="actions"><button class="btn" onclick="saveSensory()">Save Sensory Entry</button><button class="btn secondary" onclick="clearSensory()">Clear Sensory Form</button></div></div></section>
-<section id="logs" class="section"><div class="card"><h2>Logs</h2><div class="actions"><button class="btn secondary" onclick="exportCSV('session')">Export Session CSV</button><button class="btn secondary" onclick="exportCSV('sensory')">Export Sensory CSV</button><button class="btn secondary" onclick="clearLogs()">Clear Local Logs</button></div><h3>Session Log</h3><div id="sessionLog"></div><h3>Sensory Log</h3><div id="sensoryLog"></div></div></section>
-<section id="libraries" class="section"><div class="card"><h2>Libraries</h2><p class="muted">This prototype uses embedded starter libraries. Edit the HTML arrays later for permanent additions.</p><div id="libraryView"></div></div></section>
+<div class="app">
+<header>
+  <div class="kicker">KoffyKraft</div>
+  <h1>Roast Timer</h1>
+  <p class="sub">One tap records the event, time and current temperature.</p>
+</header>
+
+<section class="card">
+  <h2>Coffee identity</h2>
+  <div class="grid">
+    <div class="field full"><label>Estate / coffee</label><input id="estate" placeholder="Type once, reuse later"></div>
+    <div class="field"><label>Coffee code</label><input id="coffeeCode" placeholder="LOY-01"></div>
+    <div class="field"><label>Roast number</label><input id="roastNo" type="number" value="1" inputmode="numeric"></div>
+    <div class="field"><label>Date</label><input id="roastDate" type="date"></div>
+    <div class="field"><label>Moisture %</label><input id="moisture" type="number" step=".1" inputmode="decimal"></div>
+    <div class="field"><label>Green weight g</label><input id="greenWeight" type="number" inputmode="decimal"></div>
+    <div class="field"><label>Charge temp °C</label><input id="chargeTemp" type="number" inputmode="numeric"></div>
+    <div class="field"><label>Roast colour target</label><input id="targetColor" placeholder="Light / medium / Agtron"></div>
+  </div>
+  <div class="chips" id="estateChips"></div>
+  <div class="key" id="roastKey">KEY: —</div>
+</section>
+
+<section class="card timer-card">
+  <div class="timer" id="timer">00:00.0</div>
+  <div class="timer-actions">
+    <button class="btn primary" id="startPause">Start</button>
+    <button class="btn secondary" id="reset">Reset</button>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Live events</h2>
+  <div class="temp-now">
+    <div class="field"><label>Current temperature °C</label><input id="currentTemp" type="number" inputmode="numeric" placeholder="175"></div>
+    <button class="btn ghost" id="plusOne">+1°C</button>
+  </div>
+  <div class="event-grid">
+    <button class="event turn" data-event="Turning"><strong>Turning</strong><small>Tap</small></button>
+    <button class="event yellow" data-event="Yellow"><strong>Yellow</strong><small>Tap</small></button>
+    <button class="event maillard" data-event="Maillard"><strong>Maillard</strong><small>Tap</small></button>
+    <button class="event fc" data-event="First Crack"><strong>FC</strong><small>Tap</small></button>
+    <button class="event sc" data-event="Second Crack"><strong>SC</strong><small>Tap</small></button>
+    <button class="event drop" data-event="Drop"><strong>Drop</strong><small>Tap</small></button>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Temperature tap tiles</h2>
+  <div class="tile-head">
+    <div class="field"><label>Turning reading °C</label><input id="turnTemp" type="number" inputmode="numeric" placeholder="175"></div>
+    <div class="field"><label>Generate up to °C</label><input id="maxTemp" type="number" value="205" inputmode="numeric"></div>
+    <button class="btn ghost" id="generate">Make</button>
+  </div>
+  <div class="tiles" id="tiles"></div>
+</section>
+
+<section class="card">
+  <h2>Result</h2>
+  <div class="grid">
+    <div class="field"><label>Roasted weight g</label><input id="roastedWeight" type="number" inputmode="decimal"></div>
+    <div class="field"><label>Final roast colour</label><input id="finalColor"></div>
+    <div class="field full"><label>Notes</label><textarea id="notes" placeholder="Optional roast or cupping notes"></textarea></div>
+  </div>
+  <div class="summary" style="margin-top:12px">
+    <div class="metric"><b id="totalTime">--</b><span>Total roast</span></div>
+    <div class="metric"><b id="devTime">--</b><span>Development</span></div>
+    <div class="metric"><b id="devRatio">--</b><span>Development %</span></div>
+    <div class="metric"><b id="loss">--</b><span>Weight loss %</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Event log</h2>
+  <div class="log" id="log"><div style="color:var(--muted);font-size:.86rem">No events recorded.</div></div>
+</section>
 </div>
+
+
+<section class="print-sheet" id="printSheet">
+  <div class="print-head">
+    <div><h1>KOFFYKRAFT ROAST RECORD</h1><p id="pEstate"></p></div>
+    <div class="print-key" id="pKey"></div>
+  </div>
+  <div class="print-grid">
+    <div class="print-box"><strong>Coffee code</strong><span id="pCode"></span></div>
+    <div class="print-box"><strong>Roast number and date</strong><span id="pRoastDate"></span></div>
+    <div class="print-box"><strong>Moisture</strong><span id="pMoisture"></span></div>
+    <div class="print-box"><strong>Green weight</strong><span id="pGreen"></span></div>
+    <div class="print-box"><strong>Charge temperature</strong><span id="pCharge"></span></div>
+    <div class="print-box"><strong>Roast colour target</strong><span id="pTarget"></span></div>
+    <div class="print-box"><strong>Roasted weight</strong><span id="pRoasted"></span></div>
+    <div class="print-box"><strong>Final roast colour</strong><span id="pFinalColor"></span></div>
+  </div>
+  <div class="print-metrics">
+    <div class="print-metric"><b id="pTotal">--</b><span>Total roast</span></div>
+    <div class="print-metric"><b id="pDev">--</b><span>Development</span></div>
+    <div class="print-metric"><b id="pDevPct">--</b><span>Development %</span></div>
+    <div class="print-metric"><b id="pLoss">--</b><span>Weight loss %</span></div>
+  </div>
+  <div class="print-section"><h2>Key events</h2><table class="print-table"><thead><tr><th>Event</th><th>Time</th><th>Temperature</th></tr></thead><tbody id="pEvents"></tbody></table></div>
+  <div class="print-section"><h2>Temperature log</h2><table class="print-table"><thead><tr><th>No.</th><th>Time</th><th>Temperature</th></tr></thead><tbody id="pTemps"></tbody></table></div>
+  <div class="print-section"><h2>Notes</h2><div class="print-notes" id="pNotes"></div></div>
+</section>
+
+<div style="max-width:760px;margin:0 auto 88px;padding:0 18px;color:#746c63;font-size:.78rem;text-align:center">
+On iPhone, A4 Print / PDF opens a clean print sheet. In the print preview, spread two fingers over the preview to create a PDF, then use Share to save it.
+</div>
+
+<div class="toast" id="toast">Recorded</div>
+
+<div class="bottom">
+  <button class="btn ghost" id="save">Save</button>
+  <button class="btn ghost" id="export">Export</button>
+  <button class="btn ghost" id="printA4">A4 Print / PDF</button>
+  <button class="btn danger" id="finish">Finish</button>
+</div>
+
 <script>
-const L={leaf:[['Mature Green Leaves','Balanced body, mild coffee leaf aroma, stable structure','Balanced protocols, oolong, reference batches','Bruising or cutting helps extraction. Good for repeatable standards.'],['Young Tender Leaves','Bright, green, potentially high phenolic intensity','Small trials, green or oolong tests','Use small test lots. Avoid harsh sun-exposed stressed flush.'],['Yellowing Leaves','Soft, low green, rounded, food compatible','Decoction, milk service, food pairing','Extended boiling may flatten aroma and reduce brightness.'],['Shoots','Delicate, variable, high-risk for green harshness','Exploratory trials only','Do not mix with mature leaves in serious trials.'],['Mixed Pruning Leaves','Variable and inconsistent','Availability tests only','Use when purpose is exploratory or field availability test.']],
-process:[['Fresh Green','Short wither','2 to 4 h','ambient','avoid heating','leaf softens without heating','bright green, fresh character'],['Fresh Green','Stabilize dry','same day','55 to 70 C','avoid browning or cooked aroma','dry without cooked smell','clean green cup'],['Oolong Style','Shade wither','8 to 12 h','ambient','avoid overheating or sour notes','aroma opens and stiffness reduces','softer green, aroma lift'],['Oolong Style','Bruise or roll','manual','ambient','avoid crushing into paste','leaf aroma rises after bruising','floral, fruit, body'],['Oolong Style','Oxidation rest','2 to 8 h','ambient','avoid stale or sour notes','floral or sweet notes begin appearing','sweetish, fruity possibility'],['Decoction Style','Crush or grind','before brew','ambient','avoid muddy particles','particles suitable for extraction','body and extraction'],['Decoction Style','Simmer brew','5 to 10 min','95 C','long boiling may flatten aroma','body develops without flatness','stronger body'],['Enzyme Assisted','Apply enzyme liquid','brief','ambient','record quantity exactly','even treatment without pooling','possible extraction or aroma precursor change'],['Enzyme Assisted','Controlled rest','1 to 6 h','ambient','watch sourness and microbial risk','aroma changes without sourness','experimental modulation'],['Smoked Style','Smoke dry','variable','low smoke heat','avoid tar, ash, harsh smoke','gentle smoke without ash','warm rustic character']],
-dry:[['Shade Air Dry','ambient','12 to 36 h','delicate lots','slow drying may encourage mold or uneven moisture retention','tray thickness, airflow, humidity','best when climate is dry and airflow is good'],['Oven Low','45 to 55 C','2 to 6 h','careful aroma preservation, small batches','microbial growth risk if leaves remain wet too long before stabilization','load, time, temperature','use when aroma preservation matters'],['Oven Medium','55 to 70 C','1 to 4 h','repeatable standards','excess heat may flatten delicate aroma compounds','tray load, endpoint','practical for repeatability'],['Sun Dry','sun dependent','variable','field trials','photochemical and dust risk','sun hours, cloud, dust','use cautiously'],['Smoke Dry','low smoke heat','2 to 6 h','traditional or rustic styles','harsh smoke flavor or contamination from poor fuel or airflow','fuel, distance, smoke intensity','small controlled trials only'],['Combi Oven','50 to 70 C','1 to 4 h','controlled trials','uneven tray loading or excessive heat may create misleading consistency','fan, humidity, tray load','best for repeatability'],['Fridge drying','4 to 8 C','24 to 72 h','slow moisture removal, low aroma loss','condensation, trapped humidity, and mold risk if airflow is insufficient','airflow, condensation, smell','use only with good airflow and regular inspection']],
-brew:[['Tasting Infusion','leaf to water','85 to 95 C','4 to 8 min','clear cup comparison','bitterness, excessive green note, or thin body','Best consumed fresh'],['Short Decoction','boil/simmer','95 C','5 to 10 min','body and food compatibility','avoid prolonged boiling that flattens aroma','Acceptable warm hold 1 to 2 h'],['Long Decoction Trial','extended simmer','95 C','20 to 30 min','experimental concentrate','possible blandness','Flavor may flatten after cooling'],['Cold Steep','cold water','chilled','6 to 16 h','cold expression','stale green notes or flat extraction','Best within 24 h chilled'],['Milk Service Base','strong base then milk','hot','variable','body, warmth, food compatibility','thin base will disappear in milk','Test immediately after milk addition'],['RTD Trial Base','standardized brew','controlled','controlled','clear repeatable base','pH and safety need separate control','Requires separate stability validation']],
-enzyme:[['None','No enzyme assist','baseline','baseline drift, uncontrolled environmental variation','none'],['Plain Water Control','Water only','moisture control','dilution or wetness effect','quantity, contact time'],['Koji Water Spray','Light spray after wither or before rest','light enzyme contact trial','microbial drift, sourness','liquid age, quantity, smell'],['Koji Water Soak','Brief soak then drain','stronger enzyme contact and extraction trials','dilution, contamination, loss of soluble compounds','soak time, drain weight, smell']]};
-const scores=['Sweetness','Bitterness','Astringency','Body','Green Note','Floral','Fruit Note','Hui Gan','Hui Gan Delay min','Milk Compatibility','RTD Suitability','Overall Score'];
-function $(id){return document.getElementById(id)}
-function show(id){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active','print-target'));$(id).classList.add('active');}
-function fillSelect(id,arr,col=0){let s=$(id);s.innerHTML='';arr.forEach(r=>{let o=document.createElement('option');o.textContent=r[col];s.appendChild(o)})}
-function init(){fillSelect('leafType',L.leaf);fillSelect('processFamily',[...new Set(L.process.map(r=>r[0]))].map(x=>[x]));fillSelect('dryingMethod',L.dry);fillSelect('brewMethod',L.brew);fillSelect('sensoryBrew',L.brew);fillSelect('enzymeAssist',L.enzyme);$('date').valueAsDate=new Date();$('sensoryDate').valueAsDate=new Date();let g=$('scoreGrid');scores.forEach(sc=>{let d=document.createElement('div');d.innerHTML=`<label>${sc}</label><select id="score_${sc.replaceAll(' ','_')}" class="yellow">${[0,1,2,3,4,5].map(n=>`<option>${n}</option>`).join('')}</select>`;g.appendChild(d)});renderLogs();renderLibs();}
-function selected(arr,val){return arr.find(r=>r[0]===val)||arr[0]}
-function yieldCalc(){let f=parseFloat($('freshWeight').value),d=parseFloat($('dryWeight').value);$('yieldPct').textContent=(f&&d)?((d/f)*100).toFixed(1)+' %':''}
-['freshWeight','dryWeight'].forEach(id=>setTimeout(()=>$(id).addEventListener('input',yieldCalc),500));
-function generateProtocol(){let leaf=selected(L.leaf,$('leafType').value),dry=selected(L.dry,$('dryingMethod').value),brew=selected(L.brew,$('brewMethod').value),enz=selected(L.enzyme,$('enzymeAssist').value),steps=L.process.filter(r=>r[0]===$('processFamily').value);let html=`<p><b>Batch:</b> ${$('batchId').value||''} | <b>Date:</b> ${$('date').value||''} | <b>Estate:</b> ${$('estate').value||''}</p><h3>Harvest and Leaf Handling</h3><p><b>Leaf selection:</b> ${leaf[2]}</p><p><b>Sorting:</b> Remove diseased, blackened, insect damaged, wet, or abnormal leaves. Keep leaf classes separate.</p><p><b>Weighing:</b> Record fresh harvested leaf weight before processing.</p><p><b>Traceability:</b> Assign batch ID. Record estate, block, date, operator, leaf type, and process choices.</p><h3>Process Flow</h3><table><tr><th>Step</th><th>Time</th><th>Temp</th><th>Action</th><th>Checkpoint</th><th>Watchpoint</th></tr>${steps.map(r=>`<tr><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[6]}</td><td>${r[5]}</td></tr>`).join('')}</table><h3>Drying</h3><p><b>Method:</b> ${dry[0]} | <b>Temp:</b> ${dry[1]} | <b>Time:</b> ${dry[2]}</p><p><b>Endpoint:</b> Leaves dry, brittle, non-sticky, no internal moisture pockets.</p><p><b>Watch:</b> ${dry[4]}</p><p><b>Record:</b> ${dry[5]}</p><h3>Brewing</h3><p><b>Method:</b> ${brew[0]} | <b>Temp:</b> ${brew[2]} | <b>Time:</b> ${brew[3]}</p><p><b>Expected:</b> ${brew[4]}</p><p><b>Watch:</b> ${brew[5]}</p><p><b>Stability Window:</b> ${brew[6]}</p><h3>Enzyme Assist</h3><p><b>${enz[0]}:</b> ${enz[1]}</p><p><b>Risk:</b> ${enz[3]}</p><h3>Expected Character</h3><p>${leaf[1]}</p><h3>Notes</h3><p>${$('notes').value||''}</p><h3>Decision After Trial</h3><p>Repeat, tweak, abandon, or hold for further tasting.</p>`;$('protocolContent').innerHTML=html;}
-function prepareBatch(){let rows=['Harvest start','Fresh weight','Sorting completed','Wither start','Wither end','Bruising / cutting','Rest start','Rest end','Drying start','Drying end','Final dry weight','Aroma notes','Color notes','Texture notes','Problems','Final sample code'];let html=`<p><b>Batch:</b> ${$('batchId').value||''} | <b>Date:</b> ${$('date').value||''} | <b>Leaf:</b> ${$('leafType').value}</p><table><tr><th>Record Item</th><th>Value / Time / Observation</th></tr>${rows.map(r=>`<tr><td>${r}</td><td style="height:28px"></td></tr>`).join('')}</table>`;$('batchContent').innerHTML=html;}
-function objBuilder(){return {BatchID:$('batchId').value,Date:$('date').value,Estate:$('estate').value,Operator:$('operator').value,LeafType:$('leafType').value,ProcessFamily:$('processFamily').value,DryingMethod:$('dryingMethod').value,BrewMethod:$('brewMethod').value,EnzymeAssist:$('enzymeAssist').value,Intended:$('intended').value,FreshWeight:$('freshWeight').value,DryWeight:$('dryWeight').value,Yield:$('yieldPct').textContent,Notes:$('notes').value}}
-function saveSession(){let a=JSON.parse(localStorage.getItem('citane_sessions')||'[]');a.push(objBuilder());localStorage.setItem('citane_sessions',JSON.stringify(a));renderLogs();alert('Session saved.');}
-function saveSensory(){let o={SensoryID:$('sensoryId').value,BatchID:$('sensoryBatch').value,Date:$('sensoryDate').value,Taster:$('taster').value,BrewMethod:$('sensoryBrew').value,EvalTemp:$('evalTemp').value,Dose:$('dose').value,Water:$('water').value,Time:$('timeMin').value,LeafCondition:$('leafCondition').value,AromaPersistence:$('aromaPersistence').value,StabilityObservation:$('stabilityObservation').value,Decision:$('decision').value,Notes:$('sensoryNotes').value};scores.forEach(sc=>o[sc]=$('score_'+sc.replaceAll(' ','_')).value);let a=JSON.parse(localStorage.getItem('citane_sensory')||'[]');a.push(o);localStorage.setItem('citane_sensory',JSON.stringify(a));renderLogs();alert('Sensory entry saved.');}
-function clearBuilder(){document.querySelectorAll('#builder input,#builder textarea').forEach(e=>e.value='');$('date').valueAsDate=new Date();yieldCalc();}
-function clearSensory(){document.querySelectorAll('#sensory input,#sensory textarea').forEach(e=>e.value='');$('sensoryDate').valueAsDate=new Date();}
-function tableFrom(arr){if(!arr.length)return '<p class="muted">No entries yet.</p>';let keys=Object.keys(arr[0]);return '<table><tr>'+keys.map(k=>`<th>${k}</th>`).join('')+'</tr>'+arr.map(o=>'<tr>'+keys.map(k=>`<td>${o[k]??''}</td>`).join('')+'</tr>').join('')+'</table>'}
-function renderLogs(){$('sessionLog').innerHTML=tableFrom(JSON.parse(localStorage.getItem('citane_sessions')||'[]'));$('sensoryLog').innerHTML=tableFrom(JSON.parse(localStorage.getItem('citane_sensory')||'[]'));}
-function renderLibs(){let html='';Object.entries(L).forEach(([k,a])=>{html+=`<h3>${k.toUpperCase()}</h3><table>${a.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('')}</table>`});$('libraryView').innerHTML=html;}
-function printCurrent(){setTimeout(()=>window.print(),50)}
-function exportCSV(type){let arr=JSON.parse(localStorage.getItem(type==='session'?'citane_sessions':'citane_sensory')||'[]');if(!arr.length){alert('No data to export.');return}let keys=Object.keys(arr[0]);let csv=[keys.join(',')].concat(arr.map(o=>keys.map(k=>'"'+String(o[k]??'').replaceAll('"','""')+'"').join(','))).join('\n');let blob=new Blob([csv],{type:'text/csv'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='citane_'+type+'_log.csv';a.click();}
-function clearLogs(){if(confirm('Clear local logs in this browser?')){localStorage.removeItem('citane_sessions');localStorage.removeItem('citane_sensory');renderLogs();}}
-init();
+const $=id=>document.getElementById(id);
+let running=false,startAt=0,elapsed=0,tick=null,events=[];
+let roastId='roast-'+Date.now();
+const today=new Date().toISOString().slice(0,10);
+$('roastDate').value=today;
+
+function ms(){return running?elapsed+(performance.now()-startAt):elapsed}
+function fmt(v){const m=Math.floor(v/60000),s=Math.floor(v%60000/1000),t=Math.floor(v%1000/100);return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+t}
+function renderTimer(){$('timer').textContent=fmt(ms())}
+$('startPause').onclick=()=>{if(!running){running=true;startAt=performance.now();tick=setInterval(renderTimer,100);$('startPause').textContent='Pause'}else{elapsed=ms();running=false;clearInterval(tick);$('startPause').textContent='Resume'}};
+$('reset').onclick=()=>{if(!confirm('Reset this roast?'))return;running=false;clearInterval(tick);elapsed=0;events=[];renderTimer();renderLog();document.querySelectorAll('.event small').forEach(x=>x.textContent='Tap');$('tiles').innerHTML='';};
+
+function currentTemp(){const n=Number($('currentTemp').value);return Number.isFinite(n)&&$('currentTemp').value!==''?n:null}
+function toast(text){$('toast').textContent=text;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),750)}
+function record(type,button,temp=currentTemp()){
+  const time=ms();events.push({type,time,timeText:fmt(time),temperature:temp,createdAt:new Date().toISOString()});
+  if(button){button.classList.remove('confirmed');void button.offsetWidth;button.classList.add('confirmed');button.querySelector('small').textContent=fmt(time)+(temp!==null?' · '+temp+'°':'')}
+  toast(type+' recorded');renderLog();updateSummary();saveLocal();
+}
+document.querySelectorAll('.event').forEach(b=>b.onclick=()=>record(b.dataset.event,b));
+$('plusOne').onclick=()=>{$('currentTemp').value=(currentTemp()??0)+1};
+
+$('generate').onclick=()=>{
+  const start=Number($('turnTemp').value)+1,max=Number($('maxTemp').value);
+  if(!start||!max||start>max){toast('Enter turning and maximum');return}
+  $('tiles').innerHTML='';
+  for(let t=start;t<=max;t++){
+    const b=document.createElement('button');b.className='tile';b.textContent=t;
+    b.onclick=()=>{if(b.classList.contains('done'))return;$('currentTemp').value=t;const time=ms();b.classList.add('done');b.dataset.time=fmt(time);events.push({type:'Temperature',time,timeText:fmt(time),temperature:t,createdAt:new Date().toISOString()});toast(t+'°C recorded');renderLog();saveLocal()};
+    $('tiles').appendChild(b);
+  }
+};
+
+function renderLog(){
+  if(!events.length){$('log').innerHTML='<div style="color:var(--muted);font-size:.86rem">No events recorded.</div>';return}
+  $('log').innerHTML=[...events].sort((a,b)=>a.time-b.time).map(e=>`<div class="log-item"><div class="log-time">${e.timeText}</div><div><b>${e.type}</b></div><div class="pill">${e.temperature!==null?e.temperature+'°C':'—'}</div></div>`).join('');
+}
+function val(id){return $(id).value}
+function shortDate(){const d=val('roastDate');if(!d)return 'DATE';const [y,m,day]=d.split('-');return day+m+y.slice(2)}
+function estateCode(){const c=val('coffeeCode').trim();if(c)return c.toUpperCase();const e=val('estate').trim();return e?e.split(/\s+/).map(x=>x[0]).join('').slice(0,5).toUpperCase():'EST'}
+function updateKey(){$('roastKey').textContent='KEY: '+estateCode()+' / R'+String(val('roastNo')||1).padStart(3,'0')+' / '+shortDate()}
+['estate','coffeeCode','roastNo','roastDate'].forEach(id=>$(id).addEventListener('input',updateKey));
+updateKey();
+
+function savedEstates(){return JSON.parse(localStorage.getItem('kk-estates')||'[]')}
+function rememberEstate(){
+  const estate=val('estate').trim();if(!estate)return;
+  let arr=savedEstates().filter(x=>x.estate.toLowerCase()!==estate.toLowerCase());
+  arr.unshift({estate,coffeeCode:val('coffeeCode'),moisture:val('moisture'),greenWeight:val('greenWeight'),chargeTemp:val('chargeTemp'),targetColor:val('targetColor')});
+  localStorage.setItem('kk-estates',JSON.stringify(arr.slice(0,12)));renderChips();
+}
+function renderChips(){
+  const arr=savedEstates();$('estateChips').innerHTML=arr.map((x,i)=>`<button class="chip" data-i="${i}">${x.estate}</button>`).join('');
+  document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{const x=arr[Number(b.dataset.i)];['estate','coffeeCode','moisture','greenWeight','chargeTemp','targetColor'].forEach(k=>$(k).value=x[k]||'');updateKey();toast('Previous details filled')});
+}
+renderChips();
+
+function data(){return {id:roastId,key:$('roastKey').textContent.replace('KEY: ',''),estate:val('estate'),coffeeCode:val('coffeeCode'),roastNo:val('roastNo'),date:val('roastDate'),moisture:val('moisture'),greenWeight:val('greenWeight'),chargeTemp:val('chargeTemp'),targetColor:val('targetColor'),roastedWeight:val('roastedWeight'),finalColor:val('finalColor'),notes:val('notes'),elapsedMs:ms(),events}}
+function saveLocal(){localStorage.setItem(roastId,JSON.stringify(data()))}
+$('save').onclick=()=>{rememberEstate();saveLocal();toast('Saved on this phone')};
+$('export').onclick=()=>{rememberEstate();const blob=new Blob([JSON.stringify(data(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=data().key.replaceAll(' / ','_')+'.json';a.click();URL.revokeObjectURL(a.href)};
+$('finish').onclick=()=>{if(!events.some(e=>e.type==='Drop'))record('Drop',document.querySelector('[data-event="Drop"]'));if(running){elapsed=ms();running=false;clearInterval(tick);$('startPause').textContent='Resume'}rememberEstate();saveLocal();updateSummary();toast('Roast finished')};
+
+['greenWeight','roastedWeight'].forEach(id=>$(id).addEventListener('input',updateSummary));
+function updateSummary(){
+  const drop=events.filter(e=>e.type==='Drop').at(-1),fc=events.filter(e=>e.type==='First Crack').at(-1);
+  if(drop)$('totalTime').textContent=fmt(drop.time);
+  if(drop&&fc){const d=drop.time-fc.time;$('devTime').textContent=fmt(d);$('devRatio').textContent=((d/drop.time)*100).toFixed(1)+'%'}
+  const g=Number(val('greenWeight')),r=Number(val('roastedWeight'));if(g&&r)$('loss').textContent=(((g-r)/g)*100).toFixed(1)+'%';
+}
+
+function fillPrintSheet(){
+  const d=data();
+  $('pEstate').textContent=d.estate||'—';
+  $('pKey').textContent=d.key||'—';
+  $('pCode').textContent=d.coffeeCode||'—';
+  $('pRoastDate').textContent='R'+String(d.roastNo||'').padStart(3,'0')+' / '+(d.date||'—');
+  $('pMoisture').textContent=d.moisture?d.moisture+'%':'—';
+  $('pGreen').textContent=d.greenWeight?d.greenWeight+' g':'—';
+  $('pCharge').textContent=d.chargeTemp?d.chargeTemp+'°C':'—';
+  $('pTarget').textContent=d.targetColor||'—';
+  $('pRoasted').textContent=d.roastedWeight?d.roastedWeight+' g':'—';
+  $('pFinalColor').textContent=d.finalColor||'—';
+  const drop=events.filter(e=>e.type==='Drop').at(-1);
+  const fc=events.filter(e=>e.type==='First Crack').at(-1);
+  $('pTotal').textContent=drop?fmt(drop.time):'--';
+  if(drop&&fc){const dev=drop.time-fc.time;$('pDev').textContent=fmt(dev);$('pDevPct').textContent=((dev/drop.time)*100).toFixed(1)+'%'}else{$('pDev').textContent='--';$('pDevPct').textContent='--'}
+  const g=Number(d.greenWeight),r=Number(d.roastedWeight);$('pLoss').textContent=(g&&r)?(((g-r)/g)*100).toFixed(1)+'%':'--';
+  const eventTypes=['Turning','Yellow','Maillard','First Crack','Second Crack','Drop'];
+  $('pEvents').innerHTML=eventTypes.map(type=>{const e=events.filter(x=>x.type===type).at(-1);return `<tr><td>${type}</td><td>${e?e.timeText:'—'}</td><td>${e&&e.temperature!==null?e.temperature+'°C':'—'}</td></tr>`}).join('');
+  const temps=events.filter(e=>e.type==='Temperature');
+  $('pTemps').innerHTML=temps.map((e,i)=>`<tr><td>${i+1}</td><td>${e.timeText}</td><td>${e.temperature}°C</td></tr>`).join('')||'<tr><td colspan="3">No temperature readings recorded</td></tr>';
+  $('pNotes').textContent=d.notes||'';
+}
+
+function printableDocument(){
+  fillPrintSheet();
+  const sheet=$('printSheet').outerHTML;
+  return `<!doctype html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${data().key} - Roast Record</title>
+<style>
+@page{size:A4 portrait;margin:10mm}
+*{box-sizing:border-box}
+body{margin:0;color:#000;background:#fff;font-family:Arial,Helvetica,sans-serif;font-size:10pt}
+.print-sheet{display:block;width:100%}
+.print-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #000;padding-bottom:5mm;margin-bottom:4mm}
+.print-head h1{font-size:22pt;margin:0}
+.print-head p{margin:1mm 0 0;color:#444}
+.print-key{font-weight:700;font-size:10pt;text-align:right;max-width:48%}
+.print-grid{display:grid;grid-template-columns:1fr 1fr;gap:3mm 7mm;margin-bottom:4mm}
+.print-box{border:1px solid #777;padding:2.5mm;min-height:13mm}
+.print-box strong{display:block;font-size:7.5pt;text-transform:uppercase;color:#555;margin-bottom:1mm}
+.print-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:2.5mm;margin:3mm 0}
+.print-metric{border:1px solid #777;padding:2.5mm;text-align:center}
+.print-metric b{display:block;font-size:13pt}
+.print-section{margin-top:4mm;break-inside:avoid}
+.print-section h2{font-size:10pt;text-transform:uppercase;border-bottom:1px solid #000;padding-bottom:1mm;margin:0 0 2mm}
+.print-table{width:100%;border-collapse:collapse;font-size:8pt}
+.print-table th,.print-table td{border:1px solid #999;padding:1.3mm 1.7mm;text-align:left}
+.print-table th{background:#eee}
+.print-notes{border:1px solid #777;min-height:18mm;padding:2.5mm;white-space:pre-wrap}
+.screen-only{display:none!important}
+</style></head><body>${sheet}
+<script>
+window.addEventListener('load',function(){setTimeout(function(){window.print()},350)});
+<\/script></body></html>`;
+}
+
+async function openA4Print(){
+  rememberEstate();
+  saveLocal();
+  const html=printableDocument();
+
+  // Open immediately from the tap, which avoids iPhone popup blocking.
+  const printWindow=window.open('about:blank','_blank');
+  if(printWindow){
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+    toast('Opening A4 print sheet');
+    return;
+  }
+
+  // Fallback for file viewers that block new windows.
+  const blob=new Blob([html],{type:'text/html'});
+  const filename=data().key.replaceAll(' / ','_')+'_A4.html';
+  const file=new File([blob],filename,{type:'text/html'});
+
+  try{
+    if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+      await navigator.share({title:'KoffyKraft Roast Record',files:[file]});
+      return;
+    }
+  }catch(err){
+    if(err && err.name==='AbortError') return;
+  }
+
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  toast('A4 file created. Open it and choose Print.');
+}
+$('printA4').onclick=openA4Print;
+
+renderTimer();
 </script>
 </body>
 </html>
