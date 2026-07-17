@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#181310">
+<title>KoffyKraft Roast Timer v9 - Live Curves</title>
+<style>
+:root{--bg:#17120f;--panel:#211a16;--panel2:#2a211c;--line:#51443b;--text:#fff7ef;--muted:#b9aaa0;--accent:#f0a24c;--blue:#75c6e8;--green:#72d49a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}button,input,select{font:inherit}button{touch-action:manipulation}.app{max-width:1180px;margin:auto;padding:10px 10px calc(18px + env(safe-area-inset-bottom))}.topbar{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;position:sticky;top:0;z-index:20;background:linear-gradient(var(--bg) 78%,transparent);padding:8px 0 12px}.brand b{font-size:1.05rem;letter-spacing:.04em}.brand small{display:block;color:var(--muted);font-size:.72rem;margin-top:2px}.timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:1.35rem;min-width:94px;text-align:right}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:10px;padding:10px 12px;font-weight:750}.btn.primary{background:var(--accent);color:#1c1209;border-color:var(--accent)}.btn.danger{background:#4a201e;border-color:#7c332f}.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.75fr);gap:10px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;overflow:hidden}.panel h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px;color:var(--muted)}.chart-wrap{height:50vh;min-height:360px;position:relative}canvas{display:block;width:100%;height:100%;border-radius:10px;background:#120e0c}.chart-overlay{position:absolute;left:10px;right:10px;top:8px;display:flex;justify-content:space-between;pointer-events:none;font-size:.72rem;color:var(--muted)}.live-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.badge{background:#17120f;border:1px solid var(--line);border-radius:999px;padding:7px 9px;font-size:.76rem}.badge b{color:var(--accent)}.rightcol{display:grid;gap:10px;align-content:start}.current{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metric{background:#17120f;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}.metric .v{font-size:1.45rem;font-weight:850;font-variant-numeric:tabular-nums}.metric .l{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px}.temp-entry{display:grid;grid-template-columns:1fr auto;gap:8px}.temp-entry input{min-width:0;background:#15100d;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:1.1rem;font-weight:800}.phase-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.phase{min-height:58px;border:1px solid var(--line);background:#1a1411;color:var(--text);border-radius:10px;font-size:.78rem;font-weight:800;padding:7px 3px}.phase small{display:block;color:var(--muted);font-size:.61rem;font-weight:500;margin-top:3px}.phase.done{background:#47301d;border-color:#9f6b32}.phase.done small{color:#f6d4a8}.temp-section{margin-top:10px}.temp-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}.tile{min-height:62px;border:1px solid var(--line);background:#18120f;color:var(--text);border-radius:10px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center}.tile .t{font-size:.93rem;font-weight:850}.tile .at{font-size:.58rem;color:var(--muted);min-height:.72rem}.tile .gap{font-size:.64rem;color:var(--accent);font-weight:800;min-height:.76rem}.tile.done{background:#3c2a1d;border-color:#a36c36}.tile.done .at{color:#e9d7c5}.holding{transform:scale(.96);outline:2px solid var(--danger);outline-offset:1px}.log{max-height:270px;overflow:auto;border-top:1px solid var(--line)}.log-row{display:grid;grid-template-columns:64px 1fr 62px;gap:7px;align-items:center;padding:8px 2px;border-bottom:1px solid #392f29;font-size:.76rem}.log-row .tm{font-variant-numeric:tabular-nums;color:var(--muted)}.log-row .tp{text-align:right;font-weight:800}.log-row .sub{font-size:.63rem;color:var(--accent)}.settings{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.field label{display:block;color:var(--muted);font-size:.63rem;margin:0 0 4px}.field input,.field select{width:100%;background:#15100d;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 8px}.actions{display:flex;gap:7px;flex-wrap:wrap}.note{font-size:.68rem;color:var(--muted);line-height:1.35}.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#fff;color:#17120f;padding:9px 14px;border-radius:999px;font-size:.78rem;font-weight:800;opacity:0;pointer-events:none;transition:.2s;z-index:50}.toast.show{opacity:1}
+@media(max-width:820px){.grid{grid-template-columns:1fr}.chart-wrap{height:42vh;min-height:310px}.temp-grid{grid-template-columns:repeat(6,1fr)}}
+@media(orientation:landscape) and (max-height:600px){.grid{grid-template-columns:1.65fr .75fr}.chart-wrap{height:72vh;min-height:300px}.temp-grid{grid-template-columns:repeat(8,1fr)}.topbar{position:static}.rightcol{max-height:78vh;overflow:auto}}
+@media print{body{background:white;color:black}.topbar,.rightcol,.temp-section,.actions,.note{display:none!important}.app,.grid,.panel{max-width:none;padding:0;border:0;background:white}.grid{display:block}.chart-wrap{height:160mm}canvas{background:white}.live-badges{color:black}.badge{background:white;border-color:#999}@page{size:A4 landscape;margin:10mm}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="topbar"><div class="brand"><b>KOFFYKRAFT LIVE ROAST v9</b><small>Live curves from every temperature tap</small></div><div class="timer" id="timer">00:00.0</div><button class="btn primary" id="startBtn">START</button></div>
+<div class="grid">
+<section class="panel"><div class="chart-wrap"><canvas id="chart"></canvas><div class="chart-overlay"><span>Live BT curve + estimated RoR + R1 reference</span><span id="chartStatus">READY</span></div></div><div class="live-badges"><span class="badge">Current <b id="badgeTemp">-- C</b></span><span class="badge">RoR <b id="badgeRor">-- C/min</b></span><span class="badge">DTR <b id="badgeDtr">--</b></span><span class="badge">FC <b id="badgeFc">--</b></span><span class="badge">Projected drop <b id="badgeProj">--</b></span></div></section>
+<aside class="rightcol">
+<section class="panel"><h2>Live</h2><div class="current"><div class="metric"><div class="v" id="currentTemp">--</div><div class="l">Temperature C</div></div><div class="metric"><div class="v" id="lastGap">--</div><div class="l">Last gap</div></div></div><div class="temp-entry" style="margin-top:8px"><input id="tempInput" inputmode="decimal" placeholder="Enter temperature"><button class="btn primary" id="recordTempBtn">RECORD</button></div></section>
+<section class="panel"><h2>Phases</h2><div class="phase-grid" id="phases"></div></section>
+<section class="panel"><h2>Roast setup</h2><div class="settings"><div class="field"><label>ROAST KEY</label><input id="roastKey" value="CP / R003 / 170726"></div><div class="field"><label>CHARGE C</label><input id="chargeTemp" type="number" value="231"></div><div class="field"><label>GREEN G</label><input id="greenWeight" type="number" value="2500"></div><div class="field"><label>TARGET</label><select id="target"><option>Medium</option><option>Medium Dark</option><option>Dark</option></select></div></div></section>
+<section class="panel"><h2>Actions</h2><div class="actions"><button class="btn" id="pauseBtn">PAUSE</button><button class="btn" id="undoBtn">UNDO LAST</button><button class="btn" id="printBtn">A4 PRINT / PDF</button><button class="btn danger" id="resetBtn">RESET</button></div></section>
+<section class="panel"><h2>Recent events</h2><div class="log" id="log"></div></section>
+</aside></div>
+<section class="panel temp-section"><h2>Temperature tiles - tap to record/update, long press to remove</h2><div class="temp-grid" id="tempGrid"></div></section>
+<p class="note">The RoR line is estimated from manual taps. R1 appears as a faint reference profile. Tap temperatures steadily for a cleaner RoR trace.</p>
+</div><div class="toast" id="toast"></div>
+<script>
+const $=id=>document.getElementById(id),phases=["Turning","Yellow","Maillard","First Crack","Second Crack","Drop"];
+const R1=[[124.3,179],[158.7,180],[191.9,181],[256.3,182],[269.2,183],[286,184],[302.9,185],[313.8,186],[326.8,186],[330.4,187],[344.8,188],[357.3,189],[369.7,190],[386.6,191],[396.2,192],[411,193],[427.4,194],[439.6,195],[451.1,196],[468.3,197],[480.6,198],[492.2,199],[500.9,199],[506.5,200],[517,201],[537.9,202],[560.9,203],[575.2,204],[594.9,205],[615.4,206],[622.5,207],[675.6,207]];
+let state={running:false,paused:false,startAt:null,pausedAt:null,accumulatedPause:0,events:[],temps:[]};
+function nowMs(){if(!state.startAt)return 0;const end=state.paused&&state.pausedAt?state.pausedAt:Date.now();return Math.max(0,end-state.startAt-state.accumulatedPause)}
+function fmt(ms){const s=ms/1000,m=Math.floor(s/60),r=s-m*60;return String(m).padStart(2,"0")+":"+r.toFixed(1).padStart(4,"0")}
+function fmtGap(ms){if(ms==null)return"FIRST";const s=ms/1000;return s<60?"+"+s.toFixed(1)+"s":"+"+Math.floor(s/60)+":"+String((s%60).toFixed(1)).padStart(4,"0")}
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove("show"),1200)}
+function save(){localStorage.setItem("koffykraft_v8",JSON.stringify(state))}function load(){const s=localStorage.getItem("koffykraft_v8");if(s)try{state={...state,...JSON.parse(s)}}catch(e){}}
+function tick(){$("timer").textContent=fmt(nowMs());updateLive();draw();requestAnimationFrame(tick)}
+function start(){if(!state.running){state.running=true;state.paused=false;state.startAt=Date.now();state.accumulatedPause=0;$("startBtn").textContent="RUNNING";toast("Roast started")}save()}
+function pause(){if(!state.running)return;if(!state.paused){state.paused=true;state.pausedAt=Date.now();$("pauseBtn").textContent="RESUME"}else{state.accumulatedPause+=Date.now()-state.pausedAt;state.paused=false;state.pausedAt=null;$("pauseBtn").textContent="PAUSE"}save()}
+function recordTemp(temp){if(!state.running)start();temp=Number(temp);if(!Number.isFinite(temp))return;const time=nowMs(),idx=state.temps.findIndex(x=>Number(x.temp)===temp),obj={temp,time};if(idx>=0){state.temps[idx]=obj;toast(temp+" C updated")}else{state.temps.push(obj);toast(temp+" C recorded")}state.temps.sort((a,b)=>a.time-b.time);$("tempInput").value="";render();save()}
+function recordPhase(name){if(!state.running)start();const time=nowMs(),last=state.temps[state.temps.length-1],temp=last?last.temp:null,idx=state.events.findIndex(x=>x.name===name),obj={name,time,temp};if(idx>=0){state.events[idx]=obj;toast(name+" updated")}else{state.events.push(obj);toast(name+" recorded")}state.events.sort((a,b)=>a.time-b.time);render();save()}
+function undoLast(){
+  if(lastDeleted){
+    if(lastDeleted.kind==="temp")state.temps.push(lastDeleted.item);else state.events.push(lastDeleted.item);
+    state.temps.sort((a,b)=>a.time-b.time);state.events.sort((a,b)=>a.time-b.time);
+    toast("Removed entry restored");vibrate(20);lastDeleted=null;render();save();return;
+  }
+  const all=[...state.temps.map((x,i)=>({kind:"temp",i,time:x.time})),...state.events.map((x,i)=>({kind:"event",i,time:x.time}))].sort((a,b)=>b.time-a.time);
+  if(!all.length)return;
+  const x=all[0];if(x.kind==="temp")state.temps.splice(x.i,1);else state.events.splice(x.i,1);
+  render();save();toast("Last record removed");
+}
+function reset(){if(!confirm("Clear the current roast?"))return;state={running:false,paused:false,startAt:null,pausedAt:null,accumulatedPause:0,events:[],temps:[]};$("startBtn").textContent="START";$("pauseBtn").textContent="PAUSE";render();save()}
+
+let lastDeleted=null,undoTimer=null;
+function vibrate(ms=20){try{if(navigator.vibrate)navigator.vibrate(ms)}catch(e){}}
+function removeTemp(temp){
+  const i=state.temps.findIndex(x=>Number(x.temp)===Number(temp));
+  if(i<0)return;
+  lastDeleted={kind:"temp",item:state.temps[i]};
+  state.temps.splice(i,1);render();save();vibrate(45);toast(temp+" C removed - tap UNDO LAST to restore");
+}
+function removePhase(name){
+  const i=state.events.findIndex(x=>x.name===name);
+  if(i<0)return;
+  lastDeleted={kind:"event",item:state.events[i]};
+  state.events.splice(i,1);render();save();vibrate(45);toast(name+" removed - tap UNDO LAST to restore");
+}
+function bindPress(el,onTap,onLong){
+  let timer=null,longDone=false;
+  const start=e=>{
+    longDone=false;
+    el.classList.add("holding");
+    timer=setTimeout(()=>{longDone=true;el.classList.remove("holding");onLong();},700);
+  };
+  const end=e=>{
+    clearTimeout(timer);el.classList.remove("holding");
+    if(!longDone)onTap();
+  };
+  const cancel=()=>{clearTimeout(timer);el.classList.remove("holding")};
+  el.addEventListener("pointerdown",start);
+  el.addEventListener("pointerup",end);
+  el.addEventListener("pointercancel",cancel);
+  el.addEventListener("pointerleave",cancel);
+  el.addEventListener("contextmenu",e=>e.preventDefault());
+}
+function smoothPath(ctx,pts){
+  if(!pts.length)return;
+  if(pts.length===1){ctx.moveTo(pts[0][0],pts[0][1]);return}
+  ctx.moveTo(pts[0][0],pts[0][1]);
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;
+    const cp1x=p1[0]+(p2[0]-p0[0])/6,cp1y=p1[1]+(p2[1]-p0[1])/6;
+    const cp2x=p2[0]-(p3[0]-p1[0])/6,cp2y=p2[1]-(p3[1]-p1[1])/6;
+    ctx.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,p2[0],p2[1]);
+  }
+}
+function renderPhases(){
+  $("phases").innerHTML="";
+  phases.forEach(name=>{
+    const b=document.createElement("button"),e=state.events.find(x=>x.name===name);
+    b.className="phase"+(e?" done":"");
+    b.innerHTML=name+(e?`<small>${fmt(e.time)}${e.temp!=null?" · "+e.temp+" C":""}</small>`:"<small>Tap to mark</small>");
+    bindPress(b,()=>recordPhase(name),()=>{if(e)removePhase(name)});
+    $("phases").appendChild(b);
+  });
+}
+function renderTiles(){
+  $("tempGrid").innerHTML="";
+  for(let t=170;t<=215;t++){
+    const b=document.createElement("button"),x=state.temps.find(z=>Number(z.temp)===t);
+    let gap=null;
+    if(x){
+      const sorted=[...state.temps].sort((a,b)=>a.time-b.time),i=sorted.findIndex(z=>z.temp===t);
+      gap=i>0?x.time-sorted[i-1].time:null;
+    }
+    b.className="tile"+(x?" done":"");
+    b.innerHTML=`<span class="t">${t}</span><span class="at">${x?fmt(x.time):""}</span><span class="gap">${x?fmtGap(gap):""}</span>`;
+    bindPress(b,()=>recordTemp(t),()=>{if(x)removeTemp(t)});
+    $("tempGrid").appendChild(b);
+  }
+}
+function renderLog(){const items=[...state.temps.map(x=>({type:"Temperature",time:x.time,temp:x.temp})),...state.events.map(x=>({type:x.name,time:x.time,temp:x.temp}))].sort((a,b)=>b.time-a.time).slice(0,20);$("log").innerHTML=items.map(x=>{let sub="";if(x.type==="Temperature"){const asc=[...state.temps].sort((a,b)=>a.time-b.time),k=asc.findIndex(z=>z.time===x.time&&z.temp===x.temp);sub=k>0?fmtGap(x.time-asc[k-1].time):"FIRST"}return`<div class="log-row"><span class="tm">${fmt(x.time)}</span><span>${x.type}<div class="sub">${sub}</div></span><span class="tp">${x.temp??"--"} C</span></div>`}).join("")}
+function currentRor(){const a=[...state.temps].sort((x,y)=>x.time-y.time);if(a.length<2)return null;const p=a[a.length-2],q=a[a.length-1],dt=(q.time-p.time)/60000;return dt>0?(q.temp-p.temp)/dt:null}
+function updateLive(){const a=[...state.temps].sort((x,y)=>x.time-y.time),last=a[a.length-1],prev=a[a.length-2];$("currentTemp").textContent=last?last.temp:"--";$("badgeTemp").textContent=last?last.temp+" C":"-- C";$("lastGap").textContent=last&&prev?fmtGap(last.time-prev.time):"--";const r=currentRor();$("badgeRor").textContent=r==null?"-- C/min":r.toFixed(1)+" C/min";const fc=state.events.find(x=>x.name==="First Crack");$("badgeFc").textContent=fc?fmt(fc.time):"--";if(fc){const dev=nowMs()-fc.time;$("badgeDtr").textContent=(dev/Math.max(1,nowMs())*100).toFixed(1)+"%";$("badgeProj").textContent=fmt(fc.time/.75)}else{$("badgeDtr").textContent="--";$("badgeProj").textContent="--"}$("chartStatus").textContent=state.running?(state.paused?"PAUSED":"LIVE"):"READY"}
+function render(){renderPhases();renderTiles();renderLog();updateLive();draw()}
+function resizeCanvas(){const c=$("chart"),r=c.getBoundingClientRect(),d=window.devicePixelRatio||1,w=Math.max(300,Math.round(r.width*d)),h=Math.max(240,Math.round(r.height*d));if(c.width!==w||c.height!==h){c.width=w;c.height=h}}
+function draw(){resizeCanvas();const c=$("chart"),ctx=c.getContext("2d"),W=c.width,H=c.height,d=window.devicePixelRatio||1;ctx.clearRect(0,0,W,H);const pad={l:48*d,r:42*d,t:28*d,b:34*d},iw=W-pad.l-pad.r,ih=H-pad.t-pad.b,maxSec=Math.max(720,nowMs()/1000+30),minT=165,maxT=225,x=s=>pad.l+s/maxSec*iw,y=t=>pad.t+(maxT-t)/(maxT-minT)*ih;ctx.fillStyle="#120e0c";ctx.fillRect(0,0,W,H);const fc=state.events.find(e=>e.name==="First Crack"),yellow=state.events.find(e=>e.name==="Yellow")||state.events.find(e=>e.name==="Maillard"),drop=state.events.find(e=>e.name==="Drop"),bands=[[0,yellow?yellow.time/1000:null,"rgba(244,177,79,.08)"],[yellow?yellow.time/1000:null,fc?fc.time/1000:null,"rgba(97,178,215,.08)"],[fc?fc.time/1000:null,drop?drop.time/1000:nowMs()/1000,"rgba(109,211,148,.09)"]];bands.forEach(([a,b,col])=>{if(a!=null&&b!=null&&b>a){ctx.fillStyle=col;ctx.fillRect(x(a),pad.t,x(b)-x(a),ih)}});ctx.lineWidth=1*d;ctx.font=`${10*d}px system-ui`;ctx.fillStyle="#9d8e84";ctx.strokeStyle="#332a25";for(let t=170;t<=220;t+=10){ctx.beginPath();ctx.moveTo(pad.l,y(t));ctx.lineTo(W-pad.r,y(t));ctx.stroke();ctx.fillText(String(t),6*d,y(t)+3*d)}for(let s=0;s<=maxSec;s+=60){ctx.beginPath();ctx.moveTo(x(s),pad.t);ctx.lineTo(x(s),H-pad.b);ctx.stroke();ctx.fillText(String(Math.floor(s/60)).padStart(2,"0")+":00",x(s)-13*d,H-10*d)}ctx.strokeStyle="rgba(255,255,255,.25)";ctx.lineWidth=2*d;ctx.setLineDash([6*d,5*d]);ctx.beginPath();R1.forEach((p,i)=>{const X=x(p[0]),Y=y(p[1]);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.stroke();ctx.setLineDash([]);const a=[...state.temps].sort((m,n)=>m.time-n.time);if(a.length){ctx.strokeStyle="#f0a24c";ctx.lineWidth=3*d;ctx.beginPath();smoothPath(ctx,a.map(p=>[x(p.time/1000),y(p.temp)]));ctx.stroke();a.forEach(p=>{ctx.fillStyle="#ffd2a2";ctx.beginPath();ctx.arc(x(p.time/1000),y(p.temp),3.5*d,0,Math.PI*2);ctx.fill()})}if(a.length>1){const pts=[];for(let i=1;i<a.length;i++){const dt=(a[i].time-a[i-1].time)/60000;if(dt>0)pts.push({time:a[i].time/1000,ror:(a[i].temp-a[i-1].temp)/dt})}const yr=v=>pad.t+(30-Math.max(0,Math.min(30,v)))/30*ih;ctx.strokeStyle="#75c6e8";ctx.lineWidth=2*d;ctx.setLineDash([7*d,5*d]);ctx.beginPath();smoothPath(ctx,pts.map(p=>[x(p.time),yr(p.ror)]));ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="#75c6e8";ctx.fillText("RoR",W-36*d,pad.t+12*d)}state.events.forEach(e=>{const X=x(e.time/1000);ctx.strokeStyle=e.name==="First Crack"?"#72d49a":"#d3b69e";ctx.lineWidth=1.5*d;ctx.beginPath();ctx.moveTo(X,pad.t);ctx.lineTo(X,H-pad.b);ctx.stroke();ctx.save();ctx.translate(X+4*d,pad.t+18*d);ctx.rotate(-Math.PI/2);ctx.fillStyle="#f4e8da";ctx.font=`bold ${9*d}px system-ui`;ctx.fillText(e.name,0,0);ctx.restore()});ctx.fillStyle="#f0a24c";ctx.font=`bold ${10*d}px system-ui`;ctx.fillText("BT",pad.l+5*d,pad.t+14*d)}
+$("startBtn").onclick=start;$("pauseBtn").onclick=pause;$("recordTempBtn").onclick=()=>recordTemp($("tempInput").value);$("tempInput").addEventListener("keydown",e=>{if(e.key==="Enter")recordTemp(e.target.value)});$("undoBtn").onclick=undoLast;$("resetBtn").onclick=reset;$("printBtn").onclick=()=>{draw();setTimeout(()=>window.print(),150)};window.addEventListener("resize",draw);load();render();tick();
+</script></body></html>
