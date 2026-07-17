@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#171512">
-<title>KoffyKraft Roast Timer v4 - A4 Print</title>
+<title>KoffyKraft Roast Timer v6 - Editable Taps</title>
 <style>
 :root{
   --bg:#f4f0e8;--card:#fffaf3;--ink:#211c17;--muted:#746c63;--line:#d8cec2;
@@ -49,7 +49,7 @@ textarea{min-height:70px;resize:vertical}
 .tile-head{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
 .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
 .tile{border:1px solid var(--line);background:white;border-radius:12px;min-height:55px;font-weight:700;font-size:1.03rem;position:relative}
-.tile.done{background:#2e2924;color:white;border-color:#2e2924;animation:tapFlash .3s ease}
+.tile.done{background:#2e2924;color:white;border-color:#2e2924;animation:tapFlash .3s ease}.tile.done:active{transform:scale(.96)}
 .tile.done::after{content:attr(data-time);display:block;font-size:.6rem;font-weight:400;margin-top:2px}
 .log{display:flex;flex-direction:column;gap:7px}
 .log-item{display:grid;grid-template-columns:67px 1fr auto;gap:8px;padding:9px;border:1px solid var(--line);border-radius:10px;background:white;align-items:start}
@@ -98,7 +98,7 @@ textarea{min-height:70px;resize:vertical}
 <header>
   <div class="kicker">KoffyKraft</div>
   <h1>Roast Timer</h1>
-  <p class="sub">One tap records the event, time and current temperature.</p>
+  <p class="sub">Tap records the event, time and temperature. Retap updates it.</p>
 </header>
 
 <section class="card">
@@ -126,7 +126,7 @@ textarea{min-height:70px;resize:vertical}
 </section>
 
 <section class="card">
-  <h2>Live events</h2>
+  <h2>Live events</h2><div style="font-size:.78rem;color:var(--muted);margin:-4px 0 10px">Retapping Turning, Yellow, Maillard, FC, SC or Drop replaces the earlier time and temperature.</div>
   <div class="temp-now">
     <div class="field"><label>Current temperature °C</label><input id="currentTemp" type="number" inputmode="numeric" placeholder="175"></div>
     <button class="btn ghost" id="plusOne">+1°C</button>
@@ -142,13 +142,25 @@ textarea{min-height:70px;resize:vertical}
 </section>
 
 <section class="card">
-  <h2>Temperature tap tiles</h2>
+  <h2>Temperature tap tiles</h2><div style="font-size:.78rem;color:var(--muted);margin:-4px 0 10px">Tap once to record. Retap the same temperature to replace its time.</div>
   <div class="tile-head">
     <div class="field"><label>Turning reading °C</label><input id="turnTemp" type="number" inputmode="numeric" placeholder="175"></div>
     <div class="field"><label>Generate up to °C</label><input id="maxTemp" type="number" value="205" inputmode="numeric"></div>
     <button class="btn ghost" id="generate">Make</button>
   </div>
   <div class="tiles" id="tiles"></div>
+</section>
+
+
+<section class="card" id="curveCard">
+  <h2>Roast curve</h2>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">
+    <div style="font-size:.8rem;color:var(--muted)">Temperature against elapsed time</div>
+    <button class="btn ghost" id="refreshCurve" type="button">Refresh curve</button>
+  </div>
+  <div style="background:white;border:1px solid var(--line);border-radius:12px;padding:8px;overflow:hidden">
+    <canvas id="curveCanvas" width="720" height="360" style="display:block;width:100%;height:auto"></canvas>
+  </div>
 </section>
 
 <section class="card">
@@ -223,14 +235,143 @@ function ms(){return running?elapsed+(performance.now()-startAt):elapsed}
 function fmt(v){const m=Math.floor(v/60000),s=Math.floor(v%60000/1000),t=Math.floor(v%1000/100);return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+t}
 function renderTimer(){$('timer').textContent=fmt(ms())}
 $('startPause').onclick=()=>{if(!running){running=true;startAt=performance.now();tick=setInterval(renderTimer,100);$('startPause').textContent='Pause'}else{elapsed=ms();running=false;clearInterval(tick);$('startPause').textContent='Resume'}};
-$('reset').onclick=()=>{if(!confirm('Reset this roast?'))return;running=false;clearInterval(tick);elapsed=0;events=[];renderTimer();renderLog();document.querySelectorAll('.event small').forEach(x=>x.textContent='Tap');$('tiles').innerHTML='';};
+$('reset').onclick=()=>{if(!confirm('Reset this roast?'))return;running=false;clearInterval(tick);elapsed=0;events=[];
+function curvePoints(){
+  return events
+    .filter(e=>e.temperature!==null && Number.isFinite(Number(e.temperature)))
+    .map(e=>({time:e.time/1000,temp:Number(e.temperature),type:e.type}))
+    .sort((a,b)=>a.time-b.time);
+}
+
+function drawCurve(){
+  const canvas=$('curveCanvas');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width,h=canvas.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,w,h);
+
+  const pts=curvePoints();
+  const pad={l:54,r:18,t:22,b:42};
+
+  ctx.strokeStyle='#d8cec2';
+  ctx.lineWidth=1;
+  ctx.strokeRect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b);
+
+  if(pts.length<2){
+    ctx.fillStyle='#746c63';
+    ctx.font='18px Arial';
+    ctx.textAlign='center';
+    ctx.fillText('Record temperature taps to build the roast curve',w/2,h/2);
+    return;
+  }
+
+  const minT=Math.floor(Math.min(...pts.map(p=>p.temp))/5)*5;
+  const maxT=Math.ceil(Math.max(...pts.map(p=>p.temp))/5)*5;
+  const maxTime=Math.max(...pts.map(p=>p.time));
+
+  const x=t=>pad.l+(t/maxTime)*(w-pad.l-pad.r);
+  const y=temp=>h-pad.b-((temp-minT)/(maxT-minT||1))*(h-pad.t-pad.b);
+
+  ctx.font='13px Arial';
+  ctx.fillStyle='#6f665e';
+  ctx.textAlign='right';
+  for(let temp=minT;temp<=maxT;temp+=5){
+    const yy=y(temp);
+    ctx.strokeStyle='#eee8df';
+    ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(w-pad.r,yy);ctx.stroke();
+    ctx.fillText(temp+'°',pad.l-8,yy+4);
+  }
+
+  ctx.textAlign='center';
+  const ticks=6;
+  for(let i=0;i<=ticks;i++){
+    const sec=maxTime*i/ticks;
+    const xx=x(sec);
+    ctx.strokeStyle='#eee8df';
+    ctx.beginPath();ctx.moveTo(xx,pad.t);ctx.lineTo(xx,h-pad.b);ctx.stroke();
+    const m=Math.floor(sec/60),s=Math.round(sec%60);
+    ctx.fillText(String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'),xx,h-16);
+  }
+
+  ctx.strokeStyle='#8b4b2e';
+  ctx.lineWidth=4;
+  ctx.lineJoin='round';
+  ctx.lineCap='round';
+  ctx.beginPath();
+  pts.forEach((p,i)=>{const xx=x(p.time),yy=y(p.temp);if(i===0)ctx.moveTo(xx,yy);else ctx.lineTo(xx,yy)});
+  ctx.stroke();
+
+  const eventColors={
+    'Turning':'#537184','Yellow':'#d8ad2f','Maillard':'#aa6938',
+    'First Crack':'#a64031','Second Crack':'#692724','Drop':'#202020'
+  };
+  pts.filter(p=>eventColors[p.type]).forEach(p=>{
+    const xx=x(p.time),yy=y(p.temp);
+    ctx.fillStyle=eventColors[p.type];
+    ctx.beginPath();ctx.arc(xx,yy,7,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#211c17';
+    ctx.font='bold 12px Arial';
+    ctx.textAlign='center';
+    const label=p.type==='First Crack'?'FC':p.type==='Second Crack'?'SC':p.type;
+    ctx.fillText(label,xx,Math.max(14,yy-12));
+  });
+
+  ctx.fillStyle='#211c17';
+  ctx.font='bold 14px Arial';
+  ctx.textAlign='left';
+  ctx.fillText('Temperature °C',pad.l,pad.t-7);
+}
+
+function curveDataUrl(){
+  drawCurve();
+  const c=$('curveCanvas');
+  return c ? c.toDataURL('image/png') : '';
+}
+
+$('refreshCurve').onclick=drawCurve;
+
+renderTimer();
+drawCurve();renderLog();document.querySelectorAll('.event small').forEach(x=>x.textContent='Tap');$('tiles').innerHTML='';};
 
 function currentTemp(){const n=Number($('currentTemp').value);return Number.isFinite(n)&&$('currentTemp').value!==''?n:null}
 function toast(text){$('toast').textContent=text;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),750)}
 function record(type,button,temp=currentTemp()){
-  const time=ms();events.push({type,time,timeText:fmt(time),temperature:temp,createdAt:new Date().toISOString()});
-  if(button){button.classList.remove('confirmed');void button.offsetWidth;button.classList.add('confirmed');button.querySelector('small').textContent=fmt(time)+(temp!==null?' · '+temp+'°':'')}
-  toast(type+' recorded');renderLog();updateSummary();saveLocal();
+  const time=ms();
+  const existingIndex=events.findIndex(e=>e.type===type);
+
+  if(existingIndex>=0){
+    events[existingIndex]={
+      ...events[existingIndex],
+      time,
+      timeText:fmt(time),
+      temperature:temp,
+      updatedAt:new Date().toISOString()
+    };
+    toast(type+' updated');
+  }else{
+    events.push({
+      type,
+      time,
+      timeText:fmt(time),
+      temperature:temp,
+      createdAt:new Date().toISOString()
+    });
+    toast(type+' recorded');
+  }
+
+  if(button){
+    button.classList.remove('confirmed');
+    void button.offsetWidth;
+    button.classList.add('confirmed');
+    button.querySelector('small').textContent=fmt(time)+(temp!==null?' · '+temp+'°':'');
+  }
+
+  renderLog();
+  updateSummary();
+  drawCurve();
+  saveLocal();
 }
 document.querySelectorAll('.event').forEach(b=>b.onclick=()=>record(b.dataset.event,b));
 $('plusOne').onclick=()=>{$('currentTemp').value=(currentTemp()??0)+1};
@@ -241,7 +382,40 @@ $('generate').onclick=()=>{
   $('tiles').innerHTML='';
   for(let t=start;t<=max;t++){
     const b=document.createElement('button');b.className='tile';b.textContent=t;
-    b.onclick=()=>{if(b.classList.contains('done'))return;$('currentTemp').value=t;const time=ms();b.classList.add('done');b.dataset.time=fmt(time);events.push({type:'Temperature',time,timeText:fmt(time),temperature:t,createdAt:new Date().toISOString()});toast(t+'°C recorded');renderLog();saveLocal()};
+    b.onclick=()=>{
+      $('currentTemp').value=t;
+      const time=ms();
+      const existingIndex=events.findIndex(e=>e.type==='Temperature' && Number(e.temperature)===t);
+
+      if(existingIndex>=0){
+        events[existingIndex]={
+          ...events[existingIndex],
+          time,
+          timeText:fmt(time),
+          updatedAt:new Date().toISOString()
+        };
+        toast(t+'°C updated');
+      }else{
+        events.push({
+          type:'Temperature',
+          time,
+          timeText:fmt(time),
+          temperature:t,
+          createdAt:new Date().toISOString()
+        });
+        toast(t+'°C recorded');
+      }
+
+      b.classList.remove('done');
+      void b.offsetWidth;
+      b.classList.add('done');
+      b.dataset.time=fmt(time);
+
+      renderLog();
+      updateSummary();
+      drawCurve();
+      saveLocal();
+    };
     $('tiles').appendChild(b);
   }
 };
@@ -274,7 +448,7 @@ function data(){return {id:roastId,key:$('roastKey').textContent.replace('KEY: '
 function saveLocal(){localStorage.setItem(roastId,JSON.stringify(data()))}
 $('save').onclick=()=>{rememberEstate();saveLocal();toast('Saved on this phone')};
 $('export').onclick=()=>{rememberEstate();const blob=new Blob([JSON.stringify(data(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=data().key.replaceAll(' / ','_')+'.json';a.click();URL.revokeObjectURL(a.href)};
-$('finish').onclick=()=>{if(!events.some(e=>e.type==='Drop'))record('Drop',document.querySelector('[data-event="Drop"]'));if(running){elapsed=ms();running=false;clearInterval(tick);$('startPause').textContent='Resume'}rememberEstate();saveLocal();updateSummary();toast('Roast finished')};
+$('finish').onclick=()=>{if(!events.some(e=>e.type==='Drop'))record('Drop',document.querySelector('[data-event="Drop"]'));if(running){elapsed=ms();running=false;clearInterval(tick);$('startPause').textContent='Resume'}rememberEstate();saveLocal();updateSummary();drawCurve();toast('Roast finished')};
 
 ['greenWeight','roastedWeight'].forEach(id=>$(id).addEventListener('input',updateSummary));
 function updateSummary(){
@@ -335,7 +509,7 @@ body{margin:0;color:#000;background:#fff;font-family:Arial,Helvetica,sans-serif;
 .print-table{width:100%;border-collapse:collapse;font-size:8pt}
 .print-table th,.print-table td{border:1px solid #999;padding:1.3mm 1.7mm;text-align:left}
 .print-table th{background:#eee}
-.print-notes{border:1px solid #777;min-height:18mm;padding:2.5mm;white-space:pre-wrap}
+.print-notes{border:1px solid #777;min-height:18mm;padding:2.5mm;white-space:pre-wrap}.print-curve{border:1px solid #777;padding:2mm;margin-top:3mm}.print-curve img{display:block;width:100%;height:auto}
 .screen-only{display:none!important}
 </style></head><body>${sheet}
 <script>
