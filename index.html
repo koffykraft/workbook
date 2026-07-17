@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#171512">
-<title>KoffyKraft Roast Timer v6 - Editable Taps</title>
+<title>KoffyKraft Roast Timer v7 - Temperature Gaps</title>
 <style>
 :root{
   --bg:#f4f0e8;--card:#fffaf3;--ink:#211c17;--muted:#746c63;--line:#d8cec2;
@@ -48,9 +48,17 @@ textarea{min-height:70px;resize:vertical}
 .turn{background:var(--turn)}.yellow{background:var(--yellow);color:#302500}.maillard{background:var(--maillard)}.fc{background:var(--fc)}.sc{background:var(--sc)}.drop{background:var(--drop)}
 .tile-head{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
 .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
-.tile{border:1px solid var(--line);background:white;border-radius:12px;min-height:55px;font-weight:700;font-size:1.03rem;position:relative}
-.tile.done{background:#2e2924;color:white;border-color:#2e2924;animation:tapFlash .3s ease}.tile.done:active{transform:scale(.96)}
-.tile.done::after{content:attr(data-time);display:block;font-size:.6rem;font-weight:400;margin-top:2px}
+.tile{
+  border:1px solid var(--line);background:white;border-radius:12px;min-height:68px;
+  padding:6px 3px;font-weight:700;position:relative;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px
+}
+.tile .temp-label{font-size:1.05rem;line-height:1}
+.tile .tile-time{font-size:.61rem;font-weight:400;min-height:.75rem}
+.tile .tile-gap{font-size:.67rem;font-weight:700;color:var(--accent);min-height:.8rem}
+.tile.done{background:#2e2924;color:white;border-color:#2e2924;animation:tapFlash .3s ease}
+.tile.done .tile-gap{color:#f4c58c}
+.tile.done:active{transform:scale(.96)}
 .log{display:flex;flex-direction:column;gap:7px}
 .log-item{display:grid;grid-template-columns:67px 1fr auto;gap:8px;padding:9px;border:1px solid var(--line);border-radius:10px;background:white;align-items:start}
 .log-time{font-weight:700;font-variant-numeric:tabular-nums}
@@ -142,7 +150,7 @@ textarea{min-height:70px;resize:vertical}
 </section>
 
 <section class="card">
-  <h2>Temperature tap tiles</h2><div style="font-size:.78rem;color:var(--muted);margin:-4px 0 10px">Tap once to record. Retap the same temperature to replace its time.</div>
+  <h2>Temperature tap tiles</h2><div style="font-size:.78rem;color:var(--muted);margin:-4px 0 10px">Tap once to record. Each tile shows its time and the gap since the previous temperature tap. Retap to replace the time.</div>
   <div class="tile-head">
     <div class="field"><label>Turning reading °C</label><input id="turnTemp" type="number" inputmode="numeric" placeholder="175"></div>
     <div class="field"><label>Generate up to °C</label><input id="maxTemp" type="number" value="205" inputmode="numeric"></div>
@@ -333,7 +341,7 @@ function curveDataUrl(){
 $('refreshCurve').onclick=drawCurve;
 
 renderTimer();
-drawCurve();renderLog();document.querySelectorAll('.event small').forEach(x=>x.textContent='Tap');$('tiles').innerHTML='';};
+drawCurve();renderLog();document.querySelectorAll('.event small').forEach(x=>x.textContent='Tap');$('tiles').innerHTML='';refreshTemperatureTiles();};
 
 function currentTemp(){const n=Number($('currentTemp').value);return Number.isFinite(n)&&$('currentTemp').value!==''?n:null}
 function toast(text){$('toast').textContent=text;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),750)}
@@ -381,7 +389,10 @@ $('generate').onclick=()=>{
   if(!start||!max||start>max){toast('Enter turning and maximum');return}
   $('tiles').innerHTML='';
   for(let t=start;t<=max;t++){
-    const b=document.createElement('button');b.className='tile';b.textContent=t;
+    const b=document.createElement('button');
+    b.className='tile';
+    b.dataset.temp=t;
+    b.innerHTML=`<span class="temp-label">${t}</span><span class="tile-time"></span><span class="tile-gap"></span>`;
     b.onclick=()=>{
       $('currentTemp').value=t;
       const time=ms();
@@ -409,8 +420,8 @@ $('generate').onclick=()=>{
       b.classList.remove('done');
       void b.offsetWidth;
       b.classList.add('done');
-      b.dataset.time=fmt(time);
 
+      refreshTemperatureTiles();
       renderLog();
       updateSummary();
       drawCurve();
@@ -418,11 +429,62 @@ $('generate').onclick=()=>{
     };
     $('tiles').appendChild(b);
   }
+  refreshTemperatureTiles();
 };
+
+
+function fmtGap(value){
+  if(value===null || value===undefined || !Number.isFinite(value)) return 'FIRST';
+  const totalSeconds=value/1000;
+  if(totalSeconds<60) return '+'+totalSeconds.toFixed(1)+'s';
+  const minutes=Math.floor(totalSeconds/60);
+  const seconds=(totalSeconds%60).toFixed(1).padStart(4,'0');
+  return '+'+minutes+':'+seconds;
+}
+
+function refreshTemperatureTiles(){
+  const temperatureEvents=events
+    .filter(e=>e.type==='Temperature' && Number.isFinite(Number(e.temperature)))
+    .sort((a,b)=>a.time-b.time);
+
+  const details=new Map();
+  temperatureEvents.forEach((event,index)=>{
+    const previous=index>0 ? temperatureEvents[index-1] : null;
+    details.set(Number(event.temperature),{
+      timeText:fmt(event.time),
+      gap:previous ? event.time-previous.time : null
+    });
+  });
+
+  document.querySelectorAll('.tile[data-temp]').forEach(tile=>{
+    const detail=details.get(Number(tile.dataset.temp));
+    const timeElement=tile.querySelector('.tile-time');
+    const gapElement=tile.querySelector('.tile-gap');
+
+    if(detail){
+      tile.classList.add('done');
+      timeElement.textContent=detail.timeText;
+      gapElement.textContent=fmtGap(detail.gap);
+    }else{
+      tile.classList.remove('done');
+      timeElement.textContent='';
+      gapElement.textContent='';
+    }
+  });
+}
 
 function renderLog(){
   if(!events.length){$('log').innerHTML='<div style="color:var(--muted);font-size:.86rem">No events recorded.</div>';return}
-  $('log').innerHTML=[...events].sort((a,b)=>a.time-b.time).map(e=>`<div class="log-item"><div class="log-time">${e.timeText}</div><div><b>${e.type}</b></div><div class="pill">${e.temperature!==null?e.temperature+'°C':'—'}</div></div>`).join('');
+  const sorted=[...events].sort((a,b)=>a.time-b.time);
+  let previousTemperature=null;
+  $('log').innerHTML=sorted.map(e=>{
+    let gapText='';
+    if(e.type==='Temperature'){
+      gapText=previousTemperature===null?' · FIRST':' · '+fmtGap(e.time-previousTemperature);
+      previousTemperature=e.time;
+    }
+    return `<div class="log-item"><div class="log-time">${e.timeText}</div><div><b>${e.type}</b>${gapText?`<div style="font-size:.72rem;color:var(--muted);margin-top:2px">${gapText.replace(' · ','')}</div>`:''}</div><div class="pill">${e.temperature!==null?e.temperature+'°C':'—'}</div></div>`;
+  }).join('');
 }
 function val(id){return $(id).value}
 function shortDate(){const d=val('roastDate');if(!d)return 'DATE';const [y,m,day]=d.split('-');return day+m+y.slice(2)}
