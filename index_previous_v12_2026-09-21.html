@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171512">
+<title>KoffyKraft Open Roast Timer v12 - Freeware</title>
+<style>
+:root{
+ --bg:#f4f0e8;--card:#fffaf3;--ink:#211c17;--muted:#746c63;--line:#d8cec2;
+ --dark:#171512;--accent:#8b4b2e;--exhaust:#b85f32;--bean:#287a91;
+ --turn:#537184;--yellow:#d8ad2f;--maillard:#aa6938;--fc:#a64031;
+ --sc:#692724;--drop:#202020;--danger:#9b342d
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+button,input,textarea,select{font:inherit}
+button{touch-action:manipulation}
+.app{max-width:800px;margin:auto;padding:env(safe-area-inset-top) 12px calc(96px + env(safe-area-inset-bottom))}
+header{padding:16px 4px 10px}
+.kicker{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{font-size:clamp(2rem,8vw,3.5rem);line-height:.94;margin:.18em 0 .16em}
+.sub{margin:0;color:var(--muted);line-height:1.35}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0;box-shadow:0 7px 22px rgba(44,32,22,.05)}
+.card h2{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;margin:0 0 12px;color:var(--accent)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:5px}
+label{font-size:.73rem;color:var(--muted);font-weight:700}
+input,textarea,select{width:100%;border:1px solid var(--line);background:white;border-radius:11px;padding:11px 12px;min-height:44px;color:var(--ink)}
+textarea{min-height:70px;resize:vertical}
+.chips{display:flex;gap:7px;overflow:auto;padding:8px 0 1px;scrollbar-width:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:#eee7dd;border-radius:999px;padding:8px 11px;font-size:.8rem}
+.key{background:#211c17;color:white;border-radius:12px;padding:11px 12px;font-weight:700;letter-spacing:.04em;word-break:break-word}
+.timer-card{background:var(--dark);color:white;border-color:var(--dark);position:sticky;top:6px;z-index:10}
+.timer{font-variant-numeric:tabular-nums;font-size:clamp(3rem,15vw,6rem);font-weight:700;letter-spacing:-.05em;text-align:center;line-height:1}
+.timer-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
+.btn{border:0;border-radius:12px;min-height:48px;padding:10px 13px;font-weight:700}
+.btn.primary{background:white;color:#181512}.btn.secondary{background:#38322d;color:white}
+.btn.ghost{background:#ece4da;color:var(--ink)}.btn.danger{background:var(--danger);color:white}
+.probe-choice{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.probe-choice button{border:1px solid var(--line);background:white;border-radius:11px;min-height:48px;font-weight:700}
+.probe-choice button.active{background:var(--dark);color:white;border-color:var(--dark)}
+.probe-tabs{display:flex;gap:8px;margin-bottom:10px}
+.probe-tab{flex:1;border:1px solid var(--line);background:#eee7dd;border-radius:11px;padding:10px;font-weight:700}
+.probe-tab.active.exhaust{background:var(--exhaust);color:white;border-color:var(--exhaust)}
+.probe-tab.active.bean{background:var(--bean);color:white;border-color:var(--bean)}
+.temp-now{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-bottom:12px}
+.temp-now input{font-size:1.45rem;font-weight:700;text-align:center}
+.event-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.event{color:white;border:0;border-radius:13px;min-height:70px;padding:8px 5px;font-weight:700;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px}
+.event small{font-size:.64rem;font-weight:400;opacity:.92}.turn{background:var(--turn)}.yellow{background:var(--yellow);color:#302500}.maillard{background:var(--maillard)}.fc{background:var(--fc)}.sc{background:var(--sc)}.drop{background:var(--drop)}
+.tile-config{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:8px;align-items:end}
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+.tile{border:1px solid var(--line);background:white;border-radius:12px;min-height:72px;padding:6px 3px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;user-select:none}
+.tile .temp-label{font-size:1.05rem}.tile .tile-time{font-size:.61rem;font-weight:400;min-height:.75rem}.tile .tile-gap{font-size:.67rem;color:var(--accent);min-height:.8rem}
+.tile.done.exhaust{background:var(--exhaust);color:white;border-color:var(--exhaust)}.tile.done.bean{background:var(--bean);color:white;border-color:var(--bean)}
+.tile.done .tile-gap{color:#fff0d8}.holding{outline:3px solid var(--danger);transform:scale(.96)}
+.chart-box{background:#171512;border-radius:13px;padding:8px;overflow:hidden}
+canvas{display:block;width:100%;height:auto;min-height:300px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.75rem;color:var(--muted);margin:8px 2px 0}
+.legend b{display:inline-block;width:18px;border-top:3px solid;margin-right:5px;vertical-align:middle}.legend .e b{border-color:var(--exhaust)}.legend .b b{border-color:var(--bean)}.legend .r b{border-color:#74b7cf;border-top-style:dashed}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.metric{background:white;border:1px solid var(--line);border-radius:11px;padding:9px}.metric b{display:block;font-size:1.05rem}.metric span{font-size:.65rem;color:var(--muted)}
+.log{display:flex;flex-direction:column;gap:7px}.log-item{display:grid;grid-template-columns:68px 1fr auto;gap:8px;padding:9px;border:1px solid var(--line);border-radius:10px;background:white}.log-time{font-weight:700;font-variant-numeric:tabular-nums}.pill{font-size:.64rem;padding:4px 7px;border-radius:99px;background:#ece5db}
+.toast{position:fixed;left:50%;bottom:94px;transform:translate(-50%,20px);background:#1f1b17;color:white;padding:10px 14px;border-radius:999px;font-size:.82rem;opacity:0;pointer-events:none;transition:.22s;z-index:40}.toast.show{opacity:1;transform:translate(-50%,0)}
+.bottom{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(800px,100%);padding:9px 12px calc(9px + env(safe-area-inset-bottom));background:rgba(244,240,232,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);gap:8px;z-index:20}
+.help{font-size:.76rem;color:var(--muted);line-height:1.4;margin-top:8px}
+@media(max-width:560px){.event-grid{grid-template-columns:repeat(2,1fr)}.tiles{grid-template-columns:repeat(4,1fr)}.summary{grid-template-columns:1fr 1fr}.tile-config{grid-template-columns:1fr 1fr}.tile-config .make{grid-column:1/-1}.probe-choice{grid-template-columns:1fr 1fr 1fr}}
+@media print{.bottom,.timer-card,.toast,.no-print{display:none!important}.app{max-width:none;padding:0}.card{box-shadow:none;break-inside:avoid}.chart-box{background:white;border:1px solid #999}@page{size:A4 portrait;margin:10mm}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+ <div class="kicker">KoffyKraft presents</div><h1>Open Roast Timer</h1>
+ <p class="sub">The flexible earlier timer, now with live curves. Free roast logging software by KoffyKraft. Choose ET only, BT only, or ET + BT. ET only remains the default.</p>
+</header>
+
+<div class="card" style="margin-top:8px">
+  <h2>Freeware identity</h2>
+  <p style="margin:0;line-height:1.45">
+    <strong>KoffyKraft Open Roast Timer</strong> is freeware created and published by KoffyKraft.
+    It may be used without charge. KoffyKraft branding and ownership credit should remain visible in redistributed copies.
+  </p>
+</div>
+
+
+<section class="card">
+<h2>Roaster and coffee identity</h2>
+<div class="grid">
+ <div class="field full"><label>Roastery / user name</label><input id="roasteryName" placeholder="Optional"></div>
+ <div class="field full"><label>Machine / roaster profile</label><input id="machineName" placeholder="Optional"></div>
+ <div class="field full"><label>Estate / coffee</label><input id="estate" placeholder="Type once, reuse later"></div>
+ <div class="field"><label>Coffee code</label><input id="coffeeCode" placeholder="CP"></div>
+ <div class="field"><label>Roast number</label><input id="roastNo" type="number" value="1"></div>
+ <div class="field"><label>Date</label><input id="roastDate" type="date"></div>
+ <div class="field"><label>Moisture %</label><input id="moisture" type="number" step=".1"></div>
+ <div class="field"><label>Green weight g</label><input id="greenWeight" type="number"></div>
+ <div class="field"><label>Charge temperature °C</label><input id="chargeTemp" type="number"></div>
+ <div class="field"><label>Roast colour target</label><input id="targetColor" placeholder="Medium dark / colour"></div>
+</div>
+<div class="chips" id="estateChips"></div><div class="key" id="roastKey">KEY: —</div>
+</section>
+
+<section class="card">
+<h2>Probe configuration</h2>
+<div class="probe-choice">
+ <button data-mode="exhaust" class="active">ET only</button>
+ <button data-mode="bean">BT only</button>
+ <button data-mode="both">ET + BT</button>
+</div>
+<p class="help">ET means Exhaust Temperature. BT means Bean Temperature. In ET + BT mode, select which probe the tiles should record.</p>
+</section>
+
+<section class="card timer-card">
+ <div class="timer" id="timer">00:00.0</div>
+ <div class="timer-actions"><button class="btn primary" id="startPause">Start</button><button class="btn secondary" id="reset">Reset</button></div>
+</section>
+
+<section class="card">
+<h2>Live events</h2>
+<div id="probeStatus" class="key" style="margin-bottom:10px">ACTIVE PROBE: ET ONLY</div>
+<div id="probeTabs" class="probe-tabs" style="display:none">
+ <button class="probe-tab exhaust active" data-probe="exhaust">Enter ET</button>
+ <button class="probe-tab bean" data-probe="bean">Enter BT</button>
+</div>
+<div class="temp-now">
+ <div class="field"><label id="currentTempLabel">Current ET °C</label><input id="currentTemp" type="number" inputmode="decimal" placeholder="175"></div>
+ <button class="btn ghost" id="plusOne">+1°C</button>
+</div>
+<div class="event-grid">
+ <button class="event turn" data-event="Turning"><strong>Turning</strong><small>Tap to record</small></button>
+ <button class="event yellow" data-event="Yellow"><strong>Yellow</strong><small>Tap to record</small></button>
+ <button class="event maillard" data-event="Maillard"><strong>Maillard</strong><small>Tap to record</small></button>
+ <button class="event fc" data-event="First Crack"><strong>FC</strong><small>Tap to record</small></button>
+ <button class="event sc" data-event="Second Crack"><strong>SC</strong><small>Tap to record</small></button>
+ <button class="event drop" data-event="Drop"><strong>Drop</strong><small>Tap to record</small></button>
+</div>
+<p class="help">Tap an event to record or replace it. With ET only selected, the event stores ET. With ET + BT selected, it stores the latest ET and BT values. Long press to remove.</p>
+</section>
+
+<section class="card">
+<h2>Configurable temperature tiles</h2>
+<div class="tile-config">
+ <div class="field"><label>Start °C</label><input id="tileStart" type="number" value="170"></div>
+ <div class="field"><label>End °C</label><input id="tileEnd" type="number" value="210"></div>
+ <div class="field"><label>Interval °C</label><input id="tileStep" type="number" value="1" min=".1" step=".1"></div>
+ <div class="field"><label>Decimals</label><select id="tileDecimals"><option value="0">Whole °C</option><option value="1">0.1°C</option></select></div>
+ <button class="btn ghost make" id="generate">Make tiles</button>
+</div>
+<div class="tiles" id="tiles"></div>
+<p class="help">Tap to record or update. Long press a recorded tile to remove it. Time gaps are recalculated automatically.</p>
+</section>
+
+<section class="card">
+<h2>Live roast curves</h2>
+<div class="chart-box"><canvas id="curveCanvas" width="760" height="390"></canvas></div>
+<div class="legend"><span class="e"><b></b>ET curve</span><span class="b"><b></b>BT curve</span><span class="r"><b></b>Estimated RoR</span></div>
+<p class="help">The line is created immediately from your taps. RoR is an estimate from the time and temperature difference between manual readings.</p>
+</section>
+
+<section class="card">
+<h2>Result</h2>
+<div class="grid">
+ <div class="field"><label>Roasted weight g</label><input id="roastedWeight" type="number"></div>
+ <div class="field"><label>Final roast colour</label><input id="finalColor"></div>
+ <div class="field full"><label>Notes</label><textarea id="notes"></textarea></div>
+</div>
+<div class="summary" style="margin-top:12px">
+ <div class="metric"><b id="totalTime">--</b><span>Total roast</span></div>
+ <div class="metric"><b id="devTime">--</b><span>Development</span></div>
+ <div class="metric"><b id="devRatio">--</b><span>Development %</span></div>
+ <div class="metric"><b id="loss">--</b><span>Weight loss %</span></div>
+</div>
+</section>
+
+
+<section class="card">
+<h2>Saving and export</h2>
+<p style="margin:0 0 8px;line-height:1.45">
+<strong>Save on device</strong> stores the active roast inside this browser on this phone or computer.
+It does not place a file in Downloads.
+</p>
+<p style="margin:0;line-height:1.45">
+<strong>JSON</strong> and <strong>CSV</strong> create downloadable files. The browser normally places them in its Downloads location or asks where to save them.
+<strong>Print / PDF</strong> opens the system print screen.
+</p>
+</section>
+
+<section class="card"><h2>Event log</h2><div class="log" id="log"></div></section>
+
+<footer style="text-align:center;padding:18px 8px 8px;color:var(--muted);font-size:.76rem;line-height:1.5">
+  KoffyKraft Open Roast Timer<br>
+  Freeware created and published by KoffyKraft<br>
+  Please retain this credit in shared or redistributed copies.
+</footer>
+
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="bottom" style="grid-template-columns:repeat(5,1fr)">
+ <button class="btn ghost" id="save">Save on device</button>
+ <button class="btn ghost" id="exportJson">JSON</button>
+ <button class="btn ghost" id="exportCsv">CSV</button>
+ <button class="btn ghost" id="printBtn">Print / PDF</button>
+ <button class="btn danger" id="finish">Finish</button>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const phaseNames=["Turning","Yellow","Maillard","First Crack","Second Crack","Drop"];
+let state={
+ running:false,startStamp:0,elapsed:0,mode:"exhaust",activeProbe:"exhaust",
+ events:[],readings:{exhaust:[],bean:[]},tile:{start:170,end:210,step:1,decimals:0}
+};
+let ticker=null,lastDeleted=null;
+$("roastDate").value=new Date().toISOString().slice(0,10);
+
+function elapsedMs(){return state.running?state.elapsed+(performance.now()-state.startStamp):state.elapsed}
+function fmt(ms){const m=Math.floor(ms/60000),s=Math.floor(ms%60000/1000),d=Math.floor(ms%1000/100);return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")+"."+d}
+function gapFmt(ms){if(ms==null)return"FIRST";const s=ms/1000;return s<60?"+"+s.toFixed(1)+"s":"+"+Math.floor(s/60)+":"+String((s%60).toFixed(1)).padStart(4,"0")}
+function toast(x){const t=$("toast");t.textContent=x;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),1600)}
+function vibrate(ms=20){try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}}
+function currentProbe(){return state.mode==="both"?state.activeProbe:state.mode}
+function labelProbe(p){return p==="exhaust"?"ET":"BT"}
+function saveState(){localStorage.setItem("kk_roast_v10",JSON.stringify(state));saveFields()}
+function loadState(){try{const x=JSON.parse(localStorage.getItem("kk_roast_v10")||"null");if(x)state={...state,...x,readings:{exhaust:x.readings?.exhaust||[],bean:x.readings?.bean||[]}}}catch(e){}}
+function fields(){return["roasteryName","machineName","estate","coffeeCode","roastNo","roastDate","moisture","greenWeight","chargeTemp","targetColor","roastedWeight","finalColor","notes"]}
+function saveFields(){const d={};fields().forEach(k=>d[k]=$(k).value);localStorage.setItem("kk_fields_v10",JSON.stringify(d))}
+function loadFields(){try{const d=JSON.parse(localStorage.getItem("kk_fields_v10")||"{}");fields().forEach(k=>{if(d[k]!=null)$(k).value=d[k]})}catch(e){}}
+function updateKey(){const code=$("coffeeCode").value.trim()||"—",r=String($("roastNo").value||1).padStart(3,"0"),date=($("roastDate").value||"").split("-").reverse().join("").slice(0,6);$("roastKey").textContent=`KEY: ${code} / R${r} / ${date||"—"}`}
+fields().forEach(k=>$(k).addEventListener("input",()=>{updateKey();saveFields();updateSummary()}));
+
+function startPause(){
+ if(!state.running){state.running=true;state.startStamp=performance.now();$("startPause").textContent="Pause";ticker=setInterval(renderTimer,100)}
+ else{state.elapsed=elapsedMs();state.running=false;clearInterval(ticker);$("startPause").textContent="Resume"}
+ saveState()
+}
+function renderTimer(){$("timer").textContent=fmt(elapsedMs())}
+function resetRoast(){if(!confirm("Reset this roast and clear entries?"))return;state.running=false;clearInterval(ticker);state.elapsed=0;state.events=[];state.readings={exhaust:[],bean:[]};$("startPause").textContent="Start";renderAll();saveState()}
+$("startPause").onclick=startPause;$("reset").onclick=resetRoast;
+
+function setMode(mode){
+ state.mode=mode;if(mode!=="both")state.activeProbe=mode;
+ document.querySelectorAll(".probe-choice button").forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));
+ $("probeTabs").style.display=mode==="both"?"flex":"none";
+ updateProbeUI();renderTiles();drawCurve();saveState()
+}
+document.querySelectorAll(".probe-choice button").forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+document.querySelectorAll(".probe-tab").forEach(b=>b.onclick=()=>{state.activeProbe=b.dataset.probe;updateProbeUI();renderTiles();saveState()});
+function updateProbeUI(){
+ const p=currentProbe();
+ $("probeStatus").textContent=state.mode==="both"?`ACTIVE ENTRY: ${p==="exhaust"?"ET":"BT"} · MODE: ET + BT`:`ACTIVE PROBE: ${p==="exhaust"?"ET ONLY":"BT ONLY"}`;
+ document.querySelectorAll(".probe-tab").forEach(b=>b.classList.toggle("active",b.dataset.probe===state.activeProbe));
+ $("currentTempLabel").textContent=`Current ${p==="exhaust"?"ET":"BT"} °C`;
+ $("currentTemp").placeholder=p==="exhaust"?"175":"160";
+}
+$("plusOne").onclick=()=>{$("currentTemp").value=(Number($("currentTemp").value)||0)+1};
+
+function bindPress(el,tap,longpress){
+ let h=null,long=false;
+ const start=()=>{long=false;el.classList.add("holding");h=setTimeout(()=>{long=true;el.classList.remove("holding");longpress()},700)};
+ const end=()=>{clearTimeout(h);el.classList.remove("holding");if(!long)tap()};
+ const cancel=()=>{clearTimeout(h);el.classList.remove("holding")};
+ el.addEventListener("pointerdown",start);el.addEventListener("pointerup",end);el.addEventListener("pointercancel",cancel);el.addEventListener("pointerleave",cancel);el.addEventListener("contextmenu",e=>e.preventDefault())
+}
+
+function recordReading(temp,probe=currentProbe()){
+ if(!state.running)startPause();
+ temp=Number(temp);if(!Number.isFinite(temp))return;
+ const time=elapsedMs(),arr=state.readings[probe],i=arr.findIndex(x=>Number(x.temp)===temp);
+ const item={temp,time};
+ if(i>=0){arr[i]=item;toast(`${labelProbe(probe)} ${temp}°C updated`)}else{arr.push(item);toast(`${labelProbe(probe)} ${temp}°C recorded`)}
+ arr.sort((a,b)=>a.time-b.time);$("currentTemp").value=temp;renderAll();saveState()
+}
+function removeReading(temp,probe=currentProbe()){
+ const arr=state.readings[probe],i=arr.findIndex(x=>Number(x.temp)===Number(temp));if(i<0)return;
+ lastDeleted={kind:"reading",probe,item:arr[i]};arr.splice(i,1);vibrate(45);toast(`${labelProbe(probe)} ${temp}°C removed`);renderAll();saveState()
+}
+function recordEvent(name){
+ if(!state.running)startPause();
+ const time=elapsedMs(),ex=lastReading("exhaust"),bt=lastReading("bean"),i=state.events.findIndex(e=>e.name===name);
+ const item={name,time,exhaust:ex?.temp??null,bean:bt?.temp??null};
+ if(i>=0)state.events[i]=item;else state.events.push(item);
+ state.events.sort((a,b)=>a.time-b.time);toast(`${name} recorded`);renderAll();saveState()
+}
+function removeEvent(name){
+ const i=state.events.findIndex(e=>e.name===name);if(i<0)return;
+ lastDeleted={kind:"event",item:state.events[i]};state.events.splice(i,1);vibrate(45);toast(`${name} removed`);renderAll();saveState()
+}
+function lastReading(p){const a=[...state.readings[p]].sort((x,y)=>x.time-y.time);return a[a.length-1]}
+document.querySelectorAll(".event").forEach(b=>bindPress(b,()=>recordEvent(b.dataset.event),()=>removeEvent(b.dataset.event)));
+
+$("generate").onclick=()=>{
+ const s=Number($("tileStart").value),e=Number($("tileEnd").value),st=Number($("tileStep").value),d=Number($("tileDecimals").value);
+ if(!Number.isFinite(s)||!Number.isFinite(e)||!Number.isFinite(st)||st<=0||e<s){toast("Check tile range");return}
+ if((e-s)/st>150){toast("Please use 150 tiles or fewer");return}
+ state.tile={start:s,end:e,step:st,decimals:d};renderTiles();saveState()
+};
+function renderTiles(){
+ $("tileStart").value=state.tile.start;$("tileEnd").value=state.tile.end;$("tileStep").value=state.tile.step;$("tileDecimals").value=state.tile.decimals;
+ const p=currentProbe(),arr=state.readings[p],box=$("tiles");box.innerHTML="";
+ const n=Math.floor((state.tile.end-state.tile.start)/state.tile.step+0.000001);
+ for(let i=0;i<=n;i++){
+  const temp=Number((state.tile.start+i*state.tile.step).toFixed(state.tile.decimals));
+  const x=arr.find(z=>Number(z.temp)===temp),ordered=[...arr].sort((a,b)=>a.time-b.time);
+  const ix=x?ordered.findIndex(z=>z.temp===x.temp):-1,gap=x&&ix>0?x.time-ordered[ix-1].time:null;
+  const b=document.createElement("button");b.className=`tile${x?" done "+p:""}`;
+  b.innerHTML=`<span class="temp-label">${temp.toFixed(state.tile.decimals)}°</span><span class="tile-time">${x?fmt(x.time):""}</span><span class="tile-gap">${x?gapFmt(gap):""}</span>`;
+  bindPress(b,()=>recordReading(temp,p),()=>{if(x)removeReading(temp,p)});box.appendChild(b)
+ }
+}
+
+function renderEvents(){
+ document.querySelectorAll(".event").forEach(b=>{
+  const e=state.events.find(x=>x.name===b.dataset.event),s=b.querySelector("small");
+  s.textContent=e?`${fmt(e.time)} · ET ${e.exhaust??"--"} · BT ${e.bean??"--"}`:"Tap to record"
+ })
+}
+function updateSummary(){
+ const drop=state.events.find(e=>e.name==="Drop"),fc=state.events.find(e=>e.name==="First Crack");
+ const total=drop?.time??elapsedMs();$("totalTime").textContent=drop?fmt(total):"--";
+ if(drop&&fc){const dev=drop.time-fc.time;$("devTime").textContent=fmt(dev);$("devRatio").textContent=(dev/drop.time*100).toFixed(1)+"%"}else{$("devTime").textContent="--";$("devRatio").textContent="--"}
+ const g=Number($("greenWeight").value),r=Number($("roastedWeight").value);$("loss").textContent=g>0&&r>0?((g-r)/g*100).toFixed(1)+"%":"--"
+}
+function renderLog(){
+ const rows=[
+  ...state.readings.exhaust.map(x=>({time:x.time,name:"ET",temp:x.temp,probe:"ET"})),
+  ...state.readings.bean.map(x=>({time:x.time,name:"BT",temp:x.temp,probe:"BT"})),
+  ...state.events.map(x=>({time:x.time,name:x.name,temp:`ET ${x.exhaust??"--"} / BT ${x.bean??"--"}`,probe:"EVENT"}))
+ ].sort((a,b)=>b.time-a.time);
+ $("log").innerHTML=rows.length?rows.map(x=>`<div class="log-item"><span class="log-time">${fmt(x.time)}</span><span>${x.name}</span><span class="pill">${x.temp}${typeof x.temp==="number"?"°C":""}</span></div>`).join(""):`<div style="color:var(--muted)">No entries recorded.</div>`
+}
+
+function smoothPath(ctx,pts){
+ if(!pts.length)return;if(pts.length===1){ctx.moveTo(...pts[0]);return}
+ ctx.moveTo(...pts[0]);
+ for(let i=0;i<pts.length-1;i++){
+  const p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;
+  ctx.bezierCurveTo(p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6,p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6,p2[0],p2[1])
+ }
+}
+function drawCurve(){
+ const c=$("curveCanvas"),ctx=c.getContext("2d"),W=c.width,H=c.height,pad={l:48,r:46,t:25,b:35};
+ ctx.clearRect(0,0,W,H);ctx.fillStyle="#171512";ctx.fillRect(0,0,W,H);
+ const all=[...state.readings.exhaust,...state.readings.bean],temps=all.map(x=>x.temp);
+ const minT=Math.floor((temps.length?Math.min(...temps):150)/10)*10-10,maxT=Math.ceil((temps.length?Math.max(...temps):220)/10)*10+10,maxSec=Math.max(720,elapsedMs()/1000+30);
+ const x=s=>pad.l+s/maxSec*(W-pad.l-pad.r),y=t=>pad.t+(maxT-t)/(maxT-minT)*(H-pad.t-pad.b);
+ ctx.font="11px Arial";ctx.strokeStyle="#3b342f";ctx.fillStyle="#b8aaa0";ctx.lineWidth=1;
+ for(let t=Math.ceil(minT/10)*10;t<=maxT;t+=10){ctx.beginPath();ctx.moveTo(pad.l,y(t));ctx.lineTo(W-pad.r,y(t));ctx.stroke();ctx.fillText(t+"°",7,y(t)+4)}
+ for(let s=0;s<=maxSec;s+=60){ctx.beginPath();ctx.moveTo(x(s),pad.t);ctx.lineTo(x(s),H-pad.b);ctx.stroke();ctx.fillText(String(s/60).padStart(2,"0")+":00",x(s)-15,H-10)}
+ const drawSeries=(arr,color)=>{
+  const a=[...arr].sort((m,n)=>m.time-n.time);if(!a.length)return;
+  ctx.strokeStyle=color;ctx.lineWidth=3;ctx.beginPath();smoothPath(ctx,a.map(p=>[x(p.time/1000),y(p.temp)]));ctx.stroke();
+  a.forEach(p=>{ctx.fillStyle=color;ctx.beginPath();ctx.arc(x(p.time/1000),y(p.temp),3,0,Math.PI*2);ctx.fill()});
+  if(a.length>1){
+   const rr=[];for(let i=1;i<a.length;i++){const dt=(a[i].time-a[i-1].time)/60000;if(dt>0)rr.push({time:a[i].time/1000,ror:(a[i].temp-a[i-1].temp)/dt})}
+   const yr=v=>pad.t+(30-Math.max(0,Math.min(30,v)))/30*(H-pad.t-pad.b);
+   ctx.strokeStyle="#74b7cf";ctx.globalAlpha=.55;ctx.lineWidth=1.5;ctx.setLineDash([6,5]);ctx.beginPath();smoothPath(ctx,rr.map(p=>[x(p.time),yr(p.ror)]));ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1
+  }
+ };
+ if(state.mode==="exhaust"||state.mode==="both")drawSeries(state.readings.exhaust,"#e2783f");
+ if(state.mode==="bean"||state.mode==="both")drawSeries(state.readings.bean,"#43a4bf");
+ state.events.forEach(e=>{const X=x(e.time/1000);ctx.strokeStyle="rgba(255,255,255,.55)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(X,pad.t);ctx.lineTo(X,H-pad.b);ctx.stroke();ctx.save();ctx.translate(X+4,pad.t+15);ctx.rotate(-Math.PI/2);ctx.fillStyle="#fff";ctx.font="bold 9px Arial";ctx.fillText(e.name,0,0);ctx.restore()})
+}
+function renderAll(){renderTimer();updateProbeUI();renderTiles();renderEvents();renderLog();updateSummary();drawCurve();updateKey()}
+window.addEventListener("resize",drawCurve);
+
+$("save").onclick=()=>{saveState();toast("Saved in this browser on this device")};
+$("exportJson").onclick=()=>{
+ saveState();const payload={identity:Object.fromEntries(fields().map(k=>[k,$(k).value])),...state};
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));a.download=($("coffeeCode").value||"KoffyKraft")+"_roast.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)
+};
+
+$("exportCsv").onclick=()=>{
+ saveState();
+ const identity=Object.fromEntries(fields().map(k=>[k,$(k).value]));
+ const rows=[["KoffyKraft Open Roast Timer"],["Freeware by KoffyKraft"],[],["Field","Value"]];
+ Object.entries(identity).forEach(([k,v])=>rows.push([k,v]));
+ rows.push([],["Type","Probe/Event","Time","Temperature/Values"]);
+ state.readings.exhaust.forEach(x=>rows.push(["Temperature","ET",fmt(x.time),x.temp]));
+ state.readings.bean.forEach(x=>rows.push(["Temperature","BT",fmt(x.time),x.temp]));
+ state.events.forEach(x=>rows.push(["Event",x.name,fmt(x.time),`ET ${x.exhaust??""} / BT ${x.bean??""}`]));
+ const esc=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+ const csv=rows.map(r=>r.map(esc).join(",")).join("\n");
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+ a.download=($("coffeeCode").value||"roast")+"_KoffyKraft_Open_Roast_Timer.csv";
+ a.click();
+ setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+
+$("printBtn").onclick=()=>{drawCurve();setTimeout(()=>window.print(),150)};
+$("finish").onclick=()=>{
+ if(state.running)startPause();const n=Number($("roastNo").value)||1;$("roastNo").value=n+1;updateKey();saveState();toast("Roast finished. Next roast number prepared")
+};
+
+loadState();loadFields();setMode(state.mode||"exhaust");renderAll();setInterval(()=>{renderTimer();drawCurve();updateSummary()},500);
+</script>
+</body>
+</html>
