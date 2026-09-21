@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#171512">
-<title>KoffyKraft Open Roast Timer v13 - Revised</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="KoffyKraft"><link rel="icon" href="koffykraft-icon.svg" type="image/svg+xml"><title>KoffyKraft Open Roast Timer v13 - Revised</title>
 <style>
 :root{
  --bg:#f4f0e8;--card:#fffaf3;--ink:#211c17;--muted:#746c63;--line:#d8cec2;
@@ -449,5 +449,5 @@ $("finish").onclick=()=>{
 
 loadState();loadFields();if(!state.unit)state.unit="C";if(state.smoothCurve===undefined)state.smoothCurve=true;if(state.showRor===undefined)state.showRor=true;setMode(state.mode||"exhaust");renderAll();setInterval(()=>{renderTimer();drawCurve();updateSummary()},500);
 </script>
-</body>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}</script></body>
 </html>
