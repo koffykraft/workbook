@@ -1,8 +1,7 @@
 name: Production probe
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths-ignore:
       - PRODUCTION_RESULT.txt
       - ACTION_OK.txt
@@ -13,29 +12,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: sleep 90
+      - run: sleep 30
       - shell: bash
         run: |
           BASE="https://roast.royal-rice-d21a.workers.dev"
           echo "source=$GITHUB_SHA" > PRODUCTION_RESULT.txt
-          echo "root=$(curl -L -sS -o /tmp/root -w '%{http_code}' "$BASE/")" >> PRODUCTION_RESULT.txt
-          echo "hub=$(curl -L -sS -o /tmp/hub -w '%{http_code}' "$BASE/roastbooks.html")" >> PRODUCTION_RESULT.txt
-          echo "newroast=$(curl -L -sS -o /tmp/newroast -w '%{http_code}' "$BASE/roastbook.html")" >> PRODUCTION_RESULT.txt
-          echo "timer=$(curl -L -sS -o /tmp/timer -w '%{http_code}' "$BASE/roast-timer-v14.html")" >> PRODUCTION_RESULT.txt
-          echo "roasts=$(curl -L -sS -o /tmp/roasts -w '%{http_code}' "$BASE/roasts.html")" >> PRODUCTION_RESULT.txt
-          echo "ocr=$(curl -L -sS -o /tmp/ocr -w '%{http_code}' "$BASE/ocr.html")" >> PRODUCTION_RESULT.txt
-          echo "capture=$(curl -L -sS -o /tmp/capture -w '%{http_code}' "$BASE/capture.html")" >> PRODUCTION_RESULT.txt
-          echo "data=$(curl -L -sS -o /tmp/data -w '%{http_code}' "$BASE/data.html")" >> PRODUCTION_RESULT.txt
-          echo "process=$(curl -L -sS -o /tmp/process -w '%{http_code}' "$BASE/process.html")" >> PRODUCTION_RESULT.txt
-          echo "sw=$(curl -L -sS -o /tmp/sw -w '%{http_code}' "$BASE/sw.js")" >> PRODUCTION_RESULT.txt
-          echo "api=$(curl -L -sS -o /tmp/status -w '%{http_code}' "$BASE/api/status")" >> PRODUCTION_RESULT.txt
-          echo "root_roastbooks=$(grep -c Roastbooks /tmp/root)" >> PRODUCTION_RESULT.txt
-          echo "root_old=$(grep -c 'Coffee, from origin to cup' /tmp/root)" >> PRODUCTION_RESULT.txt
-          echo "cache_v14=$(grep -c koffykraft-v14 /tmp/sw)" >> PRODUCTION_RESULT.txt
-          echo "timer_save=$(grep -c 'objectStore(\"roasts\").put(rec)' /tmp/timer)" >> PRODUCTION_RESULT.txt
-          echo "ocr_tesseract=$(grep -c Tesseract.recognize /tmp/ocr)" >> PRODUCTION_RESULT.txt
-          echo "roastbook_export=$(grep -c koffykraft-roastbook.csv /tmp/roasts)" >> PRODUCTION_RESULT.txt
-          echo "status=$(cat /tmp/status)" >> PRODUCTION_RESULT.txt
+          echo "root=$(curl --connect-timeout 4 --max-time 8 -L -sS -o /tmp/root -w '%{http_code}' "$BASE/")" >> PRODUCTION_RESULT.txt
+          echo "timer=$(curl --connect-timeout 4 --max-time 8 -L -sS -o /tmp/timer -w '%{http_code}' "$BASE/roast-timer-v14.html")" >> PRODUCTION_RESULT.txt
+          echo "roasts=$(curl --connect-timeout 4 --max-time 8 -L -sS -o /tmp/roasts -w '%{http_code}' "$BASE/roasts.html")" >> PRODUCTION_RESULT.txt
+          echo "ocr=$(curl --connect-timeout 4 --max-time 8 -L -sS -o /tmp/ocr -w '%{http_code}' "$BASE/ocr.html")" >> PRODUCTION_RESULT.txt
+          echo "sw=$(curl --connect-timeout 4 --max-time 8 -L -sS -o /tmp/sw -w '%{http_code}' "$BASE/sw.js")" >> PRODUCTION_RESULT.txt
+          echo "api=$(curl --connect-timeout 4 --max-time 8 -L -sS -o /tmp/status -w '%{http_code}' "$BASE/api/status")" >> PRODUCTION_RESULT.txt
+          test -f /tmp/root && echo "root_roastbooks=$(grep -c Roastbooks /tmp/root)" >> PRODUCTION_RESULT.txt || echo "root_roastbooks=0" >> PRODUCTION_RESULT.txt
+          test -f /tmp/root && echo "root_old=$(grep -c 'Coffee, from origin to cup' /tmp/root)" >> PRODUCTION_RESULT.txt || echo "root_old=-1" >> PRODUCTION_RESULT.txt
+          test -f /tmp/sw && echo "cache_v14=$(grep -c koffykraft-v14 /tmp/sw)" >> PRODUCTION_RESULT.txt || echo "cache_v14=0" >> PRODUCTION_RESULT.txt
+          test -f /tmp/timer && echo "timer_save=$(grep -c 'objectStore(\"roasts\").put(rec)' /tmp/timer)" >> PRODUCTION_RESULT.txt || echo "timer_save=0" >> PRODUCTION_RESULT.txt
+          test -f /tmp/ocr && echo "ocr_tesseract=$(grep -c Tesseract.recognize /tmp/ocr)" >> PRODUCTION_RESULT.txt || echo "ocr_tesseract=0" >> PRODUCTION_RESULT.txt
+          test -f /tmp/roasts && echo "roastbook_export=$(grep -c koffykraft-roastbook.csv /tmp/roasts)" >> PRODUCTION_RESULT.txt || echo "roastbook_export=0" >> PRODUCTION_RESULT.txt
+          test -f /tmp/status && echo "status=$(cat /tmp/status)" >> PRODUCTION_RESULT.txt || echo "status=unavailable" >> PRODUCTION_RESULT.txt
           git config user.name "koffykraft-probe"
           git config user.email "actions@users.noreply.github.com"
           git add PRODUCTION_RESULT.txt
