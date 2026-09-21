@@ -1,17 +1,11 @@
 <!doctype html>
 <html lang="en">
 <head>
-<!--
-KoffyKraft Open Roast Timer
-Copyright © 2026 KoffyKraft. All rights reserved.
-Freeware: permission is granted to use this software without charge.
-KoffyKraft name, branding, authorship and copyright notice may not be removed or misrepresented in redistributed copies.
-No transfer of ownership is implied by free use.
--->
+<!-- KoffyKraft Open Roast Timer · Copyright © 2026 KoffyKraft. Freeware for use without charge. KoffyKraft authorship and copyright notice should be retained in redistributed copies. -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#171512">
-<title>KoffyKraft Open Roast Timer v14 - Roastbook</title>
+<title>KoffyKraft Open Roast Timer v12 - Freeware</title>
 <style>
 :root{
  --bg:#f4f0e8;--card:#fffaf3;--ink:#211c17;--muted:#746c63;--line:#d8cec2;
@@ -31,10 +25,10 @@ h1{font-size:clamp(2rem,8vw,3.5rem);line-height:.94;margin:.18em 0 .16em}
 .sub{margin:0;color:var(--muted);line-height:1.35}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0;box-shadow:0 7px 22px rgba(44,32,22,.05)}
 .card h2{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;margin:0 0 12px;color:var(--accent)}
-.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.grid>*{min-width:0}.full{grid-column:1/-1}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}
 .field{display:flex;flex-direction:column;gap:5px}
 label{font-size:.73rem;color:var(--muted);font-weight:700}
-input,textarea,select{width:100%;min-width:0;max-width:100%;border:1px solid var(--line);background:white;border-radius:11px;padding:11px 12px;min-height:44px;color:var(--ink)}input[type=date]{min-width:0;-webkit-appearance:none;appearance:none}
+input,textarea,select{width:100%;border:1px solid var(--line);background:white;border-radius:11px;padding:11px 12px;min-height:44px;color:var(--ink)}
 textarea{min-height:70px;resize:vertical}
 .chips{display:flex;gap:7px;overflow:auto;padding:8px 0 1px;scrollbar-width:none}
 .chip{flex:0 0 auto;border:1px solid var(--line);background:#eee7dd;border-radius:999px;padding:8px 11px;font-size:.8rem}
@@ -72,35 +66,8 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
 .toast{position:fixed;left:50%;bottom:94px;transform:translate(-50%,20px);background:#1f1b17;color:white;padding:10px 14px;border-radius:999px;font-size:.82rem;opacity:0;pointer-events:none;transition:.22s;z-index:40}.toast.show{opacity:1;transform:translate(-50%,0)}
 .bottom{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(800px,100%);padding:9px 12px calc(9px + env(safe-area-inset-bottom));background:rgba(244,240,232,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);gap:8px;z-index:20}
 .help{font-size:.76rem;color:var(--muted);line-height:1.4;margin-top:8px}
-@media(max-width:560px){.bottom{grid-template-columns:repeat(5,minmax(0,1fr))!important}.bottom .btn{font-size:.72rem;padding:7px 3px}.event-grid{grid-template-columns:repeat(2,1fr)}.tiles{grid-template-columns:repeat(4,1fr)}.summary{grid-template-columns:1fr 1fr}.tile-config{grid-template-columns:1fr 1fr}.tile-config .make{grid-column:1/-1}.probe-choice{grid-template-columns:1fr 1fr 1fr}}
+@media(max-width:560px){.event-grid{grid-template-columns:repeat(2,1fr)}.tiles{grid-template-columns:repeat(4,1fr)}.summary{grid-template-columns:1fr 1fr}.tile-config{grid-template-columns:1fr 1fr}.tile-config .make{grid-column:1/-1}.probe-choice{grid-template-columns:1fr 1fr 1fr}}
 @media print{.bottom,.timer-card,.toast,.no-print{display:none!important}.app{max-width:none;padding:0}.card{box-shadow:none;break-inside:avoid}.chart-box{background:white;border:1px solid #999}@page{size:A4 portrait;margin:10mm}}
-
-.tile.phase-Turning{background:var(--turn)!important;color:white!important;border-color:var(--turn)!important}
-.tile.phase-Yellow{background:var(--yellow)!important;color:#302500!important;border-color:var(--yellow)!important}
-.tile.phase-Maillard{background:var(--maillard)!important;color:white!important;border-color:var(--maillard)!important}
-.tile.phase-First-Crack{background:var(--fc)!important;color:white!important;border-color:var(--fc)!important}
-.tile.phase-Second-Crack{background:var(--sc)!important;color:white!important;border-color:var(--sc)!important}
-.tile.phase-Drop{background:var(--drop)!important;color:white!important;border-color:var(--drop)!important}
-.tile[class*="phase-"] .tile-gap{color:inherit}
-.option-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
-.option-toggle{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:white;border-radius:11px;padding:10px 12px;font-weight:700}
-.option-toggle input{width:20px;min-height:20px;max-width:20px;margin:0}
-.unit-choice{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.unit-choice button{border:1px solid var(--line);background:white;border-radius:11px;min-height:46px;font-weight:700}
-.unit-choice button.active{background:var(--dark);color:white;border-color:var(--dark)}
-
-
-.no-print{}
-.dbnote{font-size:.78rem;line-height:1.45;background:#fff4d8;border:1px solid #e8d39c;border-radius:11px;padding:10px}
-.plan-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.live-curve-card{position:sticky;top:6px;z-index:9}
-.swatches{display:flex;gap:7px;overflow:auto;padding:5px 0}
-.swatch{flex:0 0 72px;height:58px;border-radius:10px;border:3px solid transparent}
-.swatch.selected{border-color:#111;outline:2px solid #fff;outline-offset:-5px}
-.roast-list{display:grid;gap:7px}
-.roast-row{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:center;background:white;border:1px solid var(--line);border-radius:10px;padding:9px}
-.compare-box{margin-top:10px}
-@media print{.no-print,#freewareCard,#roastbookSetup,#planCard,#roastbookCard{display:none!important}.live-curve-card{position:static!important}}
 </style>
 </head>
 <body>
@@ -110,11 +77,19 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
  <p class="sub">The flexible earlier timer, now with live curves. Free roast logging software by KoffyKraft. Choose ET only, BT only, or ET + BT. ET only remains the default.</p>
 </header>
 
-<div class="card no-print" style="margin-top:8px">
-  <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
-    <strong>FREEWARE · By KoffyKraft</strong>
-    <span style="font-size:.76rem;color:var(--muted)">Please keep KoffyKraft credit when sharing.</span>
-  </div>
+<section class="card">
+<h2>Roaster and coffee identity</h2>
+<div class="grid">
+ <div class="field full"><label>Roastery / user name</label><input id="roasteryName" placeholder="Optional"></div>
+ <div class="field full"><label>Machine / roaster profile</label><input id="machineName" placeholder="Optional"></div>
+ <div class="field full"><label>Estate / coffee</label><input id="estate" placeholder="Type once, reuse later"></div>
+ <div class="field"><label>Coffee code</label><input id="coffeeCode" placeholder="CP"></div>
+ <div class="field"><label>Roast number</label><input id="roastNo" type="number" value="1"></div>
+ <div class="field"><label>Date</label><input id="roastDate" type="date"></div>
+ <div class="field"><label>Moisture %</label><input id="moisture" type="number" step=".1"></div>
+ <div class="field"><label>Green weight g</label><input id="greenWeight" type="number"></div>
+ <div class="field"><label>Charge temperature °C</label><input id="chargeTemp" type="number"></div>
+ <div class="field"><label>Roast colour target</label><input id="targetColor" placeholder="Medium dark / colour"></div>
 </div>
 <div class="chips" id="estateChips"></div><div class="key" id="roastKey">KEY: —</div>
 </section>
@@ -127,15 +102,6 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
  <button data-mode="both">ET + BT</button>
 </div>
 <p class="help">ET means Exhaust Temperature. BT means Bean Temperature. In ET + BT mode, select which probe the tiles should record.</p>
-</section>
-
-<section class="card">
-<h2>Temperature unit</h2>
-<div class="unit-choice">
- <button id="unitC" class="active">Celsius °C</button>
- <button id="unitF">Fahrenheit °F</button>
-</div>
-<p class="help">Changing the unit converts the charge temperature, tile range, saved readings and event temperatures.</p>
 </section>
 
 <section class="card timer-card">
@@ -162,25 +128,15 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
  <button class="event sc" data-event="Second Crack"><strong>SC</strong><small>Tap to record</small></button>
  <button class="event drop" data-event="Drop"><strong>Drop</strong><small>Tap to record</small></button>
 </div>
-<p class="help">Tap an event to record or replace it. Recorded temperature tiles take the colour of the active roast phase, making the roast progression easier to see. Long press to remove.</p>
+<p class="help">Tap an event to record or replace it. With ET only selected, the event stores ET. With ET + BT selected, it stores the latest ET and BT values. Long press to remove.</p>
 </section>
 
-<section class="card live-curve-card">
-<h2>Live roast curves</h2>
-<div class="option-row">
- <label class="option-toggle"><input id="smoothCurve" type="checkbox" checked> Smooth temperature curve</label>
- <label class="option-toggle"><input id="showRor" type="checkbox"> Show estimated RoR</label>
-</div>
-<div class="chart-box"><canvas id="curveCanvas" width="760" height="390"></canvas></div>
-<div class="legend"><span class="e"><b></b>ET curve</span><span class="b"><b></b>BT curve</span><span class="r"><b></b>Estimated RoR</span></div>
-<p class="help">The line is created immediately from your taps. RoR is an estimate from the time and temperature difference between manual readings.</p>
-</section>
 <section class="card">
 <h2>Configurable temperature tiles</h2>
 <div class="tile-config">
- <div class="field"><label>Start <span class="unitMark">°C</span></label><input id="tileStart" type="number" value="170"></div>
- <div class="field"><label>End <span class="unitMark">°C</span></label><input id="tileEnd" type="number" value="210"></div>
- <div class="field"><label>Interval <span class="unitMark">°C</span></label><input id="tileStep" type="number" value="1" min=".1" step=".1"></div>
+ <div class="field"><label>Start °C</label><input id="tileStart" type="number" value="170"></div>
+ <div class="field"><label>End °C</label><input id="tileEnd" type="number" value="210"></div>
+ <div class="field"><label>Interval °C</label><input id="tileStep" type="number" value="1" min=".1" step=".1"></div>
  <div class="field"><label>Decimals</label><select id="tileDecimals"><option value="0">Whole °C</option><option value="1">0.1°C</option></select></div>
  <button class="btn ghost make" id="generate">Make tiles</button>
 </div>
@@ -188,15 +144,18 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
 <p class="help">Tap to record or update. Long press a recorded tile to remove it. Time gaps are recalculated automatically.</p>
 </section>
 
-
+<section class="card">
+<h2>Live roast curves</h2>
+<div class="chart-box"><canvas id="curveCanvas" width="760" height="390"></canvas></div>
+<div class="legend"><span class="e"><b></b>ET curve</span><span class="b"><b></b>BT curve</span><span class="r"><b></b>Estimated RoR</span></div>
+<p class="help">The line is created immediately from your taps. RoR is an estimate from the time and temperature difference between manual readings.</p>
+</section>
 
 <section class="card">
 <h2>Result</h2>
 <div class="grid">
  <div class="field"><label>Roasted weight g</label><input id="roastedWeight" type="number"></div>
- <div class="field"><label>Achieved colour name / reading</label><input id="finalColor"></div>
- <div class="field"><label>Visual estimate</label><input id="visualColor" readonly placeholder="Optional"></div>
- <div class="field full no-print"><label>Visual bean colour matcher — approximate screen estimate only</label><div class="swatches" id="colorSwatches"></div></div>
+ <div class="field"><label>Final roast colour</label><input id="finalColor"></div>
  <div class="field full"><label>Notes</label><textarea id="notes"></textarea></div>
 </div>
 <div class="summary" style="margin-top:12px">
@@ -220,17 +179,6 @@ It does not place a file in Downloads.
 </p>
 </section>
 
-<section class="card no-print" id="roastbookCard" style="display:none">
-<h2>Roastbook & Compare</h2>
-<div class="plan-actions">
- <button class="btn ghost" id="backupRoastbook">Backup Roastbook</button>
- <label class="btn ghost" style="display:inline-flex;align-items:center">Restore Backup<input id="restoreRoastbook" type="file" accept=".json" style="display:none"></label>
- <button class="btn primary" id="compareSelected">Compare selected</button>
-</div>
-<div class="roast-list" id="roastList" style="margin-top:10px"></div>
-<div class="chart-box compare-box"><canvas id="compareCanvas" width="760" height="390"></canvas></div>
-</section>
-
 <section class="card"><h2>Event log</h2><div class="log" id="log"></div></section>
 
 <footer style="text-align:center;padding:18px 8px 8px;color:var(--muted);font-size:.76rem;line-height:1.5">
@@ -252,7 +200,7 @@ It does not place a file in Downloads.
 const $=id=>document.getElementById(id);
 const phaseNames=["Turning","Yellow","Maillard","First Crack","Second Crack","Drop"];
 let state={
- running:false,startStamp:0,elapsed:0,mode:"exhaust",activeProbe:"exhaust",unit:"C",smoothCurve:true,showRor:false,
+ running:false,startStamp:0,elapsed:0,mode:"exhaust",activeProbe:"exhaust",
  events:[],readings:{exhaust:[],bean:[]},tile:{start:170,end:210,step:1,decimals:0}
 };
 let ticker=null,lastDeleted=null;
@@ -267,49 +215,11 @@ function currentProbe(){return state.mode==="both"?state.activeProbe:state.mode}
 function labelProbe(p){return p==="exhaust"?"ET":"BT"}
 function saveState(){localStorage.setItem("kk_roast_v10",JSON.stringify(state));saveFields()}
 function loadState(){try{const x=JSON.parse(localStorage.getItem("kk_roast_v10")||"null");if(x)state={...state,...x,readings:{exhaust:x.readings?.exhaust||[],bean:x.readings?.bean||[]}}}catch(e){}}
-function fields(){return["roasteryName","machineName","estate","coffeeCode","roastNo","roastDate","moisture","greenWeight","chargeTemp","targetColor","roastedWeight","finalColor","visualColor","notes"]}
+function fields(){return["roasteryName","machineName","estate","coffeeCode","roastNo","roastDate","moisture","greenWeight","chargeTemp","targetColor","roastedWeight","finalColor","notes"]}
 function saveFields(){const d={};fields().forEach(k=>d[k]=$(k).value);localStorage.setItem("kk_fields_v10",JSON.stringify(d))}
 function loadFields(){try{const d=JSON.parse(localStorage.getItem("kk_fields_v10")||"{}");fields().forEach(k=>{if(d[k]!=null)$(k).value=d[k]})}catch(e){}}
-function updateKey(){
- const code=$("coffeeCode").value.trim()||"—";
- const r=String($("roastNo").value||1).padStart(3,"0");
- const raw=$("roastDate").value||"";
- const parts=raw.split("-");
- const date=parts.length===3 ? `${parts[2]}${parts[1]}${parts[0].slice(-2)}` : "";
- $("roastKey").textContent=`KEY: ${code} / R${r} / ${date||"—"}`;
-}
+function updateKey(){const code=$("coffeeCode").value.trim()||"—",r=String($("roastNo").value||1).padStart(3,"0"),date=($("roastDate").value||"").split("-").reverse().join("").slice(0,6);$("roastKey").textContent=`KEY: ${code} / R${r} / ${date||"—"}`}
 fields().forEach(k=>$(k).addEventListener("input",()=>{updateKey();saveFields();updateSummary()}));
-
-
-function unitSymbol(){return state.unit==="F"?"°F":"°C"}
-function cToF(v){return v*9/5+32}
-function fToC(v){return (v-32)*5/9}
-function convertNumber(v,from,to){
- if(v===null||v===undefined||v==="")return v;
- const n=Number(v);if(!Number.isFinite(n)||from===to)return v;
- return Number((to==="F"?cToF(n):fToC(n)).toFixed(1));
-}
-function setUnit(next){
- const prev=state.unit||"C";
- if(next===prev){updateUnitUI();return}
- ["chargeTemp","currentTemp"].forEach(id=>{const el=$(id);if(el&&el.value!=="")el.value=convertNumber(el.value,prev,next)});
- state.tile.start=convertNumber(state.tile.start,prev,next);
- state.tile.end=convertNumber(state.tile.end,prev,next);
- state.tile.step=Number(((next==="F"?state.tile.step*9/5:state.tile.step*5/9)).toFixed(1));
- ["exhaust","bean"].forEach(p=>state.readings[p].forEach(x=>x.temp=convertNumber(x.temp,prev,next)));
- state.events.forEach(e=>{if(e.exhaust!=null)e.exhaust=convertNumber(e.exhaust,prev,next);if(e.bean!=null)e.bean=convertNumber(e.bean,prev,next)});
- state.unit=next;
- updateUnitUI();renderAll();saveState();toast(`Temperature changed to ${next==="F"?"Fahrenheit":"Celsius"}`);
-}
-function updateUnitUI(){
- document.querySelectorAll(".unitMark").forEach(x=>x.textContent=unitSymbol());
- $("unitC").classList.toggle("active",state.unit!=="F");
- $("unitF").classList.toggle("active",state.unit==="F");
- $("plusOne").textContent=`+1${unitSymbol()}`;
- $("currentTempLabel").textContent=`Current ${currentProbe()==="exhaust"?"ET":"BT"} ${unitSymbol()}`;
-}
-$("unitC").onclick=()=>setUnit("C");
-$("unitF").onclick=()=>setUnit("F");
 
 function startPause(){
  if(!state.running){state.running=true;state.startStamp=performance.now();$("startPause").textContent="Pause";ticker=setInterval(renderTimer,100)}
@@ -332,7 +242,7 @@ function updateProbeUI(){
  const p=currentProbe();
  $("probeStatus").textContent=state.mode==="both"?`ACTIVE ENTRY: ${p==="exhaust"?"ET":"BT"} · MODE: ET + BT`:`ACTIVE PROBE: ${p==="exhaust"?"ET ONLY":"BT ONLY"}`;
  document.querySelectorAll(".probe-tab").forEach(b=>b.classList.toggle("active",b.dataset.probe===state.activeProbe));
- $("currentTempLabel").textContent=`Current ${p==="exhaust"?"ET":"BT"} ${unitSymbol()}`;
+ $("currentTempLabel").textContent=`Current ${p==="exhaust"?"ET":"BT"} °C`;
  $("currentTemp").placeholder=p==="exhaust"?"175":"160";
 }
 $("plusOne").onclick=()=>{$("currentTemp").value=(Number($("currentTemp").value)||0)+1};
@@ -385,14 +295,8 @@ function renderTiles(){
   const temp=Number((state.tile.start+i*state.tile.step).toFixed(state.tile.decimals));
   const x=arr.find(z=>Number(z.temp)===temp),ordered=[...arr].sort((a,b)=>a.time-b.time);
   const ix=x?ordered.findIndex(z=>z.temp===x.temp):-1,gap=x&&ix>0?x.time-ordered[ix-1].time:null;
-  const b=document.createElement("button");const phaseForReading=(()=>{
-   if(!x)return "";
-   const prior=[...state.events].filter(e=>e.time<=x.time).sort((a,b)=>a.time-b.time);
-   return prior.length?prior[prior.length-1].name:"";
-  })();
-  const phaseClass=phaseForReading?` phase-${phaseForReading.replace(/\s+/g,"-")}`:"";
-  b.className=`tile${x?" done "+p:""}${phaseClass}`;
-  b.innerHTML=`<span class="temp-label">${temp.toFixed(state.tile.decimals)}${unitSymbol()}</span><span class="tile-time">${x?fmt(x.time):""}</span><span class="tile-gap">${x?gapFmt(gap):""}</span>`;
+  const b=document.createElement("button");b.className=`tile${x?" done "+p:""}`;
+  b.innerHTML=`<span class="temp-label">${temp.toFixed(state.tile.decimals)}°</span><span class="tile-time">${x?fmt(x.time):""}</span><span class="tile-gap">${x?gapFmt(gap):""}</span>`;
   bindPress(b,()=>recordReading(temp,p),()=>{if(x)removeReading(temp,p)});box.appendChild(b)
  }
 }
@@ -400,7 +304,7 @@ function renderTiles(){
 function renderEvents(){
  document.querySelectorAll(".event").forEach(b=>{
   const e=state.events.find(x=>x.name===b.dataset.event),s=b.querySelector("small");
-  s.textContent=e?`${fmt(e.time)} · ET ${e.exhaust??"--"}${e.exhaust!=null?unitSymbol():""} · BT ${e.bean??"--"}${e.bean!=null?unitSymbol():""}`:"Tap to record"
+  s.textContent=e?`${fmt(e.time)} · ET ${e.exhaust??"--"} · BT ${e.bean??"--"}`:"Tap to record"
  })
 }
 function updateSummary(){
@@ -415,7 +319,7 @@ function renderLog(){
   ...state.readings.bean.map(x=>({time:x.time,name:"BT",temp:x.temp,probe:"BT"})),
   ...state.events.map(x=>({time:x.time,name:x.name,temp:`ET ${x.exhaust??"--"} / BT ${x.bean??"--"}`,probe:"EVENT"}))
  ].sort((a,b)=>b.time-a.time);
- $("log").innerHTML=rows.length?rows.map(x=>`<div class="log-item"><span class="log-time">${fmt(x.time)}</span><span>${x.name}</span><span class="pill">${x.temp}${typeof x.temp==="number"?unitSymbol():""}</span></div>`).join(""):`<div style="color:var(--muted)">No entries recorded.</div>`
+ $("log").innerHTML=rows.length?rows.map(x=>`<div class="log-item"><span class="log-time">${fmt(x.time)}</span><span>${x.name}</span><span class="pill">${x.temp}${typeof x.temp==="number"?"°C":""}</span></div>`).join(""):`<div style="color:var(--muted)">No entries recorded.</div>`
 }
 
 function smoothPath(ctx,pts){
@@ -433,13 +337,13 @@ function drawCurve(){
  const minT=Math.floor((temps.length?Math.min(...temps):150)/10)*10-10,maxT=Math.ceil((temps.length?Math.max(...temps):220)/10)*10+10,maxSec=Math.max(720,elapsedMs()/1000+30);
  const x=s=>pad.l+s/maxSec*(W-pad.l-pad.r),y=t=>pad.t+(maxT-t)/(maxT-minT)*(H-pad.t-pad.b);
  ctx.font="11px Arial";ctx.strokeStyle="#3b342f";ctx.fillStyle="#b8aaa0";ctx.lineWidth=1;
- for(let t=Math.ceil(minT/10)*10;t<=maxT;t+=10){ctx.beginPath();ctx.moveTo(pad.l,y(t));ctx.lineTo(W-pad.r,y(t));ctx.stroke();ctx.fillText(t+unitSymbol(),7,y(t)+4)}
+ for(let t=Math.ceil(minT/10)*10;t<=maxT;t+=10){ctx.beginPath();ctx.moveTo(pad.l,y(t));ctx.lineTo(W-pad.r,y(t));ctx.stroke();ctx.fillText(t+"°",7,y(t)+4)}
  for(let s=0;s<=maxSec;s+=60){ctx.beginPath();ctx.moveTo(x(s),pad.t);ctx.lineTo(x(s),H-pad.b);ctx.stroke();ctx.fillText(String(s/60).padStart(2,"0")+":00",x(s)-15,H-10)}
  const drawSeries=(arr,color)=>{
   const a=[...arr].sort((m,n)=>m.time-n.time);if(!a.length)return;
-  ctx.strokeStyle=color;ctx.lineWidth=3;ctx.beginPath();const pts=a.map(p=>[x(p.time/1000),y(p.temp)]);if(state.smoothCurve)smoothPath(ctx,pts);else{ctx.moveTo(...pts[0]);pts.slice(1).forEach(pt=>ctx.lineTo(...pt))}ctx.stroke();
+  ctx.strokeStyle=color;ctx.lineWidth=3;ctx.beginPath();smoothPath(ctx,a.map(p=>[x(p.time/1000),y(p.temp)]));ctx.stroke();
   a.forEach(p=>{ctx.fillStyle=color;ctx.beginPath();ctx.arc(x(p.time/1000),y(p.temp),3,0,Math.PI*2);ctx.fill()});
-  if(state.showRor&&a.length>1){
+  if(a.length>1){
    const rr=[];for(let i=1;i<a.length;i++){const dt=(a[i].time-a[i-1].time)/60000;if(dt>0)rr.push({time:a[i].time/1000,ror:(a[i].temp-a[i-1].temp)/dt})}
    const yr=v=>pad.t+(30-Math.max(0,Math.min(30,v)))/30*(H-pad.t-pad.b);
    ctx.strokeStyle="#74b7cf";ctx.globalAlpha=.55;ctx.lineWidth=1.5;ctx.setLineDash([6,5]);ctx.beginPath();smoothPath(ctx,rr.map(p=>[x(p.time),yr(p.ror)]));ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1
@@ -449,12 +353,8 @@ function drawCurve(){
  if(state.mode==="bean"||state.mode==="both")drawSeries(state.readings.bean,"#43a4bf");
  state.events.forEach(e=>{const X=x(e.time/1000);ctx.strokeStyle="rgba(255,255,255,.55)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(X,pad.t);ctx.lineTo(X,H-pad.b);ctx.stroke();ctx.save();ctx.translate(X+4,pad.t+15);ctx.rotate(-Math.PI/2);ctx.fillStyle="#fff";ctx.font="bold 9px Arial";ctx.fillText(e.name,0,0);ctx.restore()})
 }
-function renderAll(){renderTimer();updateProbeUI();updateUnitUI();$("smoothCurve").checked=state.smoothCurve!==false;$("showRor").checked=state.showRor!==false;renderTiles();renderEvents();renderLog();updateSummary();drawCurve();updateKey()}
+function renderAll(){renderTimer();updateProbeUI();renderTiles();renderEvents();renderLog();updateSummary();drawCurve();updateKey()}
 window.addEventListener("resize",drawCurve);
-
-
-$("smoothCurve").onchange=()=>{state.smoothCurve=$("smoothCurve").checked;drawCurve();saveState()};
-$("showRor").onchange=()=>{state.showRor=$("showRor").checked;drawCurve();saveState()};
 
 $("save").onclick=()=>{saveState();toast("Saved in this browser on this device")};
 $("exportJson").onclick=()=>{
@@ -481,87 +381,11 @@ $("exportCsv").onclick=()=>{
 };
 
 $("printBtn").onclick=()=>{drawCurve();setTimeout(()=>window.print(),150)};
-
-
-
-// --- Temporary Roastbook: opt-in IndexedDB memory ---
-let roastDB=null;
-function openRoastDB(){
- return new Promise((resolve,reject)=>{
-  const r=indexedDB.open("KoffyKraftTemporaryRoastbook",1);
-  r.onupgradeneeded=()=>{
-   const d=r.result;
-   if(!d.objectStoreNames.contains("roasts"))d.createObjectStore("roasts",{keyPath:"id"});
-   if(!d.objectStoreNames.contains("plans"))d.createObjectStore("plans",{keyPath:"id"});
-  };
-  r.onsuccess=()=>{roastDB=r.result;localStorage.setItem("kk_roastbook_active","1");resolve(roastDB)};
-  r.onerror=()=>reject(r.error);
- });
-}
-function store(name,mode="readonly"){return roastDB.transaction(name,mode).objectStore(name)}
-function dbPut(name,obj){return new Promise((ok,no)=>{const r=store(name,"readwrite").put(obj);r.onsuccess=()=>ok();r.onerror=()=>no(r.error)})}
-function dbAll(name){return new Promise((ok,no)=>{const r=store(name).getAll();r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
-async function activateRoastbook(){
- await openRoastDB();
- $("roastbookSetup").style.display="none";$("planCard").style.display="block";$("roastbookCard").style.display="block";
- await renderRoastbook();toast("Temporary Roastbook activated");
-}
-$("activateRoastbook").onclick=activateRoastbook;
-function currentPlan(){
- return {id:"latest",savedAt:new Date().toISOString(),purpose:$("purpose").value,roaster:$("sessionRoaster").value,helpers:$("helpers").value,
- beanLot:$("beanLot").value,beanCost:$("beanCost").value,plannedBatches:$("plannedBatches").value,sessionNotes:$("sessionNotes").value,
- roasteryName:$("roasteryName").value,machineName:$("machineName").value,estate:$("estate").value,coffeeCode:$("coffeeCode").value,
- moisture:$("moisture").value,greenWeight:$("greenWeight").value,targetColor:$("targetColor").value};
-}
-$("savePlan").onclick=async()=>{await dbPut("plans",currentPlan());toast("Today's roast plan saved")};
-$("usePreviousPlan").onclick=async()=>{
- const a=await dbAll("plans"),p=a.find(x=>x.id==="latest");if(!p)return toast("No previous plan yet");
- const map={roasteryName:"roasteryName",machineName:"machineName",estate:"estate",coffeeCode:"coffeeCode",moisture:"moisture",greenWeight:"greenWeight",targetColor:"targetColor",
- purpose:"purpose",roaster:"sessionRoaster",helpers:"helpers",beanLot:"beanLot",beanCost:"beanCost",plannedBatches:"plannedBatches",sessionNotes:"sessionNotes"};
- Object.entries(map).forEach(([k,id])=>{if(p[k]!=null)$(id).value=p[k]});updateKey();toast("Previous plan loaded");
+$("finish").onclick=()=>{
+ if(state.running)startPause();const n=Number($("roastNo").value)||1;$("roastNo").value=n+1;updateKey();saveState();toast("Roast finished. Next roast number prepared")
 };
-function roastRecord(){
- const identity={};fields().forEach(k=>identity[k]=$(k).value);
- return {id:Date.now()+"-"+Math.random().toString(36).slice(2),savedAt:new Date().toISOString(),key:$("roastKey").textContent,identity,plan:roastDB?currentPlan():null,state:JSON.parse(JSON.stringify(state))};
-}
-async function renderRoastbook(){
- if(!roastDB)return;const a=(await dbAll("roasts")).sort((x,y)=>y.savedAt.localeCompare(x.savedAt));
- $("roastList").innerHTML=a.length?a.map(r=>`<label class="roast-row"><input type="checkbox" class="comparePick" value="${r.id}"><div><b>${r.key}</b><br><small>${r.identity.estate||"Coffee"} · ${r.identity.finalColor||r.identity.targetColor||""} · ${new Date(r.savedAt).toLocaleString()}</small></div></label>`).join(""):'<div style="color:var(--muted)">No completed roasts yet.</div>';
-}
-function dl(text,name,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-$("backupRoastbook").onclick=async()=>dl(JSON.stringify({format:"KoffyKraft Temporary Roastbook",version:1,exportedAt:new Date().toISOString(),plans:await dbAll("plans"),roasts:await dbAll("roasts")},null,2),"KoffyKraft_Roastbook_Backup.json","application/json");
-$("restoreRoastbook").onchange=async e=>{try{const x=JSON.parse(await e.target.files[0].text());for(const p of x.plans||[])await dbPut("plans",p);for(const r of x.roasts||[])await dbPut("roasts",r);await renderRoastbook();toast("Roastbook restored")}catch(err){toast("Backup could not be restored")}};
-$("compareSelected").onclick=async()=>{
- const ids=[...document.querySelectorAll(".comparePick:checked")].map(x=>x.value),all=await dbAll("roasts"),sel=all.filter(x=>ids.includes(x.id));
- drawCompare(sel);
-};
-function drawCompare(records){
- const c=$("compareCanvas"),ctx=c.getContext("2d"),W=c.width,H=c.height,P={l:48,r:20,t:25,b:35};
- ctx.clearRect(0,0,W,H);ctx.fillStyle="#fff";ctx.fillRect(0,0,W,H);
- const pal=["#26753b","#286e96","#b45d2b","#6b3fa0","#9b831f","#333"],series=records.map((r,i)=>({name:r.key,data:(r.state.readings.exhaust?.length?r.state.readings.exhaust:r.state.readings.bean)||[],color:pal[i%pal.length]}));
- const all=series.flatMap(s=>s.data);if(!all.length){ctx.fillStyle="#777";ctx.fillText("Select saved roasts to compare",20,30);return}
- const mn=Math.floor(Math.min(...all.map(x=>x.temp))/10)*10-10,mx=Math.ceil(Math.max(...all.map(x=>x.temp))/10)*10+10,mt=Math.max(...all.map(x=>x.time),600000);
- const X=t=>P.l+t/mt*(W-P.l-P.r),Y=t=>P.t+(mx-t)/(mx-mn)*(H-P.t-P.b);ctx.strokeStyle="#eee";ctx.fillStyle="#777";ctx.font="11px Arial";
- for(let t=Math.ceil(mn/20)*20;t<=mx;t+=20){ctx.beginPath();ctx.moveTo(P.l,Y(t));ctx.lineTo(W-P.r,Y(t));ctx.stroke();ctx.fillText(t,8,Y(t)+4)}
- series.forEach((s,i)=>{ctx.strokeStyle=s.color;ctx.lineWidth=2.4;ctx.beginPath();s.data.sort((a,b)=>a.time-b.time).forEach((p,j)=>j?ctx.lineTo(X(p.time),Y(p.temp)):ctx.moveTo(X(p.time),Y(p.temp)));ctx.stroke();ctx.fillStyle=s.color;ctx.fillText(s.name,60+i*120,16)});
-}
-// Finish now becomes persistent when Roastbook is active.
-const oldFinish=$("finish").onclick;
-$("finish").onclick=async()=>{
- if(state.running)startPause();
- if(roastDB){await dbPut("roasts",roastRecord());await dbPut("plans",currentPlan());await renderRoastbook();toast("Roast saved to Temporary Roastbook")}
- else toast("Finished. Activate Roastbook to retain roast history.");
- const n=Number($("roastNo").value)||1;$("roastNo").value=n+1;updateKey();saveState();
-};
-// Optional visual colour matcher. It is explicitly an approximation, not a meter.
-[["Very Light","#c69a6b"],["Light","#aa7548"],["Medium Light","#8d5b35"],["Medium","#704326"],["Medium Dark","#57311d"],["Dark","#402319"],["Very Dark","#2c1914"]].forEach(([name,color])=>{
- const b=document.createElement("button");b.className="swatch";b.style.background=color;b.title=name;
- b.onclick=()=>{$("visualColor").value=name;document.querySelectorAll(".swatch").forEach(x=>x.classList.remove("selected"));b.classList.add("selected")};
- $("colorSwatches").appendChild(b);
-});
-if(localStorage.getItem("kk_roastbook_active")==="1")activateRoastbook();
 
-loadState();loadFields();if(!state.unit)state.unit="C";if(state.smoothCurve===undefined)state.smoothCurve=true;if(state.showRor===undefined)state.showRor=false;setMode(state.mode||"exhaust");renderAll();setInterval(()=>{renderTimer();drawCurve();updateSummary()},500);
+loadState();loadFields();setMode(state.mode||"exhaust");renderAll();setInterval(()=>{renderTimer();drawCurve();updateSummary()},500);
 </script>
 </body>
 </html>
