@@ -1,0 +1,30 @@
+name: Production smoke check
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Cloudflare deployment
+        run: sleep 90
+      - name: Verify production root and pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://roast.royal-rice-d21a.workers.dev"
+          curl -fsSL --retry 5 --retry-delay 10 "$BASE/" -o /tmp/root.html
+          grep -q "Roastbooks" /tmp/root.html
+          ! grep -q "Coffee, from origin to cup" /tmp/root.html
+          for p in roastbooks.html roastbook.html roast-timer-v14.html roast-graph.html roasts.html capture.html ocr.html data.html account.html brew.html process.html process-run.html sw.js; do
+            code=$(curl -sS -o "/tmp/$p" -w "%{http_code}" --retry 5 --retry-delay 10 "$BASE/$p")
+            test "$code" = "200"
+          done
+          grep -q "koffykraft-v13" /tmp/sw.js
+          grep -q 'objectStore("roasts").put(rec)' /tmp/roast-timer-v14.html
+          grep -q "Tesseract.recognize" /tmp/ocr.html
+          grep -q "koffykraft-roastbook.csv" /tmp/roasts.html
+          curl -fsSL --retry 5 --retry-delay 10 "$BASE/api/status" -o /tmp/status.json
+          grep -q '"ok":true' /tmp/status.json
+          grep -q '"database":true' /tmp/status.json
