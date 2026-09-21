@@ -1,5 +1,5 @@
-const CACHE='koffykraft-v7';
-const CORE=['./','./index.html','./roastbook.html','./roast-timer-v14.html','./roast-graph.html','./roasts.html','./process.html','./process-run.html','./ocr.html','./capture.html','./data.html','./privacy.html','./manifest.webmanifest','./koffykraft-icon.svg'];
+const CACHE='koffykraft-v8';
+const CORE=['./','./index.html','./account.html','./brew.html','./roastbook.html','./roast-timer-v14.html','./roast-graph.html','./roasts.html','./process.html','./process-run.html','./ocr.html','./capture.html','./data.html','./privacy.html','./manifest.webmanifest','./koffykraft-icon.svg'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request)))});
