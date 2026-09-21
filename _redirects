@@ -1,2 +1,2 @@
-# Cloudflare entry point for KoffyKraft Open Roast Timer
-/ /roastbook.html 302
+# Cloudflare root uses the KoffyKraft tools landing page.
+# Individual tools remain directly addressable.
