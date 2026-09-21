@@ -169,17 +169,6 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
 
 </section>
 
-<section class="card" id="graphSection" style="display:none">
-<h2>Live roast curves</h2>
-<div class="option-row">
- <label class="option-toggle"><input id="smoothCurve" type="checkbox" checked> Smooth temperature curve</label>
- <label class="option-toggle"><input id="showRor" type="checkbox" checked> Show estimated RoR</label>
-</div>
-<div class="chart-box"><canvas id="curveCanvas" width="760" height="390"></canvas></div>
-<div class="legend"><span class="e"><b></b>ET curve</span><span class="b"><b></b>BT curve</span><span class="r"><b></b>Estimated RoR</span></div>
-<p class="help">The line is created immediately from your taps. RoR is an estimate from the time and temperature difference between manual readings.</p>
-</section>
-
 <section class="card">
 <h2>Result</h2>
 <div class="grid">
@@ -197,7 +186,15 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
 
 
 
-<section class="card"><h2>Event log</h2><div class="log" id="log"></div></section>
+<section class="card"><h2>Event log</h2><div class="log" id="log"></div></section>\n\n<section class="card" id="graphSection">
+<h2>Roast curve</h2>
+<div class="option-row">
+ <label class="option-toggle"><input id="smoothCurve" type="checkbox" checked> Smooth</label>
+ <label class="option-toggle"><input id="showRor" type="checkbox" checked> RoR</label>
+</div>
+<div class="chart-box"><canvas id="curveCanvas" width="760" height="390"></canvas></div>
+<div style="margin-top:10px"><a class="btn ghost" href="roast-graph.html" target="_blank" rel="noopener" style="display:flex;text-decoration:none;align-items:center;justify-content:center">Open graph / export</a></div>
+</section>
 
 
 <footer style="text-align:center;padding:10px 8px;color:var(--muted);font-size:.7rem">© 2026 KoffyKraft · Freeware</footer>
