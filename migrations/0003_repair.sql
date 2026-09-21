@@ -1,0 +1,2 @@
+-- Repair migration: auth identity integrity
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique ON users(email);
