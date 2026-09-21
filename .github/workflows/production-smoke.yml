@@ -3,8 +3,8 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - PRODUCTION_SMOKE_OK.txt
-  workflow_dispatch:
+      - PRODUCTION_SMOKE_RESULT.txt
+      - ACTION_OK.txt
 permissions:
   contents: write
 jobs:
@@ -14,31 +14,52 @@ jobs:
       - uses: actions/checkout@v4
       - name: Wait for Cloudflare deployment
         run: sleep 90
-      - name: Verify production root and pages
+      - name: Verify production
+        id: verify
         shell: bash
         run: |
-          set -euo pipefail
+          set +e
           BASE="https://roast.royal-rice-d21a.workers.dev"
-          curl -fsSL --retry 5 --retry-delay 10 "$BASE/" -o /tmp/root.html
-          grep -q "Roastbooks" /tmp/root.html
-          ! grep -q "Coffee, from origin to cup" /tmp/root.html
+          : > PRODUCTION_SMOKE_RESULT.txt
+          fail=0
+          check_url() {
+            name="$1"; url="$2"
+            code=$(curl -sS -L -o "/tmp/$name" -w "%{http_code}" --retry 3 --retry-delay 5 "$url")
+            echo "$name HTTP $code" >> PRODUCTION_SMOKE_RESULT.txt
+            [ "$code" = "200" ] || fail=1
+          }
+          check_url root "$BASE/"
           for p in roastbooks.html roastbook.html roast-timer-v14.html roast-graph.html roasts.html capture.html ocr.html data.html account.html brew.html process.html process-run.html sw.js; do
-            code=$(curl -sS -o "/tmp/$p" -w "%{http_code}" --retry 5 --retry-delay 10 "$BASE/$p")
-            test "$code" = "200"
+            check_url "$p" "$BASE/$p"
           done
-          grep -q "koffykraft-v13" /tmp/sw.js
-          grep -q 'objectStore("roasts").put(rec)' /tmp/roast-timer-v14.html
-          grep -q "Tesseract.recognize" /tmp/ocr.html
-          grep -q "koffykraft-roastbook.csv" /tmp/roasts.html
-          curl -fsSL --retry 5 --retry-delay 10 "$BASE/api/status" -o /tmp/status.json
-          grep -q '"ok":true' /tmp/status.json
-          grep -q '"database":true' /tmp/status.json
-      - name: Record passing production check
+          root_roastbooks=FAIL; grep -q "Roastbooks" /tmp/root && root_roastbooks=PASS || fail=1
+          root_old=PASS; grep -q "Coffee, from origin to cup" /tmp/root && root_old=FAIL && fail=1
+          cache=FAIL; grep -q "koffykraft-v14" /tmp/sw.js && cache=PASS || fail=1
+          timer=FAIL; grep -q 'objectStore("roasts").put(rec)' /tmp/roast-timer-v14.html && timer=PASS || fail=1
+          ocr=FAIL; grep -q "Tesseract.recognize" /tmp/ocr.html && ocr=PASS || fail=1
+          exportcheck=FAIL; grep -q "koffykraft-roastbook.csv" /tmp/roasts.html && exportcheck=PASS || fail=1
+          echo "root_has_roastbooks $root_roastbooks" >> PRODUCTION_SMOKE_RESULT.txt
+          echo "root_old_dashboard_absent $root_old" >> PRODUCTION_SMOKE_RESULT.txt
+          echo "cache_v14 $cache" >> PRODUCTION_SMOKE_RESULT.txt
+          echo "timer_persistence $timer" >> PRODUCTION_SMOKE_RESULT.txt
+          echo "ocr_fallback $ocr" >> PRODUCTION_SMOKE_RESULT.txt
+          echo "roastbook_export $exportcheck" >> PRODUCTION_SMOKE_RESULT.txt
+          status_code=$(curl -sS -o /tmp/status.json -w "%{http_code}" --retry 3 --retry-delay 5 "$BASE/api/status")
+          echo "api_status_http $status_code" >> PRODUCTION_SMOKE_RESULT.txt
+          cat /tmp/status.json >> PRODUCTION_SMOKE_RESULT.txt
+          echo >> PRODUCTION_SMOKE_RESULT.txt
+          [ "$status_code" = "200" ] || fail=1
+          grep -q '"ok":true' /tmp/status.json || fail=1
+          grep -q '"database":true' /tmp/status.json || fail=1
+          echo "Source: $GITHUB_SHA" >> PRODUCTION_SMOKE_RESULT.txt
+          echo "Checked: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> PRODUCTION_SMOKE_RESULT.txt
+          exit $fail
+      - name: Record production result
+        if: always()
         shell: bash
         run: |
-          printf "Production smoke passed\nSource: %s\nChecked: %s\n" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > PRODUCTION_SMOKE_OK.txt
           git config user.name "koffykraft-smoke"
           git config user.email "actions@users.noreply.github.com"
-          git add PRODUCTION_SMOKE_OK.txt
-          git commit -m "Record passing production smoke check"
+          git add PRODUCTION_SMOKE_RESULT.txt
+          git commit -m "Record production smoke result" || exit 0
           git push
