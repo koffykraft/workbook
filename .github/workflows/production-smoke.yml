@@ -2,11 +2,16 @@ name: Production smoke check
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - PRODUCTION_SMOKE_OK.txt
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Wait for Cloudflare deployment
         run: sleep 90
       - name: Verify production root and pages
@@ -28,3 +33,12 @@ jobs:
           curl -fsSL --retry 5 --retry-delay 10 "$BASE/api/status" -o /tmp/status.json
           grep -q '"ok":true' /tmp/status.json
           grep -q '"database":true' /tmp/status.json
+      - name: Record passing production check
+        shell: bash
+        run: |
+          printf "Production smoke passed\nSource: %s\nChecked: %s\n" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > PRODUCTION_SMOKE_OK.txt
+          git config user.name "koffykraft-smoke"
+          git config user.email "actions@users.noreply.github.com"
+          git add PRODUCTION_SMOKE_OK.txt
+          git commit -m "Record passing production smoke check"
+          git push
