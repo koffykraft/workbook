@@ -28,9 +28,9 @@ label{font-size:.73rem;color:var(--muted);font-weight:700}input,select{width:100
 <div class="field"><label>Tile start °C</label><input id="tileStart" type="number" value="170"></div>
 <div class="field"><label>Tile end °C</label><input id="tileEnd" type="number" value="210"></div>
 </div>
-<div class="actions"><button class="btn" id="savePlan">Save</button><button class="btn" id="saveOpen">Save & Roast</button></div>
+<div class="actions"><button class="btn" id="quick" style="grid-column:1/-1;background:#fff;color:#8b4b2e;border:1px solid #8b4b2e">Quick Roast</button><button class="btn ghost" id="savePlan">Save</button><button class="btn" id="saveOpen">Save & Roast</button></div>
 <div class="saved" id="saved"></div></section>
-<section class="card"><div class="actions" style="margin-top:0"><button class="btn ghost" id="clear">Clear</button><a class="btn ghost" href="roast-timer-v14.html">Roast Timer</a></div></section>
+<section class="card"><div class="actions" style="margin-top:0"><a class="btn ghost" href="index.html">KoffyKraft</a><a class="btn ghost" href="roast-timer-v14.html">Roast Timer</a></div></section>
 <footer>© 2026 KoffyKraft</footer></main>
 <script>
 const $=id=>document.getElementById(id),DB='KoffyKraftTemporaryRoastbook',VER=1;
@@ -46,6 +46,6 @@ async function save(go){const d=data();localStorage.setItem('kk_preroast_plan',J
  $('saved').textContent='Saved';if(go)location.href='roast-timer-v14.html';
 }
 $('savePlan').onclick=()=>save(false);$('saveOpen').onclick=()=>save(true);
-$('clear').onclick=()=>{ids.forEach(id=>$(id).value='');$('roastNo').value=1;$('tileStart').value=170;$('tileEnd').value=210;$('saved').textContent=''};
+$('quick').onclick=()=>{const keep={roasteryName:$('roasteryName').value,machineName:$('machineName').value,tileStart:$('tileStart').value||170,tileEnd:$('tileEnd').value||210};ids.forEach(id=>$(id).value='');$('roasteryName').value=keep.roasteryName;$('machineName').value=keep.machineName;$('roastNo').value=1;$('tileStart').value=keep.tileStart;$('tileEnd').value=keep.tileEnd;localStorage.removeItem('kk_preroast_plan');const fields={roasteryName:keep.roasteryName,machineName:keep.machineName,estate:'',coffeeCode:'',roastNo:1,roastDate:new Date().toISOString().slice(0,10),moisture:'',greenWeight:'',chargeTemp:'',targetColor:'',roastedWeight:'',finalColor:'',notes:''};localStorage.setItem('kk_fields_v10',JSON.stringify(fields));const old=JSON.parse(localStorage.getItem('kk_roast_v10')||'{}');old.events=[];old.readings={exhaust:[],bean:[]};old.running=false;old.elapsed=0;old.tile={start:Number(keep.tileStart)||170,end:Number(keep.tileEnd)||210,step:old.tile?.step||1,decimals:old.tile?.decimals||0};localStorage.setItem('kk_roast_v10',JSON.stringify(old));$('saved').textContent='Working roast reset · saved records untouched'};
 try{fill(JSON.parse(localStorage.getItem('kk_preroast_plan')||'null'))}catch(e){}
 </script></body></html>
