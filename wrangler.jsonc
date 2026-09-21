@@ -3,7 +3,12 @@
   "name": "roast",
   "compatibility_date": "2026-09-21",
   "observability": { "enabled": true },
-  "main": "worker.js",\n  "assets": { "directory": ".", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
+  "main": "worker.js",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
   "d1_databases": [
     {
       "binding": "DB",
