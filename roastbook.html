@@ -2,18 +2,18 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#171512"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="KoffyKraft"><link rel="icon" href="koffykraft-icon.svg" type="image/svg+xml"><title>KoffyKraft Pre-roast</title>
 <style>
-:root{--bg:#f4f0e8;--card:#fffaf3;--ink:#211c17;--muted:#746c63;--line:#d8cec2;--accent:#8b4b2e}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,sans-serif}
+:root{--bg:#f7f5f0;--card:#fff;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--accent:#8d583b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
 button,input,select{font:inherit}.app{max-width:760px;margin:auto;padding:14px 12px 70px}
-header{padding:4px 3px 8px}.kicker{font-size:.7rem;letter-spacing:.15em;color:var(--accent);font-weight:700}h1{font-size:1.8rem;margin:.15em 0}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0}
+header{padding:10px 3px 18px}.kicker{font-size:.68rem;letter-spacing:.17em;color:var(--accent);font-weight:750}h1{font-size:2.5rem;letter-spacing:-.045em;line-height:1;margin:.18em 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin:10px 0}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}.field{display:flex;flex-direction:column;gap:5px}
-label{font-size:.73rem;color:var(--muted);font-weight:700}input,select{width:100%;border:1px solid var(--line);background:white;border-radius:11px;padding:11px 12px;min-height:46px;color:var(--ink)}
+label{font-size:.73rem;color:var(--muted);font-weight:700}input,select{width:100%;border:1px solid var(--line);background:white;border-radius:13px;padding:13px 12px;min-height:50px;color:var(--ink)}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.btn{border:0;border-radius:12px;min-height:50px;padding:10px 13px;font-weight:700;background:#211c17;color:white;text-decoration:none;display:flex;align-items:center;justify-content:center}.ghost{background:#ece4da;color:var(--ink)}
 .saved{font-size:.78rem;color:var(--accent);min-height:1em;margin-top:8px}footer{text-align:center;color:var(--muted);font-size:.7rem;padding:12px}
 @media(max-width:520px){.grid{grid-template-columns:1fr 1fr}.full{grid-column:1/-1}}
 </style></head><body><main class="app">
-<header><div class="kicker">KOFFYKRAFT</div><h1>Pre-roast</h1></header>
+<header><div class="kicker">KOFFYKRAFT · ROASTBOOKS</div><h1>New Roast</h1></header>
 <section class="card"><div class="grid">
 <div class="field full"><label>Roastery</label><input id="roasteryName"></div>
 <div class="field full"><label>Machine / roaster</label><input id="machineName"></div>
@@ -30,7 +30,7 @@ label{font-size:.73rem;color:var(--muted);font-weight:700}input,select{width:100
 </div>
 <div class="actions"><button class="btn" id="quick" style="grid-column:1/-1;background:#fff;color:#8b4b2e;border:1px solid #8b4b2e">Quick Roast</button><button class="btn ghost" id="savePlan">Save</button><button class="btn" id="saveOpen">Save & Roast</button></div>
 <div class="saved" id="saved"></div></section>
-<section class="card"><div class="actions" style="margin-top:0"><a class="btn ghost" href="index.html">KoffyKraft</a><a class="btn ghost" href="roast-timer-v14.html">Roast Timer</a></div></section>
+<section class="card"><div class="actions" style="margin-top:0"><a class="btn ghost" href="roastbooks.html">Roastbooks</a><a class="btn ghost" href="roast-timer-v14.html">Timer</a></div></section>
 <footer>© 2026 KoffyKraft</footer></main>
 <script>
 const $=id=>document.getElementById(id),DB='KoffyKraftTemporaryRoastbook',VER=1;
