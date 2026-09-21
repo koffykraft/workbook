@@ -1,9 +1,51 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>KoffyKraft Roastbook</title><style>:root{--bg:#f4f0e8;--card:#fffaf3;--ink:#211c17;--muted:#746c63;--line:#d8cec2}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,sans-serif}.app{max-width:760px;margin:auto;padding:20px 14px 70px}h1{margin:.15em 0}.sub,.muted{color:var(--muted)}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0}.row{display:flex;gap:22px;align-items:center}.stat{font-size:1.7rem;font-weight:700}.btn{border:0;border-radius:11px;padding:11px 14px;font-weight:700;background:#211c17;color:white}.ghost{background:#ece4da;color:var(--ink)}.item{padding:10px 0;border-top:1px solid var(--line)}a{color:#8b4b2e;font-weight:700}</style></head><body><main class="app"><div class="muted">KOFFYKRAFT</div><h1>Temporary Roastbook</h1><p class="sub">Local browser database for roast history. Clearing browser/site data can erase it, so keep backups.</p><section class="card"><div id="status">Opening database…</div></section><section class="card"><div class="row"><div><div class="stat" id="roastCount">0</div><div class="muted">Roasts</div></div><div><div class="stat" id="planCount">0</div><div class="muted">Plans</div></div></div></section><section class="card"><button class="btn" id="backup">Backup database</button> <button class="btn ghost" id="refreshBtn">Refresh</button><div style="margin-top:14px"><input type="file" id="restoreFile" accept="application/json"><br><button class="btn ghost" id="restore" style="margin-top:8px">Restore backup</button></div></section><section class="card"><strong>Recent roasts</strong><div id="list" class="muted" style="margin-top:8px">None yet.</div></section><p><a href="roast-timer-v14.html">Open V14 Roast Timer</a> · <a href="./">Working timer</a></p><footer class="muted">KoffyKraft Roastbook · Freeware · © 2026 KoffyKraft</footer></main><script>
-const DB='KoffyKraftTemporaryRoastbook',VER=1;let db;const $=x=>document.getElementById(x);
-function openDB(){return new Promise((ok,no)=>{const r=indexedDB.open(DB,VER);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('roasts'))d.createObjectStore('roasts',{keyPath:'id'});if(!d.objectStoreNames.contains('plans'))d.createObjectStore('plans',{keyPath:'id'})};r.onsuccess=()=>{db=r.result;ok()};r.onerror=()=>no(r.error)})}
-function all(s){return new Promise((ok,no)=>{const r=db.transaction(s).objectStore(s).getAll();r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
-function esc(x){return String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
-async function refresh(){const [rs,ps]=await Promise.all([all('roasts'),all('plans')]);$('roastCount').textContent=rs.length;$('planCount').textContent=ps.length;$('status').innerHTML='<strong>Database ready</strong><div class="muted">'+DB+' · this browser/device</div>';const a=rs.slice().reverse().slice(0,20);$('list').innerHTML=a.length?a.map(x=>'<div class="item"><strong>'+esc(x.identity?.estate||x.estate||x.coffee||'Roast')+'</strong><div class="muted">'+esc(x.identity?.coffeeCode||x.coffeeCode||'')+' '+esc(x.identity?.roastNo||x.roastNo||'')+'</div></div>').join(''):'None yet.'}
-$('backup').onclick=async()=>{const p={format:DB,version:1,exportedAt:new Date().toISOString(),roasts:await all('roasts'),plans:await all('plans')};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(p,null,2)],{type:'application/json'}));a.download='KoffyKraft_Roastbook_Backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
-$('restore').onclick=async()=>{const f=$('restoreFile').files[0];if(!f)return alert('Choose a backup first.');let p;try{p=JSON.parse(await f.text())}catch(e){return alert('Invalid backup.')}for(const s of ['roasts','plans']){const tx=db.transaction(s,'readwrite'),os=tx.objectStore(s);for(const x of(p[s]||[]))if(x&&x.id!=null)os.put(x);await new Promise((ok,no)=>{tx.oncomplete=ok;tx.onerror=()=>no(tx.error)})}await refresh();alert('Backup restored.')};$('refreshBtn').onclick=refresh;openDB().then(refresh).catch(e=>$('status').textContent='Database error: '+e.message);
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171512"><title>KoffyKraft Pre-roast</title>
+<style>
+:root{--bg:#f4f0e8;--card:#fffaf3;--ink:#211c17;--muted:#746c63;--line:#d8cec2;--accent:#8b4b2e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,sans-serif}
+button,input,select{font:inherit}.app{max-width:760px;margin:auto;padding:14px 12px 70px}
+header{padding:4px 3px 8px}.kicker{font-size:.7rem;letter-spacing:.15em;color:var(--accent);font-weight:700}h1{font-size:1.8rem;margin:.15em 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}.field{display:flex;flex-direction:column;gap:5px}
+label{font-size:.73rem;color:var(--muted);font-weight:700}input,select{width:100%;border:1px solid var(--line);background:white;border-radius:11px;padding:11px 12px;min-height:46px;color:var(--ink)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.btn{border:0;border-radius:12px;min-height:50px;padding:10px 13px;font-weight:700;background:#211c17;color:white;text-decoration:none;display:flex;align-items:center;justify-content:center}.ghost{background:#ece4da;color:var(--ink)}
+.saved{font-size:.78rem;color:var(--accent);min-height:1em;margin-top:8px}footer{text-align:center;color:var(--muted);font-size:.7rem;padding:12px}
+@media(max-width:520px){.grid{grid-template-columns:1fr 1fr}.full{grid-column:1/-1}}
+</style></head><body><main class="app">
+<header><div class="kicker">KOFFYKRAFT</div><h1>Pre-roast</h1></header>
+<section class="card"><div class="grid">
+<div class="field full"><label>Roastery</label><input id="roasteryName"></div>
+<div class="field full"><label>Machine / roaster</label><input id="machineName"></div>
+<div class="field full"><label>Estate</label><input id="estate"></div>
+<div class="field full"><label>Bean / lot / process</label><input id="bean"></div>
+<div class="field"><label>Coffee code</label><input id="coffeeCode"></div>
+<div class="field"><label>Roast no.</label><input id="roastNo" type="number" value="1"></div>
+<div class="field"><label>Moisture %</label><input id="moisture" type="number" step=".1"></div>
+<div class="field"><label>Green weight g</label><input id="greenWeight" type="number"></div>
+<div class="field"><label>Charge °C</label><input id="chargeTemp" type="number"></div>
+<div class="field"><label>Target</label><input id="targetColor"></div>
+<div class="field"><label>Tile start °C</label><input id="tileStart" type="number" value="170"></div>
+<div class="field"><label>Tile end °C</label><input id="tileEnd" type="number" value="210"></div>
+</div>
+<div class="actions"><button class="btn" id="savePlan">Save</button><button class="btn" id="saveOpen">Save & Roast</button></div>
+<div class="saved" id="saved"></div></section>
+<section class="card"><div class="actions" style="margin-top:0"><button class="btn ghost" id="clear">Clear</button><a class="btn ghost" href="roast-timer-v14.html">Roast Timer</a></div></section>
+<footer>© 2026 KoffyKraft</footer></main>
+<script>
+const $=id=>document.getElementById(id),DB='KoffyKraftTemporaryRoastbook',VER=1;
+const ids=['roasteryName','machineName','estate','bean','coffeeCode','roastNo','moisture','greenWeight','chargeTemp','targetColor','tileStart','tileEnd'];
+function data(){const d={};ids.forEach(id=>d[id]=$(id).value);d.id='plan-'+Date.now();d.savedAt=new Date().toISOString();return d}
+function fill(d){if(!d)return;ids.forEach(id=>{if(d[id]!=null)$(id).value=d[id]})}
+function openDB(){return new Promise((ok,no)=>{const r=indexedDB.open(DB,VER);r.onupgradeneeded=e=>{const x=e.target.result;if(!x.objectStoreNames.contains('roasts'))x.createObjectStore('roasts',{keyPath:'id'});if(!x.objectStoreNames.contains('plans'))x.createObjectStore('plans',{keyPath:'id'})};r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
+async function save(go){const d=data();localStorage.setItem('kk_preroast_plan',JSON.stringify(d));
+ const fields={roasteryName:d.roasteryName,machineName:d.machineName,estate:d.estate,coffeeCode:d.coffeeCode,roastNo:d.roastNo,roastDate:new Date().toISOString().slice(0,10),moisture:d.moisture,greenWeight:d.greenWeight,chargeTemp:d.chargeTemp,targetColor:d.targetColor,roastedWeight:'',finalColor:'',notes:d.bean||''};
+ localStorage.setItem('kk_fields_v10',JSON.stringify(fields));
+ try{const db=await openDB();await new Promise((ok,no)=>{const tx=db.transaction('plans','readwrite');tx.objectStore('plans').put(d);tx.oncomplete=ok;tx.onerror=()=>no(tx.error)})}catch(e){}
+ const old=JSON.parse(localStorage.getItem('kk_roast_v10')||'{}');old.tile={start:Number(d.tileStart)||170,end:Number(d.tileEnd)||210,step:old.tile?.step||1,decimals:old.tile?.decimals||0};localStorage.setItem('kk_roast_v10',JSON.stringify(old));
+ $('saved').textContent='Saved';if(go)location.href='roast-timer-v14.html';
+}
+$('savePlan').onclick=()=>save(false);$('saveOpen').onclick=()=>save(true);
+$('clear').onclick=()=>{ids.forEach(id=>$(id).value='');$('roastNo').value=1;$('tileStart').value=170;$('tileEnd').value=210;$('saved').textContent=''};
+try{fill(JSON.parse(localStorage.getItem('kk_preroast_plan')||'null'))}catch(e){}
 </script></body></html>
