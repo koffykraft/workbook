@@ -82,23 +82,16 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
 .unit-choice button{border:1px solid var(--line);background:white;border-radius:11px;min-height:46px;font-weight:700}
 .unit-choice button.active{background:var(--dark);color:white;border-color:var(--dark)}
 
+.compact-head{padding:10px 4px 2px}.compact-head h1{font-size:1.65rem;line-height:1.05;margin:.12em 0}
 </style>
 </head>
 <body>
 <div class="app">
-<header>
- <div class="kicker">KoffyKraft presents</div><h1>Open Roast Timer</h1>
- <p class="sub">The flexible earlier timer, now with live curves. Free roast logging software by KoffyKraft. Choose ET only, BT only, or ET + BT. ET only remains the default.</p>
+<header class="compact-head">
+ <div class="kicker">KOFFYKRAFT</div>
+ <h1>Open Roast Timer</h1>
+ <a class="btn ghost" href="roastbook.html" style="display:inline-flex;align-items:center;text-decoration:none;margin-top:8px">Pre-roast</a>
 </header>
-
-<div class="card" style="margin-top:8px">
-  <h2>Freeware identity</h2>
-  <p style="margin:0;line-height:1.45">
-    <strong>KoffyKraft Open Roast Timer</strong> is freeware created and published by KoffyKraft.
-    It may be used without charge. KoffyKraft branding and ownership credit should remain visible in redistributed copies.
-  </p>
-</div>
-
 
 <section class="card">
 <h2>Roaster and coffee identity</h2>
@@ -124,7 +117,7 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
  <button data-mode="bean">BT only</button>
  <button data-mode="both">ET + BT</button>
 </div>
-<p class="help">ET means Exhaust Temperature. BT means Bean Temperature. In ET + BT mode, select which probe the tiles should record.</p>
+
 </section>
 
 <section class="card">
@@ -133,7 +126,7 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
  <button id="unitC" class="active">Celsius °C</button>
  <button id="unitF">Fahrenheit °F</button>
 </div>
-<p class="help">Changing the unit converts the charge temperature, tile range, saved readings and event temperatures.</p>
+
 </section>
 
 <section class="card timer-card">
@@ -160,7 +153,7 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
  <button class="event sc" data-event="Second Crack"><strong>SC</strong><small>Tap to record</small></button>
  <button class="event drop" data-event="Drop"><strong>Drop</strong><small>Tap to record</small></button>
 </div>
-<p class="help">Tap an event to record or replace it. Recorded temperature tiles take the colour of the active roast phase, making the roast progression easier to see. Long press to remove.</p>
+
 </section>
 
 <section class="card">
@@ -173,10 +166,10 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
  <button class="btn ghost make" id="generate">Make tiles</button>
 </div>
 <div class="tiles" id="tiles"></div>
-<p class="help">Tap to record or update. Long press a recorded tile to remove it. Time gaps are recalculated automatically.</p>
+
 </section>
 
-<section class="card">
+<section class="card" id="graphSection" style="display:none">
 <h2>Live roast curves</h2>
 <div class="option-row">
  <label class="option-toggle"><input id="smoothCurve" type="checkbox" checked> Smooth temperature curve</label>
@@ -203,27 +196,11 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
 </section>
 
 
-<section class="card">
-<h2>Saving and export</h2>
-<p style="margin:0 0 8px;line-height:1.45">
-<strong>Save on device</strong> stores the active roast inside this browser on this phone or computer.
-It does not place a file in Downloads.
-</p>
-<p style="margin:0;line-height:1.45">
-<strong>JSON</strong> and <strong>CSV</strong> create downloadable files. The browser normally places them in its Downloads location or asks where to save them.
-<strong>Print / PDF</strong> opens the system print screen.
-</p>
-</section>
 
 <section class="card"><h2>Event log</h2><div class="log" id="log"></div></section>
 
-<div style="text-align:center;margin:14px 0"><a class="btn ghost" href="roastbook.html" style="display:inline-flex;align-items:center;text-decoration:none">Open Roastbook</a></div>
 
-<footer style="text-align:center;padding:18px 8px 8px;color:var(--muted);font-size:.76rem;line-height:1.5">
-  KoffyKraft Open Roast Timer<br>
-  Freeware created and published by KoffyKraft<br>
-  Please retain this credit in shared or redistributed copies.
-</footer>
+<footer style="text-align:center;padding:10px 8px;color:var(--muted);font-size:.7rem">© 2026 KoffyKraft · Freeware</footer>
 
 </div>
 
