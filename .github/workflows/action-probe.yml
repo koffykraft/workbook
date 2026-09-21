@@ -1,0 +1,20 @@
+name: Action probe
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ACTION_OK.txt
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          echo "$GITHUB_SHA" > ACTION_OK.txt
+          git config user.name "koffykraft-probe"
+          git config user.email "actions@users.noreply.github.com"
+          git add ACTION_OK.txt
+          git commit -m "Record action probe"
+          git push
