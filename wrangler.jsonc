@@ -3,5 +3,12 @@
   "name": "roast",
   "compatibility_date": "2026-09-21",
   "observability": { "enabled": true },
-  "assets": { "directory": "." }
+  "assets": { "directory": "." },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "koffykraft",
+      "database_id": "aaa51abd-149b-49ba-a8ae-bfcc5dbe05d1"
+    }
+  ]
 }
