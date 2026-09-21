@@ -5,7 +5,7 @@
 :root{--bg:#f7f5f0;--card:#fff;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--accent:#8d583b}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
 button,input,select{font:inherit}.app{max-width:760px;margin:auto;padding:14px 12px 70px}
-header{padding:10px 3px 18px}.kicker{font-size:.68rem;letter-spacing:.17em;color:var(--accent);font-weight:750}h1{font-size:2.5rem;letter-spacing:-.045em;line-height:1;margin:.18em 0}
+header{padding:10px 3px 18px}.wordmark{display:block;width:150px;max-height:48px;object-fit:contain;object-position:left center;margin-bottom:18px}.kicker{font-size:.68rem;letter-spacing:.17em;color:var(--accent);font-weight:750}h1{font-size:2.5rem;letter-spacing:-.045em;line-height:1;margin:.18em 0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin:10px 0}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}.field{display:flex;flex-direction:column;gap:5px}
 label{font-size:.73rem;color:var(--muted);font-weight:700}input,select{width:100%;border:1px solid var(--line);background:white;border-radius:13px;padding:13px 12px;min-height:50px;color:var(--ink)}
@@ -13,7 +13,7 @@ label{font-size:.73rem;color:var(--muted);font-weight:700}input,select{width:100
 .saved{font-size:.78rem;color:var(--accent);min-height:1em;margin-top:8px}footer{text-align:center;color:var(--muted);font-size:.7rem;padding:12px}
 @media(max-width:520px){.grid{grid-template-columns:1fr 1fr}.full{grid-column:1/-1}}
 </style></head><body><main class="app">
-<header><div class="kicker">KOFFYKRAFT · ROASTBOOKS</div><h1>New Roast</h1></header>
+<header><img class="wordmark" src="koffykraft-wordmark.png" alt="Koffy Kraft"><div class="kicker">ROASTBOOKS</div><h1>New Roast</h1></header>
 <section class="card"><div class="grid">
 <div class="field full"><label>Roastery</label><input id="roasteryName"></div>
 <div class="field full"><label>Machine / roaster</label><input id="machineName"></div>
