@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#171512"><title>KoffyKraft Pre-roast</title>
+<meta name="theme-color" content="#171512"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="KoffyKraft"><link rel="icon" href="koffykraft-icon.svg" type="image/svg+xml"><title>KoffyKraft Pre-roast</title>
 <style>
 :root{--bg:#f4f0e8;--card:#fffaf3;--ink:#211c17;--muted:#746c63;--line:#d8cec2;--accent:#8b4b2e}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,sans-serif}
@@ -48,4 +48,4 @@ async function save(go){const d=data();localStorage.setItem('kk_preroast_plan',J
 $('savePlan').onclick=()=>save(false);$('saveOpen').onclick=()=>save(true);
 $('quick').onclick=()=>{const keep={roasteryName:$('roasteryName').value,machineName:$('machineName').value,tileStart:$('tileStart').value||170,tileEnd:$('tileEnd').value||210};ids.forEach(id=>$(id).value='');$('roasteryName').value=keep.roasteryName;$('machineName').value=keep.machineName;$('roastNo').value=1;$('tileStart').value=keep.tileStart;$('tileEnd').value=keep.tileEnd;localStorage.removeItem('kk_preroast_plan');const fields={roasteryName:keep.roasteryName,machineName:keep.machineName,estate:'',coffeeCode:'',roastNo:1,roastDate:new Date().toISOString().slice(0,10),moisture:'',greenWeight:'',chargeTemp:'',targetColor:'',roastedWeight:'',finalColor:'',notes:''};localStorage.setItem('kk_fields_v10',JSON.stringify(fields));const old=JSON.parse(localStorage.getItem('kk_roast_v10')||'{}');old.events=[];old.readings={exhaust:[],bean:[]};old.running=false;old.elapsed=0;old.tile={start:Number(keep.tileStart)||170,end:Number(keep.tileEnd)||210,step:old.tile?.step||1,decimals:old.tile?.decimals||0};localStorage.setItem('kk_roast_v10',JSON.stringify(old));$('saved').textContent='Working roast reset · saved records untouched'};
 try{fill(JSON.parse(localStorage.getItem('kk_preroast_plan')||'null'))}catch(e){}
-</script></body></html>
+</script><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}</script></body></html>
