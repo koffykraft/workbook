@@ -437,7 +437,7 @@ $("exportCsv").onclick=()=>{
  const csv=rows.map(r=>r.map(esc).join(",")).join("\n");
  const a=document.createElement("a");
  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
- a.download=($("coffeeCode").value||"roast")+"_KoffyKraft_Open_Roast_Timer.csv";
+ a.download=($("coffeeCode").value||"roast")+"_KoffyKraft_Roast.csv";
  a.click();
  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 };
