@@ -12,7 +12,7 @@ label{font-size:.73rem;color:var(--muted);font-weight:700}input,select{width:100
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.btn{border:0;border-radius:12px;min-height:50px;padding:10px 13px;font-weight:700;background:#211c17;color:white;text-decoration:none;display:flex;align-items:center;justify-content:center}.ghost{background:#ece4da;color:var(--ink)}
 .saved{font-size:.78rem;color:var(--accent);min-height:1em;margin-top:8px}footer{text-align:center;color:var(--muted);font-size:.7rem;padding:12px}
 @media(max-width:520px){.grid{grid-template-columns:1fr 1fr}.full{grid-column:1/-1}}
-</style></head><body><main class="app">
+</style><script src="koffykraft-db.js"></script></head><body><main class="app">
 <header><img class="wordmark" src="koffykraft-wordmark.png" alt="Koffy Kraft"><div class="kicker">ROASTBOOKS</div><h1>New Roast</h1></header>
 <section class="card"><div class="grid">
 <div class="field full"><label>Roastery</label><input id="roasteryName"></div>
@@ -33,15 +33,14 @@ label{font-size:.73rem;color:var(--muted);font-weight:700}input,select{width:100
 <section class="card"><div class="actions" style="margin-top:0"><a class="btn ghost" href="roastbooks.html">Roastbooks</a><a class="btn ghost" href="roast-timer-v14.html">Timer</a></div></section>
 <footer>© 2026 KoffyKraft</footer></main>
 <script>
-const $=id=>document.getElementById(id),DB='KoffyKraftTemporaryRoastbook',VER=1;
+const $=id=>document.getElementById(id);
 const ids=['roasteryName','machineName','estate','bean','coffeeCode','roastNo','moisture','greenWeight','chargeTemp','targetColor','tileStart','tileEnd'];
 function data(){const d={};ids.forEach(id=>d[id]=$(id).value);d.id='plan-'+Date.now();d.savedAt=new Date().toISOString();return d}
 function fill(d){if(!d)return;ids.forEach(id=>{if(d[id]!=null)$(id).value=d[id]})}
-function openDB(){return new Promise((ok,no)=>{const r=indexedDB.open(DB,VER);r.onupgradeneeded=e=>{const x=e.target.result;if(!x.objectStoreNames.contains('roasts'))x.createObjectStore('roasts',{keyPath:'id'});if(!x.objectStoreNames.contains('plans'))x.createObjectStore('plans',{keyPath:'id'})};r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
 async function save(go){const d=data();localStorage.setItem('kk_preroast_plan',JSON.stringify(d));
  const fields={roasteryName:d.roasteryName,machineName:d.machineName,estate:d.estate,coffeeCode:d.coffeeCode,roastNo:d.roastNo,roastDate:new Date().toISOString().slice(0,10),moisture:d.moisture,greenWeight:d.greenWeight,chargeTemp:d.chargeTemp,targetColor:d.targetColor,roastedWeight:'',finalColor:'',notes:d.bean||''};
  localStorage.setItem('kk_fields_v10',JSON.stringify(fields));
- try{const db=await openDB();await new Promise((ok,no)=>{const tx=db.transaction('plans','readwrite');tx.objectStore('plans').put(d);tx.oncomplete=ok;tx.onerror=()=>no(tx.error)})}catch(e){}
+ try{await KKDB.put('plans',d)}catch(e){$('saved').textContent='Could not save preset';if(!go)return}
  const old=JSON.parse(localStorage.getItem('kk_roast_v10')||'{}');old.tile={start:Number(d.tileStart)||170,end:Number(d.tileEnd)||210,step:old.tile?.step||1,decimals:old.tile?.decimals||0};localStorage.setItem('kk_roast_v10',JSON.stringify(old));
  $('saved').textContent='Saved';if(go)location.href='roast-timer-v14.html';
 }
