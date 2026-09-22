@@ -1,8 +1,129 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KoffyKraft Account</title><style>*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;margin:0;color:#111}.app{max-width:600px;margin:auto;padding:26px 16px}header{display:flex;justify-content:space-between;align-items:center}h1{font-size:26px}.card{border:1px solid #ddd;border-radius:16px;padding:15px;margin:15px 0}input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0}.btn{border:1px solid #111;background:#111;color:#fff;padding:11px 13px;border-radius:10px;font-weight:700}.ghost{background:#fff;color:#111}.meta{font-size:12px;color:#777;margin:8px 0}.hide{display:none}a{color:#555}</style></head><body><main class="app"><header><h1>Account</h1><a href="index.html">KoffyKraft</a></header><script src="sync.js"></script><div class="card" id="local"><b>Continue without an account</b><div class="meta">Your tools and local saving remain available. No sign-in required.</div><a href="index.html">Continue locally</a></div><div class="card" id="signin"><b>Private cloud account</b><div class="meta">Sign in with email to sync roasts to the cloud.</div><input id="email" type="email" placeholder="Email"><button class="btn" id="send">Send sign-in code</button><div id="verify" class="hide"><input id="code" inputmode="numeric" placeholder="6-digit code" maxlength="6"><button class="btn" id="go">Verify & sign in</button></div><div class="meta" id="msg"></div></div><div class="card hide" id="me"><b id="who"></b><div class="meta">Signed in to KoffyKraft cloud · roasts will sync automatically</div><div class="meta" id="roastCount" style="margin-top:12px;padding-top:12px;border-top:1px solid #ddd"></div><button class="btn ghost" id="logout" style="width:100%;margin-top:12px">Sign out</button></div><div class="card"><b>Your data remains portable</b><div class="meta">Export everything or keep it in storage you control.</div><a href="data.html">My Data · Import · Export</a></div></main><script>
-const localCard=document.getElementById('local'),signinCard=document.getElementById('signin'),meCard=document.getElementById('me'),whoEl=document.getElementById('who'),roastCountEl=document.getElementById('roastCount'),emailInput=document.getElementById('email'),sendBtn=document.getElementById('send'),verifyBox=document.getElementById('verify'),codeInput=document.getElementById('code'),goBtn=document.getElementById('go'),logoutBtn=document.getElementById('logout'),msgEl=document.getElementById('msg');
-async function check(){if(!SYNC.isAuthenticated())return;const me=await SYNC.getMe();if(me.error)return;const roasts=await SYNC.loadRoasts();signinCard.classList.add('hide');localCard.classList.add('hide');meCard.classList.remove('hide');whoEl.textContent=me.user.email;roastCountEl.textContent=`${roasts.items?.length||0} roasts in cloud`}
-sendBtn.onclick=async()=>{msgEl.textContent='';const result=await SYNC.requestSignIn(emailInput.value);if(result.ok){verifyBox.classList.remove('hide');msgEl.textContent='6-digit code sent to '+emailInput.value;codeInput.focus()}else{msgEl.textContent=result.error||'Sign-in unavailable'}};
-goBtn.onclick=async()=>{const result=await SYNC.verifyCode(emailInput.value,codeInput.value);if(result.ok){location.reload()}else{msgEl.textContent=result.error||'Could not sign in'}};
-logoutBtn.onclick=async()=>{await SYNC.logout();location.reload()};
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KoffyKraft Account</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;margin:0;color:#111}
+.app{max-width:600px;margin:auto;padding:26px 16px}
+header{display:flex;justify-content:space-between;align-items:center}
+h1{font-size:26px}
+.card{border:1px solid #ddd;border-radius:16px;padding:15px;margin:15px 0}
+input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0}
+.btn{border:1px solid #111;background:#111;color:#fff;padding:11px 13px;border-radius:10px;font-weight:700}
+.ghost{background:#fff;color:#111}
+.meta{font-size:12px;color:#777;margin:8px 0}
+.hide{display:none}
+a{color:#555}
+.backup-reminder{background:#fff3cd;border:1px solid #ffe699;border-radius:12px;padding:12px;margin:12px 0;font-size:13px;line-height:1.5}
+.backup-reminder strong{display:block;color:#111;margin-bottom:6px}
+</style>
+</head>
+<body>
+<main class="app">
+<header>
+<h1>Account</h1>
+<a href="roastbooks.html">KoffyKraft</a>
+</header>
+
+<script src="sync.js"></script>
+
+<div class="card" id="local">
+<b>Continue without an account</b>
+<div class="meta">Your tools and local saving remain available. No sign-in required.</div>
+<a href="roastbooks.html">Continue locally</a>
+</div>
+
+<div class="card" id="signin">
+<b>Private cloud account</b>
+<div class="meta">Sign in with email to sync roasts to the cloud.</div>
+<input id="email" type="email" placeholder="Email">
+<button class="btn" id="send">Send sign-in code</button>
+<div id="verify" class="hide">
+<input id="code" inputmode="numeric" placeholder="6-digit code" maxlength="6">
+<button class="btn" id="go">Verify & sign in</button>
+</div>
+<div class="meta" id="msg"></div>
+</div>
+
+<div class="card hide" id="me">
+<b id="who"></b>
+<div class="meta">Signed in to KoffyKraft cloud · roasts will sync automatically</div>
+<div class="meta" id="roastCount" style="margin-top:12px;padding-top:12px;border-top:1px solid #ddd"></div>
+<div class="backup-reminder">
+<strong>⚠️ Backup Your Data</strong>
+Keep your own copies of important roasts. Export to Dropbox, Google Drive, or your computer regularly.
+<div style="margin-top:8px"><a href="roasts.html" style="display:inline-block;padding:6px 12px;background:#111;color:white;text-decoration:none;border-radius:6px;font-size:11px">Go to Roastbook</a></div>
+</div>
+<button class="btn ghost" id="logout" style="width:100%;margin-top:12px">Sign out</button>
+</div>
+
+<div class="card">
+<b>Your data remains portable</b>
+<div class="meta">Export everything or keep it in storage you control. You own your roasts.</div>
+<div style="margin-top:10px">
+<a href="roasts.html" style="display:inline-block;margin-right:12px;padding:8px 12px;background:#111;color:white;text-decoration:none;border-radius:8px;font-size:12px">Export Now</a>
+<a href="privacy.html" style="color:#777">Privacy</a> · <a href="terms.html" style="color:#777">Terms</a>
+</div>
+</div>
+
+</main>
+
+<script>
+const localCard=document.getElementById('local'),
+      signinCard=document.getElementById('signin'),
+      meCard=document.getElementById('me'),
+      whoEl=document.getElementById('who'),
+      roastCountEl=document.getElementById('roastCount'),
+      emailInput=document.getElementById('email'),
+      sendBtn=document.getElementById('send'),
+      verifyBox=document.getElementById('verify'),
+      codeInput=document.getElementById('code'),
+      goBtn=document.getElementById('go'),
+      logoutBtn=document.getElementById('logout'),
+      msgEl=document.getElementById('msg');
+
+async function check(){
+  if(!SYNC.isAuthenticated())return;
+  const me=await SYNC.getMe();
+  if(me.error)return;
+  const roasts=await SYNC.loadRoasts();
+  signinCard.classList.add('hide');
+  localCard.classList.add('hide');
+  meCard.classList.remove('hide');
+  whoEl.textContent=me.user.email;
+  roastCountEl.textContent=`${roasts.items?.length||0} roasts in cloud`;
+}
+
+sendBtn.onclick=async()=>{
+  msgEl.textContent='';
+  const result=await SYNC.requestSignIn(emailInput.value);
+  if(result.ok){
+    verifyBox.classList.remove('hide');
+    msgEl.textContent='6-digit code sent to '+emailInput.value;
+    codeInput.focus();
+  }else{
+    msgEl.textContent=result.error||'Sign-in unavailable';
+  }
+};
+
+goBtn.onclick=async()=>{
+  const result=await SYNC.verifyCode(emailInput.value,codeInput.value);
+  if(result.ok){
+    location.reload();
+  }else{
+    msgEl.textContent=result.error||'Could not sign in';
+  }
+};
+
+logoutBtn.onclick=async()=>{
+  await SYNC.logout();
+  location.reload();
+};
+
 check();
-</script></body></html>
+</script>
+</body>
+</html>
