@@ -1,0 +1,14 @@
+source=9b64015c2b027217122af76c04dc63d749d0afe8
+root=200
+timer=200
+roasts=200
+ocr=200
+sw=200
+api=200
+root_roastbooks=1
+root_old=0
+cache_v14=0
+timer_save=1
+ocr_tesseract=1
+roastbook_export=1
+status={"ok":true,"email_login":false,"database":true}
