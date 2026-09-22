@@ -436,7 +436,9 @@ async function persistFinishedRoast(){const f=fields();const rec={id:"roast-"+Da
 $("finish").onclick=async()=>{
  if(state.running)startPause();
  try{await persistFinishedRoast()}catch(e){toast("Could not save finished roast");return}
- const n=Number($("roastNo").value)||1;$("roastNo").value=n+1;updateKey();saveState();toast("Roast saved. Next roast number prepared")
+ const n=Number($("roastNo").value)||1;$("roastNo").value=n+1;updateKey();saveState();
+ toast("Roast saved · opening roastbook...");
+ setTimeout(()=>location.href='roasts.html',1200)
 };
 
 loadState();loadFields();if(!state.unit)state.unit="C";if(state.smoothCurve===undefined)state.smoothCurve=true;if(state.showRor===undefined)state.showRor=true;setMode(state.mode||"exhaust");renderAll();setInterval(()=>{renderTimer();drawCurve();updateSummary()},500);
