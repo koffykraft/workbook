@@ -20,10 +20,7 @@
     "production": {
       "vars": {
         "AUTH_EMAIL_ENDPOINT": "https://api.mailgun.net/v3/sandboxb97fe0c72adc4feea556292b5ff5f544.mailgun.org/messages"
-      },
-      "secrets": [
-        "AUTH_EMAIL_SECRET"
-      ]
+      }
     }
   }
 }
