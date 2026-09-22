@@ -4,16 +4,17 @@
 <style>
 :root{--bg:#f7f5f0;--card:#fff;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--accent:#8d583b}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
-button,input,select{font:inherit}.app{max-width:760px;margin:auto;padding:14px 12px 70px}
-header{padding:10px 3px 18px}.wordmark{display:block;width:150px;max-height:48px;object-fit:contain;object-position:left center;margin-bottom:18px}.kicker{font-size:.68rem;letter-spacing:.17em;color:var(--accent);font-weight:750}h1{font-size:2.5rem;letter-spacing:-.045em;line-height:1;margin:.18em 0}
+button,input,select{font:inherit}.app{max-width:760px;margin:auto;padding:8px 12px 70px}
+header{padding:8px 0 12px;border-bottom:1px solid var(--line);margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px}header .brand{font-size:18px;font-weight:300;letter-spacing:1px;color:var(--ink)}nav{display:flex;gap:12px;font-size:12px;flex:1;justify-content:center}nav a{text-decoration:none;color:var(--ink)}.acct{width:40px;height:40px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;text-decoration:none;font-size:18px;flex-shrink:0}.kicker{font-size:.68rem;letter-spacing:.17em;color:var(--accent);font-weight:750}h1{font-size:2.5rem;letter-spacing:-.045em;line-height:1;margin:.18em 0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin:10px 0}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}.field{display:flex;flex-direction:column;gap:5px}
 label{font-size:.73rem;color:var(--muted);font-weight:700}input,select{width:100%;border:1px solid var(--line);background:white;border-radius:13px;padding:13px 12px;min-height:50px;color:var(--ink)}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.btn{border:0;border-radius:12px;min-height:50px;padding:10px 13px;font-weight:700;background:#211c17;color:white;text-decoration:none;display:flex;align-items:center;justify-content:center}.ghost{background:#ece4da;color:var(--ink)}
 .saved{font-size:.78rem;color:var(--accent);min-height:1em;margin-top:8px}footer{text-align:center;color:var(--muted);font-size:.7rem;padding:12px}
-@media(max-width:520px){.grid{grid-template-columns:1fr 1fr}.full{grid-column:1/-1}}
+@media(max-width:640px){nav{gap:10px;font-size:11px}}@media(max-width:520px){.grid{grid-template-columns:1fr 1fr}.full{grid-column:1/-1}nav{gap:8px;font-size:10px}}
 </style><script src="koffykraft-db.js"></script></head><body><main class="app">
-<header><img class="wordmark" src="koffykraft-wordmark.png" alt="Koffy Kraft"><div class="kicker">ROASTBOOKS</div><h1>New Roast</h1></header>
+<header><span class="brand">Koffy Kraft</span><nav><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="account.html">Account</a></nav><a class="acct" href="account.html">👤</a></header>
+<div class="kicker">ROASTBOOKS</div><h1>New Roast</h1>
 <section class="card"><div class="grid">
 <div class="field full"><label>Roastery</label><input id="roasteryName"></div>
 <div class="field full"><label>Machine / roaster</label><input id="machineName"></div>
@@ -30,7 +31,6 @@ label{font-size:.73rem;color:var(--muted);font-weight:700}input,select{width:100
 </div>
 <div class="actions"><button class="btn" id="quick" style="grid-column:1/-1;background:#fff;color:#8b4b2e;border:1px solid #8b4b2e">Quick Roast</button><button class="btn ghost" id="savePlan">Save</button><button class="btn" id="saveOpen">Save & Roast</button></div>
 <div class="saved" id="saved"></div></section>
-<section class="card"><div class="actions" style="margin-top:0"><a class="btn ghost" href="roastbooks.html">Roastbooks</a><a class="btn ghost" href="roast-timer-v14.html">Timer</a></div></section>
 <footer>© 2026 KoffyKraft</footer></main>
 <script>
 const $=id=>document.getElementById(id);
