@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-title" content="KoffyKraft"><meta name="apple-mobile-web-app-capable" content="yes">
+<title>KoffyKraft Origin</title>
+<style>
+:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b;--soft:#faf7f2;--ok:#3f6b5a}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Arial;color:var(--ink);background:var(--bg)}
+.app{max-width:680px;margin:auto;padding:24px 16px 120px}
+h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 4px;line-height:1.2}
+.sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+.sync{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.sync i{width:8px;height:8px;border-radius:50%;background:#c9bfb2;display:inline-block}
+.sync.synced i{background:var(--ok)}.sync.syncing i{background:#c47f1d}.sync.error i{background:#b4432f}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:#ece7df;border-radius:12px;padding:4px;margin:12px 0 16px;position:sticky;top:0;z-index:5}
+.tabs button{border:0;background:transparent;border-radius:9px;padding:10px 4px;font:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+button{font:inherit}
+.btn{border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px 14px;font-weight:600;cursor:pointer;font-size:14px;color:var(--ink)}
+.btn.primary{background:#171512;color:#fff;border-color:#171512}
+.btn.danger{color:#b4432f}
+.btn.small{padding:7px 10px;font-size:13px;border-radius:9px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sec{display:flex;justify-content:space-between;align-items:center;margin:18px 0 8px}
+.sec h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:0}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:8px 0;cursor:pointer}
+.card:active{background:var(--soft)}
+.card b{font-size:17px;display:block}
+.card .m{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.45}
+.card .tagrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;background:var(--soft);border:1px solid #efe8de;border-radius:999px;padding:3px 8px;color:#5c554e}
+.empty{color:var(--muted);padding:18px;border:1px dashed var(--line);border-radius:14px;font-size:13px;line-height:1.5}
+form{display:block}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:10px 10px}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld.full{grid-column:1/-1}
+.fld label{font-size:12px;color:var(--muted);font-weight:600}
+.fld label em{font-style:normal;color:#b4432f}
+input,select,textarea{font:inherit;font-size:15px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);width:100%;min-width:0}
+textarea{min-height:76px;resize:vertical}
+.unitwrap{display:flex;gap:6px}.unitwrap input{flex:1}.unitwrap select{width:auto;flex:0 0 auto;padding:11px 8px}
+.fhead{grid-column:1/-1;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:12px 0 0;font-weight:700}
+.calc{grid-column:1/-1;background:var(--soft);border:1px solid #efe8de;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.5}
+.calc b{font-variant-numeric:tabular-nums}
+.checks{display:grid;gap:6px}
+.checks label{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink);font-weight:400;background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+.checks input{width:auto}
+.lst{display:grid;gap:6px}
+.lrow{display:grid;gap:6px;align-items:center}
+.lrow input,.lrow select{padding:9px 10px;font-size:14px}
+.x{border:0;background:transparent;color:var(--muted);font-size:18px;padding:4px 8px;cursor:pointer}
+.lsum{font-size:13px;color:var(--muted)}
+.step{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff;display:grid;gap:8px}
+.step .sh{display:flex;gap:8px;align-items:center}
+.step .sh select{flex:1;font-weight:600}
+.step .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.step .grid2>*,.lrow>*{min-width:0}.step .dt{grid-column:1/-1}.rd{border:1px solid #efe8de;background:var(--soft);border-radius:11px;padding:8px;display:grid;gap:6px}.rd .r1{display:flex;gap:6px;align-items:center}.rd .r1 input{flex:1}.rd .r2{display:grid;gap:6px}
+.step .mini{font-size:12px;color:var(--muted)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;gap:8px;justify-content:space-between;z-index:20}
+.bar .grow{flex:1}
+.lineage{display:grid;gap:0;margin-top:4px}
+.lin{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start}
+.lin .dot{width:12px;height:12px;border-radius:50%;background:var(--coffee);margin:4px 5px 0;position:relative}
+.lin:not(:last-child) .dot::after{content:"";position:absolute;left:5px;top:12px;width:2px;height:44px;background:#e3d9cc}
+.lin .lt{font-size:14px;padding-bottom:14px;line-height:1.4}.lin .lt small{display:block;color:var(--muted);font-size:12px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#171512;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30}
+.toast.on{opacity:1}
+.back{background:none;border:0;color:var(--coffee);font-weight:600;padding:6px 0;cursor:pointer;font-size:14px}
+@media(max-width:380px){.f{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="app">
+<header style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #ddd;margin-bottom:20px;gap:12px"><span style="font-size:18px;font-weight:300;letter-spacing:1px;color:#111">Koffy Kraft</span><nav style="display:flex;gap:12px;font-size:13px;flex:1;justify-content:center;flex-wrap:wrap"><a href="origin.html" style="text-decoration:none;color:#111;font-weight:600">Origin</a><a href="roast-timer-v14.html" style="text-decoration:none;color:#111">Timer</a><a href="roast-graph.html" style="text-decoration:none;color:#111">Graph</a><a href="roasts.html" style="text-decoration:none;color:#111">Roastbook</a><a href="account.html" style="text-decoration:none;color:#111">Account</a></nav><a href="account.html" style="width:40px;height:40px;border:1px solid #ddd;border-radius:50%;display:grid;place-items:center;text-decoration:none;font-size:18px;flex-shrink:0">👤</a></header>
+<div id="view"></div>
+</main>
+<div class="toast" id="toast"></div>
+<script src="sync.js"></script>
+<script src="origin-db.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const n=parseFloat(v);return Number.isFinite(n)?n:null};
+const today=()=>new Date().toISOString().slice(0,10);
+const r1=v=>Math.round(v*10)/10, r2=v=>Math.round(v*100)/100;
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),1800)}
+function fmtDate(d){if(!d)return '';const x=new Date(d.length===10?d+'T00:00':d);return isNaN(x)?d:x.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
+function fmtDT(d){if(!d)return '';const x=new Date(d);return isNaN(x)?d:x.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+function hours(a,b){if(!a||!b)return null;const h=(new Date(b)-new Date(a))/36e5;return Number.isFinite(h)&&h>=0?h:null}
+function fmtDur(h){if(h==null)return '';if(h<48)return r1(h)+' h';return r1(h/24)+' days'}
+
+// ---------- field definitions ----------
+const SPECIES=['Arabica','Robusta','Liberica','Excelsa','Other'];
+const VARIETIES=['SLN 795 (S795)','SLN 9','SLN 5B','Chandragiri','Cauvery (Catimor)','Catuai','Kent','Sln 13','Gesha','Bourbon','Typica','SL28','SL34','Pacamara','Robusta CxR','Robusta Peridenia','Robusta SLN 274','Robusta Old Robusta'];
+const PATHWAYS=['Washed','Natural','Honey, white','Honey, yellow','Honey, red','Honey, black','Pulped natural','Anaerobic washed','Anaerobic natural','Carbonic maceration','Wet-hulled','Monsooned','Experimental'];
+const F={
+ estate:[
+  {k:'name',l:'Estate name',t:'text',req:1,full:1,ph:'Thumpassery Estate'},
+  {k:'locality',l:'Village / locality',t:'text'},{k:'district',l:'District',t:'text'},
+  {k:'region',l:'State / region',t:'text'},{k:'country',l:'Country',t:'text',def:'India'},
+  {k:'manager',l:'Owner / manager',t:'text',full:1},
+  {k:'area',l:'Total area',t:'num',unit:'areaUnit',units:['acre','ha'],def_unit:'acre'},
+  {k:'notes',l:'Notes',t:'area',full:1}],
+ plot:[
+  {k:'estateId',l:'Estate',t:'ref',ref:'estate',req:1,full:1},
+  {k:'block',l:'Block',t:'text',ph:'North block'},{k:'name',l:'Plot name / code',t:'text',req:1,ph:'P3'},
+  {h:'Location'},
+  {k:'gps',t:'gps',full:1},
+  {k:'altitude',l:'Altitude',t:'num',unit:'altUnit',units:['ft','m'],def_unit:'ft'},
+  {k:'area',l:'Area',t:'num',unit:'areaUnit',units:['acre','ha'],def_unit:'acre'},
+  {k:'slope',l:'Slope / aspect',t:'text',ph:'Gentle, east facing'},{k:'soil',l:'Soil',t:'text',ph:'Red laterite'},
+  {h:'Plants'},
+  {k:'species',l:'Species',t:'sel',opts:SPECIES},{k:'variety',l:'Variety',t:'text',list:'varieties'},
+  {k:'plantYear',l:'Planting year',t:'num',ph:'2012'},{k:'plantAgeCalc',t:'calc',fn:r=>{const y=num(r.plantYear);return y?'Plant age <b>'+(new Date().getFullYear()-y)+' years</b>':''}},
+  {k:'plantCount',l:'Plant count',t:'num'},
+  {k:'spacingRow',l:'Row spacing',t:'num',unit:'spacingUnit',units:['ft','m'],def_unit:'ft'},{k:'spacingPlant',l:'Plant spacing',t:'num',unit:'spacingUnit',units:['ft','m'],def_unit:'ft'},
+  {k:'densityCalc',t:'calc',fn:r=>{const a=num(r.spacingRow),b=num(r.spacingPlant);if(!a||!b)return '';const u=r.spacingUnit||'ft';const perAcre=u==='m'?4046.86/(a*b):43560/(a*b),perHa=u==='m'?10000/(a*b):107639/(a*b);return 'Planting density <b>'+Math.round(perAcre)+' plants/acre</b> ('+Math.round(perHa)+'/ha)'}},
+  {h:'Shade and care'},
+  {k:'shade',l:'Shade intensity',t:'sel',opts:['None','Light','Medium','Heavy']},{k:'shadePct',l:'Shade cover %',t:'num'},
+  {k:'shadeTrees',l:'Shade trees',t:'text',full:1,ph:'Silver oak, jackfruit, ficus'},
+  {k:'irrigation',l:'Irrigation',t:'sel',opts:['Rainfed','Sprinkler','Drip','Other']},{k:'lastPruning',l:'Last pruning',t:'date'},
+  {k:'fertilizer',l:'Nutrition / fertiliser notes',t:'area',full:1},
+  {h:'Flowering'},
+  {k:'blossomShower',l:'Blossom shower',t:'date'},{k:'backingShower',l:'Backing shower',t:'date'},
+  {k:'flowering',l:'Flowering records',t:'list',full:1,cols:[{k:'date',l:'Date',t:'date'},{k:'notes',l:'Intensity / notes',t:'text'}],add:'Add flowering'},
+  {k:'expectedHarvest',l:'Expected harvest',t:'text',full:1,ph:'Late Nov to Jan'},
+  {k:'notes',l:'Notes',t:'area',full:1}],
+ harvest:[
+  {k:'code',l:'Harvest code',t:'text',req:1},{k:'date',l:'Date',t:'date',req:1,def:today},
+  {k:'startTime',l:'Start time',t:'time'},{k:'endTime',l:'End time',t:'time'},
+  {k:'plotIds',l:'Plots picked',t:'refs',ref:'plot',full:1},
+  {k:'pickType',l:'Picking',t:'sel',opts:['Selective','Strip','Gleaning','Mixed']},{k:'pickers',l:'Pickers',t:'num'},
+  {h:'Weights'},
+  {k:'baskets',l:'Baskets / batches',t:'list',full:1,cols:[{k:'label',l:'Basket / picker',t:'text'},{k:'kg',l:'kg',t:'num'}],add:'Add basket',sum:'kg'},
+  {k:'cherryKg',t:'calc',fn:r=>{const t=harvestKg(r);return t?'Total cherry <b>'+r1(t)+' kg</b>'+((r.baskets||[]).length?' from '+r.baskets.filter(b=>num(b.kg)).length+' baskets':''):''}},
+  {h:'Cherry quality'},
+  {k:'ripePct',l:'Ripe %',t:'num'},{k:'underPct',l:'Under-ripe %',t:'num'},{k:'overPct',l:'Over-ripe %',t:'num'},{k:'floatPct',l:'Floaters %',t:'num'},
+  {k:'brix',l:'Brix readings (optional)',t:'list',full:1,cols:[{k:'v',l:'°Brix',t:'num'}],add:'Add Brix reading'},
+  {k:'brixCalc',t:'calc',fn:r=>{const v=(r.brix||[]).map(x=>num(x.v)).filter(x=>x!=null);if(!v.length)return '';return 'Average Brix <b>'+r1(v.reduce((a,b)=>a+b,0)/v.length)+'°</b> from '+v.length+' readings (range '+Math.min(...v)+' to '+Math.max(...v)+')'}},
+  {k:'weather',l:'Weather',t:'text',full:1,ph:'Clear, 24°C'},
+  {k:'notes',l:'Notes',t:'area',full:1}],
+ process:[
+  {k:'code',l:'Process code',t:'text',req:1},{k:'pathway',l:'Pathway',t:'sel',opts:PATHWAYS,req:1},
+  {k:'harvestIds',l:'Source harvests',t:'refs',ref:'harvest',full:1},
+  {k:'cherryIn',l:'Cherry in (if not from harvests)',t:'num',unitLabel:'kg'},{k:'started',l:'Started',t:'date',def:today},
+  {k:'inCalc',t:'calc',fn:r=>{const s=processSummary(r);return s.cherry?'Cherry in <b>'+r1(s.cherry)+' kg</b>'+(s.green?' · Green out <b>'+r1(s.green)+' kg</b> · Outturn <b>'+r1(s.outturn)+'%</b>':'')+(s.days!=null?' · '+fmtDur(s.days*24):''):''}},
+  {h:'Steps'},
+  {k:'steps',t:'steps',full:1},
+  {k:'notes',l:'Notes',t:'area',full:1}],
+ green:[
+  {k:'code',l:'Green lot code',t:'text',req:1},{k:'name',l:'Name',t:'text',ph:'Heggadde washed Catuai'},
+  {k:'processId',l:'From process',t:'ref',ref:'process',full:1},
+  {k:'lineageCalc',t:'calc',fn:r=>lineageHtml(r)},
+  {k:'weightKg',l:'Green weight',t:'num',unitLabel:'kg',req:1},{k:'date',l:'Date',t:'date',def:today},
+  {k:'bags',l:'Bags',t:'num'},{k:'bagKg',l:'Bag size',t:'num',unitLabel:'kg'},
+  {h:'Quality'},
+  {k:'moisture',l:'Moisture %',t:'num'},{k:'aw',l:'Water activity (aw)',t:'num'},
+  {k:'density',l:'Density g/L',t:'num'},{k:'screen',l:'Screen size',t:'text',ph:'17/18'},
+  {k:'grade',l:'Grade',t:'text',ph:'AA, A, PB'},{k:'score',l:'Cup score',t:'num'},
+  {k:'storage',l:'Storage',t:'text',full:1,ph:'GrainPro, store room 2'},
+  {k:'stockCalc',t:'calc',fn:r=>stockHtml(r)},
+  {k:'notes',l:'Notes',t:'area',full:1}]
+};
+const STEP_TYPES={
+ 'Sorting / floating':{f:['start','inKg','outKg','floatKg','notes']},
+ 'Pulping':{f:['start','inKg','outKg','method','notes'],methods:['Disc pulper','Drum pulper','Eco-pulper','Hand']},
+ 'Fermentation':{f:['start','end','method','vessel','notes'],methods:['Dry','Underwater','Anaerobic','Carbonic','With yeast / starter','Other'],read:['temp','ph','brix']},
+ 'Washing':{f:['start','method','notes'],methods:['Channel','Tank','Machine']},
+ 'Drying':{f:['start','end','method','location','layer','outKg','notes'],methods:['Raised beds','Patio','Tarpaulin','Mechanical dryer','Other'],read:['moisture','temp']},
+ 'Resting':{f:['start','end','method','location','notes'],methods:['In cherry','In parchment','As green']},
+ 'Hulling':{f:['start','inKg','outKg','notes']},
+ 'Grading / sorting':{f:['start','inKg','outKg','method','defects','notes'],methods:['Screen','Density table','Colour sorter','Hand picking']},
+ 'Other':{f:['name','start','end','inKg','outKg','notes']}};
+const STEP_LABELS={start:'Start',end:'End',inKg:'In kg',outKg:'Out kg',floatKg:'Floaters kg',method:'Method',vessel:'Vessel',location:'Location / bed',layer:'Layer cm',defects:'Defects',notes:'Notes',name:'Step name'};
+const READ_LABELS={temp:'Temp °C',ph:'pH',brix:'°Brix',moisture:'Moisture %'};
+
+// ---------- data helpers ----------
+let DB={estate:[],plot:[],harvest:[],process:[],green:[]};let ROASTS=[];
+async function loadAll(){for(const t of ORIGIN.TYPES)DB[t]=await ORIGIN.all(t);const local=await loadRoasts();const m=new Map(local.map(r=>[r.id,r]));for(const r of await cloudRoasts())if(!m.has(r.id))m.set(r.id,r);ROASTS=[...m.values()]}
+let CLOUD_ROASTS=null;async function cloudRoasts(){if(CLOUD_ROASTS)return CLOUD_ROASTS;if(typeof SYNC==='undefined'||!SYNC.isAuthenticated()||!navigator.onLine)return [];try{const res=await SYNC.loadRoasts();CLOUD_ROASTS=(res.items||[]).map(r=>{let n={};try{n=typeof r.notes==='string'?JSON.parse(r.notes):(r.notes||{})}catch(e){}return{id:r.id,greenLotId:n.greenLotId||'',greenWeight:r.green_weight}});return CLOUD_ROASTS}catch(e){return []}}
+function byId(t,id){return DB[t].find(x=>x.id===id)}
+function harvestKg(h){const b=(h.baskets||[]).map(x=>num(x.kg)).filter(x=>x!=null);return b.length?b.reduce((a,c)=>a+c,0):num(h.cherryKg)}
+function processSummary(p){const hs=(p.harvestIds||[]).map(id=>byId('harvest',id)).filter(Boolean);const fromH=hs.reduce((a,h)=>a+(harvestKg(h)||0),0);const cherry=num(p.cherryIn)||fromH||null;const steps=p.steps||[];let green=null;for(const s of steps)if(['Hulling','Grading / sorting'].includes(s.type)&&num(s.outKg))green=num(s.outKg);const starts=steps.map(s=>s.start).filter(Boolean).sort(),ends=steps.map(s=>s.end||s.start).filter(Boolean).sort();const days=starts.length&&ends.length?hours(starts[0],ends[ends.length-1])/24:null;let moist=null;for(const s of steps)for(const r of s.readings||[])if(num(r.moisture)!=null)moist=num(r.moisture);return{cherry,green,outturn:cherry&&green?green/cherry*100:null,days,moist,harvests:hs}}
+function lineage(g){const p=g.processId?byId('process',g.processId):null;const hs=p?(p.harvestIds||[]).map(id=>byId('harvest',id)).filter(Boolean):[];const plotIds=[...new Set(hs.flatMap(h=>h.plotIds||[]))];const plots=plotIds.map(id=>byId('plot',id)).filter(Boolean);const estates=[...new Set(plots.map(x=>x.estateId))].map(id=>byId('estate',id)).filter(Boolean);return{p,hs,plots,estates,varieties:[...new Set(plots.map(x=>x.variety).filter(Boolean))],species:[...new Set(plots.map(x=>x.species).filter(Boolean))]}}
+function lineageHtml(g){if(!g.processId)return '';const L=lineage(g);const it=[];if(L.estates.length)it.push(['Estate',L.estates.map(e=>e.name).join(', ')]);if(L.plots.length)it.push(['Plots',L.plots.map(p=>[p.block,p.name].filter(Boolean).join(' / ')+(p.variety?' · '+p.variety:'')+(p.altitude?' · '+p.altitude+' '+(p.altUnit||'ft'):'')).join('<br>'),1]);if(L.hs.length)it.push(['Harvest',L.hs.map(h=>esc(h.code)+' · '+fmtDate(h.date)+(harvestKg(h)?' · '+r1(harvestKg(h))+' kg cherry':'')).join('<br>'),1]);if(L.p){const s=processSummary(L.p);it.push(['Process',esc(L.p.code)+' · '+esc(L.p.pathway||'')+(s.outturn?' · outturn '+r1(s.outturn)+'%':'')+(s.days!=null?' · '+fmtDur(s.days*24):''),1])}it.push(['Green lot',esc(g.code||'this lot'),1]);return '<div class="lineage">'+it.map(([a,b,raw])=>'<div class="lin"><span class="dot"></span><div class="lt">'+(raw?b:esc(b))+'<small>'+a+'</small></div></div>').join('')+'</div>'}
+async function loadRoasts(){try{return await new Promise((ok)=>{const q=indexedDB.open('KoffyKraftTemporaryRoastbook');q.onsuccess=()=>{const db=q.result;if(!db.objectStoreNames.contains('roasts')){db.close();ok([]);return}const t=db.transaction('roasts','readonly').objectStore('roasts').getAll();t.onsuccess=()=>{db.close();ok(t.result||[])};t.onerror=()=>{db.close();ok([])}};q.onerror=()=>ok([]);q.onupgradeneeded=e=>{e.target.transaction.abort()}})}catch{return[]}}
+function roastsFor(g){return ROASTS.filter(r=>r.greenLotId===g.id)}
+function stockHtml(g){const w=num(g.weightKg);if(!g.id)return w?'Stock <b>'+r2(w)+' kg</b>':'';const rs=roastsFor(g);const used=rs.reduce((a,r)=>a+(num(r.greenWeight)||0),0)/1000;if(!w&&!rs.length)return '';return 'Roasted from this lot: <b>'+rs.length+'</b> roast'+(rs.length===1?'':'s')+' · <b>'+r2(used)+' kg</b> used'+(w?' · <b>'+r2(Math.max(0,w-used))+' kg left</b> of '+r2(w)+' kg':'')}
+function nextCode(type,prefix,date){const d=(date||today()).replace(/-/g,'').slice(2);const n=DB[type].filter(x=>String(x.code||'').startsWith(prefix+d)).length+1;return prefix+d+'-'+n}
+function title(t,r){if(t==='estate')return r.name||'Estate';if(t==='plot')return [r.block,r.name].filter(Boolean).join(' / ')||'Plot';if(t==='green')return r.code+(r.name?' · '+r.name:'');return r.code||t}
+function refLabel(t,r){if(t==='plot'){const e=byId('estate',r.estateId);return title('plot',r)+(e?' · '+e.name:'')+(r.variety?' · '+r.variety:'')}if(t==='harvest'){const kg=harvestKg(r);return r.code+' · '+fmtDate(r.date)+(kg?' · '+r1(kg)+' kg':'')}if(t==='process')return r.code+' · '+(r.pathway||'');return title(t,r)}
+
+// ---------- routing ----------
+let TAB='farm';
+function go(h){location.hash=h}
+window.addEventListener('hashchange',route);
+async function route(){const h=location.hash.slice(1);await loadAll();const m=h.match(/^edit\/(estate|plot|harvest|process|green)\/(.+)$/);if(m&&m[2]!=='new'&&!byId(m[1],m[2])&&typeof SYNC!=='undefined'&&SYNC.isAuthenticated()){$('#view').innerHTML='<div class="empty">Loading from your account…</div>';try{await ORIGIN.sync()}catch(e){}await loadAll()}if(m)return editView(m[1],m[2]==='new'?null:m[2]);if(['farm','harvest','process','green'].includes(h))TAB=h;listView()}
+
+// ---------- list ----------
+function syncBadge(){return '<span class="sync" id="syncState"><i></i><span>'+(typeof SYNC!=='undefined'&&SYNC.isAuthenticated()?'Synced to your account':'Saved on this device')+'</span></span>'}
+function listView(){const tabs=[['farm','Farm'],['harvest','Harvest'],['process','Process'],['green','Green']];let body='';
+ if(TAB==='farm'){body+='<div class="sec"><h2>Estates</h2><button class="btn small" onclick="go(\'edit/estate/new\')">+ Estate</button></div>'+(DB.estate.length?DB.estate.map(e=>card('estate',e,[e.locality,e.district,e.region].filter(Boolean).join(', '),[e.area?e.area+' '+(e.areaUnit||'acre'):'',DB.plot.filter(p=>p.estateId===e.id).length+' plots'])).join(''):'<div class="empty">Add your estate first, then its blocks and plots.</div>');
+  body+='<div class="sec"><h2>Plots</h2><button class="btn small" onclick="go(\'edit/plot/new\')"'+(DB.estate.length?'':' disabled')+'>+ Plot</button></div>'+(DB.plot.length?DB.estate.map(e=>{const ps=DB.plot.filter(p=>p.estateId===e.id);return ps.map(p=>card('plot',p,e.name,[p.variety,p.species,p.altitude?p.altitude+' '+(p.altUnit||'ft'):'',p.area?p.area+' '+(p.areaUnit||'acre'):'',p.plantYear?(new Date().getFullYear()-p.plantYear)+' yrs':'',p.shade?p.shade+' shade':''])).join('')}).join(''):'<div class="empty">No plots yet. A plot holds variety, plant age, spacing, shade and flowering.</div>')}
+ if(TAB==='harvest'){body+='<div class="sec"><h2>Harvests</h2><button class="btn small" onclick="go(\'edit/harvest/new\')">+ Harvest</button></div>'+(DB.harvest.length?sortD(DB.harvest,'date').map(h=>{const kg=harvestKg(h);const ps=(h.plotIds||[]).map(id=>byId('plot',id)).filter(Boolean);const b=(h.brix||[]).map(x=>num(x.v)).filter(x=>x!=null);return card('harvest',h,fmtDate(h.date)+(ps.length?' · '+ps.map(p=>title('plot',p)).join(', '):''),[kg?r1(kg)+' kg cherry':'',h.pickType,h.ripePct?h.ripePct+'% ripe':'',b.length?r1(b.reduce((a,c)=>a+c,0)/b.length)+'° Brix':''])}).join(''):'<div class="empty">Record each day\'s picking: plots, baskets, ripeness and Brix.</div>')}
+ if(TAB==='process'){body+='<div class="sec"><h2>Processing</h2><button class="btn small" onclick="go(\'edit/process/new\')">+ Process</button></div>'+(DB.process.length?sortD(DB.process,'started').map(p=>{const s=processSummary(p);return card('process',p,(p.pathway||'')+(p.started?' · started '+fmtDate(p.started):''),[s.cherry?r1(s.cherry)+' kg cherry':'',s.green?r1(s.green)+' kg green':'',s.outturn?'outturn '+r1(s.outturn)+'%':'',(p.steps||[]).length+' steps',s.moist!=null?'last moisture '+s.moist+'%':''])}).join(''):'<div class="empty">Start a processing run from one or more harvests, then log each step: fermentation, drying, resting, hulling.</div>')}
+ if(TAB==='green'){body+='<div class="sec"><h2>Green lots</h2><button class="btn small" onclick="go(\'edit/green/new\')">+ Green lot</button></div>'+(DB.green.length?sortD(DB.green,'date').map(g=>{const L=lineage(g);const used=roastsFor(g).reduce((a,r)=>a+(num(r.greenWeight)||0),0)/1000;const w=num(g.weightKg);return card('green',g,[L.estates.map(e=>e.name).join(', '),L.varieties.join(', '),L.p?L.p.pathway:''].filter(Boolean).join(' · '),[w!=null?r2(Math.max(0,w-used))+' kg left':'',g.moisture?g.moisture+'% moisture':'',g.grade,roastsFor(g).length?roastsFor(g).length+' roasts':''])}).join(''):'<div class="empty">A green lot is what goes to the roaster. Link it to its process, and pick it in the Timer as the roast\'s source.</div>')}
+ $('#view').innerHTML='<h1>Origin</h1><div class="sub">Farm, harvest, processing and green lots. '+syncBadge()+'</div><div class="tabs">'+tabs.map(([k,l])=>'<button class="'+(TAB===k?'on':'')+'" onclick="go(\''+k+'\')">'+l+'</button>').join('')+'</div>'+body;
+ refreshSyncBadge()}
+function sortD(a,k){return [...a].sort((x,y)=>String(y[k]||y.updatedAt).localeCompare(String(x[k]||x.updatedAt)))}
+function card(t,r,sub,tags){return '<div class="card" onclick="go(\'edit/'+t+'/'+r.id+'\')"><b>'+esc(title(t,r))+'</b>'+(sub?'<div class="m">'+esc(sub)+'</div>':'')+'<div class="tagrow">'+tags.filter(Boolean).map(x=>'<span class="tag">'+esc(x)+'</span>').join('')+'</div></div>'}
+
+// ---------- edit ----------
+let CUR=null,CUR_T=null;
+function editView(t,id){CUR_T=t;const ex=id?byId(t,id):null;if(id&&!ex){toast('Not found');return go(TAB)}
+ CUR=ex?JSON.parse(JSON.stringify(ex)):{type:t};if(!ex){F[t].forEach(f=>{if(f.def!==undefined&&CUR[f.k]==null)CUR[f.k]=typeof f.def==='function'?f.def():f.def;if(f.unit&&!CUR[f.unit])CUR[f.unit]=f.def_unit});if(t==='harvest')CUR.code=nextCode('harvest','H',CUR.date);if(t==='process'){CUR.code=nextCode('process','P',CUR.started);CUR.steps=[]}if(t==='green')CUR.code=nextCode('green','G',CUR.date);if(t==='plot'&&DB.estate.length===1)CUR.estateId=DB.estate[0].id;if(t==='plot'){CUR.species='Arabica'}if(['harvest','process','green'].includes(t))CUR._auto=1}
+ const names={estate:'Estate',plot:'Plot',harvest:'Harvest',process:'Processing run',green:'Green lot'};const backTab={estate:'farm',plot:'farm',harvest:'harvest',process:'process',green:'green'}[t];
+ $('#view').innerHTML='<button class="back" onclick="go(\''+backTab+'\')">‹ Back</button><h1>'+(ex?esc(title(t,ex)):'New '+names[t].toLowerCase())+'</h1><div class="sub">'+names[t]+(ex?' · updated '+fmtDT(ex.updatedAt):'')+'</div><form id="form" class="f" onsubmit="return false">'+F[t].map(fieldHtml).join('')+'</form><datalist id="varieties">'+VARIETIES.map(v=>'<option value="'+esc(v)+'">').join('')+'</datalist>';
+ document.querySelector('.bar')?.remove();const bar=document.createElement('div');bar.className='bar';bar.innerHTML=(ex?'<button class="btn danger" id="del">Delete</button>':'<span></span>')+'<button class="btn primary grow" id="save">Save</button>';document.body.appendChild(bar);
+ $('#save').onclick=save;if(ex)$('#del').onclick=del;bindForm();window.scrollTo(0,0)}
+window.addEventListener('hashchange',()=>{if(!location.hash.startsWith('#edit/'))document.querySelector('.bar')?.remove()});
+function fid(k){return 'f_'+k}
+function fieldHtml(f){if(f.h)return '<div class="fhead">'+esc(f.h)+'</div>';const v=CUR[f.k];const lab=f.l?'<label for="'+fid(f.k)+'">'+esc(f.l)+(f.req?' <em>*</em>':'')+'</label>':'';const cls='fld'+(f.full?' full':'');
+ switch(f.t){
+ case 'text':return '<div class="'+cls+'">'+lab+'<input id="'+fid(f.k)+'" data-k="'+f.k+'" value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'"'+(f.list?' list="'+f.list+'"':'')+'></div>';
+ case 'num':return '<div class="'+cls+'">'+lab+'<div class="unitwrap"><input id="'+fid(f.k)+'" data-k="'+f.k+'" type="number" step="any" inputmode="decimal" value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'">'+(f.unit?'<select data-k="'+f.unit+'" aria-label="unit">'+f.units.map(u=>'<option'+((CUR[f.unit]||f.def_unit)===u?' selected':'')+'>'+u+'</option>').join('')+'</select>':f.unitLabel?'<span style="align-self:center;color:var(--muted);font-size:13px">'+f.unitLabel+'</span>':'')+'</div></div>';
+ case 'date':case 'time':return '<div class="'+cls+'">'+lab+'<input id="'+fid(f.k)+'" data-k="'+f.k+'" type="'+f.t+'" value="'+esc(v)+'"></div>';
+ case 'area':return '<div class="'+cls+'">'+lab+'<textarea id="'+fid(f.k)+'" data-k="'+f.k+'">'+esc(v)+'</textarea></div>';
+ case 'sel':return '<div class="'+cls+'">'+lab+'<select id="'+fid(f.k)+'" data-k="'+f.k+'"><option value="">–</option>'+f.opts.map(o=>'<option'+(v===o?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select></div>';
+ case 'ref':{const rows=DB[f.ref].filter(x=>x.id!==CUR.id);return '<div class="'+cls+'">'+lab+'<select id="'+fid(f.k)+'" data-k="'+f.k+'"><option value="">'+(rows.length?'Choose…':'None yet')+'</option>'+rows.map(x=>'<option value="'+x.id+'"'+(v===x.id?' selected':'')+'>'+esc(refLabel(f.ref,x))+'</option>').join('')+'</select></div>'}
+ case 'refs':{const rows=f.ref==='harvest'?sortD(DB.harvest,'date'):DB[f.ref];const sel=new Set(v||[]);return '<div class="'+cls+'">'+lab+(rows.length?'<div class="checks">'+rows.map(x=>'<label><input type="checkbox" data-refs="'+f.k+'" value="'+x.id+'"'+(sel.has(x.id)?' checked':'')+'>'+esc(refLabel(f.ref,x))+'</label>').join('')+'</div>':'<div class="empty">None recorded yet.</div>')+'</div>'}
+ case 'calc':return '<div class="calc" data-calc="'+f.k+'"'+(f.fn(CUR)?'':' hidden')+'>'+f.fn(CUR)+'</div>';
+ case 'gps':return '<div class="'+cls+'"><label>GPS location</label><div class="row"><input id="f_lat" data-k="lat" type="number" step="any" placeholder="Latitude" value="'+esc(CUR.lat)+'" style="flex:1"><input id="f_lng" data-k="lng" type="number" step="any" placeholder="Longitude" value="'+esc(CUR.lng)+'" style="flex:1"></div><div class="row"><button type="button" class="btn small" id="gpsBtn">Use my location</button><span class="lsum" id="gpsInfo">'+(CUR.lat&&CUR.lng?'<a href="https://maps.google.com/?q='+esc(CUR.lat)+','+esc(CUR.lng)+'" target="_blank" rel="noopener">Open in map</a>'+(CUR.gpsAcc?' · ±'+Math.round(CUR.gpsAcc)+' m':''):'')+'</span></div></div>';
+ case 'list':return '<div class="'+cls+'">'+lab+'<div class="lst" data-list="'+f.k+'"></div><div class="row"><button type="button" class="btn small" data-add="'+f.k+'">+ '+esc(f.add||'Add')+'</button><span class="lsum" data-lsum="'+f.k+'"></span></div></div>';
+ case 'steps':return '<div class="'+cls+'"><div class="lst" id="steps"></div><div class="row" style="margin-top:6px"><select id="newStep" style="flex:1">'+Object.keys(STEP_TYPES).map(s=>'<option>'+s+'</option>').join('')+'</select><button type="button" class="btn small" id="addStep">+ Add step</button></div></div>';
+ }return ''}
+function bindForm(){const form=$('#form');
+ const CODEDATE={harvest:['date','H'],process:['started','P'],green:['date','G']}[CUR_T];form.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('input',()=>{const k=el.dataset.k;CUR[k]=el.value;if(k==='code')CUR._auto=0;if(CODEDATE&&CUR._auto&&k===CODEDATE[0]&&el.value){CUR.code=nextCode(CUR_T,CODEDATE[1],el.value);const c=$('#f_code');if(c)c.value=CUR.code}refreshCalcs()}));
+ form.querySelectorAll('[data-refs]').forEach(el=>el.addEventListener('change',()=>{const k=el.dataset.refs;CUR[k]=[...form.querySelectorAll('[data-refs="'+k+'"]:checked')].map(x=>x.value);refreshCalcs()}));
+ F[CUR_T].filter(f=>f.t==='list').forEach(f=>{renderList(f);form.querySelector('[data-add="'+f.k+'"]').onclick=()=>{CUR[f.k]=[...(CUR[f.k]||[]),{}];renderList(f,true)}});
+ if($('#gpsBtn'))$('#gpsBtn').onclick=getGps;
+ if($('#steps')){renderSteps();$('#addStep').onclick=()=>{const t=$('#newStep').value;const last=(CUR.steps||[]).slice(-1)[0];CUR.steps=[...(CUR.steps||[]),{type:t,start:nowLocal(),inKg:last&&last.outKg?last.outKg:''}];renderSteps(true)}}}
+function refreshCalcs(){F[CUR_T].filter(f=>f.t==='calc').forEach(f=>{const el=document.querySelector('[data-calc="'+f.k+'"]');if(!el)return;const h=f.fn(CUR);el.innerHTML=h;el.hidden=!h});F[CUR_T].filter(f=>f.t==='list').forEach(listSum)}
+function renderList(f,focus){const box=document.querySelector('[data-list="'+f.k+'"]');const rows=CUR[f.k]||[];box.innerHTML=rows.map((r,i)=>'<div class="lrow" style="grid-template-columns:'+f.cols.map(c=>c.t==='num'?'1fr':'2fr').join(' ')+' auto">'+f.cols.map(c=>'<input data-li="'+i+'" data-lk="'+c.k+'" type="'+(c.t==='num'?'number':c.t)+'"'+(c.t==='num'?' step="any" inputmode="decimal"':'')+' placeholder="'+esc(c.l)+'" value="'+esc(r[c.k])+'" aria-label="'+esc(c.l)+'">').join('')+'<button type="button" class="x" data-rm="'+i+'" aria-label="Remove">×</button></div>').join('');
+ box.querySelectorAll('input').forEach(el=>el.addEventListener('input',()=>{CUR[f.k][+el.dataset.li][el.dataset.lk]=el.value;refreshCalcs()}));
+ box.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{CUR[f.k].splice(+b.dataset.rm,1);renderList(f);refreshCalcs()});
+ listSum(f);refreshCalcs();if(focus){const ins=box.querySelectorAll('input');if(ins.length)ins[ins.length-f.cols.length].focus()}}
+function listSum(f){const el=document.querySelector('[data-lsum="'+f.k+'"]');if(!el||!f.sum)return;const t=(CUR[f.k]||[]).map(r=>num(r[f.sum])).filter(x=>x!=null);el.textContent=t.length?t.length+' · total '+r2(t.reduce((a,b)=>a+b,0))+' kg':''}
+function nowLocal(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
+function renderSteps(focusLast){const box=$('#steps');const steps=CUR.steps||[];box.innerHTML=steps.length?steps.map((s,i)=>stepHtml(s,i)).join(''):'<div class="empty">No steps yet. Add them as you go: each step keeps its own times, weights and readings.</div>';
+ box.querySelectorAll('[data-si]').forEach(el=>el.addEventListener('input',()=>{const s=CUR.steps[+el.dataset.si];s[el.dataset.sk]=el.value;if(el.dataset.sk==='type'){renderSteps();return}updateStepCalc(+el.dataset.si);refreshCalcs()}));
+ box.querySelectorAll('[data-ri]').forEach(el=>el.addEventListener('input',()=>{CUR.steps[+el.dataset.si].readings[+el.dataset.ri][el.dataset.rk]=el.value;refreshCalcs()}));
+ box.querySelectorAll('[data-radd]').forEach(b=>b.onclick=()=>{const s=CUR.steps[+b.dataset.radd];s.readings=[...(s.readings||[]),{at:nowLocal()}];renderSteps()});
+ box.querySelectorAll('[data-rrm]').forEach(b=>b.onclick=()=>{const [si,ri]=b.dataset.rrm.split(':').map(Number);CUR.steps[si].readings.splice(ri,1);renderSteps();refreshCalcs()});
+ box.querySelectorAll('[data-srm]').forEach(b=>b.onclick=()=>{if(!confirm('Remove this step?'))return;CUR.steps.splice(+b.dataset.srm,1);renderSteps();refreshCalcs()});
+ box.querySelectorAll('[data-sup]').forEach(b=>b.onclick=()=>{const i=+b.dataset.sup;if(i<1)return;[CUR.steps[i-1],CUR.steps[i]]=[CUR.steps[i],CUR.steps[i-1]];renderSteps()});
+ refreshCalcs();if(focusLast)box.lastElementChild?.scrollIntoView({behavior:'smooth',block:'center'})}
+function stepCalc(s){const p=[];const h=hours(s.start,s.end);if(h!=null)p.push(fmtDur(h));const a=num(s.inKg),b=num(s.outKg);if(a&&b)p.push('yield '+r1(b/a*100)+'%');const rd=(s.readings||[]);if(rd.length)p.push(rd.length+' readings');return p.join(' · ')}
+function updateStepCalc(i){const el=document.querySelector('[data-scalc="'+i+'"]');if(el)el.textContent=stepCalc(CUR.steps[i])}
+function stepHtml(s,i){const def=STEP_TYPES[s.type]||STEP_TYPES.Other;const inp=(k)=>{const lab=STEP_LABELS[k];if(k==='notes')return '<textarea data-si="'+i+'" data-sk="notes" placeholder="Notes" style="grid-column:1/-1;min-height:56px">'+esc(s.notes)+'</textarea>';if(k==='method'&&def.methods)return '<select data-si="'+i+'" data-sk="method" aria-label="Method"><option value="">Method</option>'+def.methods.map(m=>'<option'+(s.method===m?' selected':'')+'>'+m+'</option>').join('')+'</select>';const type=k==='start'||k==='end'?'datetime-local':['inKg','outKg','floatKg','layer'].includes(k)?'number':'text';return '<label class="mini'+(type==='datetime-local'?' dt':'')+'" style="display:flex;flex-direction:column;gap:3px">'+lab+'<input data-si="'+i+'" data-sk="'+k+'" type="'+type+'"'+(type==='number'?' step="any" inputmode="decimal"':'')+' value="'+esc(s[k])+'"></label>'};
+ const reads=def.read?'<div class="mini">Readings</div>'+((s.readings||[]).length?'<div class="r2 mini" style="display:grid;gap:6px;padding:0 9px;grid-template-columns:repeat('+def.read.length+',minmax(0,1fr))">'+def.read.map(k=>'<span>'+READ_LABELS[k]+'</span>').join('')+'</div>':'')+(s.readings||[]).map((r,ri)=>'<div class="rd"><div class="r1"><input type="datetime-local" data-si="'+i+'" data-ri="'+ri+'" data-rk="at" value="'+esc(r.at)+'" aria-label="Time"><button type="button" class="x" data-rrm="'+i+':'+ri+'" aria-label="Remove reading">×</button></div><div class="r2" style="grid-template-columns:repeat('+def.read.length+',minmax(0,1fr))">'+def.read.map(k=>'<input type="number" step="any" inputmode="decimal" data-si="'+i+'" data-ri="'+ri+'" data-rk="'+k+'" placeholder="'+READ_LABELS[k]+'" value="'+esc(r[k])+'" aria-label="'+READ_LABELS[k]+'">').join('')+'</div></div>').join('')+'<button type="button" class="btn small" data-radd="'+i+'">+ Reading ('+def.read.map(k=>READ_LABELS[k]).join(', ')+')</button>':'';
+ return '<div class="step"><div class="sh"><span class="mini">'+(i+1)+'</span><select data-si="'+i+'" data-sk="type" aria-label="Step type">'+Object.keys(STEP_TYPES).map(t=>'<option'+(s.type===t?' selected':'')+'>'+t+'</option>').join('')+'</select>'+(i>0?'<button type="button" class="x" data-sup="'+i+'" aria-label="Move up">↑</button>':'')+'<button type="button" class="x" data-srm="'+i+'" aria-label="Remove step">×</button></div><div class="grid2">'+def.f.map(inp).join('')+'</div>'+reads+'<div class="mini" data-scalc="'+i+'">'+esc(stepCalc(s))+'</div></div>'}
+function getGps(){if(!navigator.geolocation){toast('Location not available on this device');return}$('#gpsInfo').textContent='Getting location…';navigator.geolocation.getCurrentPosition(p=>{CUR.lat=r6(p.coords.latitude);CUR.lng=r6(p.coords.longitude);CUR.gpsAcc=p.coords.accuracy;$('#f_lat').value=CUR.lat;$('#f_lng').value=CUR.lng;if(p.coords.altitude!=null&&!CUR.altitude){const m=p.coords.altitude;CUR.altitude=Math.round((CUR.altUnit||'ft')==='ft'?m*3.28084:m);const a=$('#f_altitude');if(a)a.value=CUR.altitude}$('#gpsInfo').innerHTML='<a href="https://maps.google.com/?q='+CUR.lat+','+CUR.lng+'" target="_blank" rel="noopener">Open in map</a> · ±'+Math.round(p.coords.accuracy)+' m'},e=>{$('#gpsInfo').textContent='Could not get location: '+e.message},{enableHighAccuracy:true,timeout:20000})}
+function r6(v){return Math.round(v*1e6)/1e6}
+async function save(){const miss=F[CUR_T].filter(f=>f.req&&(CUR[f.k]==null||String(CUR[f.k]).trim()===''));if(miss.length){toast('Fill in: '+miss.map(f=>f.l).join(', '));const el=$('#'+fid(miss[0].k));el&&el.focus();return}
+ if(CUR_T==='green'){const L=lineage(CUR);CUR.estate=L.estates.map(e=>e.name).join(', ');CUR.variety=L.varieties.join(', ');CUR.species=L.species.join(', ');CUR.pathway=L.p?L.p.pathway:''}
+ delete CUR._auto;const saved=await ORIGIN.put(CUR);toast('Saved');const back={estate:'farm',plot:'farm',harvest:'harvest',process:'process',green:'green'}[CUR_T];CUR=saved;
+ if(CUR_T==='process'||CUR_T==='green'){await loadAll();editView(CUR_T,saved.id);history.replaceState(null,'','#edit/'+CUR_T+'/'+saved.id)}else go(back)}
+async function del(){const t=CUR_T,id=CUR.id;const uses={estate:()=>DB.plot.filter(p=>p.estateId===id).length,plot:()=>DB.harvest.filter(h=>(h.plotIds||[]).includes(id)).length,harvest:()=>DB.process.filter(p=>(p.harvestIds||[]).includes(id)).length,process:()=>DB.green.filter(g=>g.processId===id).length,green:()=>roastsFor({id}).length}[t]();if(!confirm(uses?'This is used by '+uses+' other record'+(uses===1?'':'s')+'. Delete anyway? They will lose this link.':'Delete this record?'))return;await ORIGIN.remove(id);toast('Deleted');go({estate:'farm',plot:'farm'}[t]||t)}
+
+// ---------- sync status ----------
+function refreshSyncBadge(s){const el=$('#syncState');if(!el)return;const st=s||refreshSyncBadge.last;if(!st)return;el.className='sync '+(st.status||'');el.querySelector('span').textContent={local:'Saved on this device',offline:'Offline, will sync later',syncing:'Syncing…',synced:'Synced to your account',error:'Sync failed, will retry'}[st.status]||''}
+ORIGIN.onSync(s=>{refreshSyncBadge.last=s;refreshSyncBadge(s);if(s.status==='synced'&&s.changed&&!location.hash.startsWith('#edit/'))route()});
+route().then(()=>ORIGIN.sync().catch(()=>{}));
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body>
+</html>
