@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-title" content="KoffyKraft"><meta name="apple-mobile-web-app-capable" content="yes">
+<title>KoffyKraft Cup</title>
+<style>
+:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b;--soft:#faf7f2;--ok:#3f6b5a}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Arial;color:var(--ink);background:var(--bg)}
+.app{max-width:680px;margin:auto;padding:24px 16px 120px}
+h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 4px;line-height:1.2}
+.sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+.sync{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.sync i{width:8px;height:8px;border-radius:50%;background:#c9bfb2;display:inline-block}
+.sync.synced i{background:var(--ok)}.sync.syncing i{background:#c47f1d}.sync.error i{background:#b4432f}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:#ece7df;border-radius:12px;padding:4px;margin:12px 0 16px;position:sticky;top:0;z-index:5}
+.tabs button{border:0;background:transparent;border-radius:9px;padding:10px 4px;font:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+button{font:inherit}
+.btn{border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px 14px;font-weight:600;cursor:pointer;font-size:14px;color:var(--ink)}
+.btn.primary{background:#171512;color:#fff;border-color:#171512}
+.btn.danger{color:#b4432f}
+.btn.small{padding:7px 10px;font-size:13px;border-radius:9px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sec{display:flex;justify-content:space-between;align-items:center;margin:18px 0 8px}
+.sec h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:0}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:8px 0;cursor:pointer}
+.card:active{background:var(--soft)}
+.card b{font-size:17px;display:block}
+.card .m{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.45}
+.card .tagrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;background:var(--soft);border:1px solid #efe8de;border-radius:999px;padding:3px 8px;color:#5c554e}
+.empty{color:var(--muted);padding:18px;border:1px dashed var(--line);border-radius:14px;font-size:13px;line-height:1.5}
+form{display:block}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:10px 10px}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld.full{grid-column:1/-1}
+.fld label{font-size:12px;color:var(--muted);font-weight:600}
+.fld label em{font-style:normal;color:#b4432f}
+input,select,textarea{font:inherit;font-size:15px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);width:100%;min-width:0}
+textarea{min-height:76px;resize:vertical}
+.unitwrap{display:flex;gap:6px}.unitwrap input{flex:1}.unitwrap select{width:auto;flex:0 0 auto;padding:11px 8px}
+.fhead{grid-column:1/-1;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:12px 0 0;font-weight:700}
+.calc{grid-column:1/-1;background:var(--soft);border:1px solid #efe8de;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.5}
+.calc b{font-variant-numeric:tabular-nums}
+.checks{display:grid;gap:6px}
+.checks label{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink);font-weight:400;background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+.checks input{width:auto}
+.lst{display:grid;gap:6px}
+.lrow{display:grid;gap:6px;align-items:center}
+.lrow input,.lrow select{padding:9px 10px;font-size:14px}
+.x{border:0;background:transparent;color:var(--muted);font-size:18px;padding:4px 8px;cursor:pointer}
+.lsum{font-size:13px;color:var(--muted)}
+.step{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff;display:grid;gap:8px}
+.step .sh{display:flex;gap:8px;align-items:center}
+.step .sh select{flex:1;font-weight:600}
+.step .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.step .grid2>*,.lrow>*{min-width:0}.step .dt{grid-column:1/-1}.rd{border:1px solid #efe8de;background:var(--soft);border-radius:11px;padding:8px;display:grid;gap:6px}.rd .r1{display:flex;gap:6px;align-items:center}.rd .r1 input{flex:1}.rd .r2{display:grid;gap:6px}
+.step .mini{font-size:12px;color:var(--muted)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;gap:8px;justify-content:space-between;z-index:20}
+.bar .grow{flex:1}
+.lineage{display:grid;gap:0;margin-top:4px}
+.lin{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start}
+.lin .dot{width:12px;height:12px;border-radius:50%;background:var(--coffee);margin:4px 5px 0;position:relative}
+.lin:not(:last-child) .dot::after{content:"";position:absolute;left:5px;top:12px;width:2px;height:44px;background:#e3d9cc}
+.lin .lt{font-size:14px;padding-bottom:14px;line-height:1.4}.lin .lt small{display:block;color:var(--muted);font-size:12px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#171512;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30}
+.toast.on{opacity:1}
+.back{background:none;border:0;color:var(--coffee);font-weight:600;padding:6px 0;cursor:pointer;font-size:14px}
+@media(max-width:380px){.f{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="app">
+<header style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #ddd;margin-bottom:20px;gap:12px"><span style="font-size:18px;font-weight:300;letter-spacing:1px;color:#111">Koffy Kraft</span><nav style="display:flex;gap:12px;font-size:13px;flex:1;justify-content:center;flex-wrap:wrap"><a href="origin.html" style="text-decoration:none;color:#111">Origin</a><a href="roast-timer-v14.html" style="text-decoration:none;color:#111">Timer</a><a href="roast-graph.html" style="text-decoration:none;color:#111">Graph</a><a href="roasts.html" style="text-decoration:none;color:#111">Roastbook</a><a href="cup.html" style="text-decoration:none;color:#111;font-weight:600">Cup</a><a href="account.html" style="text-decoration:none;color:#111">Account</a></nav><a href="account.html" style="width:40px;height:40px;border:1px solid #ddd;border-radius:50%;display:grid;place-items:center;text-decoration:none;font-size:18px;flex-shrink:0">👤</a></header>
+<div id="view"></div>
+</main>
+<div class="toast" id="toast"></div>
+<script src="sync.js"></script>
+<script src="origin-db.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const n=parseFloat(v);return Number.isFinite(n)?n:null};
+const r1=v=>Math.round(v*10)/10, r2=v=>Math.round(v*100)/100;
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),1800)}
+function nowLocal(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
+function fmtDT(d){if(!d)return '';const x=new Date(d);return isNaN(x)?d:x.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+function fmtDate(d){if(!d)return '';const x=new Date(d.length===10?d+'T00:00':d);return isNaN(x)?d:x.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
+
+// ---------- roasts (this device + cloud) ----------
+let ROASTS=[],DB={brew:[],cupping:[]};
+async function localRoasts(){try{return await new Promise(ok=>{const q=indexedDB.open('KoffyKraftTemporaryRoastbook');q.onsuccess=()=>{const db=q.result;if(!db.objectStoreNames.contains('roasts')){db.close();ok([]);return}const t=db.transaction('roasts','readonly').objectStore('roasts').getAll();t.onsuccess=()=>{db.close();ok(t.result||[])};t.onerror=()=>{db.close();ok([])}};q.onerror=()=>ok([]);q.onupgradeneeded=e=>e.target.transaction.abort()})}catch{return[]}}
+let CLOUD=null;async function cloudRoasts(){if(CLOUD)return CLOUD;if(typeof SYNC==='undefined'||!SYNC.isAuthenticated()||!navigator.onLine)return[];try{const res=await SYNC.loadRoasts();CLOUD=(res.items||[]).map(r=>{let n={};try{n=typeof r.notes==='string'?JSON.parse(r.notes):(r.notes||{})}catch(e){n={bean:r.notes}}return{id:r.id,estate:n.estate||'',coffeeCode:n.coffeeCode||'',bean:n.bean||'',roastNo:r.roast_number,roastDate:r.roast_date,finishedAt:n.finishedAt||r.ended_at||(r.created_at?String(r.created_at).replace(' ','T')+'Z':''),greenLotId:n.greenLotId||'',targetColor:r.target_color,finalColor:r.final_color}});return CLOUD}catch(e){return[]}}
+async function loadAll(){DB.brew=await ORIGIN.all('brew');DB.cupping=await ORIGIN.all('cupping');const m=new Map((await localRoasts()).map(r=>[r.id,r]));for(const r of await cloudRoasts())if(!m.has(r.id))m.set(r.id,r);ROASTS=[...m.values()].sort((a,b)=>String(b.finishedAt||b.roastDate||'').localeCompare(String(a.finishedAt||a.roastDate||'')))}
+function roastById(id){return ROASTS.find(r=>String(r.id)===String(id))}
+function roastLabel(r){if(!r)return '';return [r.estate||r.coffeeCode||r.bean||'Roast',r.roastNo?'#'+r.roastNo:'',r.roastDate?fmtDate(r.roastDate):''].filter(Boolean).join(' · ')}
+function roastedAt(r){if(!r)return null;const t=r.finishedAt||r.roastDate;const d=new Date(t&&t.length===10?t+'T12:00':t);return isNaN(d)?null:d}
+function restDays(roastId,at){const r=roastedAt(roastById(roastId));const b=new Date(at);if(!r||isNaN(b))return null;return (b-r)/864e5}
+function restText(d){if(d==null)return '';if(d<0)return 'before the roast date';if(d<1)return Math.round(d*24)+' h after roast';return r1(d)+' days rest'}
+
+// ---------- scoring ----------
+const ATTR=[['fragrance','Fragrance / aroma'],['flavor','Flavour'],['aftertaste','Aftertaste'],['acidity','Acidity'],['body','Body'],['balance','Balance'],['overall','Overall']];
+const CUPS_ATTR=[['uniform','Uniform cups'],['clean','Clean cups'],['sweet','Sweet cups']];
+function sampleScore(s,sess){if((sess.protocol||'SCA')==='Simple')return num(s.score);const a=ATTR.map(([k])=>num(s[k]));if(a.some(x=>x==null))return null;const cups=num(sess.cups)||5;const c=CUPS_ATTR.map(([k])=>{const v=num(s[k]);return v==null?cups:Math.max(0,Math.min(cups,v))});const def=(num(s.taints)||0)*2+(num(s.faults)||0)*4;return a.reduce((x,y)=>x+y,0)+c.reduce((x,y)=>x+y*10/cups,0)-def}
+function brewRatio(b){const d=num(b.dose),w=num(b.water);return d&&w?w/d:null}
+function brewEY(b){const d=num(b.dose),t=num(b.tds);if(!d||!t)return null;let bev=num(b.beverage),est=false;if(!bev){const w=num(b.water);if(!w)return null;bev=/espresso/i.test(b.method||'')?w:w-2*d;est=true}return{ey:t*bev/d,est}}
+
+// ---------- fields ----------
+const METHODS=['V60','Kalita Wave','Origami','Chemex','AeroPress','French press','Espresso','Moka pot','South Indian filter','Cold brew','Batch brewer','Siphon','Clever dripper','Other'];
+const F={brew:[
+ {k:'roastId',l:'Roast',t:'roast',full:1},
+ {k:'coffee',l:'Coffee (if not from a roast here)',t:'text',full:1},
+ {k:'brewedAt',l:'Brewed',t:'dt',def:nowLocal},
+ {k:'restCalc',t:'calc',fn:b=>{const d0=restDays(b.roastId,b.brewedAt);const d=d0!=null?d0:(b.roastId&&!roastById(b.roastId)?b.restDays:null);return d==null?'':'<b>'+restText(d)+'</b>'}},
+ {k:'method',l:'Method',t:'sel',opts:METHODS,req:1},{k:'brewer',l:'Brewer / recipe',t:'text',ph:'V60 02, 4:6'},
+ {h:'Recipe'},
+ {k:'dose',l:'Coffee g',t:'num'},{k:'water',l:'Water g (espresso: yield g)',t:'num'},
+ {k:'ratioCalc',t:'calc',fn:b=>{const r=brewRatio(b);return r?'Ratio <b>1:'+r1(r)+'</b>':''}},
+ {k:'waterTemp',l:'Water °C',t:'num'},{k:'grinder',l:'Grinder',t:'text'},
+ {k:'grind',l:'Grind setting',t:'text'},{k:'bloom',l:'Bloom (g / s)',t:'text',ph:'40 g / 45 s'},
+ {k:'time',l:'Total time',t:'text',ph:'3:10'},{k:'pours',l:'Pours / agitation',t:'text'},
+ {k:'waterType',l:'Water',t:'text',full:1,ph:'Filtered, 80 ppm'},
+ {h:'Measure'},
+ {k:'tds',l:'TDS %',t:'num'},{k:'beverage',l:'Beverage g',t:'num'},
+ {k:'eyCalc',t:'calc',fn:b=>{const e=brewEY(b);return e?'Extraction <b>'+r1(e.ey)+'%</b>'+(e.est?' (beverage estimated from water)':''):''}},
+ {h:'Taste'},
+ {k:'rating',l:'Rating out of 10',t:'num'},{k:'descriptors',l:'Descriptors',t:'text',ph:'Jaggery, orange, cocoa'},
+ {k:'notes',l:'Notes',t:'area',full:1},{k:'nextTime',l:'Next time',t:'text',full:1,ph:'Grind 1 step finer'}],
+ cupping:[
+ {k:'at',l:'Session',t:'dt',def:nowLocal,req:1},{k:'protocol',l:'Protocol',t:'sel',opts:['SCA','Simple'],def:'SCA'},
+ {k:'cups',l:'Cups per sample',t:'num',def:'5'},{k:'people',l:'Cuppers',t:'text'},
+ {k:'water',l:'Water / ratio',t:'text',full:1,ph:'8.25 g : 150 ml, 93°C'},
+ {h:'Samples'},{k:'samples',t:'samples',full:1},
+ {k:'notes',l:'Session notes',t:'area',full:1}]};
+
+// ---------- routing ----------
+let TAB='brew',CUR=null,CUR_T=null;
+function go(h){location.hash=h}
+window.addEventListener('hashchange',route);
+async function route(){const h=location.hash.slice(1);await loadAll();const m=h.match(/^edit\/(brew|cupping)\/(.+)$/);if(m&&m[2]!=='new'&&!DB[m[1]].some(x=>x.id===m[2])&&typeof SYNC!=='undefined'&&SYNC.isAuthenticated()){try{await ORIGIN.sync()}catch(e){}await loadAll()}if(m)return editView(m[1],m[2]==='new'?null:m[2],new URLSearchParams(location.search).get('roast'));document.querySelector('.bar')?.remove();if(['brew','cupping'].includes(h))TAB=h;listView()}
+
+function listView(){let body='';
+ if(TAB==='brew'){const rs=[...DB.brew].sort((a,b)=>String(b.brewedAt).localeCompare(String(a.brewedAt)));body='<div class="sec"><h2>Brews</h2><button class="btn small" onclick="go(\'edit/brew/new\')">+ Brew</button></div>'+(rs.length?rs.map(b=>{const r=roastById(b.roastId);const e=brewEY(b);const rd=restDays(b.roastId,b.brewedAt);return card('brew',b,(r?roastLabel(r):b.roastLabel||b.coffee||'Coffee'),fmtDT(b.brewedAt),[b.method,brewRatio(b)?'1:'+r1(brewRatio(b)):'',restText(rd!=null?rd:b.restDays),e?'EY '+r1(e.ey)+'%':'',num(b.rating)!=null?b.rating+'/10':'',b.descriptors])}).join(''):'<div class="empty">Log each brew against the roast it came from: recipe, rest days, TDS and how it tasted.</div>')}
+ else{const rs=[...DB.cupping].sort((a,b)=>String(b.at).localeCompare(String(a.at)));body='<div class="sec"><h2>Cupping sessions</h2><button class="btn small" onclick="go(\'edit/cupping/new\')">+ Cupping</button></div>'+(rs.length?rs.map(c=>{const sc=(c.samples||[]).map(s=>sampleScore(s,c)).filter(x=>x!=null);return card('cupping',c,'Cupping · '+(c.samples||[]).length+' samples',fmtDT(c.at),[c.protocol,sc.length?'top '+r2(Math.max(...sc)):'',...(c.samples||[]).slice(0,3).map(s=>{const r=roastById(s.roastId);return (r?roastLabel(r):s.roastLabel||s.label||'Sample')+(sampleScore(s,c)!=null?' '+r2(sampleScore(s,c)):'')})])}).join(''):'<div class="empty">Cup several roasts side by side. Each sample links to its roast, so scores show up in the Roastbook.</div>')}
+ $('#view').innerHTML='<h1>Cup</h1><div class="sub">Brews and cupping, linked to your roasts. '+syncBadge()+'</div><div class="tabs" style="grid-template-columns:1fr 1fr">'+[['brew','Brew'],['cupping','Cupping']].map(([k,l])=>'<button class="'+(TAB===k?'on':'')+'" onclick="go(\''+k+'\')">'+l+'</button>').join('')+'</div>'+body;refreshSyncBadge()}
+function card(t,r,ti,sub,tags){return '<div class="card" onclick="go(\'edit/'+t+'/'+r.id+'\')"><b>'+esc(ti)+'</b><div class="m">'+esc(sub)+'</div><div class="tagrow">'+tags.filter(Boolean).map(x=>'<span class="tag">'+esc(x)+'</span>').join('')+'</div></div>'}
+function syncBadge(){return '<span class="sync" id="syncState"><i></i><span>'+(typeof SYNC!=='undefined'&&SYNC.isAuthenticated()?'Synced to your account':'Saved on this device')+'</span></span>'}
+function refreshSyncBadge(s){const el=$('#syncState');if(!el)return;const st=s||refreshSyncBadge.last;if(!st)return;el.className='sync '+(st.status||'');el.querySelector('span').textContent={local:'Saved on this device',offline:'Offline, will sync later',syncing:'Syncing…',synced:'Synced to your account',error:'Sync failed, will retry'}[st.status]||''}
+
+// ---------- edit ----------
+function editView(t,id,presetRoast){CUR_T=t;const ex=id?DB[t].find(x=>x.id===id):null;if(id&&!ex){toast('Not found');return go(t)}
+ CUR=ex?JSON.parse(JSON.stringify(ex)):{type:t};if(!ex){F[t].forEach(f=>{if(f.def!==undefined&&CUR[f.k]==null)CUR[f.k]=typeof f.def==='function'?f.def():f.def});if(t==='brew'&&presetRoast)CUR.roastId=presetRoast;if(t==='cupping'){CUR.samples=presetRoast?[{roastId:presetRoast}]:[]}}
+ $('#view').innerHTML='<button class="back" onclick="go(\''+t+'\')">‹ Back</button><h1>'+(ex?(t==='brew'?'Brew':'Cupping'):(t==='brew'?'New brew':'New cupping'))+'</h1><div class="sub">'+(ex?'Updated '+fmtDT(ex.updatedAt):'')+'</div><form id="form" class="f" onsubmit="return false">'+F[t].map(fieldHtml).join('')+'</form>';
+ document.querySelector('.bar')?.remove();const bar=document.createElement('div');bar.className='bar';bar.innerHTML=(ex?'<button class="btn danger" id="del">Delete</button>':'<span></span>')+'<button class="btn primary grow" id="save">Save</button>';document.body.appendChild(bar);$('#save').onclick=save;if(ex)$('#del').onclick=del;bindForm();window.scrollTo(0,0)}
+function roastOptions(sel,savedLabel){const missing=sel&&!roastById(sel);return '<option value="">'+(ROASTS.length?'Choose a roast…':'No roasts yet')+'</option>'+(missing?'<option value="'+esc(sel)+'" selected>'+esc(savedLabel||'Roast on another device')+'</option>':'')+ROASTS.map(r=>'<option value="'+esc(r.id)+'"'+(String(sel)===String(r.id)?' selected':'')+'>'+esc(roastLabel(r))+'</option>').join('')}
+function fieldHtml(f){if(f.h)return '<div class="fhead">'+esc(f.h)+'</div>';const v=CUR[f.k];const lab=f.l?'<label for="f_'+f.k+'">'+esc(f.l)+(f.req?' <em>*</em>':'')+'</label>':'';const cls='fld'+(f.full?' full':'');
+ switch(f.t){case 'text':return '<div class="'+cls+'">'+lab+'<input id="f_'+f.k+'" data-k="'+f.k+'" value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'"></div>';
+ case 'num':return '<div class="'+cls+'">'+lab+'<input id="f_'+f.k+'" data-k="'+f.k+'" type="number" step="any" inputmode="decimal" value="'+esc(v)+'"></div>';
+ case 'dt':return '<div class="'+cls+'">'+lab+'<input id="f_'+f.k+'" data-k="'+f.k+'" type="datetime-local" value="'+esc(v)+'"></div>';
+ case 'area':return '<div class="'+cls+'">'+lab+'<textarea id="f_'+f.k+'" data-k="'+f.k+'">'+esc(v)+'</textarea></div>';
+ case 'sel':return '<div class="'+cls+'">'+lab+'<select id="f_'+f.k+'" data-k="'+f.k+'"><option value="">–</option>'+f.opts.map(o=>'<option'+(v===o?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select></div>';
+ case 'roast':return '<div class="'+cls+'">'+lab+'<select id="f_'+f.k+'" data-k="'+f.k+'">'+roastOptions(v,CUR.roastLabel)+'</select></div>';
+ case 'calc':{const h=f.fn(CUR);return '<div class="calc" data-calc="'+f.k+'"'+(h?'':' hidden')+'>'+h+'</div>'}
+ case 'samples':return '<div class="'+cls+'"><div class="lst" id="samples"></div><button type="button" class="btn small" id="addSample" style="margin-top:6px">+ Add sample</button></div>'}return ''}
+function bindForm(){const form=$('#form');form.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('input',()=>{CUR[el.dataset.k]=el.value;if(el.dataset.k==='protocol'||el.dataset.k==='cups'||el.dataset.k==='at'){if($('#samples'))renderSamples()}refreshCalcs()}));if($('#samples')){renderSamples();$('#addSample').onclick=()=>{CUR.samples=[...(CUR.samples||[]),{}];renderSamples(true)}}}
+function refreshCalcs(){F[CUR_T].filter(f=>f.t==='calc').forEach(f=>{const el=document.querySelector('[data-calc="'+f.k+'"]');if(!el)return;const h=f.fn(CUR);el.innerHTML=h;el.hidden=!h})}
+function renderSamples(focus){const box=$('#samples');const ss=CUR.samples||[];const simple=(CUR.protocol||'SCA')==='Simple';const cups=num(CUR.cups)||5;
+ box.innerHTML=ss.length?ss.map((s,i)=>{const sc=sampleScore(s,CUR);const rd0=restDays(s.roastId,CUR.at);const rd=rd0!=null?rd0:s.restDays;const n=(k,l,step,min,max)=>'<label class="mini" style="display:flex;flex-direction:column;gap:3px">'+l+'<input type="number" inputmode="decimal" step="'+step+'" min="'+min+'" max="'+max+'" data-si="'+i+'" data-sk="'+k+'" value="'+esc(s[k])+'"></label>';
+  return '<div class="step"><div class="sh"><span class="mini">'+String.fromCharCode(65+i)+'</span><select data-si="'+i+'" data-sk="roastId" aria-label="Roast">'+roastOptions(s.roastId,s.roastLabel)+'</select><button type="button" class="x" data-rm="'+i+'" aria-label="Remove sample">×</button></div>'+(s.roastId?'':'<input data-si="'+i+'" data-sk="label" placeholder="Or name the sample" value="'+esc(s.label)+'">')+'<div class="mini">'+esc(restText(rd))+'</div>'+
+  (simple?'<div class="grid2">'+n('score','Score','0.25',0,100)+'</div>':'<div class="grid2">'+ATTR.map(([k,l])=>n(k,l+' (6 to 10)','0.25',6,10)).join('')+'</div><div class="mini">Cups out of '+cups+' (blank = all)</div><div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr))">'+CUPS_ATTR.map(([k,l])=>n(k,l,'1',0,cups)).join('')+'</div><div class="grid2">'+n('taints','Taints (cups, −2)','1',0,cups)+n('faults','Faults (cups, −4)','1',0,cups)+'</div>')+
+  '<input data-si="'+i+'" data-sk="descriptors" placeholder="Descriptors" value="'+esc(s.descriptors)+'"><textarea data-si="'+i+'" data-sk="notes" placeholder="Notes" style="min-height:52px">'+esc(s.notes)+'</textarea><div class="calc" data-scal="'+i+'"'+(sc==null?' hidden':'')+'>Score <b>'+(sc==null?'':r2(sc))+'</b></div></div>'}).join(''):'<div class="empty">Add one sample per roast on the table.</div>';
+ box.querySelectorAll('[data-si]').forEach(el=>el.addEventListener('input',()=>{const s=CUR.samples[+el.dataset.si];s[el.dataset.sk]=el.value;if(el.dataset.sk==='roastId'){renderSamples();return}const c=document.querySelector('[data-scal="'+el.dataset.si+'"]');const sc=sampleScore(s,CUR);if(c){c.hidden=sc==null;c.innerHTML='Score <b>'+(sc==null?'':r2(sc))+'</b>'}}));
+ box.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{if(!confirm('Remove this sample?'))return;CUR.samples.splice(+b.dataset.rm,1);renderSamples()});
+ if(focus)box.lastElementChild?.scrollIntoView({behavior:'smooth',block:'center'})}
+async function save(){const miss=F[CUR_T].filter(f=>f.req&&(CUR[f.k]==null||String(CUR[f.k]).trim()===''));if(miss.length){toast('Fill in: '+miss.map(f=>f.l).join(', '));return}
+ if(CUR_T==='brew'&&!CUR.roastId&&!String(CUR.coffee||'').trim()){toast('Choose a roast or name the coffee');return}
+ if(CUR_T==='brew'){const r=roastById(CUR.roastId);if(r){CUR.roastLabel=roastLabel(r);CUR.restDays=restDays(CUR.roastId,CUR.brewedAt)}else if(!CUR.roastId){CUR.roastLabel='';CUR.restDays=null}}
+ if(CUR_T==='cupping'){CUR.samples=(CUR.samples||[]).map(s=>{const r=roastById(s.roastId);return{...s,roastLabel:r?roastLabel(r):(s.roastId?s.roastLabel:''),restDays:r?restDays(s.roastId,CUR.at):(s.roastId?s.restDays:null),total:sampleScore(s,CUR)}});CUR.roastIds=[...new Set(CUR.samples.map(s=>s.roastId).filter(Boolean))]}
+ await ORIGIN.put(CUR);toast('Saved');go(CUR_T)}
+async function del(){if(!confirm('Delete this record?'))return;await ORIGIN.remove(CUR.id);toast('Deleted');go(CUR_T)}
+ORIGIN.onSync(s=>{refreshSyncBadge.last=s;refreshSyncBadge(s);if(s.status==='synced'&&s.changed&&!location.hash.startsWith('#edit/'))route()});
+route().then(()=>ORIGIN.sync().catch(()=>{}));
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body>
+</html>
