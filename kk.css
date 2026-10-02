@@ -35,3 +35,12 @@ nav.kkh-nav{display:flex;flex:none;justify-content:space-between;font-size:14px;
 .kkh-sub h1{margin:0}
 .kkh-sub a{font-size:14px;color:var(--kk-coffee);text-decoration:none;white-space:nowrap}
 @media(max-width:380px){.kkh-nav a{padding:8px 5px;font-size:13.5px}}
+/* Cloud location tags and controls */
+.loc{display:inline-block;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:#f0ebe4;color:#77716a}
+.loc.in{background:#e3eee8;color:#3f6b5a}
+.tag.loc{border:0}
+.cloudrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--kk-line);border-radius:12px;padding:8px 10px;margin:0 0 14px}
+.cloudrow .loc{font-size:12px;padding:5px 10px}
+.cl-link{font-size:13px;color:var(--kk-coffee)}
+.cl-check{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;white-space:nowrap;padding:0 4px}
+.cl-check input{width:20px;height:20px}

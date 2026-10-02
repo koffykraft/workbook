@@ -79,7 +79,7 @@ textarea{min-height:76px;resize:vertical}
 </main>
 <div class="toast" id="toast"></div>
 <script src="sync.js"></script>
-<script src="origin-db.js"></script>
+<script src="prefs.js"></script><script src="origin-db.js"></script><script src="cloud-ui.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -146,15 +146,15 @@ function listView(){let body='';
  if(TAB==='brew'){const rs=[...DB.brew].sort((a,b)=>String(b.brewedAt).localeCompare(String(a.brewedAt)));body='<div class="sec"><h2>Brews</h2><button class="btn small" onclick="go(\'edit/brew/new\')">+ Brew</button></div>'+(rs.length?rs.map(b=>{const r=roastById(b.roastId);const e=brewEY(b);const rd=restDays(b.roastId,b.brewedAt);return card('brew',b,(r?roastLabel(r):b.roastLabel||b.coffee||'Coffee'),fmtDT(b.brewedAt),[b.method,brewRatio(b)?'1:'+r1(brewRatio(b)):'',restText(rd!=null?rd:b.restDays),e?'EY '+r1(e.ey)+'%':'',num(b.rating)!=null?b.rating+'/10':'',b.descriptors])}).join(''):'<div class="empty">Log each brew against the roast it came from: recipe, rest days, TDS and how it tasted.</div>')}
  else{const rs=[...DB.cupping].sort((a,b)=>String(b.at).localeCompare(String(a.at)));body='<div class="sec"><h2>Cupping sessions</h2><button class="btn small" onclick="go(\'edit/cupping/new\')">+ Cupping</button></div>'+(rs.length?rs.map(c=>{const sc=(c.samples||[]).map(s=>sampleScore(s,c)).filter(x=>x!=null);return card('cupping',c,'Cupping · '+(c.samples||[]).length+' samples',fmtDT(c.at),[c.protocol,sc.length?'top '+r2(Math.max(...sc)):'',...(c.samples||[]).slice(0,3).map(s=>{const r=roastById(s.roastId);return (r?roastLabel(r):s.roastLabel||s.label||'Sample')+(sampleScore(s,c)!=null?' '+r2(sampleScore(s,c)):'')})])}).join(''):'<div class="empty">Cup several roasts side by side. Each sample links to its roast, so scores show up in the Roastbook.</div>')}
  $('#view').innerHTML='<h1>Cup</h1><div class="sub">Brews and cupping, linked to your roasts. '+syncBadge()+'</div><div class="tabs" style="grid-template-columns:1fr 1fr">'+[['brew','Brew'],['cupping','Cupping']].map(([k,l])=>'<button class="'+(TAB===k?'on':'')+'" onclick="go(\''+k+'\')">'+l+'</button>').join('')+'</div>'+body;refreshSyncBadge()}
-function card(t,r,ti,sub,tags){return '<div class="card" onclick="go(\'edit/'+t+'/'+r.id+'\')"><b>'+esc(ti)+'</b><div class="m">'+esc(sub)+'</div><div class="tagrow">'+tags.filter(Boolean).map(x=>'<span class="tag">'+esc(x)+'</span>').join('')+'</div></div>'}
-function syncBadge(){return '<span class="sync" id="syncState"><i></i><span>'+(typeof SYNC!=='undefined'&&SYNC.isAuthenticated()?'Synced to your account':'Saved on this device')+'</span></span>'}
-function refreshSyncBadge(s){const el=$('#syncState');if(!el)return;const st=s||refreshSyncBadge.last;if(!st)return;el.className='sync '+(st.status||'');el.querySelector('span').textContent={local:'Saved on this device',offline:'Offline, will sync later',syncing:'Syncing…',synced:'Synced to your account',error:'Sync failed, will retry'}[st.status]||''}
+function card(t,r,ti,sub,tags){return '<div class="card" onclick="go(\'edit/'+t+'/'+r.id+'\')"><b>'+esc(ti)+'</b><div class="m">'+esc(sub)+'</div><div class="tagrow">'+locTag(r)+tags.filter(Boolean).map(x=>'<span class="tag">'+esc(x)+'</span>').join('')+'</div></div>'}
+function syncBadge(){return '<span class="sync" id="syncState"><i></i><span>'+cloudModeText('cup')+'</span></span>'}
+function refreshSyncBadge(s){const el=$('#syncState');if(!el)return;const st=s||refreshSyncBadge.last;if(!st)return;el.className='sync '+(st.status||'');el.querySelector('span').textContent=({local:'Saved on this device',offline:'Offline, will sync later',syncing:'Syncing…',error:'Sync failed, will retry'}[st.status])||cloudModeText('cup')}
 
 // ---------- edit ----------
 function editView(t,id,presetRoast){CUR_T=t;const ex=id?DB[t].find(x=>x.id===id):null;if(id&&!ex){toast('Not found');return go(t)}
  CUR=ex?JSON.parse(JSON.stringify(ex)):{type:t};if(!ex){F[t].forEach(f=>{if(f.def!==undefined&&CUR[f.k]==null)CUR[f.k]=typeof f.def==='function'?f.def():f.def});if(t==='brew'&&presetRoast)CUR.roastId=presetRoast;if(t==='cupping'){CUR.samples=presetRoast?[{roastId:presetRoast}]:[]}}
- $('#view').innerHTML='<button class="back" onclick="go(\''+t+'\')">‹ Back</button><h1>'+(ex?(t==='brew'?'Brew':'Cupping'):(t==='brew'?'New brew':'New cupping'))+'</h1><div class="sub">'+(ex?'Updated '+fmtDT(ex.updatedAt):'')+'</div><form id="form" class="f" onsubmit="return false">'+F[t].map(fieldHtml).join('')+'</form>';
- document.querySelector('.bar')?.remove();const bar=document.createElement('div');bar.className='bar';bar.innerHTML=(ex?'<button class="btn danger" id="del">Delete</button>':'<span></span>')+'<button class="btn primary grow" id="save">Save</button>';document.body.appendChild(bar);$('#save').onclick=save;if(ex)$('#del').onclick=del;bindForm();window.scrollTo(0,0)}
+ $('#view').innerHTML='<button class="back" onclick="go(\''+t+'\')">‹ Back</button><h1>'+(ex?(t==='brew'?'Brew':'Cupping'):(t==='brew'?'New brew':'New cupping'))+'</h1><div class="sub">'+(ex?'Updated '+fmtDT(ex.updatedAt):'')+'</div>'+(ex?'<div id="cloudRow" class="cloudrow">'+cloudRowHtml(CUR)+'</div>':'')+'<form id="form" class="f" onsubmit="return false">'+F[t].map(fieldHtml).join('')+'</form>';
+ document.querySelector('.bar')?.remove();const bar=document.createElement('div');bar.className='bar';bar.innerHTML=(ex?'<button class="btn danger" id="del">Delete</button>':'<span></span>')+''+alsoCloudHtml(CUR)+'<button class="btn primary grow" id="save">Save</button>';document.body.appendChild(bar);$('#save').onclick=save;bindCloudRow(CUR);if(ex)$('#del').onclick=del;bindForm();window.scrollTo(0,0)}
 function roastOptions(sel,savedLabel){const missing=sel&&!roastById(sel);return '<option value="">'+(ROASTS.length?'Choose a roast…':'No roasts yet')+'</option>'+(missing?'<option value="'+esc(sel)+'" selected>'+esc(savedLabel||'Roast on another device')+'</option>':'')+ROASTS.map(r=>'<option value="'+esc(r.id)+'"'+(String(sel)===String(r.id)?' selected':'')+'>'+esc(roastLabel(r))+'</option>').join('')}
 function fieldHtml(f){if(f.h)return '<div class="fhead">'+esc(f.h)+'</div>';const v=CUR[f.k];const lab=f.l?'<label for="f_'+f.k+'">'+esc(f.l)+(f.req?' <em>*</em>':'')+'</label>':'';const cls='fld'+(f.full?' full':'');
  switch(f.t){case 'text':return '<div class="'+cls+'">'+lab+'<input id="f_'+f.k+'" data-k="'+f.k+'" value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'"></div>';
@@ -179,10 +179,10 @@ async function save(){const miss=F[CUR_T].filter(f=>f.req&&(CUR[f.k]==null||Stri
  if(CUR_T==='brew'&&!CUR.roastId&&!String(CUR.coffee||'').trim()){toast('Choose a roast or name the coffee');return}
  if(CUR_T==='brew'){const r=roastById(CUR.roastId);if(r){CUR.roastLabel=roastLabel(r);CUR.restDays=restDays(CUR.roastId,CUR.brewedAt)}else if(!CUR.roastId){CUR.roastLabel='';CUR.restDays=null}}
  if(CUR_T==='cupping'){CUR.samples=(CUR.samples||[]).map(s=>{const r=roastById(s.roastId);return{...s,roastLabel:r?roastLabel(r):(s.roastId?s.roastLabel:''),restDays:r?restDays(s.roastId,CUR.at):(s.roastId?s.restDays:null),total:sampleScore(s,CUR)}});CUR.roastIds=[...new Set(CUR.samples.map(s=>s.roastId).filter(Boolean))]}
- await ORIGIN.put(CUR);toast('Saved');go(CUR_T)}
+ if($('#alsoCloud')&&$('#alsoCloud').checked)CUR.cloud=true;await ORIGIN.put(CUR);toast('Saved');go(CUR_T)}
 async function del(){if(!confirm('Delete this record?'))return;await ORIGIN.remove(CUR.id);toast('Deleted');go(CUR_T)}
 ORIGIN.onSync(s=>{refreshSyncBadge.last=s;refreshSyncBadge(s);if(s.status==='synced'&&s.changed&&!location.hash.startsWith('#edit/'))route()});
-route().then(()=>ORIGIN.sync().catch(()=>{}));
+PREFS.pull().then(route).then(()=>ORIGIN.sync().catch(()=>{}));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>

@@ -70,7 +70,7 @@ textarea{min-height:76px;resize:vertical}
 .toast.on{opacity:1}
 .back{background:none;border:0;color:var(--coffee);font-weight:600;padding:6px 0;cursor:pointer;font-size:14px}
 @media(max-width:380px){.f{grid-template-columns:1fr}}
-</style>
+.fbar{display:flex;gap:8px;margin:0 0 8px}.fbar .fq{flex:1}.fpanel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin:0 0 8px}.fgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 10px;margin-bottom:10px}.fl{display:flex;flex-direction:column;gap:4px;min-width:0}.fl span{font-size:12px;color:var(--muted);font-weight:600}.fsum{font-size:13px;color:var(--muted);margin:4px 2px 0}</style>
 <link rel="stylesheet" href="kk.css"></head>
 <body>
 <main class="app">
@@ -79,7 +79,7 @@ textarea{min-height:76px;resize:vertical}
 </main>
 <div class="toast" id="toast"></div>
 <script src="sync.js"></script>
-<script src="origin-db.js"></script>
+<script src="prefs.js"></script><script src="origin-db.js"></script><script src="cloud-ui.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -200,26 +200,77 @@ window.addEventListener('hashchange',route);
 async function route(){const h=location.hash.slice(1);await loadAll();const m=h.match(/^edit\/(estate|plot|harvest|process|green)\/(.+)$/);if(m&&m[2]!=='new'&&!byId(m[1],m[2])&&typeof SYNC!=='undefined'&&SYNC.isAuthenticated()){$('#view').innerHTML='<div class="empty">Loading from your account…</div>';try{await ORIGIN.sync()}catch(e){}await loadAll()}if(m)return editView(m[1],m[2]==='new'?null:m[2]);if(['farm','harvest','process','green'].includes(h))TAB=h;listView()}
 
 // ---------- list ----------
-function syncBadge(){return '<span class="sync" id="syncState"><i></i><span>'+(typeof SYNC!=='undefined'&&SYNC.isAuthenticated()?'Synced to your account':'Saved on this device')+'</span></span>'}
-function listView(){const tabs=[['farm','Farm'],['harvest','Harvest'],['process','Process'],['green','Green']];let body='';
- if(TAB==='farm'){body+='<div class="sec"><h2>Estates</h2><button class="btn small" onclick="go(\'edit/estate/new\')">+ Estate</button></div>'+(DB.estate.length?DB.estate.map(e=>card('estate',e,[e.locality,e.district,e.region].filter(Boolean).join(', '),[e.area?e.area+' '+(e.areaUnit||'acre'):'',DB.plot.filter(p=>p.estateId===e.id).length+' plots'])).join(''):'<div class="empty">Add your estate first, then its blocks and plots.</div>');
-  body+='<div class="sec"><h2>Plots</h2><button class="btn small" onclick="go(\'edit/plot/new\')"'+(DB.estate.length?'':' disabled')+'>+ Plot</button></div>'+(DB.plot.length?DB.estate.map(e=>{const ps=DB.plot.filter(p=>p.estateId===e.id);return ps.map(p=>card('plot',p,e.name,[p.variety,p.species,p.altitude?p.altitude+' '+(p.altUnit||'ft'):'',p.area?p.area+' '+(p.areaUnit||'acre'):'',p.plantYear?(new Date().getFullYear()-p.plantYear)+' yrs':'',p.shade?p.shade+' shade':''])).join('')}).join(''):'<div class="empty">No plots yet. A plot holds variety, plant age, spacing, shade and flowering.</div>')}
- if(TAB==='harvest'){body+='<div class="sec"><h2>Harvests</h2><button class="btn small" onclick="go(\'edit/harvest/new\')">+ Harvest</button></div>'+(DB.harvest.length?sortD(DB.harvest,'date').map(h=>{const kg=harvestKg(h);const ps=(h.plotIds||[]).map(id=>byId('plot',id)).filter(Boolean);const b=(h.brix||[]).map(x=>num(x.v)).filter(x=>x!=null);return card('harvest',h,fmtDate(h.date)+(ps.length?' · '+ps.map(p=>title('plot',p)).join(', '):''),[kg?r1(kg)+' kg cherry':'',h.pickType,h.ripePct?h.ripePct+'% ripe':'',b.length?r1(b.reduce((a,c)=>a+c,0)/b.length)+'° Brix':''])}).join(''):'<div class="empty">Record each day\'s picking: plots, baskets, ripeness and Brix.</div>')}
- if(TAB==='process'){body+='<div class="sec"><h2>Processing</h2><button class="btn small" onclick="go(\'edit/process/new\')">+ Process</button></div>'+(DB.process.length?sortD(DB.process,'started').map(p=>{const s=processSummary(p);return card('process',p,(p.pathway||'')+(p.started?' · started '+fmtDate(p.started):''),[s.cherry?r1(s.cherry)+' kg cherry':'',s.green?r1(s.green)+' kg green':'',s.outturn?'outturn '+r1(s.outturn)+'%':'',(p.steps||[]).length+' steps',s.moist!=null?'last moisture '+s.moist+'%':''])}).join(''):'<div class="empty">Start a processing run from one or more harvests, then log each step: fermentation, drying, resting, hulling.</div>')}
- if(TAB==='green'){body+='<div class="sec"><h2>Green lots</h2><button class="btn small" onclick="go(\'edit/green/new\')">+ Green lot</button></div>'+(DB.green.length?sortD(DB.green,'date').map(g=>{const L=lineage(g);const used=roastsFor(g).reduce((a,r)=>a+(num(r.greenWeight)||0),0)/1000;const w=num(g.weightKg);return card('green',g,[L.estates.map(e=>e.name).join(', '),L.varieties.join(', '),L.p?L.p.pathway:''].filter(Boolean).join(' · '),[w!=null?r2(Math.max(0,w-used))+' kg left':'',g.moisture?g.moisture+'% moisture':'',g.grade,roastsFor(g).length?roastsFor(g).length+' roasts':''])}).join(''):'<div class="empty">A green lot is what goes to the roaster. Link it to its process, and pick it in the Timer as the roast\'s source.</div>')}
- $('#view').innerHTML='<h1>Origin</h1><div class="sub">Farm, harvest, processing and green lots. '+syncBadge()+'</div><div class="tabs">'+tabs.map(([k,l])=>'<button class="'+(TAB===k?'on':'')+'" onclick="go(\''+k+'\')">'+l+'</button>').join('')+'</div>'+body;
- refreshSyncBadge()}
+function syncBadge(){return '<span class="sync" id="syncState"><i></i><span>'+cloudModeText('origin')+'</span></span>'}
+// ---------- filters ----------
+const FKEY='kk_origin_filters_v1';let FILT=(()=>{try{return JSON.parse(localStorage.getItem(FKEY)||'{}')}catch(e){return{}}})();let FOPEN=false;
+function fget(k){return (FILT[TAB]||{})[k]??''}
+function fset(k,v){FILT[TAB]={...(FILT[TAB]||{}),[k]:v};if(v===''||v==null)delete FILT[TAB][k];try{localStorage.setItem(FKEY,JSON.stringify(FILT))}catch(e){}}
+function factive(){return Object.keys(FILT[TAB]||{}).length}
+const uniq=a=>[...new Set(a.filter(Boolean))].sort((x,y)=>String(x).localeCompare(String(y)));
+function plotsOfHarvest(h){return (h.plotIds||[]).map(id=>byId('plot',id)).filter(Boolean)}
+function harvestsOfProcess(p){return (p.harvestIds||[]).map(id=>byId('harvest',id)).filter(Boolean)}
+function plotsOfProcess(p){return [...new Set(harvestsOfProcess(p).flatMap(h=>h.plotIds||[]))].map(id=>byId('plot',id)).filter(Boolean)}
+function processDone(p){const steps=p.steps||[];return steps.some(s=>['Hulling','Grading / sorting'].includes(s.type)&&num(s.outKg))}
+function toAcre(v,u){const n=num(v);return n==null?null:(u==='ha'?n*2.47105:n)}
+function ctx(t,r){// estate ids, varieties, date, text for a record
+ if(t==='plot')return{est:[r.estateId],var:[r.variety],date:'',text:[r.block,r.name,r.variety,r.species,r.notes,r.shadeTrees,r.soil].join(' ')};
+ if(t==='harvest'){const ps=plotsOfHarvest(r);return{est:ps.map(p=>p.estateId),var:ps.map(p=>p.variety),plots:r.plotIds||[],date:r.date||'',text:[r.code,r.notes,r.weather,r.pickType,...ps.map(p=>[p.block,p.name].join(' '))].join(' ')}}
+ if(t==='process'){const ps=plotsOfProcess(r);return{est:ps.map(p=>p.estateId),var:ps.map(p=>p.variety),date:r.started||'',text:[r.code,r.pathway,r.notes,...(r.steps||[]).map(s=>[s.type,s.method,s.notes,s.vessel,s.location].join(' '))].join(' ')}}
+ if(t==='green'){const L=lineage(r);return{est:L.estates.map(e=>e.id),var:L.varieties,date:r.date||'',text:[r.code,r.name,r.grade,r.screen,r.storage,r.notes,L.p&&L.p.pathway].join(' ')}}
+ return{est:[],var:[],date:'',text:''}}
+function pass(t,r){const f=FILT[TAB]||{};const c=ctx(t,r);
+ if(f.q&&!c.text.toLowerCase().includes(String(f.q).toLowerCase()))return false;
+ if(f.loc==='cloud'&&!r.cloud)return false;if(f.loc==='phone'&&r.cloud)return false;
+ if(f.estate&&!c.est.includes(f.estate))return false;
+ if(f.variety&&!c.var.includes(f.variety))return false;
+ if(f.from&&c.date&&c.date.slice(0,10)<f.from)return false;if(f.from&&!c.date)return false;
+ if(f.to&&c.date&&c.date.slice(0,10)>f.to)return false;if(f.to&&!c.date)return false;
+ if(t==='plot'){if(f.species&&r.species!==f.species)return false;if(f.shade&&r.shade!==f.shade)return false;const alt=num(r.altitude)!=null?((r.altUnit||'ft')==='m'?num(r.altitude)*3.28084:num(r.altitude)):null;if(f.altMin&&(alt==null||alt<num(f.altMin)))return false;if(f.altMax&&(alt==null||alt>num(f.altMax)))return false;const age=num(r.plantYear)?new Date().getFullYear()-num(r.plantYear):null;if(f.ageMin&&(age==null||age<num(f.ageMin)))return false;if(f.ageMax&&(age==null||age>num(f.ageMax)))return false}
+ if(t==='harvest'){if(f.plot&&!(r.plotIds||[]).includes(f.plot))return false;if(f.pickType&&r.pickType!==f.pickType)return false;const b=(r.brix||[]).map(x=>num(x.v)).filter(x=>x!=null);const avg=b.length?b.reduce((a,x)=>a+x,0)/b.length:null;if(f.brixMin&&(avg==null||avg<num(f.brixMin)))return false;if(f.ripeMin&&(num(r.ripePct)==null||num(r.ripePct)<num(f.ripeMin)))return false}
+ if(t==='process'){if(f.pathway&&r.pathway!==f.pathway)return false;if(f.status==='done'&&!processDone(r))return false;if(f.status==='running'&&processDone(r))return false;const o=processSummary(r).outturn;if(f.outMin&&(o==null||o<num(f.outMin)))return false;if(f.outMax&&(o==null||o>num(f.outMax)))return false}
+ if(t==='green'){const L=lineage(r);if(f.pathway&&(!L.p||L.p.pathway!==f.pathway))return false;if(f.grade&&String(r.grade||'').toLowerCase()!==String(f.grade).toLowerCase())return false;if(f.moistMax&&(num(r.moisture)==null||num(r.moisture)>num(f.moistMax)))return false;const left=greenLeft(r);if(f.stock==='left'&&!(left>0))return false;if(f.stock==='empty'&&left>0)return false}
+ return true}
+function greenLeft(g){const w=num(g.weightKg);if(w==null)return null;return Math.max(0,w-roastsFor(g).reduce((a,r)=>a+(num(r.greenWeight)||0),0)/1000)}
+function fSel(k,label,opts){const v=fget(k);return '<label class="fl"><span>'+label+'</span><select data-f="'+k+'"><option value="">Any</option>'+opts.map(o=>{const [val,txt]=Array.isArray(o)?o:[o,o];return '<option value="'+esc(val)+'"'+(String(v)===String(val)?' selected':'')+'>'+esc(txt)+'</option>'}).join('')+'</select></label>'}
+function fNum(k,label,ph){return '<label class="fl"><span>'+label+'</span><input data-f="'+k+'" type="number" step="any" inputmode="decimal" placeholder="'+esc(ph||'')+'" value="'+esc(fget(k))+'"></label>'}
+function fDate(k,label){return '<label class="fl"><span>'+label+'</span><input data-f="'+k+'" type="date" value="'+esc(fget(k))+'"></label>'}
+function filterPanel(){const est=DB.estate.map(e=>[e.id,e.name]);const vars=uniq(DB.plot.map(p=>p.variety));const common=[fSel('estate','Estate',est),fSel('variety','Variety',vars)];let x=[];
+ if(TAB==='farm')x=[...common,fSel('species','Species',SPECIES),fSel('shade','Shade',['None','Light','Medium','Heavy']),fNum('altMin','Altitude from (ft)'),fNum('altMax','Altitude to (ft)'),fNum('ageMin','Plant age from (yrs)'),fNum('ageMax','Plant age to (yrs)')];
+ if(TAB==='harvest')x=[...common,fSel('plot','Plot',DB.plot.map(p=>[p.id,refLabel('plot',p)])),fSel('pickType','Picking',['Selective','Strip','Gleaning','Mixed']),fDate('from','From'),fDate('to','To'),fNum('brixMin','Brix at least'),fNum('ripeMin','Ripe % at least')];
+ if(TAB==='process')x=[...common,fSel('pathway','Pathway',PATHWAYS),fSel('status','Status',[['running','Running'],['done','Done (hulled or graded)']]),fDate('from','Started from'),fDate('to','Started to'),fNum('outMin','Outturn % from'),fNum('outMax','Outturn % to')];
+ if(TAB==='green')x=[...common,fSel('pathway','Pathway',PATHWAYS),fSel('stock','Stock',[['left','Has stock left'],['empty','Used up']]),fNum('moistMax','Moisture % at most'),fSel('grade','Grade',uniq(DB.green.map(g=>g.grade))),fDate('from','Date from'),fDate('to','Date to')];
+ x.push(fSel('loc','Stored',[['cloud','In cloud'],['phone','This phone only']]));
+ return '<div class="fbar"><input class="fq" data-f="q" type="search" placeholder="Search codes, names, notes" value="'+esc(fget('q'))+'"><button type="button" class="btn small" id="fToggle">Filter'+(factive()-(fget('q')?1:0)>0?' ('+(factive()-(fget('q')?1:0))+')':'')+'</button></div><div class="fpanel"'+(FOPEN?'':' hidden')+'><div class="fgrid">'+x.join('')+'</div><button type="button" class="btn small" id="fClear">Clear filters</button></div><div id="fsum" class="fsum"></div>'}
+function sum(a){return a.reduce((x,y)=>x+y,0)}
+function listBody(){let body='',shown=0,total=0,tot='';const empty=t=>'<div class="empty">'+t+'</div>';const none='<div class="empty">Nothing matches these filters.</div>';
+ if(TAB==='farm'){const plots=DB.plot.filter(p=>pass('plot',p));total=DB.plot.length;shown=plots.length;const area=sum(plots.map(p=>toAcre(p.area,p.areaUnit||'acre')||0)),pc=sum(plots.map(p=>num(p.plantCount)||0));tot=[area?r1(area)+' acres':'',pc?pc.toLocaleString('en-IN')+' plants':''].filter(Boolean).join(' · ');
+  body+='<div class="sec"><h2>Estates</h2><button class="btn small" onclick="go(\'edit/estate/new\')">+ Estate</button></div>'+(DB.estate.length?DB.estate.map(e=>card('estate',e,[e.locality,e.district,e.region].filter(Boolean).join(', '),[e.area?e.area+' '+(e.areaUnit||'acre'):'',DB.plot.filter(p=>p.estateId===e.id).length+' plots'])).join(''):empty('Add your estate first, then its blocks and plots.'));
+  body+='<div class="sec"><h2>Plots</h2><button class="btn small" onclick="go(\'edit/plot/new\')"'+(DB.estate.length?'':' disabled')+'>+ Plot</button></div>'+(DB.plot.length?(plots.length?DB.estate.map(e=>plots.filter(p=>p.estateId===e.id).map(p=>card('plot',p,e.name,[p.variety,p.species,p.altitude?p.altitude+' '+(p.altUnit||'ft'):'',p.area?p.area+' '+(p.areaUnit||'acre'):'',p.plantYear?(new Date().getFullYear()-p.plantYear)+' yrs':'',p.shade?p.shade+' shade':''])).join('')).join(''):none):empty('No plots yet. A plot holds variety, plant age, spacing, shade and flowering.'))}
+ if(TAB==='harvest'){const hs=sortD(DB.harvest,'date').filter(h=>pass('harvest',h));total=DB.harvest.length;shown=hs.length;const kg=sum(hs.map(h=>harvestKg(h)||0));const bx=hs.flatMap(h=>(h.brix||[]).map(x=>num(x.v)).filter(x=>x!=null));tot=[kg?r1(kg)+' kg cherry':'',bx.length?'avg Brix '+r1(sum(bx)/bx.length):''].filter(Boolean).join(' · ');
+  body+='<div class="sec"><h2>Harvests</h2><button class="btn small" onclick="go(\'edit/harvest/new\')">+ Harvest</button></div>'+(DB.harvest.length?(hs.length?hs.map(h=>{const kg=harvestKg(h);const ps=plotsOfHarvest(h);const b=(h.brix||[]).map(x=>num(x.v)).filter(x=>x!=null);return card('harvest',h,fmtDate(h.date)+(ps.length?' · '+ps.map(p=>title('plot',p)).join(', '):''),[kg?r1(kg)+' kg cherry':'',h.pickType,h.ripePct?h.ripePct+'% ripe':'',b.length?r1(sum(b)/b.length)+'° Brix':''])}).join(''):none):empty('Record each day\'s picking: plots, baskets, ripeness and Brix.'))}
+ if(TAB==='process'){const ps=sortD(DB.process,'started').filter(p=>pass('process',p));total=DB.process.length;shown=ps.length;const S=ps.map(processSummary);const ch=sum(S.map(s=>s.cherry||0)),gr=sum(S.map(s=>s.green||0));tot=[ch?r1(ch)+' kg cherry':'',gr?r1(gr)+' kg green':'',ch&&gr?'outturn '+r1(gr/ch*100)+'%':''].filter(Boolean).join(' · ');
+  body+='<div class="sec"><h2>Processing</h2><button class="btn small" onclick="go(\'edit/process/new\')">+ Process</button></div>'+(DB.process.length?(ps.length?ps.map(p=>{const s=processSummary(p);return card('process',p,(p.pathway||'')+(p.started?' · started '+fmtDate(p.started):''),[processDone(p)?'Done':'Running',s.cherry?r1(s.cherry)+' kg cherry':'',s.green?r1(s.green)+' kg green':'',s.outturn?'outturn '+r1(s.outturn)+'%':'',(p.steps||[]).length+' steps',s.moist!=null?'last moisture '+s.moist+'%':''])}).join(''):none):empty('Start a processing run from one or more harvests, then log each step: fermentation, drying, resting, hulling.'))}
+ if(TAB==='green'){const gs=sortD(DB.green,'date').filter(g=>pass('green',g));total=DB.green.length;shown=gs.length;const w=sum(gs.map(g=>num(g.weightKg)||0)),left=sum(gs.map(g=>greenLeft(g)||0));tot=[w?r2(w)+' kg total':'',w?r2(left)+' kg left':''].filter(Boolean).join(' · ');
+  body+='<div class="sec"><h2>Green lots</h2><button class="btn small" onclick="go(\'edit/green/new\')">+ Green lot</button></div>'+(DB.green.length?(gs.length?gs.map(g=>{const L=lineage(g);const lf=greenLeft(g);return card('green',g,[L.estates.map(e=>e.name).join(', '),L.varieties.join(', '),L.p?L.p.pathway:''].filter(Boolean).join(' · '),[lf!=null?r2(lf)+' kg left':'',g.moisture?g.moisture+'% moisture':'',g.grade,roastsFor(g).length?roastsFor(g).length+' roasts':''])}).join(''):none):empty('A green lot is what goes to the roaster. Link it to its process, and pick it in the Timer as the roast\'s source.'))}
+ return{body,shown,total,tot}}
+function renderListBody(){const b=listBody();$('#listBody').innerHTML=b.body;const L={farm:['plot','plots'],harvest:['harvest','harvests'],process:['run','runs'],green:['lot','lots']}[TAB];const lab=n=>L[n===1?0:1];$('#fsum').textContent=b.total?(b.shown===b.total?b.total+' '+lab(b.total):'Showing '+b.shown+' of '+b.total+' '+lab(b.total))+(b.tot?' · '+b.tot:''):''}
+function listView(){const tabs=[['farm','Farm'],['harvest','Harvest'],['process','Process'],['green','Green']];
+ $('#view').innerHTML='<h1>Origin</h1><div class="sub">Farm, harvest, processing and green lots. '+syncBadge()+'</div><div class="tabs">'+tabs.map(([k,l])=>'<button class="'+(TAB===k?'on':'')+'" onclick="go(\''+k+'\')">'+l+'</button>').join('')+'</div>'+filterPanel()+'<div id="listBody"></div>';
+ $('#view').querySelectorAll('[data-f]').forEach(el=>el.addEventListener('input',()=>{fset(el.dataset.f,el.value);renderListBody();const t=$('#fToggle');const n=factive()-(fget('q')?1:0);t.textContent='Filter'+(n>0?' ('+n+')':'')}));
+ $('#fToggle').onclick=()=>{FOPEN=!FOPEN;document.querySelector('.fpanel').hidden=!FOPEN};
+ $('#fClear').onclick=()=>{delete FILT[TAB];try{localStorage.setItem(FKEY,JSON.stringify(FILT))}catch(e){}listView()};
+ renderListBody();refreshSyncBadge()}
 function sortD(a,k){return [...a].sort((x,y)=>String(y[k]||y.updatedAt).localeCompare(String(x[k]||x.updatedAt)))}
-function card(t,r,sub,tags){return '<div class="card" onclick="go(\'edit/'+t+'/'+r.id+'\')"><b>'+esc(title(t,r))+'</b>'+(sub?'<div class="m">'+esc(sub)+'</div>':'')+'<div class="tagrow">'+tags.filter(Boolean).map(x=>'<span class="tag">'+esc(x)+'</span>').join('')+'</div></div>'}
+function card(t,r,sub,tags){return '<div class="card" onclick="go(\'edit/'+t+'/'+r.id+'\')"><b>'+esc(title(t,r))+'</b>'+(sub?'<div class="m">'+esc(sub)+'</div>':'')+'<div class="tagrow">'+locTag(r)+tags.filter(Boolean).map(x=>'<span class="tag">'+esc(x)+'</span>').join('')+'</div></div>'}
 
 // ---------- edit ----------
 let CUR=null,CUR_T=null;
 function editView(t,id){CUR_T=t;const ex=id?byId(t,id):null;if(id&&!ex){toast('Not found');return go(TAB)}
  CUR=ex?JSON.parse(JSON.stringify(ex)):{type:t};if(!ex){F[t].forEach(f=>{if(f.def!==undefined&&CUR[f.k]==null)CUR[f.k]=typeof f.def==='function'?f.def():f.def;if(f.unit&&!CUR[f.unit])CUR[f.unit]=f.def_unit});if(t==='harvest')CUR.code=nextCode('harvest','H',CUR.date);if(t==='process'){CUR.code=nextCode('process','P',CUR.started);CUR.steps=[]}if(t==='green')CUR.code=nextCode('green','G',CUR.date);if(t==='plot'&&DB.estate.length===1)CUR.estateId=DB.estate[0].id;if(t==='plot'){CUR.species='Arabica'}if(['harvest','process','green'].includes(t))CUR._auto=1}
  const names={estate:'Estate',plot:'Plot',harvest:'Harvest',process:'Processing run',green:'Green lot'};const backTab={estate:'farm',plot:'farm',harvest:'harvest',process:'process',green:'green'}[t];
- $('#view').innerHTML='<button class="back" onclick="go(\''+backTab+'\')">‹ Back</button><h1>'+(ex?esc(title(t,ex)):'New '+names[t].toLowerCase())+'</h1><div class="sub">'+names[t]+(ex?' · updated '+fmtDT(ex.updatedAt):'')+'</div><form id="form" class="f" onsubmit="return false">'+F[t].map(fieldHtml).join('')+'</form><datalist id="varieties">'+VARIETIES.map(v=>'<option value="'+esc(v)+'">').join('')+'</datalist>';
- document.querySelector('.bar')?.remove();const bar=document.createElement('div');bar.className='bar';bar.innerHTML=(ex?'<button class="btn danger" id="del">Delete</button>':'<span></span>')+'<button class="btn primary grow" id="save">Save</button>';document.body.appendChild(bar);
- $('#save').onclick=save;if(ex)$('#del').onclick=del;bindForm();window.scrollTo(0,0)}
+ $('#view').innerHTML='<button class="back" onclick="go(\''+backTab+'\')">‹ Back</button><h1>'+(ex?esc(title(t,ex)):'New '+names[t].toLowerCase())+'</h1><div class="sub">'+names[t]+(ex?' · updated '+fmtDT(ex.updatedAt):'')+'</div>'+(ex?'<div id="cloudRow" class="cloudrow">'+cloudRowHtml(CUR)+'</div>':'')+'<form id="form" class="f" onsubmit="return false">'+F[t].map(fieldHtml).join('')+'</form><datalist id="varieties">'+VARIETIES.map(v=>'<option value="'+esc(v)+'">').join('')+'</datalist>';
+ document.querySelector('.bar')?.remove();const bar=document.createElement('div');bar.className='bar';bar.innerHTML=(ex?'<button class="btn danger" id="del">Delete</button>':'<span></span>')+alsoCloudHtml(CUR)+'<button class="btn primary grow" id="save">Save</button>';document.body.appendChild(bar);
+ $('#save').onclick=save;bindCloudRow(CUR);if(ex)$('#del').onclick=del;bindForm();window.scrollTo(0,0)}
 window.addEventListener('hashchange',()=>{if(!location.hash.startsWith('#edit/'))document.querySelector('.bar')?.remove()});
 function fid(k){return 'f_'+k}
 function fieldHtml(f){if(f.h)return '<div class="fhead">'+esc(f.h)+'</div>';const v=CUR[f.k];const lab=f.l?'<label for="'+fid(f.k)+'">'+esc(f.l)+(f.req?' <em>*</em>':'')+'</label>':'';const cls='fld'+(f.full?' full':'');
@@ -266,14 +317,14 @@ function getGps(){if(!navigator.geolocation){toast('Location not available on th
 function r6(v){return Math.round(v*1e6)/1e6}
 async function save(){const miss=F[CUR_T].filter(f=>f.req&&(CUR[f.k]==null||String(CUR[f.k]).trim()===''));if(miss.length){toast('Fill in: '+miss.map(f=>f.l).join(', '));const el=$('#'+fid(miss[0].k));el&&el.focus();return}
  if(CUR_T==='green'){const L=lineage(CUR);CUR.estate=L.estates.map(e=>e.name).join(', ');CUR.variety=L.varieties.join(', ');CUR.species=L.species.join(', ');CUR.pathway=L.p?L.p.pathway:''}
- delete CUR._auto;const saved=await ORIGIN.put(CUR);toast('Saved');const back={estate:'farm',plot:'farm',harvest:'harvest',process:'process',green:'green'}[CUR_T];CUR=saved;
+ delete CUR._auto;if($('#alsoCloud')&&$('#alsoCloud').checked)CUR.cloud=true;const saved=await ORIGIN.put(CUR);toast('Saved');const back={estate:'farm',plot:'farm',harvest:'harvest',process:'process',green:'green'}[CUR_T];CUR=saved;
  if(CUR_T==='process'||CUR_T==='green'){await loadAll();editView(CUR_T,saved.id);history.replaceState(null,'','#edit/'+CUR_T+'/'+saved.id)}else go(back)}
 async function del(){const t=CUR_T,id=CUR.id;const uses={estate:()=>DB.plot.filter(p=>p.estateId===id).length,plot:()=>DB.harvest.filter(h=>(h.plotIds||[]).includes(id)).length,harvest:()=>DB.process.filter(p=>(p.harvestIds||[]).includes(id)).length,process:()=>DB.green.filter(g=>g.processId===id).length,green:()=>roastsFor({id}).length}[t]();if(!confirm(uses?'This is used by '+uses+' other record'+(uses===1?'':'s')+'. Delete anyway? They will lose this link.':'Delete this record?'))return;await ORIGIN.remove(id);toast('Deleted');go({estate:'farm',plot:'farm'}[t]||t)}
 
 // ---------- sync status ----------
-function refreshSyncBadge(s){const el=$('#syncState');if(!el)return;const st=s||refreshSyncBadge.last;if(!st)return;el.className='sync '+(st.status||'');el.querySelector('span').textContent={local:'Saved on this device',offline:'Offline, will sync later',syncing:'Syncing…',synced:'Synced to your account',error:'Sync failed, will retry'}[st.status]||''}
+function refreshSyncBadge(s){const el=$('#syncState');if(!el)return;const st=s||refreshSyncBadge.last;if(!st)return;el.className='sync '+(st.status||'');el.querySelector('span').textContent=({local:'Saved on this device',offline:'Offline, will sync later',syncing:'Syncing…',error:'Sync failed, will retry'}[st.status])||cloudModeText('origin')}
 ORIGIN.onSync(s=>{refreshSyncBadge.last=s;refreshSyncBadge(s);if(s.status==='synced'&&s.changed&&!location.hash.startsWith('#edit/'))route()});
-route().then(()=>ORIGIN.sync().catch(()=>{}));
+PREFS.pull().then(route).then(()=>ORIGIN.sync().catch(()=>{}));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>

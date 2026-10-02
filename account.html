@@ -17,6 +17,7 @@ input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6p
 .meta{font-size:12px;color:#777;margin:8px 0}
 .hide{display:none}
 a{color:#555}
+.srow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #eee}.srow:first-child{border-top:0}.srow .l{font-size:14px;line-height:1.35}.srow .l small{display:block;color:#777;font-size:12px}.seg{display:flex;background:#eee;border-radius:10px;padding:3px;gap:2px;flex-shrink:0}.seg button{border:0;background:transparent;border-radius:8px;padding:8px 9px;font:inherit;font-size:13px;font-weight:600;color:#555;cursor:pointer}.seg button.on{background:#fff;color:#111;box-shadow:0 1px 2px rgba(0,0,0,.1)}
 .backup-reminder{background:#fff3cd;border:1px solid #ffe699;border-radius:12px;padding:12px;margin:12px 0;font-size:13px;line-height:1.5}
 .backup-reminder strong{display:block;color:#111;margin-bottom:6px}
 </style>
@@ -27,7 +28,7 @@ a{color:#555}
 
 <h1>Account</h1>
 
-<script src="sync.js"></script>
+<script src="sync.js"></script><script src="prefs.js"></script><script src="origin-db.js"></script>
 
 <div class="card" id="local">
 <b>Continue without an account</b>
@@ -49,7 +50,7 @@ a{color:#555}
 
 <div class="card hide" id="me">
 <b id="who"></b>
-<div class="meta">Signed in to KoffyKraft cloud · roasts will sync automatically</div>
+<div class="meta">Signed in. You choose what goes to the cloud, below.</div>
 <div class="meta" id="roastCount" style="margin-top:12px;padding-top:12px;border-top:1px solid #ddd"></div>
 <div class="backup-reminder">
 <strong>⚠️ Backup Your Data</strong>
@@ -57,6 +58,14 @@ Keep your own copies of important roasts. Export to Dropbox, Google Drive, or yo
 <div style="margin-top:8px"><a href="roasts.html" style="display:inline-block;padding:6px 12px;background:#111;color:white;text-decoration:none;border-radius:6px;font-size:11px">Go to Roastbook</a></div>
 </div>
 <button class="btn ghost" id="logout" style="width:100%;margin-top:12px">Sign out</button>
+</div>
+
+<div class="card hide" id="syncCard">
+<b>Cloud sync</b>
+<div class="meta">Off: stays on this phone. Selected only: just the records you tap "Save to cloud" on. All: every record you save goes to the cloud. Removing something from the cloud never deletes it from this phone.</div>
+<div id="syncRows"></div>
+<div class="meta" style="margin-top:12px;padding-top:12px;border-top:1px solid #eee">Process, Capture, OCR notes and Pre-roast plans stay on this phone only for now.</div>
+<div class="meta" id="syncMsg"></div>
 </div>
 
 <div class="card">
@@ -94,7 +103,16 @@ async function check(){
   meCard.classList.remove('hide');
   whoEl.textContent=me.user.email;
   roastCountEl.textContent=`${roasts.items?.length||0} roasts in cloud`;
+  await PREFS.pull();
+  let origin=[];try{const r=await fetch('/api/origin',{headers:{authorization:'Bearer '+SYNC.getToken()}});if(r.ok)origin=(await r.json()).items||[]}catch(e){}
+  const live=origin.filter(x=>!x.deleted);
+  COUNTS={origin:live.filter(x=>PREFS.sectionOf(x.type)==='origin').length,cup:live.filter(x=>PREFS.sectionOf(x.type)==='cup').length,roasts:roasts.items?.length||0};
+  document.getElementById('syncCard').classList.remove('hide');
+  drawSync();
 }
+let COUNTS={};
+function drawSync(){const p=PREFS.read();const labels={off:'Off',selected:'Selected',all:'All'};document.getElementById('syncRows').innerHTML=Object.entries(PREFS.SECTIONS).map(([k,name])=>'<div class="srow"><div class="l">'+name+'<small>'+(COUNTS[k]||0)+' in cloud</small></div><div class="seg" role="group" aria-label="'+name+'">'+PREFS.MODES.map(m=>'<button type="button" data-sec="'+k+'" data-mode="'+m+'" class="'+(p[k]===m?'on':'')+'" aria-pressed="'+(p[k]===m)+'">'+labels[m]+'</button>').join('')+'</div></div>').join('');
+ document.querySelectorAll('[data-sec]').forEach(b=>b.onclick=async()=>{const sec=b.dataset.sec,mode=b.dataset.mode;await PREFS.set(sec,mode);drawSync();const msg=document.getElementById('syncMsg');if(mode==='all'&&sec!=='roasts'){msg.textContent='Uploading…';const n=await ORIGIN.markAll(sec);msg.textContent=n?n+' records sent to the cloud.':'Everything here is already in the cloud.';const r=await fetch('/api/origin',{headers:{authorization:'Bearer '+SYNC.getToken()}}).catch(()=>null);if(r&&r.ok){const it=((await r.json()).items||[]).filter(x=>!x.deleted);COUNTS[sec]=it.filter(x=>PREFS.sectionOf(x.type)===sec).length;drawSync()}}else if(mode==='all'){msg.textContent='Roasts you finish from now on upload automatically. For earlier ones, use Save to cloud in the Roastbook.'}else if(mode==='off'){msg.textContent='Nothing new goes to the cloud from '+PREFS.SECTIONS[sec].split(' (')[0]+'. What is already there stays until you remove it.'}else{msg.textContent='Only records you choose with Save to cloud will upload.'}})}
 
 sendBtn.onclick=async()=>{
   msgEl.textContent='';
