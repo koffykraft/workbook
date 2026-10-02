@@ -91,9 +91,13 @@
             font-size: 1.1rem;
             color: #0f172a;
         }
+            body.kk-rehyd{display:block;min-height:0;background:#f7f5f0}
+        body.kk-rehyd .calculator-card{max-width:none;box-shadow:none;border:1px solid #ddd8d0;border-radius:16px}
+        body.kk-rehyd h2{text-align:left;border:0;padding:0;font-size:28px;letter-spacing:-.02em}
     </style>
-</head>
-<body>
+<link rel="stylesheet" href="kk.css"></head>
+<body class="kk-rehyd">
+<main style="max-width:680px;margin:0 auto;padding:16px 16px 60px"><header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="roastbooks.html">Koffy Kraft</a><a class="kkh-acct" href="account.html" aria-label="Account">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
 
 <div class="calculator-card">
     <h2>Coffee Rehydration</h2>
@@ -173,5 +177,6 @@
     calculateRehydration();
 </script>
 
+</main>
 </body>
 </html>

@@ -1,0 +1,37 @@
+/* KoffyKraft shared layout fixes and header.
+   Loaded after each page's own styles so these rules win. */
+:root{--kk-bg:#f7f5f0;--kk-ink:#171512;--kk-muted:#77716a;--kk-line:#ddd8d0;--kk-coffee:#8d583b}
+html,body{max-width:100%;overflow-x:hidden}
+@supports (overflow:clip){html,body{overflow-x:clip}}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--kk-bg);color:var(--kk-ink);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+img,svg,canvas,video{max-width:100%;height:auto}
+
+/* Form controls: 16px stops iPhone Safari zooming in on focus;
+   min-width:0 lets them shrink inside grid and flex columns. */
+input,select,textarea{font-size:16px !important;max-width:100%;min-width:0}
+input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{width:100%}
+select{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+input[type=date],input[type=time],input[type=datetime-local],input[type=month]{-webkit-appearance:none;appearance:none;display:block;min-width:0;min-height:44px;text-align:left;background-color:#fff;color:inherit}
+input::-webkit-date-and-time-value{text-align:left;margin:0}
+input::-webkit-datetime-edit{padding:0}
+
+/* Two-column form grids: columns may never grow past half the screen. */
+.f,.grid,.grid2,.filters,.row2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.f>*,.grid>*,.grid2>*,.filters>*,.lrow>*,.unitwrap>*,.row>*{min-width:0}
+.unitwrap select{width:auto;flex:0 0 auto;max-width:45%}
+.row input[type=number]{flex:1 1 0}
+
+/* Shared header: brand + account on one row, menu on its own row. */
+header.kkh{display:block;margin:0 0 18px;padding:6px 0 0;border-bottom:1px solid var(--kk-line);gap:0}
+.kkh-top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
+.kkh-brand{font-size:19px;font-weight:300;letter-spacing:1px;color:var(--kk-ink);text-decoration:none;white-space:nowrap}
+.kkh-acct{width:40px;height:40px;border:1px solid var(--kk-line);border-radius:50%;display:grid;place-items:center;text-decoration:none;font-size:18px;flex-shrink:0;background:#fff}
+nav.kkh-nav{display:flex;flex:none;justify-content:space-between;font-size:14px;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:6px -4px 0;padding:0 0 8px}
+.kkh-nav::-webkit-scrollbar{display:none}
+.kkh-nav a{flex:0 0 auto;padding:8px 7px;border-radius:999px;font-size:14px;color:var(--kk-ink);text-decoration:none;white-space:nowrap}
+.kkh-nav a[aria-current=page]{background:var(--kk-ink);color:#fff;font-weight:600}
+.kkh-sub{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 6px}
+.kkh-sub h1{margin:0}
+.kkh-sub a{font-size:14px;color:var(--kk-coffee);text-decoration:none;white-space:nowrap}
+@media(max-width:380px){.kkh-nav a{padding:8px 5px;font-size:13.5px}}

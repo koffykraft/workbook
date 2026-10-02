@@ -71,10 +71,10 @@ textarea{min-height:76px;resize:vertical}
 .back{background:none;border:0;color:var(--coffee);font-weight:600;padding:6px 0;cursor:pointer;font-size:14px}
 @media(max-width:380px){.f{grid-template-columns:1fr}}
 </style>
-</head>
+<link rel="stylesheet" href="kk.css"></head>
 <body>
 <main class="app">
-<header style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #ddd;margin-bottom:20px;gap:12px"><span style="font-size:18px;font-weight:300;letter-spacing:1px;color:#111">Koffy Kraft</span><nav style="display:flex;gap:12px;font-size:13px;flex:1;justify-content:center;flex-wrap:wrap"><a href="origin.html" style="text-decoration:none;color:#111">Origin</a><a href="roast-timer-v14.html" style="text-decoration:none;color:#111">Timer</a><a href="roast-graph.html" style="text-decoration:none;color:#111">Graph</a><a href="roasts.html" style="text-decoration:none;color:#111">Roastbook</a><a href="cup.html" style="text-decoration:none;color:#111;font-weight:600">Cup</a><a href="account.html" style="text-decoration:none;color:#111">Account</a></nav><a href="account.html" style="width:40px;height:40px;border:1px solid #ddd;border-radius:50%;display:grid;place-items:center;text-decoration:none;font-size:18px;flex-shrink:0">👤</a></header>
+<header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="roastbooks.html">Koffy Kraft</a><a class="kkh-acct" href="account.html" aria-label="Account">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html" aria-current="page">Cup</a><a href="account.html">Account</a></nav></header>
 <div id="view"></div>
 </main>
 <div class="toast" id="toast"></div>
@@ -113,7 +113,7 @@ const METHODS=['V60','Kalita Wave','Origami','Chemex','AeroPress','French press'
 const F={brew:[
  {k:'roastId',l:'Roast',t:'roast',full:1},
  {k:'coffee',l:'Coffee (if not from a roast here)',t:'text',full:1},
- {k:'brewedAt',l:'Brewed',t:'dt',def:nowLocal},
+ {k:'brewedAt',l:'Brewed',t:'dt',def:nowLocal,full:1},
  {k:'restCalc',t:'calc',fn:b=>{const d0=restDays(b.roastId,b.brewedAt);const d=d0!=null?d0:(b.roastId&&!roastById(b.roastId)?b.restDays:null);return d==null?'':'<b>'+restText(d)+'</b>'}},
  {k:'method',l:'Method',t:'sel',opts:METHODS,req:1},{k:'brewer',l:'Brewer / recipe',t:'text',ph:'V60 02, 4:6'},
  {h:'Recipe'},
@@ -130,7 +130,7 @@ const F={brew:[
  {k:'rating',l:'Rating out of 10',t:'num'},{k:'descriptors',l:'Descriptors',t:'text',ph:'Jaggery, orange, cocoa'},
  {k:'notes',l:'Notes',t:'area',full:1},{k:'nextTime',l:'Next time',t:'text',full:1,ph:'Grind 1 step finer'}],
  cupping:[
- {k:'at',l:'Session',t:'dt',def:nowLocal,req:1},{k:'protocol',l:'Protocol',t:'sel',opts:['SCA','Simple'],def:'SCA'},
+ {k:'at',l:'Session',t:'dt',def:nowLocal,req:1,full:1},{k:'protocol',l:'Protocol',t:'sel',opts:['SCA','Simple'],def:'SCA'},
  {k:'cups',l:'Cups per sample',t:'num',def:'5'},{k:'people',l:'Cuppers',t:'text'},
  {k:'water',l:'Water / ratio',t:'text',full:1,ph:'8.25 g : 150 ml, 93°C'},
  {h:'Samples'},{k:'samples',t:'samples',full:1},
