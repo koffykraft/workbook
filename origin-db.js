@@ -2,7 +2,7 @@
 // Works offline in IndexedDB; when signed in, syncs to /api/origin (last write wins).
 const ORIGIN = (() => {
   const NAME = 'KoffyKraftOrigin', STORE = 'records';
-  const TYPES = ['estate', 'plot', 'harvest', 'process', 'green', 'brew', 'cupping'];
+  const TYPES = ['estate', 'plot', 'harvest', 'process', 'green', 'brew', 'cupping', 'tasting'];
   function open() {
     return new Promise((ok, no) => {
       let r;

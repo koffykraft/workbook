@@ -2,7 +2,7 @@
 // off: stays on this device. selected: only records the user saves to the cloud. all: everything syncs.
 const PREFS = (() => {
   const KEY = 'kk_sync_prefs_v1';
-  const SECTIONS = { origin: 'Origin (farm, harvest, processing, green lots)', roasts: 'Roasts', cup: 'Cup (brews, cupping)' };
+  const SECTIONS = { origin: 'Origin (farm, harvest, processing, green lots)', roasts: 'Roasts', cup: 'Cup (brews, cupping, tasting tests)' };
   const DEFAULT = { origin: 'selected', roasts: 'selected', cup: 'selected' };
   const MODES = ['off', 'selected', 'all'];
   function read() {
@@ -25,6 +25,6 @@ const PREFS = (() => {
     return read();
   }
   // section for an Origin-store record type
-  function sectionOf(type) { return type === 'brew' || type === 'cupping' ? 'cup' : 'origin'; }
+  function sectionOf(type) { return type === 'brew' || type === 'cupping' || type === 'tasting' ? 'cup' : 'origin'; }
   return { SECTIONS, MODES, get, set, pull, read, sectionOf };
 })();
