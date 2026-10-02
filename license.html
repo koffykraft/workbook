@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>KoffyKraft Licence</title>
+<style>
+:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;color:var(--ink);background:var(--bg)}
+.app{max-width:680px;margin:auto;padding:24px 16px 60px}
+h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 4px}h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:22px 0 8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:8px 0;font-size:15px;line-height:1.55}
+.card ul{margin:6px 0;padding-left:20px}a{color:var(--coffee)}
+details summary{cursor:pointer;font-weight:600;color:var(--coffee)}
+pre{white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.5;color:#3d3833;margin:10px 0 0}
+</style>
+<link rel="stylesheet" href="kk.css"></head>
+<body><main class="app">
+<header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="roastbooks.html">Koffy Kraft</a><a class="kkh-acct" href="account.html" aria-label="Account">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
+<h1>Licence</h1>
+<div class="card">© 2026 T M Thomas, Thumpassery Estate, Punalur 691333, Kerala, India.<br>Roastbook is open source under the GNU Affero General Public License, version 3 (AGPL-3.0).</div>
+<h2>In plain words</h2>
+<div class="card"><b>You may</b> use the app, study the code, change it and share it, including for work.
+<ul><li>If you share or run a changed version for other people, including as a website or app, you must give them your complete source code under the same licence.</li><li>Keep the copyright and licence notices.</li><li>The app comes with no warranty.</li></ul>
+<b>You may not</b> put this code into a closed or paid product without sharing your source. For that, ask for a commercial licence: <a href="mailto:info@koffykraft.com">info@koffykraft.com</a>.<br><br>
+The KoffyKraft name and logo are not part of the code licence and may not be used for other products.</div>
+<h2>Full text</h2>
+<div class="card"><details><summary>GNU Affero General Public License v3</summary><pre id="lic">Loading…</pre></details>
+<p style="font-size:13px;color:var(--muted);margin:10px 0 0">This summary is a guide. The full licence text is what applies.</p></div>
+</main>
+<script>fetch('LICENSE').then(r=>r.ok?r.text():Promise.reject()).then(t=>document.getElementById('lic').textContent=t).catch(()=>document.getElementById('lic').textContent='Could not load the licence text. It is also at gnu.org/licenses/agpl-3.0.')</script>
+</body></html>
