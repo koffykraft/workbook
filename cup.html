@@ -118,16 +118,17 @@ function bhLow(s){const a=bhAttrs(s);return BH.filter(([k])=>a[k]!=null&&a[k]<7.
 function cupEY(s,c){const t=num(s.tds),w=num(c.bowlWater),d=num(c.bowlDose)||(w?w*0.055:null);return t&&w&&d?t*w/d:null}
 function sampleScore(s,sess){if((sess.protocol||'SCA')==='Simple')return num(s.score);if(isBH(sess)){const a=bhAttrs(s);return BH.some(([k])=>a[k]==null)?null:BH.reduce((x,[k])=>x+a[k],0)}const a=ATTR.map(([k])=>num(s[k]));if(a.some(x=>x==null))return null;const cups=num(sess.cups)||5;const c=CUPS_ATTR.map(([k])=>{const v=num(s[k]);return v==null?cups:Math.max(0,Math.min(cups,v))});const def=(num(s.taints)||0)*2+(num(s.faults)||0)*4;return a.reduce((x,y)=>x+y,0)+c.reduce((x,y)=>x+y*10/cups,0)-def}
 function brewRatio(b){const d=num(b.dose),w=num(b.water);return d&&w?w/d:null}
-function brewEY(b){const d=num(b.dose),t=num(b.tds);if(!d||!t)return null;let bev=num(b.beverage),est=false;if(!bev){const w=num(b.water);if(!w)return null;bev=/espresso/i.test(b.method||'')?w:w-2*d;est=true}return{ey:t*bev/d,est}}
+function brewEY(b){const d=num(b.dose),t=num(b.tds);if(!d||!t)return null;let bev=num(b.beverage),est=false;if(!bev){const w=num(b.water);if(!w)return null;bev=/espresso|moka/i.test(b.method||'')?w:w-2*d;est=true}return{ey:t*bev/d,est}}
 
 // ---------- fields ----------
-const METHODS=['V60','Kalita Wave','Origami','Chemex','AeroPress','French press','Espresso','Moka pot','South Indian filter','Cold brew','Batch brewer','Siphon','Clever dripper','Other'];
+const METHOD_GROUPS=[['Pour-over',['V60','Kalita Wave','Origami','Chemex','Kono','Melitta','April brewer','Orea','Bee House','Ceado Hoop','Pulsar','Nel drip (cloth)']],['Immersion and hybrid',['AeroPress','French press','Clever dripper','Hario Switch','SteepShot','Espro press','Tricolate','Siphon']],['Pressure',['Espresso','Lever espresso','Moka pot']],['Cold',['Cold brew','Cold drip (Kyoto)','Japanese iced pour-over','Nitro cold brew']],['Traditional',['South Indian filter','Turkish / ibrik','Vietnamese phin','Napoletana']],['Other',['Batch brewer','Other']]];
+const METHODS=METHOD_GROUPS.flatMap(g=>g[1]);
 const F={brew:[
  {k:'roastId',l:'Roast',t:'roast',full:1},
  {k:'coffee',l:'Coffee (if not from a roast here)',t:'text',full:1},
  {k:'brewedAt',l:'Brewed',t:'dt',def:nowLocal,full:1},
  {k:'restCalc',t:'calc',fn:b=>{const d0=restDays(b.roastId,b.brewedAt);const d=d0!=null?d0:(b.roastId&&!roastById(b.roastId)?b.restDays:null);return d==null?'':'<b>'+restText(d)+'</b>'}},
- {k:'method',l:'Method',t:'sel',opts:METHODS,req:1},{k:'brewer',l:'Brewer / recipe',t:'text',ph:'V60 02, 4:6'},
+ {k:'method',l:'Method',t:'sel',opts:METHODS,groups:METHOD_GROUPS,req:1},{k:'brewer',l:'Brewer / recipe',t:'text',ph:'V60 02, 4:6'},
  {h:'Recipe'},
  {k:'dose',l:'Coffee g',t:'num'},{k:'water',l:'Water g (espresso: yield g)',t:'num'},
  {k:'ratioCalc',t:'calc',fn:b=>{const r=brewRatio(b);return r?'Ratio <b>1:'+r1(r)+'</b>':''}},
@@ -209,7 +210,7 @@ function fieldHtml(f){if(f.show&&!f.show(CUR))return '';if(f.h)return '<div clas
  case 'num':return '<div class="'+cls+'">'+lab+'<input id="f_'+f.k+'" data-k="'+f.k+'" type="number" step="any" inputmode="decimal" value="'+esc(v)+'"></div>';
  case 'dt':return '<div class="'+cls+'">'+lab+'<input id="f_'+f.k+'" data-k="'+f.k+'" type="datetime-local" value="'+esc(v)+'"></div>';
  case 'area':return '<div class="'+cls+'">'+lab+'<textarea id="f_'+f.k+'" data-k="'+f.k+'">'+esc(v)+'</textarea></div>';
- case 'sel':return '<div class="'+cls+'">'+lab+'<select id="f_'+f.k+'" data-k="'+f.k+'"><option value="">–</option>'+f.opts.map(o=>{const[ov,ol]=Array.isArray(o)?o:[o,o];return '<option value="'+esc(ov)+'"'+(v===ov?' selected':'')+'>'+esc(ol)+'</option>'}).join('')+'</select></div>';
+ case 'sel':if(f.groups){const known=f.groups.some(g=>g[1].includes(v));return '<div class="'+cls+'">'+lab+'<select id="f_'+f.k+'" data-k="'+f.k+'"><option value="">–</option>'+(v&&!known?'<option selected>'+esc(v)+'</option>':'')+f.groups.map(g=>'<optgroup label="'+esc(g[0])+'">'+g[1].map(o=>'<option'+(v===o?' selected':'')+'>'+esc(o)+'</option>').join('')+'</optgroup>').join('')+'</select></div>'}return '<div class="'+cls+'">'+lab+'<select id="f_'+f.k+'" data-k="'+f.k+'"><option value="">–</option>'+f.opts.map(o=>{const[ov,ol]=Array.isArray(o)?o:[o,o];return '<option value="'+esc(ov)+'"'+(v===ov?' selected':'')+'>'+esc(ol)+'</option>'}).join('')+'</select></div>';
  case 'roast':return '<div class="'+cls+'">'+lab+'<select id="f_'+f.k+'" data-k="'+f.k+'">'+roastOptions(v,CUR[f.k==='roastId'?'roastLabel':'roastLabel'+f.k.slice(5)])+'</select></div>';
  case 'calc':{const h=f.fn(CUR);return '<div class="calc" data-calc="'+f.k+'"'+(h?'':' hidden')+'>'+h+'</div>'}
  case 'bhpanel':return '<div class="'+cls+'"><div class="bhp"><div class="bht"><span id="bhClock">0:00</span><span class="mini" id="bhNext"></span><button type="button" class="btn small" id="bhStart">Start</button></div><details><summary>How this session runs</summary><p>Use 55 g of coffee per litre of water, ground so most coffees pass 20% extraction by 8 minutes. Pour just off the boil and start the timer. Break the crust at 5:00 with four stirs and skim. At 8:00 draw a small sample from each bowl for TDS. From about 10:00 score the hot pass, then again warm and cool.</p><p>Score each attribute from 7.5 to 10 in steps of 0.1. Anything under 7.5 rules the coffee out. Intensity (0 to 15) for acidity, sweetness and bitterness is recorded but does not change the score. There is no overall score and no defect deduction.</p><p>Method from the <a href="https://www.baristahustle.com/wp-content/uploads/2020/01/Barista-Hustle-Cupping-Protocols-18_01_2020.pdf" target="_blank" rel="noopener">Barista Hustle cupping protocol</a>.</p></details></div></div>';
