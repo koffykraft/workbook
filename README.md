@@ -2,7 +2,7 @@
 
 A free, offline-first coffee log from farm to cup: origin and harvest records, roast timer and analysis, Artisan export, brewing, cupping and tasting tests.
 
-Live app: https://roast.tagroos.workers.dev
+Live app: https://roast.koffykraft.coffee
 
 ## Licence
 
