@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>KoffyKraft Water</title>
+<style>
+:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b;--soft:#faf7f2;--ok:#3f6b5a;--bad:#b4432f}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;color:var(--ink);background:var(--bg)}
+.app{max-width:680px;margin:auto;padding:24px 16px 60px}
+h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 4px}.sub{color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5}
+h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:20px 0 8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:8px 0}
+.f{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted);font-weight:600;min-width:0}
+input,select{font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);width:100%;min-width:0}
+.full{grid-column:1/-1}
+.pre{display:flex;gap:6px;flex-wrap:wrap}.pre button{font:inherit;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;cursor:pointer}
+.out{font-size:15px;line-height:1.6}.out b{font-variant-numeric:tabular-nums}
+.big{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.chk{display:grid;gap:6px;font-size:14px}.chk div{display:flex;justify-content:space-between;gap:8px}
+.ok{color:var(--ok);font-weight:600}.bad{color:var(--bad);font-weight:600}
+.note{font-size:13px;color:var(--muted);line-height:1.5}
+</style>
+<link rel="stylesheet" href="kk.css"></head>
+<body><main class="app">
+<header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="roastbooks.html">Koffy Kraft</a><a class="kkh-acct" href="account.html" aria-label="Account">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html" aria-current="page">Cup</a><a href="account.html">Account</a></nav></header>
+<h1>Water</h1>
+<div class="sub">Mix brewing water from two concentrates. All values are ppm as CaCO₃.</div>
+
+<h2>Concentrates (make once, 1 litre each)</h2>
+<div class="card note"><b style="color:var(--ink)">Buffer:</b> 1.68 g baking soda (sodium bicarbonate) in 1 L distilled or RO water = 1000 ppm alkalinity.<br><b style="color:var(--ink)">Hardness:</b> 2.45 g Epsom salt (magnesium sulphate) in 1 L distilled or RO water = 1000 ppm hardness.<br>Use food grade salts. Keep the bottles closed and in the fridge.</div>
+
+<h2>Target</h2>
+<div class="card"><div class="pre" id="pre"></div>
+<div class="f" style="margin-top:12px">
+<label>Hardness (GH)<input id="gh" type="number" inputmode="decimal"></label>
+<label>Alkalinity (KH)<input id="kh" type="number" inputmode="decimal"></label>
+<label class="full">Batch size, litres<input id="vol" type="number" inputmode="decimal" step="any"></label></div></div>
+
+<h2>Starting water</h2>
+<div class="card"><div class="f">
+<label class="full">Base<select id="base"><option value="ro">Distilled or RO (zero)</option><option value="own">My water (measured)</option></select></label>
+<label>Its hardness<input id="bgh" type="number" inputmode="decimal"></label>
+<label>Its alkalinity<input id="bkh" type="number" inputmode="decimal"></label></div>
+<div class="note" style="margin-top:8px">Test strips or a drop kit give GH and KH. If a kit reads in dH, multiply by 17.8.</div></div>
+
+<h2>Mix</h2>
+<div class="card out" id="out"></div>
+<h2>Check against SCA water ranges</h2>
+<div class="card chk" id="chk"></div>
+<div class="note">Ranges from the SCA water quality handbook: hardness 17 to 85 (ideal about 68), alkalinity 10 to 100 (ideal about 40). Magnesium tends to extract more flavour than calcium; buffer softens acidity.</div>
+</main>
+<script>
+const $=s=>document.getElementById(s),n=v=>{const x=parseFloat(v);return Number.isFinite(x)?x:0};
+const PRE=[['SCA ideal',68,40],['Bright filter',50,20],['Softer, sweeter',40,25],['Espresso',80,40]];
+const K='kk_water_v1';let S={gh:68,kh:40,vol:4,base:'ro',bgh:'',bkh:''};try{Object.assign(S,JSON.parse(localStorage.getItem(K))||{})}catch(e){}
+$('pre').innerHTML=PRE.map((p,i)=>'<button data-i="'+i+'">'+p[0]+' '+p[1]+'/'+p[2]+'</button>').join('');
+$('pre').onclick=e=>{const p=PRE[e.target.dataset.i];if(!p)return;S.gh=p[1];S.kh=p[2];fill();calc()};
+const F=['gh','kh','vol','base','bgh','bkh'];
+function fill(){F.forEach(k=>$(k).value=S[k])}
+F.forEach(k=>$(k).addEventListener('input',()=>{S[k]=$(k).value;calc()}));
+const r=v=>Math.round(v*10)/10;
+function calc(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}
+ const own=S.base==='own';$('bgh').disabled=$('bkh').disabled=!own;
+ const V=n(S.vol)*1000,G=n(S.gh),A=n(S.kh),g0=own?n(S.bgh):0,a0=own?n(S.bkh):0,C=1000;
+ // a = buffer ml, b = hardness ml; base water fills the rest.
+ // b(C-g0) - a*g0 = V(G-g0) ;  a(C-a0) - b*a0 = V(A-a0)
+ const d=(C-g0)*(C-a0)-g0*a0,b=(V*(G-g0)*(C-a0)+g0*V*(A-a0))/d,a=(V*(A-a0)*(C-g0)+a0*V*(G-g0))/d;
+ let h;if(!V)h='Enter a batch size.';
+ else if(a<0||b<0)h='<span class="bad">Your water is already '+(b<0?'harder':'more buffered')+' than the target.</span> Mix it with distilled or RO water first, or pick a higher target.';
+ else{const w=V-a-b;h='<div class="big">'+r(b)+' ml hardness · '+r(a)+' ml buffer</div>Top up with <b>'+r(w/1000)+' L</b> '+(own?'of your water':'distilled or RO')+' to make '+r(V/1000)+' L.<div class="note" style="margin-top:6px">Without concentrates: add <b>'+(b*2.45/1000).toFixed(2)+' g</b> Epsom salt and <b>'+(a*1.68/1000).toFixed(2)+' g</b> baking soda straight into the batch (needs a 0.01 g scale).</div>'}
+ $('out').innerHTML=h;
+ const row=(l,v,lo,hi,id)=>'<div><span>'+l+' '+v+'</span><span class="'+(v>=lo&&v<=hi?'ok">In range':'bad">Out of range')+'</span></div>';
+ $('chk').innerHTML=row('Hardness',G,17,85)+row('Alkalinity',A,10,100)+'<div><span>GH to KH ratio</span><span>'+(A?r(G/A):'–')+' : 1</span></div>'}
+fill();calc();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script></body></html>
