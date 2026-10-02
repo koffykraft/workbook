@@ -1,4 +1,4 @@
-# Roastbook by KoffyKraft
+# KoffyKraft
 
 A free, offline-first coffee log from farm to cup: origin and harvest records, roast timer and analysis, Artisan export, brewing, cupping and tasting tests.
 
