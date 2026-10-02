@@ -158,7 +158,7 @@ const F={brew:[
  tasting:[
  {k:'at',l:'When',t:'dt',def:nowLocal,req:1,full:1},
  {k:'kind',l:'Test',t:'sel',opts:[['triangle','Triangle: is there a difference?'],['describe','Describe: what is the difference?'],['preference','Preference: which do people like?']],def:'triangle',req:1,full:1},
- {k:'tsamples',t:'tsamples',full:1},
+ {k:'tsamples',t:'tsamples',full:1},{h:'Steep timer'},{k:'btimer',t:'btimer',full:1},
  {h:'Test'},{k:'body',t:'testbody',full:1},
  {k:'notes',l:'Notes',t:'area',full:1}],
  cupping:[
@@ -167,7 +167,7 @@ const F={brew:[
  {k:'bowlWater',l:'Water per bowl ml',t:'num',show:isBH},{k:'bowlDose',l:'Coffee per bowl g',t:'num',show:isBH},
  {k:'doseCalc',t:'calc',show:isBH,fn:c=>{const w=num(c.bowlWater),d=num(c.bowlDose);if(!w)return '';return 'At 55 g/L: <b>'+r1(w*0.055)+' g</b> for '+w+' ml'+(d?' · yours <b>'+r1(d/w*1000)+' g/L</b>':'')}},
  {k:'water',l:'Water / ratio',t:'text',full:1,ph:'8.25 g : 150 ml, 93°C'},
- {h:'Samples'},{k:'bhPanel',t:'bhpanel',show:isBH,full:1},{k:'samples',t:'samples',full:1},
+ {h:'Samples'},{k:'bhPanel',t:'bhpanel',full:1},{k:'samples',t:'samples',full:1},
  {k:'notes',l:'Session notes',t:'area',full:1}]};
 
 // ---------- tasting tests ----------
@@ -256,15 +256,16 @@ function timersView(){loadTiles();const hot=TILES.filter(t=>!t.cold),cold=TILES.
 
 // ---------- timer inside the brew form ----------
 let BT={start:null,stop:null,cut:null,alerted:0},BTICK=null;
-function btCut(){if(BT.cut)return BT.cut;const m=CUR.method;if(COLD_M.includes(m))return null;return cutFor(m||'Other',false)}
-function renderBT(){const box=$('#btimer');clearInterval(BTICK);BTICK=null;if(!box)return;const m=CUR.method;if(COLD_M.includes(m)){box.innerHTML='<div class="mini">Cold brews are timed in hours: use <a href="#timers">Brew timers</a>.</div>';return}const cut=btCut();
+function btKey(){return CUR_T==='tasting'?'Tasting steep':(CUR.method||'Other')}
+function btCut(){if(BT.cut)return BT.cut;if(CUR_T==='tasting'){const c=myCuts()['Tasting steep'];return c||240}return cutFor(CUR.method||'Other',false)}
+function renderBT(){const box=$('#btimer');clearInterval(BTICK);BTICK=null;if(!box)return;const m=btKey();if(CUR_T==='brew'&&COLD_M.includes(CUR.method)){box.innerHTML='<div class="mini">Cold brews are timed in hours: use <a href="#timers">Brew timers</a>.</div>';return}const cut=btCut();
  box.innerHTML='<div class="tile" style="padding:10px"><button type="button" class="tap" id="btTap" aria-label="Start or stop the brew timer"><span class="big" id="btBig"></span><span class="small" id="btSmall"></span><span class="tbar"><i id="btFill"></i></span></button><div class="tfoot" style="justify-content:space-between;align-items:center"><label class="mini" style="display:flex;align-items:center;gap:6px">Cut-off<input id="btCut" value="'+mss(cut)+'" inputmode="decimal" style="width:84px;padding:8px"></label>'+(BT.start?'<button type="button" class="btn small" id="btReset">Reset</button>':'')+'</div></div>';
- $('#btCut').onchange=e=>{const c=parseCut(e.target.value);if(c>0){BT.cut=c;rememberCut(m||'Other',c);paintBT()}};
- $('#btTap').onclick=()=>{if(!BT.start){BT.start=Date.now();BT.stop=null;BT.alerted=0;BT.warned=0;if(!CUR.brewedAt||!CUR.id){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());CUR.brewedAt=d.toISOString().slice(0,16);const f=$('#f_brewedAt');if(f)f.value=CUR.brewedAt}}else if(!BT.stop){BT.stop=Date.now();CUR.time=mss((BT.stop-BT.start)/1000);const f=$('#f_time');if(f)f.value=CUR.time;toast('Time saved to the brew: '+CUR.time)}else return;renderBT()};
+ $('#btCut').onchange=e=>{const c=parseCut(e.target.value);if(c>0){BT.cut=c;rememberCut(m,c);paintBT()}};
+ $('#btTap').onclick=()=>{if(!BT.start){BT.start=Date.now();BT.stop=null;BT.alerted=0;BT.warned=0;if(CUR_T==='brew'&&(!CUR.brewedAt||!CUR.id)){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());CUR.brewedAt=d.toISOString().slice(0,16);const f=$('#f_brewedAt');if(f)f.value=CUR.brewedAt}}else if(!BT.stop){BT.stop=Date.now();const tt=mss((BT.stop-BT.start)/1000);if(CUR_T==='brew'){CUR.time=tt;const f=$('#f_time');if(f)f.value=tt;toast('Time saved to the brew: '+tt)}else{CUR.steepTime=tt;toast('Steeped '+tt)}}else return;renderBT()};
  if($('#btReset'))$('#btReset').onclick=()=>{BT={start:null,stop:null,cut:BT.cut,alerted:0};renderBT()};
  paintBT();if(BT.start&&!BT.stop)BTICK=setInterval(paintBT,500)}
 function paintBT(){const big=$('#btBig');if(!big){clearInterval(BTICK);return}const cut=btCut();const el=BT.start?((BT.stop||Date.now())-BT.start)/1000:0;const over=BT.start&&el>=cut,run=BT.start&&!BT.stop;const tile=big.closest('.tile');tile.classList.toggle('run',run&&!over);tile.classList.toggle('over',run&&over);tile.classList.toggle('done',!!BT.stop);
- big.textContent=!BT.start?mss(cut):run&&over?'+'+mss(el-cut):mss(el);$('#btSmall').textContent=!BT.start?'Tap to start the brew':BT.stop?'Stopped at '+mss(el):over?'Cut-off reached. Tap to stop':'Tap to stop at '+mss(cut);$('#btFill').style.width=Math.min(100,BT.start?el/cut*100:0)+'%';
+ big.textContent=!BT.start?mss(cut):run&&over?'+'+mss(el-cut):mss(el);$('#btSmall').textContent=!BT.start?(CUR_T==='brew'?'Tap to start the brew':'Tap when the water goes on'):BT.stop?'Stopped at '+mss(el):over?(CUR_T==='brew'?'Cut-off reached. Tap to stop':'Serve now. Tap to stop'):'Tap to stop at '+mss(cut);$('#btFill').style.width=Math.min(100,BT.start?el/cut*100:0)+'%';
  if(run){if(cut>20&&!BT.warned&&el>=cut-10&&el<cut){BT.warned=1;try{navigator.vibrate&&navigator.vibrate(80)}catch(e){}}if(!BT.alerted&&over){BT.alerted=1;toast('Cut-off reached');try{navigator.vibrate&&navigator.vibrate([300,120,300,120,300])}catch(e){}}}}
 
 // ---------- routing ----------
@@ -296,7 +297,7 @@ function fieldHtml(f){if(f.show&&!f.show(CUR))return '';if(f.h)return '<div clas
  case 'sel':if(f.groups){const known=f.groups.some(g=>g[1].includes(v));return '<div class="'+cls+'">'+lab+'<select id="f_'+f.k+'" data-k="'+f.k+'"><option value="">–</option>'+(v&&!known?'<option selected>'+esc(v)+'</option>':'')+f.groups.map(g=>'<optgroup label="'+esc(g[0])+'">'+g[1].map(o=>'<option'+(v===o?' selected':'')+'>'+esc(o)+'</option>').join('')+'</optgroup>').join('')+'</select></div>'}return '<div class="'+cls+'">'+lab+'<select id="f_'+f.k+'" data-k="'+f.k+'"><option value="">–</option>'+f.opts.map(o=>{const[ov,ol]=Array.isArray(o)?o:[o,o];return '<option value="'+esc(ov)+'"'+(v===ov?' selected':'')+'>'+esc(ol)+'</option>'}).join('')+'</select></div>';
  case 'roast':return '<div class="'+cls+'">'+lab+'<select id="f_'+f.k+'" data-k="'+f.k+'">'+roastOptions(v,CUR[f.k==='roastId'?'roastLabel':'roastLabel'+f.k.slice(5)])+'</select></div>';
  case 'calc':{const h=f.fn(CUR);return '<div class="calc" data-calc="'+f.k+'"'+(h?'':' hidden')+'>'+h+'</div>'}
- case 'bhpanel':return '<div class="'+cls+'"><div class="bhp"><div class="bht"><span id="bhClock">0:00</span><span class="mini" id="bhNext"></span><button type="button" class="btn small" id="bhStart">Start</button></div><details><summary>How this session runs</summary><p>Use 55 g of coffee per litre of water, ground so most coffees pass 20% extraction by 8 minutes. Pour just off the boil and start the timer. Break the crust at 5:00 with four stirs and skim. At 8:00 draw a small sample from each bowl for TDS. From about 10:00 score the hot pass, then again warm and cool.</p><p>Score each attribute from 7.5 to 10 in steps of 0.1. Anything under 7.5 rules the coffee out. Intensity (0 to 15) for acidity, sweetness and bitterness is recorded but does not change the score. There is no overall score and no defect deduction.</p><p>Method from the <a href="https://www.baristahustle.com/wp-content/uploads/2020/01/Barista-Hustle-Cupping-Protocols-18_01_2020.pdf" target="_blank" rel="noopener">Barista Hustle cupping protocol</a>.</p></details></div></div>';
+ case 'bhpanel':return '<div class="'+cls+'"><div class="bhp"><div class="bht"><span id="bhClock">0:00</span><span class="mini" id="bhNext"></span><button type="button" class="btn small" id="bhStart">Start</button></div>'+(isBH(CUR)?'<details><summary>How this session runs</summary><p>Use 55 g of coffee per litre of water, ground so most coffees pass 20% extraction by 8 minutes. Pour just off the boil and start the timer. Break the crust at 5:00 with four stirs and skim. At 8:00 draw a small sample from each bowl for TDS. From about 10:00 score the hot pass, then again warm and cool.</p><p>Score each attribute from 7.5 to 10 in steps of 0.1. Anything under 7.5 rules the coffee out. Intensity (0 to 15) for acidity, sweetness and bitterness is recorded but does not change the score. There is no overall score and no defect deduction.</p><p>Method from the <a href="https://www.baristahustle.com/wp-content/uploads/2020/01/Barista-Hustle-Cupping-Protocols-18_01_2020.pdf" target="_blank" rel="noopener">Barista Hustle cupping protocol</a>.</p></details>':'<details><summary>How this session runs</summary><p>SCA style: about 8.25 g of coffee to 150 ml of water (55 g per litre), water at about 93 °C. Smell the dry grounds, pour, then break the crust at about 4 minutes and skim. Start tasting when cups cool to about 71 °C, roughly 8 to 10 minutes after pouring, and keep scoring as they cool.</p></details>')+'</div></div>';
  case 'btimer':return '<div class="'+cls+'" id="btimer"></div>';
  case 'tsamples':return '<div class="'+cls+'"><label>Samples</label>'+tSamplesHtml()+'</div>';
  case 'testbody':return '<div class="'+cls+'"><div id="testBody"></div></div>';
@@ -304,12 +305,14 @@ function fieldHtml(f){if(f.show&&!f.show(CUR))return '';if(f.h)return '<div clas
 function rerenderForm(){$('#form').innerHTML=F[CUR_T].map(fieldHtml).join('');bindForm()}
 function bindForm(){const form=$('#form');renderTest();bindTSamples();renderBT();if($('#bhStart'))bindTimer();form.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('input',()=>{CUR[el.dataset.k]=el.value;if(el.dataset.k==='kind'||/^roast[A-F]$/.test(el.dataset.k)){rerenderForm();return}if(el.dataset.k==='method'&&CUR_T==='brew'&&(!BT.start||BT.stop)){BT.cut=null;renderBT()}if(el.dataset.k==='protocol'){if(isBH(CUR)&&!num(CUR.bowlWater))CUR.bowlWater='180';rerenderForm();return}if(el.dataset.k==='cups'||el.dataset.k==='at'){if($('#samples'))renderSamples()}refreshCalcs()}));if($('#samples')){renderSamples();$('#addSample').onclick=()=>{CUR.samples=[...(CUR.samples||[]),{}];renderSamples(true)}}}
 let TICK=null,PASS='h',LASTEL=-1;
+const SCA_STEPS=[[240,'Break the crust, then skim'],[480,'Start tasting as cups reach about 71 °C'],[900,'Keep scoring as the cups cool']];
+function cupSteps(){return isBH(CUR)?BH_STEPS:SCA_STEPS}
 const BH_STEPS=[[300,'Break the crust: four stirs, then skim'],[480,'Draw a sample from each bowl for TDS'],[600,'Hot pass: score with cups near 65°C']];
 function fmtClock(s){s=Math.max(0,Math.floor(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
 function bindTimer(){$('#bhStart').onclick=()=>{if(CUR.timerStart){if(!confirm('Reset the session timer?'))return;CUR.timerStart=null}else CUR.timerStart=Date.now();LASTEL=-1;tick(true)};LASTEL=-1;tick(true);clearInterval(TICK);TICK=setInterval(()=>tick(false),1000)}
 function tick(init){const clock=$('#bhClock');if(!clock){clearInterval(TICK);TICK=null;return}const st=CUR.timerStart;const el=st?(Date.now()-st)/1000:0;const done=el>5400;clock.textContent=done?'Done':fmtClock(el);$('#bhStart').textContent=st?'Reset':'Start';
- const next=BH_STEPS.find(([t])=>el<t);$('#bhNext').textContent=!st?'Pour every bowl, then tap Start':done?'Session timer finished':next?'At '+fmtClock(next[0])+': '+next[1]:'Warm pass near 55°C, cool pass near 45°C';
- if(!init&&st&&LASTEL>=0)BH_STEPS.forEach(([t,l])=>{if(LASTEL<t&&el>=t){toast(l);try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}if(t===600&&PASS!=='h'){PASS='h';renderSamples()}}});LASTEL=el}
+ const next=cupSteps().find(([t])=>el<t);$('#bhNext').textContent=!st?'Pour every bowl, then tap Start':done?'Session timer finished':next?'At '+fmtClock(next[0])+': '+next[1]:(isBH(CUR)?'Warm pass near 55°C, cool pass near 45°C':'Score as cups cool. Finish by about 21 °C');
+ if(!init&&st&&LASTEL>=0)cupSteps().forEach(([t,l])=>{if(LASTEL<t&&el>=t){toast(l);try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}if(isBH(CUR)&&t===600&&PASS!=='h'){PASS='h';renderSamples()}}});LASTEL=el}
 function renderPassTabs(){const el=$('#passTabs');if(!el)return;if(!isBH(CUR)){el.innerHTML='';el.hidden=true;return}el.hidden=false;const prev=PASS==='w'?'h':PASS==='c'?'w':null;
  el.innerHTML='<div class="tabs">'+PASSES.map(([p,l,t])=>'<button type="button" class="'+(PASS===p?'on':'')+'" data-pass="'+p+'">'+l+' <span style="font-weight:400">'+t+'</span></button>').join('')+'</div>'+(prev&&(CUR.samples||[]).length?'<button type="button" class="btn small" id="copyPrev">Fill blanks from '+PASSES.find(x=>x[0]===prev)[1].toLowerCase()+' pass</button>':'');
  el.querySelectorAll('[data-pass]').forEach(b=>b.onclick=()=>{PASS=b.dataset.pass;renderSamples()});
