@@ -106,4 +106,5 @@ function exportAlog(r){download(roastFileName(r)+'.alog',toAlog(r),'text/plain')
 function exportArtisanJson(r){download(roastFileName(r)+'.json',toArtisanJson(r),'application/json')}
 detailOverlay.onclick=e=>{if(e.target===detailOverlay)closeDetail()};
 [estateInput,coffeeInput,dateInput,typeInput].forEach(x=>x.addEventListener('input',draw));console.log('[KoffyKraft] Starting app...');(typeof PREFS!=='undefined'?PREFS.pull():Promise.resolve()).then(load).then(()=>{if(typeof ORIGIN!=='undefined')ORIGIN.sync().then(c=>{if(c)loadCupData()}).catch(()=>{})});if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-</script></body></html>
+</script><script src="pv.js" defer></script>
+</body></html>

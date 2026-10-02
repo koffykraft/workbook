@@ -454,5 +454,6 @@ $("greenLotId").addEventListener("change",async()=>{const id=$("greenLotId").val
 if(typeof PREFS!=="undefined")PREFS.pull();loadGreenLots();if(typeof ORIGIN!=="undefined"){ORIGIN.onSync(st=>{if(st.status==="synced"&&st.changed)loadGreenLots()});ORIGIN.sync().catch(()=>{})}
 loadState();loadFields();if(!state.unit)state.unit="C";if(state.smoothCurve===undefined)state.smoothCurve=true;if(state.showRor===undefined)state.showRor=true;setMode(state.mode||"exhaust");renderAll();setInterval(()=>{renderTimer();drawCurve();updateSummary()},500);
 </script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}</script></body>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}</script><script src="pv.js" defer></script>
+</body>
 </html>

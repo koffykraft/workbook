@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff">
+<meta name="robots" content="noindex">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>KoffyKraft Stats</title>
+<style>
+:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b;--soft:#faf7f2}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;color:var(--ink);background:var(--bg)}
+.app{max-width:680px;margin:auto;padding:24px 16px 60px}
+h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 4px}.sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:22px 0 8px}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px}.kpi b{display:block;font-size:28px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}.kpi span{font-size:12px;color:var(--muted)}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.bars{display:flex;align-items:flex-end;gap:2px;height:110px}.bars div{flex:1;background:var(--coffee);border-radius:3px 3px 0 0;min-height:2px}.bars div.z{background:#ece7df}
+.axis{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px 4px;border-bottom:1px solid #efe8de;text-align:left;vertical-align:top}th{font-size:12px;color:var(--muted);font-weight:600}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.email{word-break:break-all}.small{font-size:12px;color:var(--muted)}
+.msg{background:#fff;border:1px dashed var(--line);border-radius:14px;padding:18px;color:var(--muted);font-size:14px;line-height:1.5}
+</style>
+<link rel="stylesheet" href="kk.css"></head>
+<body><main class="app">
+<header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="roastbooks.html">KoffyKraft</a><a class="kkh-acct" href="account.html" aria-label="Account">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
+<h1>Stats</h1>
+<div class="sub" id="sub">Loading…</div>
+<div id="out"></div>
+</main>
+<script src="sync.js"></script>
+<script>
+const out=document.getElementById('out'),sub=document.getElementById('sub');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=d=>{if(!d)return '';const x=new Date(String(d).replace(' ','T')+'Z');return isNaN(x)?d:x.toLocaleDateString('en-IN',{day:'numeric',month:'short'})};
+function days30(rows,key){const m=new Map(rows.map(r=>[r.day,Number(r[key])||0]));const a=[];const t=new Date(Date.now()+330*6e4);for(let i=29;i>=0;i--){const d=new Date(t-i*864e5).toISOString().slice(0,10);a.push([d,m.get(d)||0])}return a}
+function bars(a,label){const mx=Math.max(1,...a.map(x=>x[1]));const tot=a.reduce((s,x)=>s+x[1],0);return '<div class="card"><div class="small" style="margin-bottom:8px">'+label+': <b style="color:var(--ink)">'+tot+'</b> in 30 days</div><div class="bars" role="img" aria-label="'+esc(label)+' per day">'+a.map(([d,v])=>'<div class="'+(v?'':'z')+'" style="height:'+Math.max(2,v/mx*100)+'%" title="'+d+': '+v+'"></div>').join('')+'</div><div class="axis"><span>'+fmt(a[0][0])+'</span><span>Today</span></div></div>'}
+async function load(){if(typeof SYNC==='undefined'||!SYNC.isAuthenticated()){sub.textContent='';out.innerHTML='<div class="msg">Sign in on the <a href="account.html">Account</a> page first.</div>';return}
+ let r;try{r=await fetch('/api/admin/stats',{headers:{authorization:'Bearer '+SYNC.getToken()}})}catch(e){sub.textContent='';out.innerHTML='<div class="msg">Could not reach the server. Check your connection.</div>';return}
+ if(r.status===403){sub.textContent='';out.innerHTML='<div class="msg">This page is for the app owner.</div>';return}
+ if(!r.ok){sub.textContent='';out.innerHTML='<div class="msg">Could not load stats ('+r.status+').</div>';return}
+ const s=await r.json();const v=days30(s.views,'views'),dv=days30(s.views,'devices'),su=days30(s.signups,'n'),si=days30(s.signins,'n');
+ const sum=(a,n)=>a.slice(-n).reduce((t,x)=>t+x[1],0);const recTotal=s.records.reduce((t,x)=>t+x.n,0);
+ sub.textContent='Updated '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+' · days in India time';
+ out.innerHTML='<div class="kpis"><div class="kpi"><b>'+(s.accounts.n||0)+'</b><span>accounts, '+(s.accounts.d7||0)+' new this week</span></div><div class="kpi"><b>'+sum(v,7)+'</b><span>page views, last 7 days</span></div><div class="kpi"><b>'+sum(dv,7)+'</b><span>new devices, last 7 days</span></div><div class="kpi"><b>'+(recTotal+s.roasts)+'</b><span>records in the cloud</span></div></div>'+
+ '<h2>Visits</h2>'+bars(v,'Page views')+'<div style="height:8px"></div>'+bars(dv,'New devices')+
+ '<h2>Accounts</h2>'+bars(su,'New accounts')+'<div style="height:8px"></div>'+bars(si,'Sign-ins')+
+ '<h2>Most opened pages, 30 days</h2><div class="card">'+(s.pages.length?'<table><tbody>'+s.pages.map(p=>'<tr><td>'+esc(p.path.slice(1))+'</td><td class="n">'+p.views+'</td></tr>').join('')+'</tbody></table>':'<div class="small">No visits counted yet. Counting started with this update.</div>')+'</div>'+
+ '<h2>Saved to the cloud</h2><div class="card"><table><tbody><tr><td>Roasts</td><td class="n">'+s.roasts+'</td></tr>'+s.records.map(x=>'<tr><td>'+esc(x.type[0].toUpperCase()+x.type.slice(1))+'</td><td class="n">'+x.n+'</td></tr>').join('')+'</tbody></table></div>'+
+ '<h2>Accounts list</h2><div class="card"><table><thead><tr><th>Email</th><th>Joined</th><th class="n">Records</th></tr></thead><tbody>'+s.users.map(u=>'<tr><td class="email">'+esc(u.email)+(u.last_signin?'<div class="small">Last sign-in '+fmt(u.last_signin)+'</div>':'')+'</td><td>'+fmt(u.created_at)+'</td><td class="n">'+(u.records+u.roasts)+'</td></tr>').join('')+'</tbody></table></div>'+
+ '<p class="small">Visits are counted per page per day with no cookies or personal data. Accounts and records come from the database. Keep the email list private.</p>'}
+load();
+</script>
+</body></html>

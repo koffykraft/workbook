@@ -3,4 +3,5 @@ const titleEl=document.getElementById('title'),metaEl=document.getElementById('m
 const K='kk_active_process_run';let r=null;try{r=JSON.parse(localStorage.getItem(K)||'null')}catch(e){}
 if(!r){location.href='process.html'}else{titleEl.textContent=r.template.name;metaEl.textContent='Started '+new Date(r.startedAt).toLocaleString();function draw(){stepsEl.innerHTML=r.template.steps.map((s,i)=>'<label class="step '+(r.done.includes(i)?'done':'')+'"><input type="checkbox" '+(r.done.includes(i)?'checked':'')+' data-i="'+i+'"><span>'+s+'</span></label>').join('');document.querySelectorAll('[data-i]').forEach(x=>x.onchange=()=>{const i=+x.dataset.i;r.done=x.checked?[...new Set([...r.done,i])]:r.done.filter(n=>n!==i);localStorage.setItem(K,JSON.stringify(r));draw()})}draw();recordBtn.onclick=()=>{if(!obsInput.value.trim())return;r.observations=r.observations||[];r.observations.push({at:new Date().toISOString(),text:obsInput.value.trim()});localStorage.setItem(K,JSON.stringify(r));obsInput.value=''}}
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-</script></body></html>
+</script><script src="pv.js" defer></script>
+</body></html>

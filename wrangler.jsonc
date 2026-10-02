@@ -6,7 +6,8 @@
   "main": "worker.js",
   "vars": {
     "AUTH_EMAIL_ENDPOINT": "https://api.mailgun.net/v3/sandboxb97fe0c72adc4feea556292b5ff5f544.mailgun.org/messages",
-    "AUTH_EMAIL_FROM": "KoffyKraft <signin@koffykraft.coffee>"
+    "AUTH_EMAIL_FROM": "KoffyKraft <signin@koffykraft.coffee>",
+    "ADMIN_EMAILS": "thomas@thumpassery.com,info@tagro.in"
   },
   "assets": {
     "directory": ".",

@@ -77,4 +77,5 @@ function calc(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}
  $('chk').innerHTML=row('Hardness',G,17,85)+row('Alkalinity',A,10,100)+'<div><span>GH to KH ratio</span><span>'+(A?r(G/A):'–')+' : 1</span></div>'}
 fill();calc();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-</script></body></html>
+</script><script src="pv.js" defer></script>
+</body></html>

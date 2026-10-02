@@ -1,0 +1,2 @@
+// Counts a page view for the owner's stats. Sends only the page name; no cookies, no personal data.
+(function(){try{if(navigator.doNotTrack==='1'||/^(localhost|127\.)/.test(location.hostname))return;var n=0;try{if(!localStorage.getItem('kk_seen_v1')){localStorage.setItem('kk_seen_v1','1');n=1}}catch(e){}var b=JSON.stringify({p:location.pathname,n:n});if(navigator.sendBeacon)navigator.sendBeacon('/api/pv',new Blob([b],{type:'application/json'}));else fetch('/api/pv',{method:'POST',body:b,headers:{'content-type':'application/json'},keepalive:true})}catch(e){}})();

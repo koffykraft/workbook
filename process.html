@@ -18,4 +18,5 @@ saveBtn.onclick=()=>{const p={id:'p-'+Date.now(),name:nameInput.value.trim()||'U
 window.copyP=(i,k)=>{const src=k==='defaults'?defaults:k==='mine'?mine:JSON.parse(localStorage.getItem('kk_shared_processes_v1')||'[]');const p=JSON.parse(JSON.stringify(src[i]));p.id='p-'+Date.now();p.name=p.name+' copy';mine.unshift(p);localStorage.setItem(KEY,JSON.stringify(mine));scope='mine';render()};
 window.run=(i,k)=>{const src=k==='defaults'?defaults:k==='mine'?mine:JSON.parse(localStorage.getItem('kk_shared_processes_v1')||'[]');const p=src[i];localStorage.setItem('kk_active_process_run',JSON.stringify({id:'run-'+Date.now(),template:p,startedAt:new Date().toISOString(),done:[]}));location.href='process-run.html'};
 window.shareP=i=>{const shared=JSON.parse(localStorage.getItem('kk_shared_processes_v1')||'[]');shared.unshift({...mine[i],sharedAt:new Date().toISOString()});localStorage.setItem('kk_shared_processes_v1',JSON.stringify(shared));scope='shared';render()};render();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-</script></body></html>
+</script><script src="pv.js" defer></script>
+</body></html>

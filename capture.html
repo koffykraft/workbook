@@ -12,4 +12,5 @@ confirmBtn.onclick=async()=>{if(!kind)return alert('Choose capture type');const 
 function resetInputs(){valueInput.value=unitInput.value=labelInput.value=textInput.value='';image='';fileMeta=null;source='';previewEl.style.display='none';previewEl.removeAttribute('src');cameraInput.value=photoInput.value=fileInput.value=''}
 discardBtn.onclick=()=>{resetInputs();statusEl.textContent='Discarded · no record changed'};
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-</script></body></html>
+</script><script src="pv.js" defer></script>
+</body></html>

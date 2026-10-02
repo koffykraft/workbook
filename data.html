@@ -12,4 +12,5 @@ shareBtn.onclick=async()=>{const f=await archiveFile();if(navigator.canShare&&na
 importInput.onchange=async()=>{const f=importInput.files[0];if(!f)return;let d;try{d=JSON.parse(await f.text())}catch{return alert('Not a valid KoffyKraft archive')};if(d.format!=='koffykraft-archive'||![1,2].includes(d.version))return alert('Unsupported archive');Object.entries(d.localStorage||{}).forEach(([k,v])=>localStorage.setItem(k,v));for(const [n,rows] of Object.entries(d.indexedDB||{})){if(!['roasts','plans','captures'].includes(n))continue;for(const row of rows||[])await KKDB.put(n,row)}alert('KoffyKraft data imported')}
 clearBtn.onclick=()=>{if(!confirm('Delete KoffyKraft data stored on this device? Export first if you want a copy.'))return;[...Array(localStorage.length)].map((_,i)=>localStorage.key(i)).filter(Boolean).filter(k=>LS_PREFIX.some(p=>k.toLowerCase().startsWith(p))).forEach(k=>localStorage.removeItem(k));indexedDB.deleteDatabase(KKDB.NAME);indexedDB.deleteDatabase('KoffyKraftTemporaryRoastbook');alert('Local KoffyKraft data deleted')};
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-</script></body></html>
+</script><script src="pv.js" defer></script>
+</body></html>

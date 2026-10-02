@@ -80,6 +80,7 @@ Keep your own copies of important roasts. Export to Dropbox, Google Drive, or yo
 </main>
 
 <p style="max-width:680px;margin:24px auto 40px;padding:0 16px;font-size:12px;color:#77716a;line-height:1.5">© 2026 T M Thomas · Open source under <a href="license.html" style="color:#8d583b">AGPL-3.0</a> · Commercial licence: info@koffykraft.com · <a href="terms.html" style="color:#8d583b">Terms</a></p>
+<script>(async()=>{try{if(typeof SYNC==='undefined'||!SYNC.isAuthenticated())return;const r=await fetch('/api/me',{headers:{authorization:'Bearer '+SYNC.getToken()}});const d=await r.json();if(!d.admin)return;const c=document.createElement('a');c.href='stats.html';c.className='card';c.style.cssText='display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:inherit;margin:12px 0';c.innerHTML='<span><b>Stats</b><br><span style="font-size:13px;color:#77716a">Visits, accounts and cloud records. Only you see this.</span></span><span style="color:#8d583b;font-size:22px">›</span>';const h=document.querySelector('main h1');h&&h.insertAdjacentElement('afterend',c)}catch(e){}})();</script>
 <script>
 const localCard=document.getElementById('local'),
       signinCard=document.getElementById('signin'),
@@ -143,5 +144,6 @@ logoutBtn.onclick=async()=>{
 
 check();
 </script>
+<script src="pv.js" defer></script>
 </body>
 </html>

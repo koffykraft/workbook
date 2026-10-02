@@ -357,5 +357,6 @@ ORIGIN.onSync(s=>{refreshSyncBadge.last=s;refreshSyncBadge(s);if(s.status==='syn
 PREFS.pull().then(route).then(()=>ORIGIN.sync().catch(()=>{}));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
+<script src="pv.js" defer></script>
 </body>
 </html>
