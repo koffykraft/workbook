@@ -152,7 +152,7 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
  <button class="btn ghost" id="plusOne">+1°C</button>
 </div>
 <div class="event-grid">
- <button class="event turn" data-event="Turning"><strong>Turning</strong><small>Tap to record</small></button>
+ <button class="event turn" data-event="Turning"><strong>Turning</strong><small>Tap at the bottom</small></button>
  <button class="event yellow" data-event="Yellow"><strong>Yellow</strong><small>Tap to record</small></button>
  <button class="event maillard" data-event="Maillard"><strong>Maillard</strong><small>Tap to record</small></button>
  <button class="event fc" data-event="First Crack"><strong>FC</strong><small>Tap to record</small></button>
@@ -317,7 +317,7 @@ function bindPress(el,tap,longpress){
 function recordReading(temp,probe=currentProbe()){
  if(!state.running)startPause();
  temp=Number(temp);if(!Number.isFinite(temp))return;
- const time=elapsedMs(),arr=state.readings[probe];let i=-1;for(let k=arr.length-1;k>=0;k--){if(Number(arr[k].temp)===temp){i=k;break}}
+ const time=elapsedMs(),arr=state.readings[probe];let i=-1;for(let k=arr.length-1;k>=0;k--){if(!arr[k].bottom&&Number(arr[k].temp)===temp){i=k;break}}
  const item={temp,time};
  const returned=i>=0&&(arr.some(x=>x.time>arr[i].time&&Number(x.temp)<temp)||state.events.some(e=>e.name==="Turning"&&e.time>arr[i].time));
  if(i>=0&&!returned){arr[i]=item;toast(`${labelProbe(probe)} ${temp}°C updated`)}else{arr.push(item);toast(`${labelProbe(probe)} ${temp}°C recorded`)}
@@ -331,13 +331,16 @@ function recordEvent(name){
  if(!state.running)startPause();
  const time=elapsedMs(),ex=lastReading("exhaust"),bt=lastReading("bean"),i=state.events.findIndex(e=>e.name===name);
  const item={name,time,exhaust:ex?.temp??null,bean:bt?.temp??null};
+ if(name==="Turning")setBottom(time,item);
  if(i>=0)state.events[i]=item;else state.events.push(item);
  state.events.sort((a,b)=>a.time-b.time);toast(`${name} recorded`);renderAll();saveState()
 }
 function removeEvent(name){
  const i=state.events.findIndex(e=>e.name===name);if(i<0)return;
- lastDeleted={kind:"event",item:state.events[i]};state.events.splice(i,1);vibrate(45);toast(`${name} removed`);renderAll();saveState()
+ lastDeleted={kind:"event",item:state.events[i]};state.events.splice(i,1);if(name==="Turning")clearBottom();vibrate(45);toast(`${name} removed`);renderAll();saveState()
 }
+function clearBottom(){["exhaust","bean"].forEach(p=>{state.readings[p]=state.readings[p].filter(x=>!x.bottom)})}
+function setBottom(time,item){clearBottom();["exhaust","bean"].forEach(p=>{const before=state.readings[p].filter(x=>x.time<=time);if(!before.length)return;const lo=Math.min(...before.map(x=>Number(x.temp)));const last=[...before].sort((x,y)=>x.time-y.time).pop();item[p]=lo;if(time-last.time>2000)state.readings[p].push({temp:lo,time,bottom:true})})}
 function lastReading(p){const a=[...state.readings[p]].sort((x,y)=>x.time-y.time);return a[a.length-1]}
 document.querySelectorAll(".event").forEach(b=>bindPress(b,()=>recordEvent(b.dataset.event),()=>removeEvent(b.dataset.event)));
 
