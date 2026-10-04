@@ -55,7 +55,7 @@ textarea{min-height:70px;resize:vertical}
 .tile{border:1px solid var(--line);background:white;border-radius:12px;min-height:72px;padding:6px 3px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;user-select:none}
 .tile .temp-label{font-size:1.05rem}.tile .tile-time{font-size:.61rem;font-weight:400;min-height:.75rem}.tile .tile-gap{font-size:.67rem;color:var(--accent);min-height:.8rem}
 .tile.done.exhaust{background:var(--exhaust);color:white;border-color:var(--exhaust)}.tile.done.bean{background:var(--bean);color:white;border-color:var(--bean)}
-.tile.done .tile-gap{color:#fff0d8}.holding{outline:3px solid var(--danger);transform:scale(.96)}
+.tile.done .tile-gap{color:#fff0d8}.tile,.event{-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation;position:relative;overflow:hidden}.holding{outline:3px solid var(--danger);transform:scale(.96)}.holding::after{content:'';position:absolute;left:0;bottom:0;height:5px;width:100%;background:var(--danger);transform-origin:left;animation:holdfill .65s linear forwards}@keyframes holdfill{from{transform:scaleX(0)}to{transform:scaleX(1)}}#undoBar{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;background:#171512;color:#fff;border-radius:999px;padding:8px 8px 8px 18px;display:flex;gap:12px;align-items:center;font-size:14px;z-index:60;transition:all .2s}#undoBar.show{opacity:1;transform:translateX(-50%);pointer-events:auto}#undoBar button{background:#fff;color:#171512;border:0;border-radius:999px;padding:8px 14px;font:inherit;font-weight:700}
 .chart-box{background:#171512;border-radius:13px;padding:8px;overflow:hidden}
 canvas{display:block;width:100%;height:auto;min-height:300px}
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.75rem;color:var(--muted);margin:8px 2px 0}
@@ -307,13 +307,18 @@ function updateProbeUI(){
 $("plusOne").onclick=()=>{$("currentTemp").value=(Number($("currentTemp").value)||0)+1};
 
 function bindPress(el,tap,longpress){
- let h=null,long=false;
- const start=()=>{long=false;el.classList.add("holding");h=setTimeout(()=>{long=true;el.classList.remove("holding");longpress()},700)};
- const end=()=>{clearTimeout(h);el.classList.remove("holding");if(!long)tap()};
- const cancel=()=>{clearTimeout(h);el.classList.remove("holding")};
- el.addEventListener("pointerdown",start);el.addEventListener("pointerup",end);el.addEventListener("pointercancel",cancel);el.addEventListener("pointerleave",cancel);el.addEventListener("contextmenu",e=>e.preventDefault())
+ let h=null,long=false,x0=0,y0=0,down=false;
+ const clear=()=>{clearTimeout(h);el.classList.remove("holding");down=false};
+ el.addEventListener("pointerdown",e=>{down=true;long=false;x0=e.clientX;y0=e.clientY;try{el.setPointerCapture(e.pointerId)}catch(_){}el.classList.add("holding");h=setTimeout(()=>{long=true;el.classList.remove("holding");vibrate(60);longpress()},650)});
+ el.addEventListener("pointermove",e=>{if(down&&Math.hypot(e.clientX-x0,e.clientY-y0)>14)clear()});
+ el.addEventListener("pointerup",()=>{if(!down)return;const wasLong=long;clear();if(!wasLong)tap()});
+ el.addEventListener("pointercancel",clear);
+ el.addEventListener("contextmenu",e=>e.preventDefault());
 }
 
+let pendingTap=null;function confirmTap(k){const now=Date.now();if(pendingTap&&pendingTap.k===k&&now-pendingTap.t<2500){pendingTap=null;return true}pendingTap={k,t:now};return false}
+function showUndo(label){let u=document.getElementById('undoBar');if(!u){u=document.createElement('div');u.id='undoBar';u.innerHTML='<span></span><button type="button">Undo</button>';document.body.appendChild(u);u.querySelector('button').onclick=()=>{undoDelete();u.classList.remove('show')}}u.querySelector('span').textContent=label;u.classList.add('show');clearTimeout(u._h);u._h=setTimeout(()=>u.classList.remove('show'),5000)}
+function undoDelete(){const d=lastDeleted;if(!d)return;if(d.kind==='reading'){const arr=state.readings[d.probe];if(!arr.some(x=>Number(x.temp)===Number(d.item.temp)))arr.push(d.item);arr.sort((a,b)=>a.time-b.time)}else if(d.kind==='event'){if(!state.events.some(e=>e.name===d.item.name))state.events.push(d.item);state.events.sort((a,b)=>a.time-b.time)}lastDeleted=null;toast('Restored');renderAll();saveState()}
 function recordReading(temp,probe=currentProbe()){
  if(!state.running)startPause();
  temp=Number(temp);if(!Number.isFinite(temp))return;
@@ -324,7 +329,7 @@ function recordReading(temp,probe=currentProbe()){
 }
 function removeReading(temp,probe=currentProbe()){
  const arr=state.readings[probe],i=arr.findIndex(x=>Number(x.temp)===Number(temp));if(i<0)return;
- lastDeleted={kind:"reading",probe,item:arr[i]};arr.splice(i,1);vibrate(45);toast(`${labelProbe(probe)} ${temp}°C removed`);renderAll();saveState()
+ lastDeleted={kind:"reading",probe,item:arr[i]};arr.splice(i,1);vibrate(45);renderAll();saveState();showUndo(`${labelProbe(probe)} ${temp}°C removed`)
 }
 function recordEvent(name){
  if(!state.running)startPause();
@@ -335,10 +340,10 @@ function recordEvent(name){
 }
 function removeEvent(name){
  const i=state.events.findIndex(e=>e.name===name);if(i<0)return;
- lastDeleted={kind:"event",item:state.events[i]};state.events.splice(i,1);vibrate(45);toast(`${name} removed`);renderAll();saveState()
+ lastDeleted={kind:"event",item:state.events[i]};state.events.splice(i,1);vibrate(45);renderAll();saveState();showUndo(`${name} removed`)
 }
 function lastReading(p){const a=[...state.readings[p]].sort((x,y)=>x.time-y.time);return a[a.length-1]}
-document.querySelectorAll(".event").forEach(b=>bindPress(b,()=>recordEvent(b.dataset.event),()=>removeEvent(b.dataset.event)));
+document.querySelectorAll(".event").forEach(b=>bindPress(b,()=>{const n=b.dataset.event,e=state.events.find(x=>x.name===n);if(e&&!confirmTap('e'+n)){toast(`${n} already at ${fmt(e.time)}. Tap again to update, hold to remove`);return}recordEvent(n)},()=>removeEvent(b.dataset.event)));
 
 $("generate").onclick=()=>{
  const s=Number($("tileStart").value),e=Number($("tileEnd").value),st=Number($("tileStep").value),d=Number($("tileDecimals").value);
@@ -362,7 +367,7 @@ function renderTiles(){
   const phaseClass=phaseForReading?` phase-${phaseForReading.replace(/\s+/g,"-")}`:"";
   b.className=`tile${x?" done "+p:""}${phaseClass}`;
   b.innerHTML=`<span class="temp-label">${temp.toFixed(state.tile.decimals)}${unitSymbol()}</span><span class="tile-time">${x?fmt(x.time):""}</span><span class="tile-gap">${x?gapFmt(gap):""}</span>`;
-  bindPress(b,()=>recordReading(temp,p),()=>{if(x)removeReading(temp,p)});box.appendChild(b)
+  bindPress(b,()=>{if(x&&!confirmTap('r'+p+temp)){toast(`${temp}°C already at ${fmt(x.time)}. Tap again to update, hold to remove`);return}recordReading(temp,p)},()=>{if(x)removeReading(temp,p);else toast('Nothing to remove')});box.appendChild(b)
  }
 }
 
