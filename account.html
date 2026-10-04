@@ -117,8 +117,9 @@ function drawSync(){const p=PREFS.read();const labels={off:'Off',selected:'Selec
  document.querySelectorAll('[data-sec]').forEach(b=>b.onclick=async()=>{const sec=b.dataset.sec,mode=b.dataset.mode;await PREFS.set(sec,mode);drawSync();const msg=document.getElementById('syncMsg');if(mode==='all'&&sec!=='roasts'){msg.textContent='Uploading…';const n=await ORIGIN.markAll(sec);msg.textContent=n?n+' records sent to the cloud.':'Everything here is already in the cloud.';const r=await fetch('/api/origin',{headers:{authorization:'Bearer '+SYNC.getToken()}}).catch(()=>null);if(r&&r.ok){const it=((await r.json()).items||[]).filter(x=>!x.deleted);COUNTS[sec]=it.filter(x=>PREFS.sectionOf(x.type)===sec).length;drawSync()}}else if(mode==='all'){msg.textContent='Roasts you finish from now on upload automatically. For earlier ones, use Save to cloud in the Roastbook.'}else if(mode==='off'){msg.textContent='Nothing new goes to the cloud from '+PREFS.SECTIONS[sec].split(' (')[0]+'. What is already there stays until you remove it.'}else{msg.textContent='Only records you choose with Save to cloud will upload.'}})}
 
 sendBtn.onclick=async()=>{
-  msgEl.textContent='';
-  const result=await SYNC.requestSignIn(emailInput.value);
+  if(sendBtn.disabled)return;
+  msgEl.textContent='Sending…';sendBtn.disabled=true;
+  let result;try{result=await SYNC.requestSignIn(emailInput.value)}finally{setTimeout(()=>{sendBtn.disabled=false},result&&result.ok?30000:1500)}
   if(result.ok){
     verifyBox.classList.remove('hide');
     msgEl.textContent='6-digit code sent to '+emailInput.value;
@@ -128,7 +129,7 @@ sendBtn.onclick=async()=>{
   }
 };
 
-goBtn.onclick=async()=>{
+goBtn.onclick=async()=>{if(goBtn.disabled)return;goBtn.disabled=true;setTimeout(()=>{goBtn.disabled=false},1200);
   const result=await SYNC.verifyCode(emailInput.value,codeInput.value);
   if(result.ok){
     location.reload();
