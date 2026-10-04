@@ -317,13 +317,14 @@ function bindPress(el,tap,longpress){
 function recordReading(temp,probe=currentProbe()){
  if(!state.running)startPause();
  temp=Number(temp);if(!Number.isFinite(temp))return;
- const time=elapsedMs(),arr=state.readings[probe],i=arr.findIndex(x=>Number(x.temp)===temp);
+ const time=elapsedMs(),arr=state.readings[probe];let i=-1;for(let k=arr.length-1;k>=0;k--){if(Number(arr[k].temp)===temp){i=k;break}}
  const item={temp,time};
- if(i>=0){arr[i]=item;toast(`${labelProbe(probe)} ${temp}°C updated`)}else{arr.push(item);toast(`${labelProbe(probe)} ${temp}°C recorded`)}
+ const returned=i>=0&&(arr.some(x=>x.time>arr[i].time&&Number(x.temp)<temp)||state.events.some(e=>e.name==="Turning"&&e.time>arr[i].time));
+ if(i>=0&&!returned){arr[i]=item;toast(`${labelProbe(probe)} ${temp}°C updated`)}else{arr.push(item);toast(`${labelProbe(probe)} ${temp}°C recorded`)}
  arr.sort((a,b)=>a.time-b.time);$("currentTemp").value=temp;renderAll();saveState()
 }
 function removeReading(temp,probe=currentProbe()){
- const arr=state.readings[probe],i=arr.findIndex(x=>Number(x.temp)===Number(temp));if(i<0)return;
+ const arr=state.readings[probe];let i=-1;for(let k=arr.length-1;k>=0;k--){if(Number(arr[k].temp)===Number(temp)&&(i<0||arr[k].time>arr[i].time))i=k}if(i<0)return;
  lastDeleted={kind:"reading",probe,item:arr[i]};arr.splice(i,1);vibrate(45);toast(`${labelProbe(probe)} ${temp}°C removed`);renderAll();saveState()
 }
 function recordEvent(name){
@@ -352,8 +353,8 @@ function renderTiles(){
  const n=Math.floor((state.tile.end-state.tile.start)/state.tile.step+0.000001);
  for(let i=0;i<=n;i++){
   const temp=Number((state.tile.start+i*state.tile.step).toFixed(state.tile.decimals));
-  const x=arr.find(z=>Number(z.temp)===temp),ordered=[...arr].sort((a,b)=>a.time-b.time);
-  const ix=x?ordered.findIndex(z=>z.temp===x.temp):-1,gap=x&&ix>0?x.time-ordered[ix-1].time:null;
+  const ordered=[...arr].sort((a,b)=>a.time-b.time),all=ordered.filter(z=>Number(z.temp)===temp),x=all.length?all[all.length-1]:null;
+  const ix=x?ordered.indexOf(x):-1,gap=x&&ix>0?x.time-ordered[ix-1].time:null;
   const b=document.createElement("button");const phaseForReading=(()=>{
    if(!x)return "";
    const prior=[...state.events].filter(e=>e.time<=x.time).sort((a,b)=>a.time-b.time);
