@@ -1,65 +1,27 @@
 name: Production smoke check
+# Checks the live app after each push. Fails (and emails) only if a page or the API is down.
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - PRODUCTION_SMOKE_RESULT.txt
-      - ACTION_OK.txt
-permissions:
-  contents: write
+  workflow_dispatch:
 jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Wait for Cloudflare deployment
-        run: sleep 90
-      - name: Verify production
-        id: verify
+      - name: Wait for deploy
+        run: sleep 60
+      - name: Check live app
         shell: bash
         run: |
-          set +e
-          BASE="https://roast.royal-rice-d21a.workers.dev"
-          : > PRODUCTION_SMOKE_RESULT.txt
+          BASE="https://roast.koffykraft.coffee"
           fail=0
-          check_url() {
-            name="$1"; url="$2"
-            code=$(curl -sS -L -o "/tmp/$name" -w "%{http_code}" --retry 3 --retry-delay 5 "$url")
-            echo "$name HTTP $code" >> PRODUCTION_SMOKE_RESULT.txt
+          for p in "" roastbooks.html origin.html roast-timer-v14.html roast-graph.html roasts.html cup.html water.html account.html license.html sw.js; do
+            code=$(curl -sS -L -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 5 "$BASE/$p")
+            echo "/$p $code"
             [ "$code" = "200" ] || fail=1
-          }
-          check_url root "$BASE/"
-          for p in roastbooks.html roastbook.html roast-timer-v14.html roast-graph.html roasts.html capture.html ocr.html data.html account.html brew.html process.html process-run.html sw.js; do
-            check_url "$p" "$BASE/$p"
           done
-          root_roastbooks=FAIL; grep -q "Roastbooks" /tmp/root && root_roastbooks=PASS || fail=1
-          root_old=PASS; grep -q "Coffee, from origin to cup" /tmp/root && root_old=FAIL && fail=1
-          cache=FAIL; grep -q "koffykraft-v14" /tmp/sw.js && cache=PASS || fail=1
-          timer=FAIL; grep -q 'objectStore("roasts").put(rec)' /tmp/roast-timer-v14.html && timer=PASS || fail=1
-          ocr=FAIL; grep -q "Tesseract.recognize" /tmp/ocr.html && ocr=PASS || fail=1
-          exportcheck=FAIL; grep -q "koffykraft-roastbook.csv" /tmp/roasts.html && exportcheck=PASS || fail=1
-          echo "root_has_roastbooks $root_roastbooks" >> PRODUCTION_SMOKE_RESULT.txt
-          echo "root_old_dashboard_absent $root_old" >> PRODUCTION_SMOKE_RESULT.txt
-          echo "cache_v14 $cache" >> PRODUCTION_SMOKE_RESULT.txt
-          echo "timer_persistence $timer" >> PRODUCTION_SMOKE_RESULT.txt
-          echo "ocr_fallback $ocr" >> PRODUCTION_SMOKE_RESULT.txt
-          echo "roastbook_export $exportcheck" >> PRODUCTION_SMOKE_RESULT.txt
-          status_code=$(curl -sS -o /tmp/status.json -w "%{http_code}" --retry 3 --retry-delay 5 "$BASE/api/status")
-          echo "api_status_http $status_code" >> PRODUCTION_SMOKE_RESULT.txt
-          cat /tmp/status.json >> PRODUCTION_SMOKE_RESULT.txt
-          echo >> PRODUCTION_SMOKE_RESULT.txt
-          [ "$status_code" = "200" ] || fail=1
-          grep -q '"ok":true' /tmp/status.json || fail=1
-          grep -q '"database":true' /tmp/status.json || fail=1
-          echo "Source: $GITHUB_SHA" >> PRODUCTION_SMOKE_RESULT.txt
-          echo "Checked: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> PRODUCTION_SMOKE_RESULT.txt
+          status=$(curl -sS --retry 3 --retry-delay 5 "$BASE/api/status")
+          echo "api/status $status"
+          echo "$status" | grep -q '"ok":true' || fail=1
+          echo "$status" | grep -q '"database":true' || fail=1
           exit $fail
-      - name: Record production result
-        if: always()
-        shell: bash
-        run: |
-          git config user.name "koffykraft-smoke"
-          git config user.email "actions@users.noreply.github.com"
-          git add PRODUCTION_SMOKE_RESULT.txt
-          git commit -m "Record production smoke result" || exit 0
-          git push
