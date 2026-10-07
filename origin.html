@@ -80,7 +80,7 @@ textarea{min-height:76px;resize:vertical}
 </main>
 <div class="toast" id="toast"></div>
 <script src="sync.js"></script>
-<script src="prefs.js"></script><script src="origin-db.js"></script><script src="cloud-ui.js"></script>
+<script src="prefs.js"></script><script src="origin-db.js"></script><script src="varieties.js"></script><script src="cloud-ui.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -95,7 +95,7 @@ function fmtDur(h){if(h==null)return '';if(h<48)return r1(h)+' h';return r1(h/24
 
 // ---------- field definitions ----------
 const SPECIES=['Arabica','Robusta','Liberica','Excelsa','Other'];
-const VARIETIES=['SLN 795 (S795)','SLN 9','SLN 5B','Chandragiri','Cauvery (Catimor)','Catuai','Kent','Sln 13','Gesha','Bourbon','Typica','SL28','SL34','Pacamara','Robusta CxR','Robusta Peridenia','Robusta SLN 274','Robusta Old Robusta'];
+const VARIETIES=(typeof KK_VARIETIES!=='undefined'?KK_VARIETIES.map(v=>v.n):[]).concat(['Robusta Peridenia','Robusta Old Robusta']);
 const PATHWAYS=['Washed','Natural','Honey, white','Honey, yellow','Honey, red','Honey, black','Pulped natural','Anaerobic washed','Anaerobic natural','Carbonic maceration','Wet-hulled','Monsooned','Experimental'];
 const F={
  estate:[
@@ -114,7 +114,7 @@ const F={
   {k:'area',l:'Area',t:'num',unit:'areaUnit',units:['acre','ha'],def_unit:'acre'},
   {k:'slope',l:'Slope / aspect',t:'text',ph:'Gentle, east facing'},{k:'soil',l:'Soil',t:'text',ph:'Red laterite'},
   {h:'Plants'},
-  {k:'species',l:'Species',t:'sel',opts:SPECIES},{k:'variety',l:'Variety',t:'text',list:'varieties'},
+  {k:'species',l:'Species',t:'sel',opts:SPECIES},{k:'variety',l:'Variety',t:'text',list:'varieties',ph:'Pick or type'},{k:'varietyInfo',t:'calc',fn:r=>typeof varietyHtml==='function'?varietyHtml(r.variety):''},
   {k:'plantYear',l:'Planting year',t:'num',ph:'2012'},{k:'plantAgeCalc',t:'calc',fn:r=>{const y=num(r.plantYear);return y?'Plant age <b>'+(new Date().getFullYear()-y)+' years</b>':''}},
   {k:'plantCount',l:'Plant count',t:'num'},
   {k:'spacingRow',l:'Row spacing',t:'num',unit:'spacingUnit',units:['ft','m'],def_unit:'ft'},{k:'spacingPlant',l:'Plant spacing',t:'num',unit:'spacingUnit',units:['ft','m'],def_unit:'ft'},

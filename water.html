@@ -56,6 +56,17 @@ input,select{font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(
 <label>Alkalinity (KH)<input id="kh" type="number" inputmode="decimal"></label>
 <label class="full">Batch size, litres<input id="vol" type="number" inputmode="decimal" step="any"></label></div></div>
 
+<div class="note">Recipe targets as published by Barista Hustle, DIY Water Recipes Redux (2019).</div>
+
+<h2>Check a bottled or tap water</h2>
+<div class="card"><div class="note" style="margin-bottom:10px">Copy the figures from the bottle label or a water test report. Labels list them in mg/L.</div><div class="f">
+<label>Calcium (Ca) mg/L<input id="wca" type="number" inputmode="decimal" step="any"></label>
+<label>Magnesium (Mg) mg/L<input id="wmg" type="number" inputmode="decimal" step="any"></label>
+<label>Bicarbonate (HCO₃) mg/L<input id="whc" type="number" inputmode="decimal" step="any"></label>
+<label>Sodium (Na) mg/L, optional<input id="wna" type="number" inputmode="decimal" step="any"></label>
+<label class="full">Water name, optional<input id="wnm" placeholder="Brand or source"></label></div>
+<div class="out" id="wout" style="margin-top:12px"></div></div>
+
 <h2>Starting water</h2>
 <div class="card"><div class="f">
 <label class="full">Base<select id="base"><option value="ro">Distilled or RO (zero)</option><option value="own">My water (measured)</option></select></label>
@@ -68,10 +79,12 @@ input,select{font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(
 <h2>Check against SCA water ranges</h2>
 <div class="card chk" id="chk"></div>
 <div class="note">Ranges from the SCA water quality handbook: hardness 17 to 85 (ideal about 68), alkalinity 10 to 100 (ideal about 40). Magnesium tends to extract more flavour than calcium; buffer softens acidity.</div>
+<h2>Sources</h2>
+<div class="note">Concentrates and recipe targets: <a href="https://www.baristahustle.com/blog/diy-water-recipes-red">Barista Hustle, DIY Water Recipes Redux</a>. Ranges: SCA Water Quality Handbook. Conversion to CaCO₃: Ca × 2.497, Mg × 4.118, HCO₃ × 0.820 (molar mass ratios).</div>
 </main>
 <script>
 const $=s=>document.getElementById(s),n=v=>{const x=parseFloat(v);return Number.isFinite(x)?x:0};
-const PRE=[['SCA ideal',68,40],['Bright filter',50,20],['Softer, sweeter',40,25],['Espresso',80,40]];
+const PRE=[['Melbourne',24,12],['WOC Budapest',51,40],['SCA',68,40],['Rao',76,50],['Barista Hustle',81,40],['Hendon',100,31]];
 const K='kk_water_v1';let S={gh:68,kh:40,vol:4,base:'ro',bgh:'',bkh:''};try{Object.assign(S,JSON.parse(localStorage.getItem(K))||{})}catch(e){}
 $('pre').innerHTML=PRE.map((p,i)=>'<button data-i="'+i+'">'+p[0]+' '+p[1]+'/'+p[2]+'</button>').join('');
 $('pre').onclick=e=>{const p=PRE[e.target.dataset.i];if(!p)return;S.gh=p[1];S.kh=p[2];fill();calc()};
@@ -86,7 +99,7 @@ function calc(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}
  // b(C-g0) - a*g0 = V(G-g0) ;  a(C-a0) - b*a0 = V(A-a0)
  const d=(C-g0)*(C-a0)-g0*a0,b=(V*(G-g0)*(C-a0)+g0*V*(A-a0))/d,a=(V*(A-a0)*(C-g0)+a0*V*(G-g0))/d;
  let h;if(!V)h='Enter a batch size.';
- else if(a<0||b<0)h='<span class="bad">Your water is already '+(b<0?'harder':'more buffered')+' than the target.</span> Mix it with distilled or RO water first, or pick a higher target.';
+ else if(a<0||b<0)h='<span class="bad">Your water is already '+(b<0?'harder':'more buffered')+' than the target.</span> Mix it with distilled or RO water first, or pick a higher target.'+(()=>{const f=Math.min(g0>G?G/g0:1,a0>A?A/a0:1);return f<1?'<div class="note" style="margin-top:6px">To get under the target: use at most <b>'+Math.round(f*100)+'%</b> your water and the rest RO, enter that blend as your water, then add concentrates.</div>':''})();
  else{const w=V-a-b;h='<div class="big">'+r(b)+' ml hardness · '+r(a)+' ml buffer</div>Top up with <b>'+r(w/1000)+' L</b> '+(own?'of your water':'distilled or RO')+' to make '+r(V/1000)+' L.<div class="note" style="margin-top:6px">Without concentrates: add <b>'+(b*2.45/1000).toFixed(2)+' g</b> Epsom salt and <b>'+(a*1.68/1000).toFixed(2)+' g</b> baking soda straight into the batch (needs a 0.01 g scale).</div>'}
  $('out').innerHTML=h;
  const row=(l,v,lo,hi,id)=>'<div><span>'+l+' '+v+'</span><span class="'+(v>=lo&&v<=hi?'ok">In range':'bad">Out of range')+'</span></div>';
@@ -115,6 +128,18 @@ function mix(){try{localStorage.setItem(MK,JSON.stringify(M))}catch(e){}
   $('mchart').innerHTML='<div class="note" style="margin-bottom:6px">Quick chart for '+r(Th)+' °C hot and '+r(Tc)+' °C cold, per '+W+' '+u+'</div><table style="width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums"><tr style="color:var(--muted);font-size:12px"><td>Target</td><td style="text-align:right">Hot</td><td style="text-align:right">Cold</td><td style="width:40%"></td></tr>'+T.map(t=>{const tt=t+loss;if(tt>Th)return '';const Wm=byG?W:W*rho(tt),[a,b,f]=split(Th,Tc,tt,Wm);const ho=byG?a:a/rho(Th),co=byG?b:b/rho(Tc);return '<tr style="border-top:1px solid #efe8de'+(t===n(M.mt)?';font-weight:700':'')+'"><td style="padding:5px 0">'+t+' °C</td><td style="text-align:right">'+Math.round(ho)+'</td><td style="text-align:right">'+Math.round(co)+'</td><td style="padding-left:10px"><div style="height:8px;border-radius:4px;background:#ece7df"><div style="height:8px;border-radius:4px;background:var(--coffee);width:'+Math.round(f*100)+'%"></div></div></td></tr>'}).join('')+'</table>'}
  else $('mchart').innerHTML=''}
 mix();
+const WK='kk_water_label_v1';let L={wca:'',wmg:'',whc:'',wna:'',wnm:''};try{Object.assign(L,JSON.parse(localStorage.getItem(WK))||{})}catch(e){}
+const LF=['wca','wmg','whc','wna','wnm'];LF.forEach(k=>{$(k).value=L[k];$(k).addEventListener('input',()=>{L[k]=$(k).value;label()})});
+function label(){try{localStorage.setItem(WK,JSON.stringify(L))}catch(e){}
+ if(L.wca===''&&L.wmg===''&&L.whc===''){$('wout').innerHTML='';return}
+ const gh=n(L.wca)*2.497+n(L.wmg)*4.118,kh=n(L.whc)*0.8202,na=L.wna===''?null:n(L.wna);
+ const v=[];if(gh<17)v.push('very soft, coffee may taste flat');else if(gh>85)v.push('hardness above the SCA range, scale risk in machines');
+ if(kh<10)v.push('very little buffer, coffee may taste sharp');else if(kh>100)v.push('high buffer, coffee may taste dull or chalky');
+ if(na!=null&&na>30)v.push('sodium is high');
+ const ok=!v.length;
+ $('wout').innerHTML='<div class="big">GH '+Math.round(gh)+' · KH '+Math.round(kh)+'</div>'+(ok?'<span class="ok">Inside the SCA ranges as it is.</span>':'<span class="bad">'+v.join('; ')+'.</span>')+'<div class="note" style="margin-top:6px">GH:KH ratio '+(kh?r(gh/kh):'–')+' : 1. The SCA target of 68 and 40 is about 1.7 : 1.</div><div style="margin-top:10px"><button type="button" id="wuse" style="font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;cursor:pointer">Use as my starting water</button></div>';
+ $('wuse').onclick=()=>{S.base='own';S.bgh=Math.round(gh);S.bkh=Math.round(kh);fill();calc();$('base').scrollIntoView({behavior:'smooth',block:'center'})}}
+label();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script><script src="pv.js" defer></script>
 </body></html>
