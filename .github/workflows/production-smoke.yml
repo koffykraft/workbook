@@ -1,5 +1,5 @@
 name: Production smoke check
-# Checks the live app after each push. Fails (and emails) only if a page or the API is down.
+# Checks the live app after each push (workers.dev address; the custom domain blocks GitHub runners as bots). Fails (and emails) only if a page or the API is down.
 on:
   push:
     branches: [main]
@@ -13,7 +13,7 @@ jobs:
       - name: Check live app
         shell: bash
         run: |
-          BASE="https://roast.koffykraft.coffee"
+          BASE="https://roast.tagroos.workers.dev"
           fail=0
           for p in "" roastbooks.html origin.html roast-timer-v14.html roast-graph.html roasts.html cup.html water.html account.html license.html sw.js; do
             code=$(curl -sS -L -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 5 "$BASE/$p")
