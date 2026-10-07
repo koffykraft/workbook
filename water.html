@@ -28,7 +28,23 @@ input,select{font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(
 <body><main class="app">
 <header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="roastbooks.html">KoffyKraft</a><a class="kkh-acct" href="account.html" aria-label="Account">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html" aria-current="page">Cup</a><a href="account.html">Account</a></nav></header>
 <h1>Water</h1>
-<div class="sub">Mix brewing water from two concentrates. All values are ppm as CaCO₃.</div>
+<div class="sub">Temper hot water with cold to a set temperature, and mix brewing water from two concentrates.</div>
+
+<h2>Hot and cold mix</h2>
+<div class="card"><div class="f">
+<label>Hot water °C<input id="mh" type="number" inputmode="decimal" step="any"></label>
+<label>Cold water °C<input id="mc" type="number" inputmode="decimal" step="any"></label>
+<label>Target °C<input id="mt" type="number" inputmode="decimal" step="any"></label>
+<label>Final amount, ml or g<input id="mv" type="number" inputmode="decimal" step="any"></label>
+<label>Hot water available (optional)<input id="mha" type="number" inputmode="decimal" step="any" placeholder="No limit"></label>
+<label>Vessel loss °C (optional)<input id="ml" type="number" inputmode="decimal" step="any" placeholder="0"></label>
+<label class="full">Measure by<select id="mu"><option value="g">Weight on a scale (most precise)</option><option value="ml">Volume in a jug</option></select></label></div></div>
+<div class="card out" id="mout"></div>
+<div class="card" id="mchart"></div>
+<div class="note">Mixing is worked out by heat balance on weight. Hot water is about 4% less dense than cold, so by volume the jug figures are adjusted for that. Vessel loss: how much the mix drops when poured into your jug or kettle. Take it from one trial: mix, stir, read, and enter the shortfall.</div>
+
+<h2>Mineral recipe</h2>
+<div class="note" style="margin-bottom:6px">All values are ppm as CaCO₃.</div>
 
 <h2>Concentrates (make once, 1 litre each)</h2>
 <div class="card note"><b style="color:var(--ink)">Buffer:</b> 1.68 g baking soda (sodium bicarbonate) in 1 L distilled or RO water = 1000 ppm alkalinity.<br><b style="color:var(--ink)">Hardness:</b> 2.45 g Epsom salt (magnesium sulphate) in 1 L distilled or RO water = 1000 ppm hardness.<br>Use food grade salts. Keep the bottles closed and in the fridge.</div>
@@ -76,6 +92,29 @@ function calc(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}
  const row=(l,v,lo,hi,id)=>'<div><span>'+l+' '+v+'</span><span class="'+(v>=lo&&v<=hi?'ok">In range':'bad">Out of range')+'</span></div>';
  $('chk').innerHTML=row('Hardness',G,17,85)+row('Alkalinity',A,10,100)+'<div><span>GH to KH ratio</span><span>'+(A?r(G/A):'–')+' : 1</span></div>'}
 fill();calc();
+const MK='kk_water_mix_v1';let M={mh:95,mc:28,mt:92,mv:1000,mha:'',ml:'',mu:'g'};try{Object.assign(M,JSON.parse(localStorage.getItem(MK))||{})}catch(e){}
+const MF=['mh','mc','mt','mv','mha','ml','mu'];MF.forEach(k=>{$(k).value=M[k];$(k).addEventListener('input',()=>{M[k]=$(k).value;mix()})});
+const rho=T=>1-(T+288.9414)/(508929.2*(T+68.12963))*Math.pow(T-3.9863,2);
+function split(Th,Tc,Tt,W){const f=(Tt-Tc)/(Th-Tc);return [W*f,W*(1-f),f]}
+function mix(){try{localStorage.setItem(MK,JSON.stringify(M))}catch(e){}
+ const Th=n(M.mh),Tc=n(M.mc),loss=n(M.ml),Tt=n(M.mt)+loss,byG=M.mu==='g',V=n(M.mv),avail=M.mha===''?null:n(M.mha);
+ let h;const u=byG?'g':'ml';
+ if(!(Th>Tc))h='<span class="bad">Hot water must be hotter than cold water.</span>';
+ else if(Tt>Th)h='<span class="bad">Target'+(loss?' plus vessel loss':'')+' ('+r(Tt)+' °C) is above the hot water.</span> Heat the water more.';
+ else if(Tt<Tc)h='<span class="bad">Target is below the cold water.</span> Use colder water.';
+ else if(!V)h='Enter the final amount.';
+ else{
+  // heat balance on mass; final mass W from target volume at mix temperature
+  const W=byG?V:V*rho(Tt),[mH,mC]=split(Th,Tc,Tt,W);
+  let hot=byG?mH:mH/rho(Th),cold=byG?mC:mC/rho(Tc),warn='';
+  if(avail!=null&&avail<hot){const k=avail/hot;warn='<div class="bad" style="margin-top:6px">Only '+r(avail)+' '+u+' hot available. Max batch at this target: '+Math.floor((byG?W:V)*k)+' '+u+' (use all the hot and '+r(cold*k)+' '+u+' cold).</div>'}
+  h='<div class="big">'+Math.round(hot)+' '+u+' hot · '+Math.round(cold)+' '+u+' cold</div>Hot at '+r(Th)+' °C, cold at '+r(Tc)+' °C, gives '+r(n(M.mt))+' °C'+(loss?' after a '+r(loss)+' °C vessel drop':'')+'. Hot share '+Math.round(mH/W*100)+'%.'+warn+'<div class="note" style="margin-top:6px">Pour cold first, then hot, stir, and read before use. Each 1 °C error in the hot reading moves the mix by about '+r(mH/W)+' °C.</div>'}
+ $('mout').innerHTML=h;
+ // quick chart: hot share for targets at the current hot and cold temps
+ if(Th>Tc){const T=[];for(let t=Math.ceil(Tc/5)*5;t<=Th;t+=(t>=80?2:5))if(t>Tc)T.push(t);const W=V||1000;
+  $('mchart').innerHTML='<div class="note" style="margin-bottom:6px">Quick chart for '+r(Th)+' °C hot and '+r(Tc)+' °C cold, per '+W+' '+u+'</div><table style="width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums"><tr style="color:var(--muted);font-size:12px"><td>Target</td><td style="text-align:right">Hot</td><td style="text-align:right">Cold</td><td style="width:40%"></td></tr>'+T.map(t=>{const tt=t+loss;if(tt>Th)return '';const Wm=byG?W:W*rho(tt),[a,b,f]=split(Th,Tc,tt,Wm);const ho=byG?a:a/rho(Th),co=byG?b:b/rho(Tc);return '<tr style="border-top:1px solid #efe8de'+(t===n(M.mt)?';font-weight:700':'')+'"><td style="padding:5px 0">'+t+' °C</td><td style="text-align:right">'+Math.round(ho)+'</td><td style="text-align:right">'+Math.round(co)+'</td><td style="padding-left:10px"><div style="height:8px;border-radius:4px;background:#ece7df"><div style="height:8px;border-radius:4px;background:var(--coffee);width:'+Math.round(f*100)+'%"></div></div></td></tr>'}).join('')+'</table>'}
+ else $('mchart').innerHTML=''}
+mix();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script><script src="pv.js" defer></script>
 </body></html>
