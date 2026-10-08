@@ -5,8 +5,8 @@
 // Traits from WCR are its ratings under ideal conditions. alt: altitude band where WCR rates the variety best
 // (L = low and up, M = medium and up, H = high).
 const VARIETY_SRC={
- IN:{name:'CCRI releases (Coffee Board of India), via TNAU Agritech Portal and Counter Culture Coffee',url:'https://agritech.tnau.ac.in/horticulture/horti_plantation%20crops_coffee.html'},
- WCR:{name:'World Coffee Research, Arabica Coffee Varieties (2019)',url:'https://varieties.worldcoffeeresearch.org/'}
+ IN:{name:'CCRI releases (Coffee Board of India), as listed by:',links:[['TNAU Agritech Portal','https://agritech.tnau.ac.in/horticulture/horti_plantation%20crops_coffee.html'],['Counter Culture Coffee','https://counterculturecoffee.com/blogs/counter-culture-coffee/india-s-arabica-coffee-varieties'],['Agriculture Institute (robusta)','https://agriculture.institute/crop-production-technology/understanding-coffee-varieties-india']]},
+ WCR:{name:'',links:[['World Coffee Research, Arabica Coffee Varieties (2019)','https://varieties.worldcoffeeresearch.org/']]}
 };
 const KK_VARIETIES=[
  // India, arabica
@@ -64,7 +64,7 @@ function varietyFind(name){const k=String(name||'').trim().toLowerCase();if(!k)r
 function varietyHtml(name){const v=varietyFind(name);if(!v)return '';const e=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
  const tags=[v.sp,v.st,v.q?'Quality '+v.q.toLowerCase():'',v.y?'Yield '+v.y.toLowerCase():'',v.rust?'Rust '+v.rust.toLowerCase():''].filter(Boolean);
  const src=VARIETY_SRC[v.s];
- return '<b>'+e(v.n)+'</b> · '+e(v.line)+'<br>'+tags.map(e).join(' · ')+(v.t?'<br>'+e(v.t):'')+(v.alt?'<br>Best altitude in India: '+ALT_IN[v.alt]:'')+'<div style="font-size:11px;color:var(--muted);margin-top:4px">Source: <a href="'+src.url+'" target="_blank" rel="noopener" style="color:var(--coffee)">'+e(src.name)+'</a></div>'}
+ return '<b>'+e(v.n)+'</b> · '+e(v.line)+'<br>'+tags.map(e).join(' · ')+(v.t?'<br>'+e(v.t):'')+(v.alt?'<br>Best altitude in India: '+ALT_IN[v.alt]:'')+'<div style="font-size:11px;color:var(--muted);margin-top:4px">Sources: '+(src.name?e(src.name)+' ':'')+src.links.map(([n,u])=>'<a href="'+u+'" target="_blank" rel="noopener" style="color:var(--coffee);display:inline-block;margin:2px 10px 2px 0">'+e(n)+'</a>').join('')+'</div>'}
 function varietyDatalist(){if(document.getElementById('varieties'))return;const d=document.createElement('datalist');d.id='varieties';d.innerHTML=KK_VARIETIES.map(v=>'<option value="'+v.n.replace(/"/g,'&quot;')+'">').join('');document.body.appendChild(d)}
 // Variety picker: a bottom sheet with search, filtered by species. iPhone does not show datalists as a dropdown.
 function openVarieties(input,species){const browse=!input;const e=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
