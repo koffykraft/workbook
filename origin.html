@@ -285,7 +285,7 @@ function listBody(){let body='',shown=0,total=0,tot='';const empty=t=>'<div clas
  return{body,shown,total,tot}}
 function renderListBody(){const b=listBody();$('#listBody').innerHTML=b.body;const L={farm:['plot','plots'],harvest:['harvest','harvests'],process:['run','runs'],green:['lot','lots']}[TAB];const lab=n=>L[n===1?0:1];$('#fsum').textContent=b.total?(b.shown===b.total?b.total+' '+lab(b.total):'Showing '+b.shown+' of '+b.total+' '+lab(b.total))+(b.tot?' · '+b.tot:''):''}
 function listView(){const tabs=[['farm','Farm'],['harvest','Harvest'],['process','Process'],['green','Green']];
- $('#view').innerHTML='<h1>Origin</h1><div class="sub">Farm, harvest, processing and green lots. '+syncBadge()+'</div><div class="tabs">'+tabs.map(([k,l])=>'<button class="'+(TAB===k?'on':'')+'" onclick="go(\''+k+'\')">'+l+'</button>').join('')+'</div>'+filterPanel()+'<div id="listBody"></div>';
+ $('#view').innerHTML='<h1>Origin</h1><div class="sub">Farm, harvest, processing and green lots. '+syncBadge()+' · <a href="#" onclick="openVarieties(null,\'\');return false" style="color:var(--coffee);font-weight:600">Coffee varieties</a></div><div class="tabs">'+tabs.map(([k,l])=>'<button class="'+(TAB===k?'on':'')+'" onclick="go(\''+k+'\')">'+l+'</button>').join('')+'</div>'+filterPanel()+'<div id="listBody"></div>';
  $('#view').querySelectorAll('[data-f]').forEach(el=>el.addEventListener('input',()=>{fset(el.dataset.f,el.value);renderListBody();const t=$('#fToggle');const n=factive()-(fget('q')?1:0);t.textContent='Filter'+(n>0?' ('+n+')':'')}));
  $('#fToggle').onclick=()=>{FOPEN=!FOPEN;document.querySelector('.fpanel').hidden=!FOPEN};
  $('#fClear').onclick=()=>{delete FILT[TAB];try{localStorage.setItem(FKEY,JSON.stringify(FILT))}catch(e){}listView()};
