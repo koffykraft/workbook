@@ -135,9 +135,12 @@ canvas{display:block;width:100%;height:auto;min-height:300px}
 
 </section>
 
+<style>.dtr-row{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:10px;font-size:.9rem}.dtr-t{display:flex;align-items:center;gap:6px;color:#efe8de;font-weight:600}.dtr-t input{width:70px;font:inherit;padding:6px 8px;border:1px solid #ddd;border-radius:8px;text-align:center}.dtr-box{color:#171512;margin-top:10px;padding:10px 12px;border-radius:12px;background:#f4efe7;text-align:center;font-size:.95rem;line-height:1.4}.dtr-box b{font-size:1.25rem;font-variant-numeric:tabular-nums}.dtr-box.soon{background:#f6d58e}.dtr-box.now{background:#b4432f;color:#fff}</style>
 <section class="card timer-card">
  <div class="timer" id="timer">00:00.0</div>
  <div class="timer-actions"><button class="btn primary" id="startPause">Start</button><button class="btn secondary" id="reset">Reset</button></div>
+ <div class="dtr-row"><label class="option-toggle"><input id="dtrOn" type="checkbox"> Drop guide</label><label id="dtrTargetWrap" class="dtr-t" hidden>Target DTR <input id="dtrTarget" type="number" inputmode="decimal" step="0.5" min="5" max="40"> %</label></div>
+ <div id="dtrBox" class="dtr-box" hidden></div>
 </section>
 
 <section class="card">
@@ -285,8 +288,21 @@ function startPause(){
  else{state.elapsed=elapsedMs();state.running=false;clearInterval(ticker);$("startPause").textContent="Resume"}
  saveState()
 }
-function renderTimer(){$("timer").textContent=fmt(elapsedMs())}
+let DTR={on:false,target:20};try{Object.assign(DTR,JSON.parse(localStorage.getItem("kk_dtr_v1"))||{})}catch(e){}
+let dtrBuzzed=null;
+const mmss=ms=>{const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+function renderDtr(){const box=$("dtrBox");if(!box)return;$("dtrOn").checked=DTR.on;$("dtrTargetWrap").hidden=!DTR.on;if(document.activeElement!==$("dtrTarget"))$("dtrTarget").value=DTR.target;
+ if(!DTR.on){box.hidden=true;return}box.hidden=false;const fc=state.events.find(e=>e.name==="First Crack"),drop=state.events.find(e=>e.name==="Drop"),t=Number(DTR.target);
+ if(!(t>0&&t<100)){box.className="dtr-box";box.innerHTML="Enter a target DTR between 5 and 40%.";return}
+ if(!fc){box.className="dtr-box";box.innerHTML="Tap <b style=\"font-size:inherit\">First Crack</b> and the drop time for "+t+"% shows here.";return}
+ const dropAt=fc.time/(1-t/100),now=drop?drop.time:elapsedMs(),left=dropAt-now,dtrNow=now>fc.time?(now-fc.time)/now*100:0;
+ if(drop){box.className="dtr-box";box.innerHTML="Dropped at "+mmss(drop.time)+" · DTR <b>"+dtrNow.toFixed(1)+"%</b> (target "+t+"%, guide said "+mmss(dropAt)+")";return}
+ box.className="dtr-box"+(left<=0?" now":left<=15000?" soon":"");
+ box.innerHTML=left>0?"Drop at <b>"+mmss(dropAt)+"</b> · in "+mmss(left)+"<br>DTR now "+dtrNow.toFixed(1)+"% of "+t+"% · development "+mmss(now-fc.time)+" of "+mmss(dropAt-fc.time):"<b>Drop now</b> for "+t+"% · DTR now "+dtrNow.toFixed(1)+"%";
+ if(left<=0&&dtrBuzzed!==fc.time){dtrBuzzed=fc.time;try{navigator.vibrate&&navigator.vibrate([300,120,300])}catch(e){}}}
+function renderTimer(){$("timer").textContent=fmt(elapsedMs());renderDtr()}
 function resetRoast(){if(!confirm("Reset this roast and clear entries?"))return;if(state.savedId){const n=Number(state.savedNo)||Number($("roastNo").value)||1;$("roastNo").value=n+1;state.savedId=null;state.savedNo=null;["roastedWeight","finalColor"].forEach(k=>{const el=$(k);if(el)el.value=""});saveFields()}state.running=false;clearInterval(ticker);state.elapsed=0;state.events=[];state.readings={exhaust:[],bean:[]};$("startPause").textContent="Start";renderAll();saveState()}
+$("dtrOn").onchange=()=>{DTR.on=$("dtrOn").checked;try{localStorage.setItem("kk_dtr_v1",JSON.stringify(DTR))}catch(e){}renderDtr()};$("dtrTarget").oninput=()=>{const v=parseFloat($("dtrTarget").value);if(v>0&&v<100){DTR.target=v;try{localStorage.setItem("kk_dtr_v1",JSON.stringify(DTR))}catch(e){}}renderDtr()};
 $("startPause").onclick=startPause;$("reset").onclick=resetRoast;
 
 function setMode(mode){
