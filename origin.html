@@ -49,6 +49,8 @@ textarea{min-height:76px;resize:vertical}
 .checks{display:grid;gap:6px}
 .checks label{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink);font-weight:400;background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px 12px}
 .checks input{width:auto}
+.fld .mini,details.mini,.calc .mini{font-size:12.5px;color:var(--muted);line-height:1.45}details.mini summary{cursor:pointer;color:var(--coffee);font-weight:600}details.mini a{color:var(--coffee)}
+.pgrp{display:grid;gap:4px;margin:8px 0}.pgrp>b{font-size:14px}.pgrp .mini{font-size:12px;color:var(--muted)}.stg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.stg label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600}.sth{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;border-top:1px solid #f0ebe3}
 .lst{display:grid;gap:6px}
 .lrow{display:grid;gap:6px;align-items:center}
 .lrow input,.lrow select{padding:9px 10px;font-size:14px}
@@ -112,13 +114,21 @@ const F={
   {k:'gps',t:'gps',full:1},
   {k:'altitude',l:'Altitude',t:'num',unit:'altUnit',units:['ft','m'],def_unit:'ft'},
   {k:'area',l:'Area',t:'num',unit:'areaUnit',units:['acre','ha'],def_unit:'acre'},
-  {k:'slope',l:'Slope / aspect',t:'text',ph:'Gentle, east facing'},{k:'soil',l:'Soil',t:'text',ph:'Red laterite'},
+  {k:'slope',l:'Slope / aspect',t:'text',ph:'Gentle, east facing',full:1},
   {h:'Plants'},
   {k:'species',l:'Species',t:'sel',opts:SPECIES},{k:'variety',l:'Variety',t:'text',list:'varieties',ph:'Type or choose'},{k:'varietyInfo',t:'calc',fn:r=>typeof varietyHtml==='function'?varietyHtml(r.variety):''},
   {k:'plantYear',l:'Planting year',t:'num',ph:'2012'},{k:'plantAgeCalc',t:'calc',fn:r=>{const y=num(r.plantYear);return y?'Plant age <b>'+(new Date().getFullYear()-y)+' years</b>':''}},
   {k:'plantCount',l:'Plant count',t:'num'},
   {k:'spacingRow',l:'Row spacing',t:'num',unit:'spacingUnit',units:['ft','m'],def_unit:'ft'},{k:'spacingPlant',l:'Plant spacing',t:'num',unit:'spacingUnit',units:['ft','m'],def_unit:'ft'},
   {k:'densityCalc',t:'calc',fn:r=>{const a=num(r.spacingRow),b=num(r.spacingPlant);if(!a||!b)return '';const u=r.spacingUnit||'ft';const perAcre=u==='m'?4046.86/(a*b):43560/(a*b),perHa=u==='m'?10000/(a*b):107639/(a*b);return 'Planting density <b>'+Math.round(perAcre)+' plants/acre</b> ('+Math.round(perHa)+'/ha)'}},
+  {h:'Soil and soil life'},
+  {k:'soil',l:'Soil type',t:'text',ph:'Red laterite'},{k:'texture',l:'Texture (feel test)',t:'sel',opts:['Sandy','Sandy loam','Loam','Silty loam','Clay loam','Clay','Gravelly / laterite']},
+  {k:'soilLife',l:'Soil care practices',t:'checks',groups:'PRACTICES',full:1},
+  {k:'soilLifeCalc',t:'calc',fn:r=>principlesHtml(r)},
+  {k:'worms',l:'Earthworms per spadeful',t:'num',ph:'Dig one spade, count'},{k:'soilSmell',l:'Soil smell',t:'sel',opts:['Earthy, sweet','Little smell','Sour or rotten']},
+  {k:'soilTest',t:'soiltest',full:1},
+  {k:'inputs',l:'Inputs applied',t:'list',full:1,cols:[{k:'date',l:'Date',t:'date'},{k:'what',l:'Input',t:'text'},{k:'qty',l:'Amount',t:'text'}],add:'Add input'},
+  {k:'soilEvidence',t:'calc',fn:()=>soilEvidenceHtml()},
   {h:'Shade and care'},
   {k:'shade',l:'Shade intensity',t:'sel',opts:['None','Light','Medium','Heavy']},{k:'shadePct',l:'Shade cover %',t:'num'},
   {k:'shadeTrees',l:'Shade trees',t:'text',full:1,ph:'Silver oak, jackfruit, ficus'},
@@ -128,6 +138,8 @@ const F={
   {k:'blossomShower',l:'Blossom shower',t:'date'},{k:'backingShower',l:'Backing shower',t:'date'},
   {k:'flowering',l:'Flowering records',t:'list',full:1,cols:[{k:'date',l:'Date',t:'date'},{k:'notes',l:'Intensity / notes',t:'text'}],add:'Add flowering'},
   {k:'expectedHarvest',l:'Expected harvest',t:'text',full:1,ph:'Late Nov to Jan'},
+  {h:'Plot and cup'},
+  {k:'cupCalc',t:'calc',fn:r=>plotCupHtml(r)},
   {k:'notes',l:'Notes',t:'area',full:1}],
  harvest:[
   {k:'code',l:'Harvest code',t:'text',req:1},{k:'date',l:'Date',t:'date',req:1,def:today},
@@ -185,6 +197,45 @@ function measureOpts(s){return MEAS_OPT[s.type]||Object.keys(READ_LABELS)}
 // Rough aw from moisture, fitted to the Cafe Imports data (12% about 0.624, 11.7% about 0.610). Arabica, 10 to 13% only.
 function awFromMc(mc){mc=num(mc);return mc!=null&&mc>=10&&mc<=13?0.624+0.046*(mc-12):null}
 function awEstHtml(mc,aw){const e=awFromMc(mc);if(e==null||num(aw)!=null)return '';return 'Water activity about <b>'+e.toFixed(2)+'</b> (estimate from moisture, ±0.03). '+(e>0.61?'Above 0.61: dry a little further or store cooler and drier.':'Under 0.61: good for storage.')}
+// ---------- soil and soil life ----------
+// Four principles after KoffyKraft's Natural Farming notes (resource dynamics, energy flux, patch dynamics, biotic trait diversity).
+const PRACTICES=[['res','Resources keep moving','Mulch, residues and roots recycle food for soil life.',[['mulch','Mulch or leaf litter kept on the ground'],['residue','Prunings and pulp returned, not burned'],['notill','Little or no digging']]],
+ ['energy','Living roots all year','Green plants feed soil life through their roots.',[['cover','Ground cover or cover crop'],['nobare','No bare soil in the dry months']]],
+ ['patch','Undisturbed patches','Roots and fungi link rich and poor spots.',[['edges','Untouched edges, bunds or corners'],['spot','Spot compost or mulch pits']]],
+ ['div','Diversity','Many plants and microbes share the work.',[['legume','Legumes or nitrogen-fixing trees'],['mixshade','Three or more shade tree species'],['intercrop','Intercrops such as pepper or areca'],['noherb','No herbicide'],['nopest','No synthetic pesticide']]]];
+function principlesHtml(r){const on=new Set(r.soilLife||[]);if(!on.size)return '';const act=PRACTICES.filter(g=>g[3].some(([k])=>on.has(k)));const miss=PRACTICES.filter(g=>!act.includes(g));
+ return '<b>'+act.length+' of 4</b> soil principles active'+(miss.length?'. Not yet: '+miss.map(g=>g[1].toLowerCase()+' ('+g[2].charAt(0).toLowerCase()+g[2].slice(1).replace(/\.$/,'')+')').join('; ')+'.':'.')}
+function soilLifeShort(r){const on=new Set(r.soilLife||[]);if(!on.size)return '';return PRACTICES.filter(g=>g[3].some(([k])=>on.has(k))).length+'/4 soil principles'}
+// Indian Soil Health Card ratings for available nutrients; coffee pH range is common practice.
+const STEST=[['date','Test date','date'],['lab','Lab','text'],['ph','pH','num'],['oc','Organic carbon %','num'],['n','Available N kg/ha','num'],['p','Available P kg/ha','num'],['k','Available K kg/ha','num'],['ca','Ca cmol/kg','num'],['mg','Mg cmol/kg','num']];
+function rate(v,lo,hi){return v==null?'':v<lo?'low':v>hi?'high':'medium'}
+function soilTestCalc(t){if(!t)return '';const v=k=>num(t[k]);const out=[];
+ const ph=v('ph');if(ph!=null)out.push('pH <b>'+ph+'</b>: '+(ph<5?'more acidic than the usual coffee range; lime is often advised. Check with your lab or the Coffee Board':ph>6.5?'above the usual coffee range':'within the usual coffee range of about 5.0 to 6.5'));
+ const oc=v('oc');if(oc!=null)out.push('Organic carbon <b>'+oc+'%</b>: '+rate(oc,0.5,0.75));
+ [['n','N',280,560],['p','P',10,25],['k','K',108,280]].forEach(([k,l,lo,hi])=>{const x=v(k);if(x!=null)out.push(l+' <b>'+x+'</b> kg/ha: '+rate(x,lo,hi))});
+ const ca=v('ca'),mg=v('mg');if(ca!=null&&mg)out.push('Ca:Mg <b>'+r1(ca/mg)+'</b>. In Ethiopian forest coffee, more calcium relative to magnesium went with larger beans.');
+ return out.length?out.join('<br>')+'<div class="mini" style="margin-top:4px">Nutrient ratings: Indian Soil Health Card bands (N, P, K as available kg/ha; P as P, not P₂O₅). pH range: common practice.</div>':''}
+function soilTestHtml(){const t=CUR.soilTest||{};const hist=CUR.soilTests||[];
+ return '<div class="fld full"><label>Latest soil test</label><div class="stg">'+STEST.map(([k,l,ty])=>'<label class="mini">'+l+'<input data-st="'+k+'" type="'+(ty==='num'?'number':ty)+'"'+(ty==='num'?' step="any" inputmode="decimal"':'')+' value="'+esc(t[k])+'"></label>').join('')+'</div><div class="calc" id="stCalc"'+(soilTestCalc(t)?'':' hidden')+'>'+soilTestCalc(t)+'</div>'+
+ '<div class="row" style="margin-top:6px"><button type="button" class="btn small" id="stKeep">Keep as past test, start a new one</button></div>'+
+ (hist.length?'<details class="mini" style="margin-top:6px"><summary>Past tests ('+hist.length+')</summary>'+hist.map((h,i)=>'<div class="sth">'+esc(h.date||'No date')+' · '+['ph','oc','n','p','k'].map(k=>h[k]!=null&&h[k]!==''?({ph:'pH ',oc:'OC ',n:'N ',p:'P ',k:'K '})[k]+esc(h[k])+(k==='oc'?'%':''):'').filter(Boolean).join(' · ')+' <button type="button" class="x" data-strm="'+i+'" aria-label="Remove">×</button></div>').join('')+'</details>':'')+'</div>'}
+function bindSoilTest(){const box=document.querySelector('[data-soiltest]');if(!box)return;const draw=()=>{box.innerHTML=soilTestHtml();bind()};
+ const bind=()=>{box.querySelectorAll('[data-st]').forEach(el=>el.addEventListener('input',()=>{CUR.soilTest={...(CUR.soilTest||{}),[el.dataset.st]:el.value};const c=$('#stCalc'),h=soilTestCalc(CUR.soilTest);c.innerHTML=h;c.hidden=!h}));
+  $('#stKeep').onclick=()=>{const t=CUR.soilTest||{};if(!Object.values(t).some(x=>String(x||'').trim())){toast('Enter a test first');return}CUR.soilTests=[t,...(CUR.soilTests||[])];CUR.soilTest={};draw();toast('Kept. Save the plot to store it')};
+  box.querySelectorAll('[data-strm]').forEach(b=>b.onclick=()=>{CUR.soilTests.splice(+b.dataset.strm,1);draw()})};bind()}
+const SOIL_SRC=[['Kutos et al., Scientific Reports (2025): soil and cherry bacteria predict flavour on Colombian farms','https://www.nature.com/articles/s41598-025-03665-6'],['Getachew et al., Agronomy for Sustainable Development (2022): soil chemistry, soil temperature and cup quality, Ethiopia','https://link.springer.com/article/10.1007/s13593-022-00801-8'],['Yadessa et al., African Journal of Agricultural Research (2019): soil nutrient ratios, bean size and cup quality','https://academicjournals.org/journal/AJAR/article-full-text-pdf/540868C62548'],['Simmer et al., European Food Research and Technology (2022): soil and fruit microbes and beverage quality','https://link.springer.com/article/10.1007/s00217-022-04102-y'],['Angadi et al., Scientific Reports (2025): organic and conventional coffee soils, Kodagu','https://www.nature.com/articles/s41598-025-15437-3'],['Rojas-Chacón et al., Agronomía Mesoamericana (2024): soil microorganisms and coffee quality, review','https://revistas.ucr.ac.cr/index.php/ragromeso/article/view/3884']];
+function soilEvidenceHtml(){return '<details class="mini"><summary>What studies found about soil and the cup</summary><p>Soil and soil life are <b>linked</b> with cup quality in several studies. None yet proves cause. Your own records, plot by plot and season by season, are the real test.</p><ul style="padding-left:18px;margin:6px 0">'+
+ '<li>Colombia: certain soil and cherry bacteria predicted a sweet, brown-sugar profile, but only when shade and sun farms were looked at separately. Small effects.</li>'+
+ '<li>Ethiopia: richer soil (calcium, magnesium, carbon, potassium) went with higher cup scores and more flavour precursors. Warmer soil went with lower quality.</li>'+
+ '<li>Ethiopian forest coffee: more phosphorus relative to nitrogen went with better aroma and overall score; high magnesium relative to potassium went with lower scores.</li>'+
+ '<li>Brazil: soil and fruit microbes shifted between two harvests; the better-scoring harvest had a different microbial profile.</li>'+
+ '<li>Kodagu, Western Ghats: organic farms had more organic carbon, microbial life and water holding than conventional ones. Cup quality was not measured.</li></ul><p>Sources:</p>'+SOIL_SRC.map(([t,u])=>'<p><a href="'+u+'" target="_blank" rel="noopener">'+esc(t)+'</a></p>').join('')+'</details>'}
+// Cup scores for lots that came from this plot: green lot score and Cup sessions of its roasts.
+function plotCups(plotId){const lots=DB.green.filter(g=>lineage(g).plots.some(p=>p.id===plotId));return lots.map(g=>{const rids=new Set(roastsFor(g).map(r=>String(r.id)));const sc=[];(DB.cupping||[]).forEach(c=>(c.samples||[]).forEach(x=>{const t=num(x.total);if(t!=null&&rids.has(String(x.roastId)))sc.push(t)}));const gs=num(g.score);if(gs!=null)sc.push(gs);return{g,sc}})}
+function plotCupHtml(r){if(!r.id)return 'Save the plot, then link harvests, processing and green lots to it. Cup scores for its coffee will gather here.';const L=plotCups(r.id);const all=L.flatMap(x=>x.sc);
+ if(!all.length)return L.length?'No cup scores yet for '+L.length+' lot'+(L.length>1?'s':'')+' from this plot. Score them in Cup or on the green lot.':'No green lots from this plot yet.';
+ const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;const others=DB.plot.filter(p=>p.id!==r.id).map(p=>plotCups(p.id).flatMap(x=>x.sc)).filter(a=>a.length);
+ return 'Cup average <b>'+r1(avg(all))+'</b> from '+all.length+' score'+(all.length>1?'s':'')+(others.length?' · other plots <b>'+r1(avg(others.flat()))+'</b>':'')+'<br>'+L.filter(x=>x.sc.length).map(x=>esc(x.g.code)+(x.g.date?' · '+fmtDate(x.g.date):'')+': '+r1(avg(x.sc))+' ('+x.sc.length+')').join('<br>')+'<div class="mini" style="margin-top:4px">Compare plots and practices over seasons. A gap of a point or two can be roast, process or cupper; look for patterns that repeat.</div>'}
 function guide(s,k){const t=s.type,m=String(s.method||'');const natural=/cherry|natural/i.test(m);
  if(t==='Fermentation'){if(k==='ph')return{warnLo:4.5,alarmLo:4.0,text:'Washed lots are often stopped near pH 4.5. Below 4.0 risks over-fermentation.'};if(k==='temp')return{warnHi:30,text:'Keep the fermenting mass under 30 °C.'};if(k==='brix')return{text:'Mucilage Brix rises from about 9 to 11 to a peak of 16 to 18, then levels off.'}}
  if(t==='Drying'){if(k==='moisture')return{okHi:12,okLo:10,alarmLo:8,text:'Finish at 10 to 12% (Coffee Board). Upper limit 12% parchment, 13% cherry.'};if(k==='temp')return{warnHi:natural?45:40,text:'Dryer air at most 40 °C for parchment, 45 °C for cherry.'};if(k==='rh')return{warnHi:60,text:'Above 60% humidity the beans take moisture back.'};if(k==='aw')return{alarmHi:0.7,warnHi:0.61,okLo:0.5,okHi:0.6,text:'Aim for 0.50 to 0.60. Microbes can start growing from about 0.60. aw moves with the day\'s humidity, so read at the same time each day.'};if(k==='sampleG')return{text:'Dry when the sample weighs the same on two days running.'}}
@@ -275,7 +326,7 @@ function sum(a){return a.reduce((x,y)=>x+y,0)}
 function listBody(){let body='',shown=0,total=0,tot='';const empty=t=>'<div class="empty">'+t+'</div>';const none='<div class="empty">Nothing matches these filters.</div>';
  if(TAB==='farm'){const plots=DB.plot.filter(p=>pass('plot',p));total=DB.plot.length;shown=plots.length;const area=sum(plots.map(p=>toAcre(p.area,p.areaUnit||'acre')||0)),pc=sum(plots.map(p=>num(p.plantCount)||0));tot=[area?r1(area)+' acres':'',pc?pc.toLocaleString('en-IN')+' plants':''].filter(Boolean).join(' · ');
   body+='<div class="sec"><h2>Estates</h2><button class="btn small" onclick="go(\'edit/estate/new\')">+ Estate</button></div>'+(DB.estate.length?DB.estate.map(e=>card('estate',e,[e.locality,e.district,e.region].filter(Boolean).join(', '),[e.area?e.area+' '+(e.areaUnit||'acre'):'',DB.plot.filter(p=>p.estateId===e.id).length+' plots'])).join(''):empty('Add your estate first, then its blocks and plots.'));
-  body+='<div class="sec"><h2>Plots</h2><button class="btn small" onclick="go(\'edit/plot/new\')"'+(DB.estate.length?'':' disabled')+'>+ Plot</button></div>'+(DB.plot.length?(plots.length?DB.estate.map(e=>plots.filter(p=>p.estateId===e.id).map(p=>card('plot',p,e.name,[p.variety,p.species,p.altitude?p.altitude+' '+(p.altUnit||'ft'):'',p.area?p.area+' '+(p.areaUnit||'acre'):'',p.plantYear?(new Date().getFullYear()-p.plantYear)+' yrs':'',p.shade?p.shade+' shade':''])).join('')).join(''):none):empty('No plots yet. A plot holds variety, plant age, spacing, shade and flowering.'))}
+  body+='<div class="sec"><h2>Plots</h2><button class="btn small" onclick="go(\'edit/plot/new\')"'+(DB.estate.length?'':' disabled')+'>+ Plot</button></div>'+(DB.plot.length?(plots.length?DB.estate.map(e=>plots.filter(p=>p.estateId===e.id).map(p=>card('plot',p,e.name,[p.variety,p.species,p.altitude?p.altitude+' '+(p.altUnit||'ft'):'',p.area?p.area+' '+(p.areaUnit||'acre'):'',p.plantYear?(new Date().getFullYear()-p.plantYear)+' yrs':'',p.shade?p.shade+' shade':'',soilLifeShort(p)])).join('')).join(''):none):empty('No plots yet. A plot holds variety, plant age, spacing, shade and flowering.'))}
  if(TAB==='harvest'){const hs=sortD(DB.harvest,'date').filter(h=>pass('harvest',h));total=DB.harvest.length;shown=hs.length;const kg=sum(hs.map(h=>harvestKg(h)||0));const bx=hs.flatMap(h=>(h.brix||[]).map(x=>num(x.v)).filter(x=>x!=null));tot=[kg?r1(kg)+' kg cherry':'',bx.length?'avg Brix '+r1(sum(bx)/bx.length):''].filter(Boolean).join(' · ');
   body+='<div class="sec"><h2>Harvests</h2><button class="btn small" onclick="go(\'edit/harvest/new\')">+ Harvest</button></div>'+(DB.harvest.length?(hs.length?hs.map(h=>{const kg=harvestKg(h);const ps=plotsOfHarvest(h);const b=(h.brix||[]).map(x=>num(x.v)).filter(x=>x!=null);return card('harvest',h,fmtDate(h.date)+(ps.length?' · '+ps.map(p=>title('plot',p)).join(', '):''),[kg?r1(kg)+' kg cherry':'',h.pickType,h.ripePct?h.ripePct+'% ripe':'',b.length?r1(sum(b)/b.length)+'° Brix':''])}).join(''):none):empty('Record each day\'s picking: plots, baskets, ripeness and Brix.'))}
  if(TAB==='process'){const ps=sortD(DB.process,'started').filter(p=>pass('process',p));total=DB.process.length;shown=ps.length;const S=ps.map(processSummary);const ch=sum(S.map(s=>s.cherry||0)),gr=sum(S.map(s=>s.green||0));tot=[ch?r1(ch)+' kg cherry':'',gr?r1(gr)+' kg green':'',ch&&gr?'outturn '+r1(gr/ch*100)+'%':''].filter(Boolean).join(' · ');
@@ -315,12 +366,16 @@ function fieldHtml(f){if(f.h)return '<div class="fhead">'+esc(f.h)+'</div>';cons
  case 'calc':return '<div class="calc" data-calc="'+f.k+'"'+(f.fn(CUR)?'':' hidden')+'>'+f.fn(CUR)+'</div>';
  case 'gps':return '<div class="'+cls+'"><label>GPS location</label><div class="row"><input id="f_lat" data-k="lat" type="number" step="any" placeholder="Latitude" value="'+esc(CUR.lat)+'" style="flex:1"><input id="f_lng" data-k="lng" type="number" step="any" placeholder="Longitude" value="'+esc(CUR.lng)+'" style="flex:1"></div><div class="row"><button type="button" class="btn small" id="gpsBtn">Use my location</button><span class="lsum" id="gpsInfo">'+(CUR.lat&&CUR.lng?'<a href="https://maps.google.com/?q='+esc(CUR.lat)+','+esc(CUR.lng)+'" target="_blank" rel="noopener">Open in map</a>'+(CUR.gpsAcc?' · ±'+Math.round(CUR.gpsAcc)+' m':''):'')+'</span></div></div>';
  case 'list':return '<div class="'+cls+'">'+lab+'<div class="lst" data-list="'+f.k+'"></div><div class="row"><button type="button" class="btn small" data-add="'+f.k+'">+ '+esc(f.add||'Add')+'</button><span class="lsum" data-lsum="'+f.k+'"></span></div></div>';
+ case 'checks':{const on=new Set(v||[]);return '<div class="'+cls+'">'+lab+(f.groups==='PRACTICES'?PRACTICES:[]).map(([gk,gl,gd,items])=>'<div class="pgrp"><b>'+esc(gl)+'</b><span class="mini">'+esc(gd)+'</span><div class="checks">'+items.map(([k,l])=>'<label><input type="checkbox" data-chk="'+f.k+'" value="'+k+'"'+(on.has(k)?' checked':'')+'>'+esc(l)+'</label>').join('')+'</div></div>').join('')+'</div>'}
+ case 'soiltest':return '<div class="'+cls+'" data-soiltest="1">'+soilTestHtml()+'</div>';
  case 'steps':return '<div class="'+cls+'"><div class="lst" id="steps"></div><div class="row" style="margin-top:6px"><select id="newStep" style="flex:1">'+Object.keys(STEP_TYPES).map(s=>'<option>'+s+'</option>').join('')+'</select><button type="button" class="btn small" id="addStep">+ Add step</button></div></div>';
  }return ''}
 function bindForm(){const form=$('#form');
  const CODEDATE={harvest:['date','H'],process:['started','P'],green:['date','G']}[CUR_T];form.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('input',()=>{const k=el.dataset.k;CUR[k]=el.value;if(k==='code')CUR._auto=0;if(CODEDATE&&CUR._auto&&k===CODEDATE[0]&&el.value){CUR.code=nextCode(CUR_T,CODEDATE[1],el.value);const c=$('#f_code');if(c)c.value=CUR.code}refreshCalcs()}));
  form.querySelectorAll('[data-refs]').forEach(el=>el.addEventListener('change',()=>{const k=el.dataset.refs;CUR[k]=[...form.querySelectorAll('[data-refs="'+k+'"]:checked')].map(x=>x.value);refreshCalcs()}));
  F[CUR_T].filter(f=>f.t==='list').forEach(f=>{renderList(f);form.querySelector('[data-add="'+f.k+'"]').onclick=()=>{CUR[f.k]=[...(CUR[f.k]||[]),{}];renderList(f,true)}});
+ form.querySelectorAll('[data-chk]').forEach(el=>el.addEventListener('change',()=>{const k=el.dataset.chk;CUR[k]=[...form.querySelectorAll('[data-chk="'+k+'"]:checked')].map(x=>x.value);refreshCalcs()}));
+ bindSoilTest();
  if($('#gpsBtn'))$('#gpsBtn').onclick=getGps;
  if($('#steps')){renderSteps();$('#addStep').onclick=()=>{const t=$('#newStep').value;const last=(CUR.steps||[]).slice(-1)[0];CUR.steps=[...(CUR.steps||[]),{type:t,start:nowLocal(),inKg:last&&last.outKg?last.outKg:''}];renderSteps(true)}}}
 function refreshCalcs(){F[CUR_T].filter(f=>f.t==='calc').forEach(f=>{const el=document.querySelector('[data-calc="'+f.k+'"]');if(!el)return;const h=f.fn(CUR);el.innerHTML=h;el.hidden=!h});F[CUR_T].filter(f=>f.t==='list').forEach(listSum)}
