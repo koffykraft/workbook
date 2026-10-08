@@ -1,6 +1,7 @@
 /* KoffyKraft shared layout fixes and header.
    Loaded after each page's own styles so these rules win. */
 :root{--kk-bg:#f7f5f0;--kk-ink:#171512;--kk-muted:#77716a;--kk-line:#ddd8d0;--kk-coffee:#8d583b}
+[hidden]{display:none!important}
 html,body{max-width:100%;overflow-x:hidden}
 @supports (overflow:clip){html,body{overflow-x:clip}}
 *,*::before,*::after{box-sizing:border-box}

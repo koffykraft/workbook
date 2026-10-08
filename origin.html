@@ -114,7 +114,7 @@ const F={
   {k:'area',l:'Area',t:'num',unit:'areaUnit',units:['acre','ha'],def_unit:'acre'},
   {k:'slope',l:'Slope / aspect',t:'text',ph:'Gentle, east facing'},{k:'soil',l:'Soil',t:'text',ph:'Red laterite'},
   {h:'Plants'},
-  {k:'species',l:'Species',t:'sel',opts:SPECIES},{k:'variety',l:'Variety',t:'text',list:'varieties',ph:'Pick or type'},{k:'varietyInfo',t:'calc',fn:r=>typeof varietyHtml==='function'?varietyHtml(r.variety):''},
+  {k:'species',l:'Species',t:'sel',opts:SPECIES},{k:'variety',l:'Variety',t:'text',list:'varieties',ph:'Type or choose'},{k:'varietyInfo',t:'calc',fn:r=>typeof varietyHtml==='function'?varietyHtml(r.variety):''},
   {k:'plantYear',l:'Planting year',t:'num',ph:'2012'},{k:'plantAgeCalc',t:'calc',fn:r=>{const y=num(r.plantYear);return y?'Plant age <b>'+(new Date().getFullYear()-y)+' years</b>':''}},
   {k:'plantCount',l:'Plant count',t:'num'},
   {k:'spacingRow',l:'Row spacing',t:'num',unit:'spacingUnit',units:['ft','m'],def_unit:'ft'},{k:'spacingPlant',l:'Plant spacing',t:'num',unit:'spacingUnit',units:['ft','m'],def_unit:'ft'},
@@ -305,7 +305,7 @@ window.addEventListener('hashchange',()=>{if(!location.hash.startsWith('#edit/')
 function fid(k){return 'f_'+k}
 function fieldHtml(f){if(f.h)return '<div class="fhead">'+esc(f.h)+'</div>';const v=CUR[f.k];const lab=f.l?'<label for="'+fid(f.k)+'">'+esc(f.l)+(f.req?' <em>*</em>':'')+'</label>':'';const cls='fld'+(f.full?' full':'');
  switch(f.t){
- case 'text':return '<div class="'+cls+'">'+lab+'<input id="'+fid(f.k)+'" data-k="'+f.k+'" value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'"'+(f.list?' list="'+f.list+'"':'')+'></div>';
+ case 'text':return '<div class="'+cls+'">'+lab+'<input id="'+fid(f.k)+'" data-k="'+f.k+'" value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'"'+(f.list?' list="'+f.list+'"':'')+'>'+(f.list==='varieties'?'<button type="button" class="chip" style="margin-top:6px;justify-self:start" onclick="openVarieties(this.previousElementSibling,CUR.species)">Choose from list</button>':'')+'</div>';
  case 'num':return '<div class="'+cls+'">'+lab+'<div class="unitwrap"><input id="'+fid(f.k)+'" data-k="'+f.k+'" type="number" step="any" inputmode="decimal" value="'+esc(v)+'" placeholder="'+esc(f.ph||'')+'">'+(f.unit?'<select data-k="'+f.unit+'" aria-label="unit">'+f.units.map(u=>'<option'+((CUR[f.unit]||f.def_unit)===u?' selected':'')+'>'+u+'</option>').join('')+'</select>':f.unitLabel?'<span style="align-self:center;color:var(--muted);font-size:13px">'+f.unitLabel+'</span>':'')+'</div></div>';
  case 'date':case 'time':return '<div class="'+cls+'">'+lab+'<input id="'+fid(f.k)+'" data-k="'+f.k+'" type="'+f.t+'" value="'+esc(v)+'"></div>';
  case 'area':return '<div class="'+cls+'">'+lab+'<textarea id="'+fid(f.k)+'" data-k="'+f.k+'">'+esc(v)+'</textarea></div>';
