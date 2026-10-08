@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>KoffyKraft Brew Guide</title>
+<style>
+:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b;--soft:#faf7f2;--ok:#3f6b5a}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;color:var(--ink);background:var(--bg)}
+.app{max-width:680px;margin:auto;padding:24px 16px 60px}
+h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 4px}.sub{color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5}.sub a{color:var(--coffee)}
+h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:22px 0 8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:8px 0}
+details.card>summary{cursor:pointer;font-weight:650;font-size:15.5px;list-style:none;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+details.card>summary::-webkit-details-marker{display:none}details.card>summary::after{content:'+';color:var(--muted);font-weight:400}details.card[open]>summary::after{content:'−'}
+summary small{font-weight:500;color:var(--muted);font-size:12.5px;text-align:right}
+.bd{margin-top:8px;font-size:14px;line-height:1.55}
+.tip{padding:7px 0;border-top:1px solid #f0ebe3}.tip:first-child{border-top:0}
+.src{display:block;font-size:11.5px;color:var(--muted)}.src a{color:var(--muted)}
+.lv{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 7px;margin-right:6px;vertical-align:1px}
+.lv2{background:#efe6da;color:#8d583b}.lv3{background:#171512;color:#fff}
+.kv{font-size:13px;color:var(--muted)}.kv b{color:var(--ink);font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{font:inherit;font-size:13.5px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 13px;cursor:pointer;color:var(--ink)}.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.search{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0}
+.search input{font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;width:100%}
+.fam{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.fam a{display:block;text-decoration:none;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}
+.fam a b{display:block;font-size:15px}.fam a span{font-size:12.5px;color:var(--muted);line-height:1.4}
+.empty{color:var(--muted);font-size:14px;padding:10px 0}
+a.in{color:var(--coffee)}
+mark{background:#f5e3b5;border-radius:3px}
+</style>
+<link rel="stylesheet" href="kk.css"></head>
+<body><main class="app">
+<header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="roastbooks.html">KoffyKraft</a><a class="kkh-acct" href="account.html" aria-label="Account">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
+<h1>Brew guide</h1>
+<div class="sub">How each brewer works, what moves the taste, and where to start. Guides from published findings and common practice, not guarantees. Your taste decides. <a href="cup.html">Back to Cup</a></div>
+<div class="search"><input id="q" type="search" placeholder="Search: V60, sour, channel, bloom…" autocomplete="off"></div>
+<div class="chips" id="lvl" style="margin:4px 0 6px"></div>
+<div class="sub" id="lvlNote" style="margin:0"></div>
+<div id="out"></div>
+<h2>Sources</h2>
+<div class="card bd" id="srcs"></div>
+</main>
+<script src="brewkb.js"></script>
+<script>
+const K=window.KK_BREW,$=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LV=[[1,'Basic','The essentials. Enough to brew well.'],[2,'Intermediate','Adds why it works and what studies found.'],[3,'Advanced','Adds measuring, edge cases and pro techniques.']];
+let level=1;try{level=+localStorage.getItem('kk_brew_level')||1}catch(e){}
+function src(k){const s=K.S[k];if(!s||k==='P')return '<span class="src">Common practice</span>';return '<span class="src">'+(s.u?'<a href="'+s.u+'" target="_blank" rel="noopener">'+esc(s.t)+'</a>':esc(s.t))+'</span>'}
+function tipHtml([l,t,s],q){return '<div class="tip">'+(l>1?'<span class="lv lv'+l+'">'+(l===2?'Intermediate':'Advanced')+'</span>':'')+hl(t,q)+src(s)+'</div>'}
+function hl(t,q){const e=esc(t);if(!q)return e;const i=e.toLowerCase().indexOf(q);return i<0?e:e.slice(0,i)+'<mark>'+e.slice(i,i+q.length)+'</mark>'+e.slice(i+q.length)}
+function tipsFor(arr,q){if(q){const m=arr.filter(x=>x[1].toLowerCase().includes(q));if(m.length)return m}return arr.filter(x=>x[0]<=level)}
+const famName={drip:'Drip and filter',esp:'Espresso',moka:'Moka pot',trad:'Traditional',cold:'Cold'};
+function render(){const q=$('#q').value.trim().toLowerCase(),open=new Set([...document.querySelectorAll('#out details[open]')].map(d=>d.id));let h='';
+ const m=x=>!q||x.toLowerCase().includes(q);
+ // families
+ const fams=Object.entries(K.FAM).filter(([k,f])=>m(f.n+' '+f.d+' '+f.levers+' '+f.tips.map(t=>t[1]).join(' ')));
+ if(!q)h+='<h2>Start here</h2><div class="fam">'+Object.entries(K.FAM).map(([k,f])=>'<a href="#f-'+k+'"><b>'+esc(f.n)+'</b><span>'+esc(f.levers)+'</span></a>').join('')+'</div>';
+ if(fams.length){h+='<h2>Families</h2>'+fams.map(([k,f])=>{const ts=tipsFor(f.tips,q);return '<details class="card" id="f-'+k+'"><summary><span>'+esc(f.n)+'</span><small>'+K.METHODS.filter(x=>x.f===k).length+' brewers</small></summary><div class="bd"><div>'+hl(f.d,q)+'</div><div class="kv" style="margin:6px 0"><b>Main levers:</b> '+hl(f.levers,q)+'</div>'+ts.map(t=>tipHtml(t,q)).join('')+'<div class="kv" style="margin-top:6px">Brewers: '+K.METHODS.filter(x=>x.f===k&&x.id!=='other').map(x=>'<a class="in" href="#m-'+x.id+'">'+esc(x.n)+'</a>').join(', ')+'</div></div></details>'}).join('')}
+ // methods
+ const ms=K.METHODS.filter(x=>x.id!=='other'&&m(x.n+' '+x.start+' '+x.fl+' '+famName[x.f]+' '+x.notes.map(t=>t[1]).join(' ')));
+ if(ms.length){h+='<h2>Brewers</h2>'+ms.map(x=>{const f=K.FAM[x.f];const own=tipsFor(x.notes,q);const fam=tipsFor(f.tips,q).filter(t=>t[0]===1||level>=t[0]);
+  return '<details class="card" id="m-'+x.id+'"><summary><span>'+hl(x.n,q)+'</span><small>'+esc(famName[x.f])+'</small></summary><div class="bd"><div class="kv"><b>Common start:</b> '+hl(x.start,q)+'</div><div class="kv"><b>Filter:</b> '+esc(x.fl)+' · <b>Levers:</b> '+esc(f.levers)+'</div>'+(own.length?'<div style="margin-top:6px">'+own.map(t=>tipHtml(t,q)).join('')+'</div>':'')+'<details style="margin-top:6px"><summary class="kv" style="cursor:pointer">'+esc(f.n)+' tips ('+fam.length+')</summary>'+fam.map(t=>tipHtml(t,q)).join('')+'</details><div class="kv" style="margin-top:8px"><a class="in" href="cup.html#edit/brew/new" data-pre="'+esc(x.n)+'">Log a brew with this</a></div></div></details>'}).join('')}
+ // topics
+ const ts=K.TOPICS.filter(x=>m(x.n+' '+x.tips.map(t=>t[1]).join(' ')));
+ if(ts.length)h+='<h2>Topics</h2>'+ts.map(x=>'<details class="card" id="t-'+x.id+'"><summary><span>'+hl(x.n,q)+'</span></summary><div class="bd">'+tipsFor(x.tips,q).map(t=>tipHtml(t,q)).join('')+(x.id==='water'?'<div class="kv"><a class="in" href="water.html">Open the Water page</a></div>':'')+'</div></details>').join('');
+ // words
+ const ws=K.WORDS.filter(([,w,d])=>m(w+' '+d));
+ if(ws.length)h+='<h2>Words</h2><div class="card bd">'+ws.map(([id,w,d])=>'<div class="tip" id="w-'+id+'"><b>'+hl(w,q)+'</b>: '+hl(d,q)+'</div>').join('')+'</div>';
+ if(!h)h='<div class="empty">Nothing found for “'+esc(q)+'”. Try a brewer name or a taste, like sour.</div>';
+ $('#out').innerHTML=h;
+ document.querySelectorAll('#out details.card').forEach(d=>{if(open.has(d.id)||(q&&q.length>1&&document.querySelectorAll('#out details.card').length<=4))d.open=true});
+ if(q&&q.length>1)document.querySelectorAll('#out details.card').forEach(d=>{if(d.querySelector('mark'))d.open=true});
+}
+function renderLvl(){$('#lvl').innerHTML=LV.map(([n,l])=>'<button type="button" class="chip'+(n===level?' on':'')+'" data-l="'+n+'">'+l+'</button>').join('');$('#lvlNote').textContent=LV[level-1][2];
+ document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{level=+b.dataset.l;try{localStorage.setItem('kk_brew_level',level)}catch(e){}renderLvl();render()})}
+function go(){const h=decodeURIComponent(location.hash.slice(1));if(!h)return;if(h.startsWith('q=')){$('#q').value=h.slice(2);render();return}
+ if($('#q').value){$('#q').value='';render()}const el=document.getElementById(h);if(!el)return;if(el.tagName==='DETAILS')el.open=true;let p=el.parentElement;while(p){if(p.tagName==='DETAILS')p.open=true;p=p.parentElement}setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),30)}
+$('#srcs').innerHTML=Object.entries(K.S).filter(([k])=>k!=='P').map(([k,s])=>'<div class="tip"><a class="in" href="'+s.u+'" target="_blank" rel="noopener">'+esc(s.t)+'</a></div>').join('')+'<div class="tip kv">Starting recipes and unlabelled tips are common practice, summarised by KoffyKraft. Study findings are in our own words.</div>';
+document.addEventListener('click',e=>{const a=e.target.closest('[data-pre]');if(a){try{sessionStorage.setItem('kk_brew_prefill',JSON.stringify({method:a.dataset.pre}))}catch(x){}}});
+let qt;$('#q').addEventListener('input',()=>{clearTimeout(qt);qt=setTimeout(render,120)});
+renderLvl();render();go();window.addEventListener('hashchange',go);
+</script>
+</body>
+</html>
