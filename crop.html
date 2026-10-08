@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>KoffyKraft Crop Care</title>
+<style>
+:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b;--soft:#faf7f2;--ok:#3f6b5a}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;color:var(--ink);background:var(--bg)}
+.app{max-width:680px;margin:auto;padding:24px 16px 60px}
+h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 4px}.sub{color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5}.sub a{color:var(--coffee)}
+h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:22px 0 8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:8px 0}
+details.card>summary{cursor:pointer;font-weight:650;font-size:15.5px;list-style:none;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+details.card>summary::-webkit-details-marker{display:none}details.card>summary::after{content:'+';color:var(--muted);font-weight:400}details.card[open]>summary::after{content:'−'}
+summary small{font-weight:500;color:var(--muted);font-size:12.5px;text-align:right}
+.bd{margin-top:8px;font-size:14px;line-height:1.55}
+.tip{padding:7px 0;border-top:1px solid #f0ebe3}.tip:first-child{border-top:0}
+.src{display:block;font-size:11.5px;color:var(--muted)}
+.lv{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 7px;margin-right:6px;vertical-align:1px}
+.lv2{background:#efe6da;color:#8d583b}.lv3{background:#171512;color:#fff}.chem{background:#f6e2dc;color:#9a3a26}
+.kv{font-size:13px;color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{font:inherit;font-size:13.5px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 13px;cursor:pointer;color:var(--ink)}.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.search{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0}
+.search input{font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;width:100%}
+.mon{display:grid;gap:6px}.mon b{font-size:14px}.mon ul{margin:2px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5}
+.empty{color:var(--muted);font-size:14px;padding:10px 0}
+a.in{color:var(--coffee)}mark{background:#f5e3b5;border-radius:3px}
+</style>
+<link rel="stylesheet" href="kk.css"></head>
+<body><main class="app">
+<header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="roastbooks.html">KoffyKraft</a><a class="kkh-acct" href="account.html" aria-label="Account">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
+<h1>Crop care</h1>
+<div class="sub">Plant health, flowering, fruit set and retention, berry drop, and harvest, from the Coffee Board of India's research institute (CCRI) and other credited sources. Guides, not guarantees: your estate, weather and local extension officer come first. <a href="origin.html">Back to Origin</a></div>
+<div class="search"><input id="q" type="search" placeholder="Search: blossom, drop, berry borer, gleaning…" autocomplete="off"></div>
+<div class="chips" id="sp" style="margin:4px 0 6px"></div>
+<div class="chips" id="lvl" style="margin:6px 0"></div>
+<div class="sub" id="lvlNote" style="margin:0"></div>
+<div class="sub" style="margin:6px 0 0"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="chemOn" style="width:auto"> Show the Coffee Board's chemical options (fungicides, growth regulator)</label></div>
+<div id="out"></div>
+<h2>Sources</h2>
+<div class="card bd" id="srcs"></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const S={
+ G:['CCRI, Coffee Board of India: Coffee cultivation guide for south-west monsoon area growers','https://static.vikaspedia.in/mediastorage/document/coffee_cultivation_guide.pdf'],
+ D:['Machenahalli et al., CCRI: Pre-mature fruit drop in coffee, The Coffee Magazine (July 2020)','https://coffeeboard.gov.in/Publications/July_2020.pdf'],
+ T:['TNAU Agritech: coffee berry borer management','https://agritech.tnau.ac.in/crop_protection/coffeepest/coffee_2.html'],
+ K:['KoffyKraft Natural Farming notes: four principles of a healthy land system',''],
+ P:['Common practice','']
+};
+// [level, text, source, species ('a' arabica, 'r' robusta, '' both), chemical?]
+const SEC=[
+ ['health','Plant health',"Healthy plants carry the crop. Soil, shade, pruning and nutrition all come before flowering.",[
+  [1,'Test soil every 2 to 3 years. Keep coffee soil around pH 6.1; lime, if needed, goes on between November and February after a soil test.','G'],
+  [1,'Keep mulch on the ground and soil covered. Living roots and mulch keep soil life fed.','K'],
+  [1,'Prune after one or two summer showers (at least 2 inches of rain), usually April to May. Irrigated blocks can be pruned right after harvest.','G'],
+  [1,'Handling: one or two rounds in June to July and again in August to September. Keep two well-spaced new shoots per node, remove suckers, and clear new shoots within half a foot of the main stem (centring).','G'],
+  [2,'Shade: lop only after 4 to 5 inches of rain, ideally in May. Remove drooping shade branches 9 to 12 m above the coffee. Plant permanent shade trees 12 to 15 m apart.','G'],
+  [2,'Nutrition: pre-monsoon sustenance dose of 50:50:50 kg N:P:K per hectare in 2 to 3 splits, one after the summer showers. Do not skip phosphorus around blossom and pre-monsoon. Mid-monsoon: 58 kg N per hectare in a monsoon break.','G'],
+  [2,'Potassium supports fruit set, bean filling and ripening; nitrogen supports flowering.','G'],
+  [3,'Leaf analysis: February to March and September to November. Take the third pair of leaves from the tip, at two thirds of plant height, at least 25 pairs per hectare, before 10 am. Pair it with a soil test.','G'],
+  [3,'If you farm naturally, match the nutrient targets with compost, mulch and legumes, and use soil and leaf tests to see whether supply keeps up with the crop.','K']]],
+ ['flower','Flowering',"Coffee flower buds rest until a good shower wakes them. Then a second shower helps the flowers set.",[
+  [1,'Buds mature over the dry season. A blossom shower opens them. If the shower is missing or too light, buds turn pinkish and drop.','G'],
+  [1,'Blossom: give at least 25 mm of water if the shower fails.','G','r'],
+  [1,'Backing: if backing showers do not come 15 to 20 days after blossom, give about one inch (25 mm) by sprinkler.','G','r'],
+  [1,'Record blossom and backing dates on the plot in Origin. They set your harvest timing.','P'],
+  [2,'Robusta buds mature between mid-February and mid-March. Rain guns cut irrigation time and save water.','G','r'],
+  [2,'Robusta winter irrigation: start 20 to 25 days after the monsoon ends, 25 mm every 20 to 25 days until the end of December, checking soil moisture after any rain.','G','r'],
+  [2,'Arabica in the south-west monsoon areas mostly blossoms on natural summer showers. If they are late, delay shade lopping and pre-monsoon sprays.','G','a'],
+  [3,'Pre-blossom (February to March) spray where thin shade allows early leaf rust: 0.5% Bordeaux mixture, or a systemic fungicide.','G','',1]]],
+ ['set','Fruit set and retention',"After flowering, the plant has to feed every young berry through the monsoon. Waterlogging, stress and disease make it shed.",[
+  [1,'Some drop is normal: about 5 to 8% in Arabica and about 10% in Robusta. It peaks in June to July, 90 to 120 days after flowering.','D'],
+  [1,'Keep roots out of standing water: clear drainage channels and cradle pits before the monsoon. Waterlogged roots are the main trigger.','D'],
+  [1,'Finish handling, centring and desuckering before the monsoon, and lop temporary dadap shade.','D'],
+  [1,'Heap mulch at the centre of four plants rather than spreading it thick against stems in the monsoon.','D'],
+  [2,'Why it happens: saturated soil lowers cytokinins and raises ABA, a stress hormone that triggers shedding. Over-bearing, low carbohydrate and running blossom (uneven berry sizes) add to it.','D'],
+  [2,'Mid-monsoon nitrogen (58 kg N per hectare in a monsoon break) helps reduce berry drop.','G'],
+  [2,'Diseases that add to drop: black rot (berries blacken from one side, leaves hang on slimy threads; valleys with mist and over 80 inches of rain), stalk rot (white cottony mass at the stalk), and Myrothecium (black dots on lesions; spread by weeds and brush cutters).','D'],
+  [3,'Growth regulator: α-NAA (Planofix) at 50 ml per barrel as a pre-monsoon foliar spray, in Arabica and Robusta. Compatible with Bordeaux mixture and carbendazim. With good agronomy and disease control, CCRI reports 12 to 20% higher yield.','D','',1],
+  [3,'Black rot areas: 1% Bordeaux mixture with Planofix (50 ml per 200 L) before the monsoon. In monsoon breaks: carbendazim 50 WP at 200 g per 200 L with a wetting agent, or tebuconazole 25.9 EC or propiconazole 25 EC at 200 ml per 200 L.','D','',1],
+  [3,'Stalk rot: carbendazim 50 WP at 200 g plus Planofix 50 ml per 200 L with a wetting agent, and balanced NPK.','D','',1],
+  [3,'Myrothecium: propiconazole 25 EC at 0.8 ml per litre alternating with mancozeb 75 WP at 2 g per litre, every 20 days from May to September.','D','',1]]],
+ ['pests','Berry borer and hygiene',"The coffee berry borer breeds in berries left on plants or on the ground. Clean harvesting is the main control.",[
+  [1,'Leave no fruit behind: strip the plants at the end of the season and glean fallen berries.','G'],
+  [1,'Use picking mats or sheets under the bush so berries do not fall to the ground.','T'],
+  [1,'Install broca traps in the estate and near drying yards.','G'],
+  [2,'Dip partly damaged berries in boiling water for one minute, then dry them. Burn heavily damaged berries. Do not move coffee from infested to clean areas; use fumigated gunny bags.','G'],
+  [2,'Dry coffee to the right moisture: borers keep breeding in damp coffee.','G'],
+  [3,'Beauveria bassiana, a fungus that infects the borer: spray right after the monsoon ends, before beans harden. CCRI gives a rice-culture method for preparing it on the estate.','G']]],
+ ['harvest','Harvest: what, when, how',"Picking decides the cup. Even the best plants give a poor cup if picking is careless.",[
+  [1,'Pick only ripe fruit. Squeeze gently: a ripe cherry pops its bean out easily.','G'],
+  [1,'Under-ripe fruit gives immature beans. Over-ripe fruit gives foxy coffee: brown beans and an over-fruity cup. Keep both out of parchment lots; process them as cherry coffee.','G'],
+  [1,'When: Arabica mostly October to January, Robusta December to March, varying with altitude and blossom date. Pick in rounds as fruit ripens.','G'],
+  [1,'Use clean sacks or plastic bags washed regularly. Never use bags that held chemicals or fertiliser.','G'],
+  [1,'Strip the last fruit at the end of the season and glean fallen berries. Dry gleanings separately: they can taste earthy and carry mould.','G'],
+  [2,'Use picking mats: they keep fruit off the ground, reduce mould and cut berry borer.','G'],
+  [2,'Mould can produce ochratoxin A, a toxin. Picking mats and clean storage prevent it.','G'],
+  [2,'Move picked fruit to processing the same day; cherry left in heaps heats and ferments.','P'],
+  [2,'Log each picking in Origin, Harvest: ripe %, floaters, and Brix if you have a refractometer. Patterns show up across seasons.','P'],
+  [3,'Float-sort in water before pulping: floaters are often under-developed, damaged or dried on the plant. Process them separately.','P']]]
+];
+// Monthly calendar after the CCRI guide's operation calendars.
+const CAL={a:[['Dec to Jan','Harvest and processing; berry borer clean-up; protect dadap; water young plants; soil testing and liming'],['Feb to Mar','Strip the crop and glean; leaf analysis; pre-blossom spray where rust starts early; compost; white stem borer check; pruning'],['Apr to May','Pre-monsoon manuring; pre-monsoon spray; shade lopping after 4 to 5 inches of rain; renovate cradle pits; pruning after summer showers'],['Jun to Jul','Plant dadap, shade trees and coffee; handling and centring; black rot watch'],['Aug to Sep','Gap filling; mid-monsoon manuring; berry borer (Beauveria); post-monsoon spray and manuring'],['Oct to Nov','Clean pulper and yards; harvest begins; soil testing and liming; open cradle pits']],
+ r:[['Dec to Jan','Harvest and processing; berry borer clean-up; winter irrigation until end of December; soil testing and liming'],['Feb to Mar','Finish harvest, strip and glean; leaf analysis; pruning; blossom irrigation (25 mm) and backing (about 25 mm after 15 to 20 days)'],['Apr to May','Pre-monsoon manuring and spray; shade lopping; cradle pits'],['Jun to Jul','Planting; handling and centring; black rot watch; drainage'],['Aug to Sep','Mid-monsoon manuring; berry borer (Beauveria); post-monsoon spray'],['Oct to Nov','Prepare pulper and yards; post-monsoon manuring; plan winter irrigation']]};
+const LV=[[1,'Basic','The essentials for a healthy crop.'],[2,'Intermediate','Adds why it happens and the official doses.'],[3,'Advanced','Adds leaf analysis, growth regulator and disease control.']];
+let level=1,sp='',chem=false;try{level=+localStorage.getItem('kk_crop_level')||1;sp=localStorage.getItem('kk_crop_sp')||'';chem=localStorage.getItem('kk_crop_chem')==='1'}catch(e){}
+function hl(t,q){const e=esc(t);if(!q)return e;const i=e.toLowerCase().indexOf(q);return i<0?e:e.slice(0,i)+'<mark>'+e.slice(i,i+q.length)+'</mark>'+e.slice(i+q.length)}
+function srcHtml(k){const s=S[k];return '<span class="src">'+(s[1]?'<a href="'+s[1]+'" target="_blank" rel="noopener" style="color:inherit">'+esc(s[0])+'</a>':esc(s[0]))+'</span>'}
+function render(){const q=$('#q').value.trim().toLowerCase(),open=new Set([...document.querySelectorAll('#out details[open]')].map(d=>d.id));let h='';
+ const ok=t=>(!t[3]||!sp||t[3]===sp)&&(!t[4]||chem);
+ SEC.forEach(([id,n,d,tips])=>{let ts=tips.filter(ok);if(q){const m=ts.filter(t=>t[1].toLowerCase().includes(q));if(!m.length&&!(n+' '+d).toLowerCase().includes(q))return;ts=m.length?m:ts.filter(t=>t[0]<=level)}else ts=ts.filter(t=>t[0]<=level);
+  const hidden=tips.filter(t=>t[4]&&!chem&&t[0]<=level).length;
+  h+='<details class="card" id="s-'+id+'"'+(q||open.has('s-'+id)?' open':'')+'><summary><span>'+hl(n,q)+'</span><small>'+ts.length+' tips</small></summary><div class="bd"><div class="kv" style="margin-bottom:4px">'+esc(d)+'</div>'+ts.map(t=>'<div class="tip">'+(t[0]>1?'<span class="lv lv'+t[0]+'">'+(t[0]===2?'Intermediate':'Advanced')+'</span>':'')+(t[4]?'<span class="lv chem">Chemical</span>':'')+(t[3]?'<span class="lv lv2">'+(t[3]==='a'?'Arabica':'Robusta')+'</span>':'')+hl(t[1],q)+srcHtml(t[2])+'</div>').join('')+(hidden?'<div class="kv" style="margin-top:6px">'+hidden+' chemical option'+(hidden>1?'s':'')+' hidden. Tick the box above to show.</div>':'')+(id==='harvest'?'<div class="kv" style="margin-top:6px"><a class="in" href="origin.html#edit/harvest/new">Log a harvest</a></div>':'')+'</div></details>'});
+ if(!q){const keys=sp?[sp]:['a','r'];h+='<h2>Year calendar</h2>'+keys.map(k=>'<details class="card" id="c-'+k+'"'+(open.has('c-'+k)?' open':'')+'><summary><span>'+(k==='a'?'Arabica':'Robusta')+' year</span><small>CCRI calendar</small></summary><div class="bd mon">'+CAL[k].map(([m,t])=>'<div><b>'+m+'</b><ul>'+t.split('; ').map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>').join('')+srcHtml('G')+'</div></details>').join('')}
+ $('#out').innerHTML=h||'<div class="empty">Nothing found for “'+esc(q)+'”.</div>'}
+function chips(){$('#sp').innerHTML=[['','Both'],['a','Arabica'],['r','Robusta']].map(([k,l])=>'<button type="button" class="chip'+(k===sp?' on':'')+'" data-sp="'+k+'">'+l+'</button>').join('');
+ $('#lvl').innerHTML=LV.map(([n,l])=>'<button type="button" class="chip'+(n===level?' on':'')+'" data-l="'+n+'">'+l+'</button>').join('');$('#lvlNote').textContent=LV[level-1][2];$('#chemOn').checked=chem;
+ document.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{sp=b.dataset.sp;try{localStorage.setItem('kk_crop_sp',sp)}catch(e){}chips();render()});
+ document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{level=+b.dataset.l;try{localStorage.setItem('kk_crop_level',level)}catch(e){}chips();render()})}
+$('#chemOn').onchange=e=>{chem=e.target.checked;try{localStorage.setItem('kk_crop_chem',chem?'1':'0')}catch(x){}render()};
+$('#srcs').innerHTML=Object.entries(S).filter(([k,s])=>s[1]).map(([k,s])=>'<div class="tip"><a class="in" href="'+s[1]+'" target="_blank" rel="noopener">'+esc(s[0])+'</a></div>').join('')+'<div class="tip kv">The CCRI guide is the Coffee Board\'s English edition of its 2008 Kannada guide for south-west monsoon areas. Check current doses and approved products with the Coffee Board extension office before spraying. Findings are in our own words.</div>';
+let qt;$('#q').addEventListener('input',()=>{clearTimeout(qt);qt=setTimeout(render,120)});
+function go(){const h=location.hash.slice(1);if(!h)return;const el=document.getElementById(h);if(el){el.open=true;setTimeout(()=>el.scrollIntoView({behavior:'smooth'}),30)}}
+chips();render();go();window.addEventListener('hashchange',go);
+</script>
+</body>
+</html>

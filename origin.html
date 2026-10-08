@@ -135,7 +135,7 @@ const F={
   {k:'irrigation',l:'Irrigation',t:'sel',opts:['Rainfed','Sprinkler','Drip','Other']},{k:'lastPruning',l:'Last pruning',t:'date'},
   {k:'fertilizer',l:'Nutrition / fertiliser notes',t:'area',full:1},
   {h:'Flowering'},
-  {k:'blossomShower',l:'Blossom shower',t:'date'},{k:'backingShower',l:'Backing shower',t:'date'},
+  {k:'blossomShower',l:'Blossom shower',t:'date'},{k:'backingShower',l:'Backing shower',t:'date'},{k:'bloomCalc',t:'calc',fn:r=>bloomHtml(r)},
   {k:'flowering',l:'Flowering records',t:'list',full:1,cols:[{k:'date',l:'Date',t:'date'},{k:'notes',l:'Intensity / notes',t:'text'}],add:'Add flowering'},
   {k:'expectedHarvest',l:'Expected harvest',t:'text',full:1,ph:'Late Nov to Jan'},
   {h:'Plot and cup'},
@@ -149,6 +149,7 @@ const F={
   {h:'Weights'},
   {k:'baskets',l:'Baskets / batches',t:'list',full:1,cols:[{k:'label',l:'Basket / picker',t:'text'},{k:'kg',l:'kg',t:'num'}],add:'Add basket',sum:'kg'},
   {k:'cherryKg',t:'calc',fn:r=>{const t=harvestKg(r);return t?'Total cherry <b>'+r1(t)+' kg</b>'+((r.baskets||[]).length?' from '+r.baskets.filter(b=>num(b.kg)).length+' baskets':''):''}},
+  {k:'cropLink',t:'calc',fn:()=>'What to pick, when and how: <a href="crop.html#s-harvest" style="color:var(--coffee)">Crop care, harvest</a>'},
   {h:'Cherry quality'},
   {k:'ripePct',l:'Ripe %',t:'num'},{k:'underPct',l:'Under-ripe %',t:'num'},{k:'overPct',l:'Over-ripe %',t:'num'},{k:'floatPct',l:'Floaters %',t:'num'},
   {k:'brix',l:'Brix readings (optional)',t:'list',full:1,cols:[{k:'v',l:'°Brix',t:'num'}],add:'Add Brix reading'},
@@ -203,6 +204,10 @@ const PRACTICES=[['res','Resources keep moving','Mulch, residues and roots recyc
  ['energy','Living roots all year','Green plants feed soil life through their roots.',[['cover','Ground cover or cover crop'],['nobare','No bare soil in the dry months']]],
  ['patch','Undisturbed patches','Roots and fungi link rich and poor spots.',[['edges','Untouched edges, bunds or corners'],['spot','Spot compost or mulch pits']]],
  ['div','Diversity','Many plants and microbes share the work.',[['legume','Legumes or nitrogen-fixing trees'],['mixshade','Three or more shade tree species'],['intercrop','Intercrops such as pepper or areca'],['noherb','No herbicide'],['nopest','No synthetic pesticide']]]];
+function bloomHtml(r){const b=r.blossomShower?new Date(r.blossomShower+'T00:00'):null;if(!b||isNaN(b))return '';const add=d=>{const x=new Date(b);x.setDate(x.getDate()+d);return x.toLocaleDateString('en-IN',{day:'numeric',month:'short'})};const out=[];
+ if(!r.backingShower){const days=Math.floor((new Date()-b)/864e5);out.push('Backing shower due <b>'+add(15)+' to '+add(20)+'</b>'+(days>20?'. None recorded: if it did not come, give about 25 mm by sprinkler (CCRI, Robusta).':'.'))}
+ out.push('Normal fruit drop peaks 90 to 120 days after flowering: about <b>'+add(90)+' to '+add(120)+'</b>. Clear drains and cradle pits before then.');
+ return out.join('<br>')+' <a href="crop.html#s-set" style="color:var(--coffee)">Crop care</a>'}
 function principlesHtml(r){const on=new Set(r.soilLife||[]);if(!on.size)return '';const act=PRACTICES.filter(g=>g[3].some(([k])=>on.has(k)));const miss=PRACTICES.filter(g=>!act.includes(g));
  return '<b>'+act.length+' of 4</b> soil principles active'+(miss.length?'. Not yet: '+miss.map(g=>g[1].toLowerCase()+' ('+g[2].charAt(0).toLowerCase()+g[2].slice(1).replace(/\.$/,'')+')').join('; ')+'.':'.')}
 function soilLifeShort(r){const on=new Set(r.soilLife||[]);if(!on.size)return '';return PRACTICES.filter(g=>g[3].some(([k])=>on.has(k))).length+'/4 soil principles'}
@@ -336,7 +341,7 @@ function listBody(){let body='',shown=0,total=0,tot='';const empty=t=>'<div clas
  return{body,shown,total,tot}}
 function renderListBody(){const b=listBody();$('#listBody').innerHTML=b.body;const L={farm:['plot','plots'],harvest:['harvest','harvests'],process:['run','runs'],green:['lot','lots']}[TAB];const lab=n=>L[n===1?0:1];$('#fsum').textContent=b.total?(b.shown===b.total?b.total+' '+lab(b.total):'Showing '+b.shown+' of '+b.total+' '+lab(b.total))+(b.tot?' · '+b.tot:''):''}
 function listView(){const tabs=[['farm','Farm'],['harvest','Harvest'],['process','Process'],['green','Green']];
- $('#view').innerHTML='<h1>Origin</h1><div class="sub">Farm, harvest, processing and green lots. '+syncBadge()+' · <a href="#" onclick="openVarieties(null,\'\');return false" style="color:var(--coffee);font-weight:600">Coffee varieties and words</a></div><div class="tabs">'+tabs.map(([k,l])=>'<button class="'+(TAB===k?'on':'')+'" onclick="go(\''+k+'\')">'+l+'</button>').join('')+'</div>'+filterPanel()+'<div id="listBody"></div>';
+ $('#view').innerHTML='<h1>Origin</h1><div class="sub">Farm, harvest, processing and green lots. '+syncBadge()+' · <a href="#" onclick="openVarieties(null,\'\');return false" style="color:var(--coffee);font-weight:600">Coffee varieties and words</a> · <a href="crop.html" style="color:var(--coffee);font-weight:600">Crop care</a></div><div class="tabs">'+tabs.map(([k,l])=>'<button class="'+(TAB===k?'on':'')+'" onclick="go(\''+k+'\')">'+l+'</button>').join('')+'</div>'+filterPanel()+'<div id="listBody"></div>';
  $('#view').querySelectorAll('[data-f]').forEach(el=>el.addEventListener('input',()=>{fset(el.dataset.f,el.value);renderListBody();const t=$('#fToggle');const n=factive()-(fget('q')?1:0);t.textContent='Filter'+(n>0?' ('+n+')':'')}));
  $('#fToggle').onclick=()=>{FOPEN=!FOPEN;document.querySelector('.fpanel').hidden=!FOPEN};
  $('#fClear').onclick=()=>{delete FILT[TAB];try{localStorage.setItem(FKEY,JSON.stringify(FILT))}catch(e){}listView()};
