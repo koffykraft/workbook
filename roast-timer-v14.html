@@ -294,9 +294,10 @@ const mmss=ms=>{const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+
 function renderDtr(){const box=$("dtrBox");if(!box)return;$("dtrOn").checked=DTR.on;$("dtrTargetWrap").hidden=!DTR.on;if(document.activeElement!==$("dtrTarget"))$("dtrTarget").value=DTR.target;
  if(!DTR.on){box.hidden=true;return}box.hidden=false;const fc=state.events.find(e=>e.name==="First Crack"),drop=state.events.find(e=>e.name==="Drop"),t=Number(DTR.target);
  if(!(t>0&&t<100)){box.className="dtr-box";box.innerHTML="Enter a target DTR between 5 and 40%.";return}
- if(!fc){box.className="dtr-box";box.innerHTML="Tap <b style=\"font-size:inherit\">First Crack</b> and the drop time for "+t+"% shows here.";return}
+ if(!fc){box.className="dtr-box";box.innerHTML="Tap <b style=\"font-size:inherit\">First Crack</b> and the drop time for "+t+"% shows here.<div style=\"font-size:.78rem;opacity:.75;margin-top:4px\">Shorter development leans fruity, sweet and acidic; longer leans roasted, nutty and bitter (Alstrup et al., Beverages 2020).</div>";return}
  const dropAt=fc.time/(1-t/100),now=drop?drop.time:elapsedMs(),left=dropAt-now,dtrNow=now>fc.time?(now-fc.time)/now*100:0;
- if(drop){box.className="dtr-box";box.innerHTML="Dropped at "+mmss(drop.time)+" · DTR <b>"+dtrNow.toFixed(1)+"%</b> (target "+t+"%, guide said "+mmss(dropAt)+")";return}
+ const dtNote="<div style=\"font-size:.78rem;opacity:.75;margin-top:4px\">Shorter development leans fruity, sweet and acidic; longer leans roasted, nutty and bitter (Alstrup et al., Beverages 2020).</div>";
+ if(drop){box.className="dtr-box";box.innerHTML="Dropped at "+mmss(drop.time)+" · DTR <b>"+dtrNow.toFixed(1)+"%</b> (target "+t+"%, guide said "+mmss(dropAt)+")"+dtNote;return}
  box.className="dtr-box"+(left<=0?" now":left<=15000?" soon":"");
  box.innerHTML=left>0?"Drop at <b>"+mmss(dropAt)+"</b> · in "+mmss(left)+"<br>DTR now "+dtrNow.toFixed(1)+"% of "+t+"% · development "+mmss(now-fc.time)+" of "+mmss(dropAt-fc.time):"<b>Drop now</b> for "+t+"% · DTR now "+dtrNow.toFixed(1)+"%";
  if(left<=0&&dtrBuzzed!==fc.time){dtrBuzzed=fc.time;try{navigator.vibrate&&navigator.vibrate([300,120,300])}catch(e){}}}
