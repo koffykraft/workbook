@@ -24,7 +24,7 @@ h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coff
 .drawbar .btn{background:transparent;color:#fff;border-color:rgba(255,255,255,.35)}.drawbar .btn.primary{background:#fff;color:var(--ink)}
 .drawbar b{font-weight:600;font-size:13px;flex:1;min-width:120px}
 .wrap{position:relative}
-.lab{background:rgba(255,255,255,.88);border:0;border-radius:8px;box-shadow:none;font-size:12px;font-weight:600;color:#171512;padding:2px 6px}
+.lab{max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:rgba(255,255,255,.88);border:0;border-radius:8px;box-shadow:none;font-size:12px;font-weight:600;color:#171512;padding:2px 6px}
 .lab:before{display:none}
 .vx{width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #171512;font-size:11px;font-weight:700;display:grid;place-items:center;color:#171512}
 .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
@@ -33,6 +33,8 @@ input,select{font:inherit;font-size:16px;padding:10px 11px;border:1px solid var(
 .list .it{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 0;border-top:1px solid #f0ebe3}.list .it:first-child{border-top:0}
 .tag{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;background:#efe6da;color:#8d583b;white-space:nowrap}.tag.no{background:#eee;color:#888}
 .lrow2{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;padding:7px 0;border-top:1px solid #f0ebe3;font-size:14px}.lrow2:first-of-type{border-top:0}.lrow2 input[type=color]{width:40px!important;min-width:40px;height:32px;padding:0;border:1px solid var(--line);border-radius:8px}.lrow2 input[type=checkbox]{width:20px;height:20px}
+.nb{width:22px;height:22px;border-radius:50%;background:#171512;color:#fff;font-size:11.5px;font-weight:700;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)}.nbs{display:inline-grid;width:20px;height:20px;margin-right:6px;font-size:11px;box-shadow:none;border:0;vertical-align:-4px}
+.legend{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 0}.lg{font:inherit;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 10px 5px 5px;cursor:pointer;color:var(--ink)}
 .sw{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid rgba(0,0,0,.25)}
 .ghead{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 2px}
 .prof{width:100%;height:auto;display:block;margin-top:6px}
@@ -47,13 +49,14 @@ input,select{font:inherit;font-size:16px;padding:10px 11px;border:1px solid var(
 <div class="sub no-print">Mark your estate, plots and spots: harvest points, trees, water. See area, distance and height, then share a map link, a KML or GeoJSON file, or a printed sheet. <a href="origin.html">Back to Origin</a></div>
 <div class="sub" id="printHead" hidden></div>
 <div class="wrap"><div id="map"></div><div class="north" title="North">▲<br>N</div><div class="drawbar" id="drawbar" hidden></div></div>
+<div id="legend" class="legend" hidden></div>
 <div class="tools no-print">
  <button class="btn" id="bLoc">◎ My location</button>
  <button class="btn" id="bPlot">Mark an area</button>
  <button class="btn" id="bTag">Add a spot</button>
  <button class="btn" id="bMeasure">Measure</button>
  <button class="btn" id="bBase">Street map</button>
- <button class="btn" id="bNames">Hide names</button>
+ <button class="btn" id="bNames">Names: tidy</button>
  <button class="btn" id="bLay">Layers and colours</button>
  <input id="q" placeholder="Find a place or paste lat, lng" style="flex:1;min-width:180px;border-radius:999px">
 </div>
@@ -102,29 +105,47 @@ const geoOf=p=>Array.isArray(p.geo)&&p.geo.length>=3?p.geo:null;
 const pinOf=p=>num(p.lat)!=null&&num(p.lng)!=null?[num(p.lat),num(p.lng)]:geoOf(p)?centroid(p.geo):null;
 const altM=p=>{const a=num(p.altitude);if(a==null)return null;return (p.altUnit||'ft')==='m'?a:a*0.3048};
 // Kinds of places, each with a default colour. Colours and visibility are remembered on this phone.
-const KIND_DEF=[['Plot','#c08552'],['Store','#e9c46a'],['Factory','#9a8c98'],['Drying yard','#f4a261'],['Pulping','#9b5de5'],['Nursery','#90be6d'],['House','#ef476f'],['Water source','#4cc9f0'],['Harvest point','#e76f51'],['Variety block','#2a9d8f'],['Mother tree','#80b918'],['Shade tree','#3a7d44'],['Gate / road','#adb5bd'],['Other','#ffd166']];
+const KIND_DEF=[['Plot','#c08552'],['Store','#e9c46a'],['Factory','#9a8c98'],['Drying yard','#f4a261'],['Pulping','#9b5de5'],['Nursery','#90be6d'],['Residential','#ef476f'],['Water source','#4cc9f0'],['Harvest point','#e76f51'],['Variety block','#2a9d8f'],['Mother tree','#80b918'],['Shade tree','#3a7d44'],['Gate / road','#adb5bd'],['Other','#ffd166']];
 const KINDS=KIND_DEF.map(k=>k[0]).filter(k=>k!=='Plot'),AREA_KINDS=KIND_DEF.map(k=>k[0]);
-let LAY=(()=>{try{return Object.assign({names:true,hide:{},col:{}},JSON.parse(localStorage.getItem('kk_map_layers')||'{}'))}catch(e){return{names:true,hide:{},col:{}}}})();
+let LAY=(()=>{try{return Object.assign({names:'auto',hide:{},col:{}},JSON.parse(localStorage.getItem('kk_map_layers')||'{}'))}catch(e){return{names:'auto',hide:{},col:{}}}})();if(LAY.names===true)LAY.names='auto';if(LAY.names===false)LAY.names='off';
 function saveLay(){try{localStorage.setItem('kk_map_layers',JSON.stringify(LAY))}catch(e){}}
-const kcol=k=>LAY.col[k]||(KIND_DEF.find(x=>x[0]===k)||KIND_DEF[KIND_DEF.length-1])[1];
-const shown=k=>!LAY.hide[k];
-function tip(l,html,o){l.bindTooltip(html,Object.assign({className:'lab'},o,LAY.names?{permanent:true}:{permanent:false,sticky:false}))}
+const kAlias=k=>k==='House'?'Residential':k;
+const kcol=k=>{k=kAlias(k);return LAY.col[k]||(KIND_DEF.find(x=>x[0]===k)||KIND_DEF[KIND_DEF.length-1])[1]};const _kcolOld=k=>LAY.col[k]||(KIND_DEF.find(x=>x[0]===k)||KIND_DEF[KIND_DEF.length-1])[1];
+const shown=k=>!LAY.hide[kAlias(k)];
+// Labels: in Auto, names that would overlap are replaced by small numbers, listed under the map.
+let LABELS=[];
+function tip(l,html,o,prio,at,name){l.bindTooltip(html,Object.assign({className:'lab'},o,LAY.names!=='off'?{permanent:true}:{permanent:false,sticky:false}));LABELS.push({l,prio:prio||0,at,name:name||'',go:null})}
+let badges=null,declT=null;
+function declutter(){if(!map)return;if(!badges){if(!map.getPane('nums')){map.createPane('nums').style.zIndex=700}badges=L.layerGroup().addTo(map)}badges.clearLayers();const leg=$('#legend');const hidden=[];
+ const items=LABELS.map((x,n)=>({...x,n:n+1,el:x.l.getTooltip&&x.l.getTooltip()&&x.l.getTooltip().getElement()})).filter(x=>x.el);
+ items.forEach(x=>{x.el.style.visibility=''});
+ if(LAY.names==='auto'){const placed=[];const mb=$('#map').getBoundingClientRect();
+  items.slice().sort((a,b)=>b.prio-a.prio).forEach(x=>{const r=x.el.getBoundingClientRect();if(r.width===0)return;const off=r.right<mb.left||r.left>mb.right||r.bottom<mb.top||r.top>mb.bottom;if(off)return;
+   const hit=placed.some(q=>!(r.right+3<q.left||r.left-3>q.right||r.bottom+2<q.top||r.top-2>q.bottom));if(hit){x.el.style.visibility='hidden';hidden.push(x)}else{x.r=r;placed.push(r)}});
+  // a number badge must not sit on a visible name either
+  const ov=(a,q)=>!(a.right<q.left||a.left>q.right||a.bottom<q.top||a.top>q.bottom);
+  for(let pass=0;pass<4;pass++){const br=hidden.map(x=>{const pt=map.latLngToContainerPoint(x.at);return{left:mb.left+pt.x-13,right:mb.left+pt.x+13,top:mb.top+pt.y-13,bottom:mb.top+pt.y+13}});let changed=false;
+   items.forEach(x=>{if(!x.r||hidden.includes(x))return;if(br.some(q=>ov(x.r,q))){x.el.style.visibility='hidden';hidden.push(x);changed=true}});if(!changed)break}
+  hidden.sort((a,b)=>a.n-b.n).forEach((x,k)=>{x.k=k+1;const ic=L.divIcon({className:'',html:'<div class="nb">'+x.k+'</div>',iconSize:[22,22],iconAnchor:[11,11]});const m=L.marker(x.at,{icon:ic,keyboard:false,pane:'nums'}).addTo(badges);m.on('click',ev=>{L.DomEvent.stop(ev);x.l.fire('click')})})}
+ if(leg){leg.hidden=!hidden.length;leg.innerHTML=hidden.length?'<span class="mini">Numbered on the map:</span> '+hidden.map(x=>'<button type="button" class="lg" data-lg="'+x.k+'"><span class="nb nbs">'+x.k+'</span>'+esc(x.name)+'</button>').join(''):'';
+  leg.querySelectorAll('[data-lg]').forEach(b=>b.onclick=()=>{const x=hidden.find(h=>h.k===+b.dataset.lg);if(x)x.l.fire('click')})}}
+function declSoon(){clearTimeout(declT);declT=setTimeout(declutter,60)}
 // ---------- map ----------
 let map,base={},baseName='sat',layer,draft=null,HL=null;
 function initMap(){map=L.map('map',{zoomControl:true,attributionControl:true}).setView([10.3,76.6],8);
  base.sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:18,maxZoom:21,attribution:'Esri, Maxar, Earthstar Geographics'});
  base.street=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,maxNativeZoom:19,attribution:'© OpenStreetMap contributors'});
  base.sat.addTo(map);L.control.scale({metric:true,imperial:false}).addTo(map);layer=L.layerGroup().addTo(map);
- map.on('click',e=>{if(draft)addVertex([e.latlng.lat,e.latlng.lng])})}
-let SPOTS=[];function drawAll(){layer.clearLayers();SPOTS=[];const bounds=[];
+ map.on('click',e=>{if(draft)addVertex([e.latlng.lat,e.latlng.lng])});map.on('zoomend moveend resize',declSoon)}
+let SPOTS=[];function drawAll(){layer.clearLayers();SPOTS=[];LABELS=[];const bounds=[];
  DB.plot.forEach(p=>{const g=geoOf(p),pin=pinOf(p),hl=HL&&HL.has(p.id),col=hl?'#ffd166':'#ffffff';if(!shown('Plot')&&!hl){(p.marks||[]).forEach((k,i)=>markLayer(k,'plot',p.id,i,bounds));return}const pc=p.color||kcol('Plot');
-  if(g){const pg=L.polygon(g,{color:col,weight:hl?4:2.5,fillColor:hl?'#ffd166':pc,fillOpacity:hl?.35:.28}).addTo(layer);tip(pg,'<span class="sw" style="background:'+pc+'"></span>'+esc(ptitle(p))+(p.variety?'<br>'+esc(p.variety):''),{direction:'center'});pg.on('click',e=>{if(draft)return;L.DomEvent.stop(e);showPlot(p)});g.forEach(x=>bounds.push(x))}
-  else if(pin){const m=L.circleMarker(pin,{radius:8,color:'#fff',weight:2,fillColor:pc,fillOpacity:1}).addTo(layer);tip(m,esc(ptitle(p)),{direction:'right',offset:[8,0]});m.on('click',e=>{if(draft)return;L.DomEvent.stop(e);showPlot(p)});bounds.push(pin)}
+  if(g){const pg=L.polygon(g,{color:col,weight:hl?4:2.5,fillColor:hl?'#ffd166':pc,fillOpacity:hl?.35:.28}).addTo(layer);tip(pg,'<span class="sw" style="background:'+pc+'"></span>'+esc(ptitle(p))+(p.variety?'<br>'+esc(p.variety):''),{direction:'center'},areaM2(g),centroid(g),ptitle(p));pg.on('click',e=>{if(draft)return;L.DomEvent.stop(e);showPlot(p)});g.forEach(x=>bounds.push(x))}
+  else if(pin){const m=L.circleMarker(pin,{radius:8,color:'#fff',weight:2,fillColor:pc,fillOpacity:1}).addTo(layer);tip(m,esc(ptitle(p)),{direction:'right',offset:[8,0]},1e9,pin,ptitle(p));m.on('click',e=>{if(draft)return;L.DomEvent.stop(e);showPlot(p)});bounds.push(pin)}
   (p.marks||[]).forEach((k,i)=>markLayer(k,'plot',p.id,i,bounds))});
- DB.estate.forEach(e=>{(e.areas||[]).forEach((a,i)=>{if(!shown(a.kind)||!a.geo||a.geo.length<3)return;const c=a.color||kcol(a.kind);const pg=L.polygon(a.geo,{color:'#fff',weight:2,fillColor:c,fillOpacity:.38}).addTo(layer);tip(pg,'<span class="sw" style="background:'+c+'"></span>'+esc(a.name||a.kind),{direction:'center'});pg.on('click',ev=>{if(draft)return;L.DomEvent.stop(ev);showArea(e.id,i)});a.geo.forEach(x=>bounds.push(x))});(e.marks||[]).forEach((k,i)=>markLayer(k,'estate',e.id,i,bounds))});
- setTimeout(()=>SPOTS.forEach(m=>m.bringToFront()),0);DB.harvest.forEach(h=>{if(num(h.lat)!=null&&num(h.lng)!=null){const p=[num(h.lat),num(h.lng)];L.circleMarker(p,{radius:6,color:'#fff',weight:2,fillColor:'#b4432f',fillOpacity:1}).addTo(layer).bindTooltip('Harvest '+esc(h.code||''),{className:'lab'});bounds.push(p)}});
+ DB.estate.forEach(e=>{(e.areas||[]).forEach((a,i)=>{if(!shown(a.kind)||!a.geo||a.geo.length<3)return;const c=a.color||kcol(a.kind);const pg=L.polygon(a.geo,{color:'#fff',weight:2,fillColor:c,fillOpacity:.38}).addTo(layer);tip(pg,'<span class="sw" style="background:'+c+'"></span>'+esc(a.name||a.kind),{direction:'center'},areaM2(a.geo),centroid(a.geo),a.name||a.kind);pg.on('click',ev=>{if(draft)return;L.DomEvent.stop(ev);showArea(e.id,i)});a.geo.forEach(x=>bounds.push(x))});(e.marks||[]).forEach((k,i)=>markLayer(k,'estate',e.id,i,bounds))});
+ setTimeout(()=>{SPOTS.forEach(m=>m.bringToFront());declutter()},0);DB.harvest.forEach(h=>{if(num(h.lat)!=null&&num(h.lng)!=null){const p=[num(h.lat),num(h.lng)];L.circleMarker(p,{radius:6,color:'#fff',weight:2,fillColor:'#b4432f',fillOpacity:1}).addTo(layer).bindTooltip('Harvest '+esc(h.code||''),{className:'lab'});bounds.push(p)}});
  return bounds}
-function markLayer(k,t,id,i,bounds){if(!shown(k.kind))return;const p=[k.lat,k.lng];const c=k.color||kcol(k.kind);const m=L.circleMarker(p,{radius:9,color:'#171512',weight:2.5,fillColor:c,fillOpacity:1}).addTo(layer);SPOTS.push(m);tip(m,esc(k.label||k.kind),{direction:'right',offset:[10,0]});m.on('click',e=>{if(draft)return;L.DomEvent.stop(e);showMark(k,t,id,i)});bounds.push(p)}
+function markLayer(k,t,id,i,bounds){if(!shown(k.kind))return;const p=[k.lat,k.lng];const c=k.color||kcol(k.kind);const m=L.circleMarker(p,{radius:9,color:'#171512',weight:2.5,fillColor:c,fillOpacity:1}).addTo(layer);SPOTS.push(m);tip(m,esc(k.label||k.kind),{direction:'right',offset:[10,0]},2e9,p,k.label||k.kind);m.on('click',e=>{if(draft)return;L.DomEvent.stop(e);showMark(k,t,id,i)});bounds.push(p)}
 function fit(b){if(b.length===1)map.setView(b[0],17);else if(b.length)map.fitBounds(b,{padding:[30,30],maxZoom:18})}
 // ---------- drawing (own taps, visible numbered nodes, undo) ----------
 function startDraw(mode,opts){stopDraw();draft={mode,pts:[],opts:opts||{},grp:L.layerGroup().addTo(map)};map.doubleClickZoom.disable();$('#map').style.cursor='crosshair';barHtml()}
@@ -141,7 +162,7 @@ function barHtml(){const d=draft,bar=$('#drawbar');if(!d){bar.hidden=true;return
  const u=$('#dU');if(u)u.onclick=e=>{e.stopPropagation();d.pts.pop();renderDraft()};const f=$('#dF');if(f)f.onclick=e=>{e.stopPropagation();finishDraw()};$('#dX').onclick=e=>{e.stopPropagation();stopDraw()}}
 async function finishDraw(){const d=draft;if(d.mode==='plot'&&d.pts.length<3){toast('Tap at least 3 corners');return}if(d.mode==='measure'&&d.pts.length<2){toast('Tap at least 2 points');return}
  const pts=d.pts.slice(),mode=d.mode,opts=d.opts;stopDraw();
- if(mode==='plot')return assignPlot(pts,opts.plotId);if(mode==='tag')return newMark(pts[0]);if(mode==='measure')return showMeasure(pts)}
+ if(opts.cb)return opts.cb(pts);if(mode==='plot')return assignPlot(pts,opts.plotId);if(mode==='tag')return newMark(pts[0]);if(mode==='measure')return showMeasure(pts)}
 // ---------- panels ----------
 function card(h){$('#info').innerHTML='<div class="card">'+h+'</div>';$('#info').scrollIntoView({behavior:'smooth',block:'nearest'})}
 async function showPlot(p){const g=geoOf(p),pin=pinOf(p),e=byId('estate',p.estateId);
@@ -183,9 +204,9 @@ function assignArea(pts){const c=centroid(pts);const prev=L.polygon(pts,{color:'
   const e2=byId('estate',est.id),i=e2.areas.findIndex(a=>a.at===at);toast(K.value+' saved');if(i>=0)showArea(e2.id,i)}}
 async function showArea(eid,i){const e=byId('estate',eid),a=e.areas[i],g=a.geo,c=centroid(g);
  card('<b style="font-size:17px"><span class="sw" style="background:'+(a.color||kcol(a.kind))+'"></span>'+esc(a.name||a.kind)+'</b><div class="kv" style="margin-top:8px"><span>Kind</span><div>'+esc(a.kind)+'</div><span>Estate</span><div>'+esc(e.name)+'</div><span>Area</span><div>'+fmtA(areaM2(g))+'</div><span>Boundary</span><div>'+fmtM(perim(g,true))+'</div><span>Centre</span><div>'+r6(c[0])+', '+r6(c[1])+'</div><span>Terrain</span><div id="elv">Reading heights…</div></div><div class="mini" style="margin-top:6px">Sides: '+g.map((x,j)=>fmtM(dist(x,g[(j+1)%g.length]))).join(', ')+'</div>'+
-  '<div class="row no-print" style="margin-top:10px"><a class="btn small" href="'+gmap(c)+'" target="_blank" rel="noopener">Google Maps</a><label class="btn small" style="gap:8px">Colour <input type="color" id="arC" value="'+(a.color||kcol(a.kind))+'" style="width:28px;height:24px;padding:0;border:0"></label><button class="btn small" id="arR">Rename</button><button class="btn small" id="arD">Delete</button></div>');
+  '<div class="row no-print" style="margin-top:10px"><a class="btn small" href="'+gmap(c)+'" target="_blank" rel="noopener">Google Maps</a><label class="btn small" style="gap:8px">Colour <input type="color" id="arC" value="'+(a.color||kcol(a.kind))+'" style="width:28px;height:24px;padding:0;border:0"></label><button class="btn small" id="arR">Edit</button><button class="btn small" id="arD">Delete</button></div>');
  $('#arC').onchange=async ev=>{a.color=ev.target.value;await ORIGIN.put(e);await refresh();showArea(eid,i)};
- $('#arR').onclick=async()=>{const n=prompt('Name',a.name||'');if(n==null)return;a.name=n.trim()||a.kind;await ORIGIN.put(e);await refresh();showArea(eid,i)};
+ $('#arR').onclick=()=>editArea(eid,i);
  $('#arD').onclick=async()=>{if(!confirm('Delete '+(a.name||a.kind)+'?'))return;e.areas.splice(i,1);await ORIGIN.put(e);await refresh();$('#info').innerHTML=''};
  const st=await elevStats(g);const el=$('#elv');if(el)el.innerHTML=st?'About <b>'+Math.round(st.avg)+' m</b>, lowest '+Math.round(st.min.h)+', highest '+Math.round(st.max.h)+' m':'Not available offline.'}
 function owners(){return DB.plot.map(p=>['plot',p.id,'Plot '+ptitle(p)]).concat(DB.estate.map(e=>['estate',e.id,'Estate '+e.name]))}
@@ -203,8 +224,20 @@ function newMark(pt){const own=owners();const inP=DB.plot.find(p=>geoOf(p)&&insi
   map.setView(pt,Math.max(map.getZoom(),17));toast('Spot saved');showMark(o.marks[i],t,id,i);window.scrollTo({top:$('#map').getBoundingClientRect().top+scrollY-10,behavior:'smooth'})}
   catch(e){toast('Could not save: '+(e.message||e));btn.disabled=false;btn.textContent='Save spot'}}}
 function showMark(k,t,id,i){const r=byId(t,id);const p=[k.lat,k.lng];
- card('<b style="font-size:16px">'+esc(k.label||k.kind)+'</b><div class="kv" style="margin-top:8px"><span>Kind</span><div>'+esc(k.kind)+'</div><span>On</span><div>'+esc(t==='plot'?'Plot '+ptitle(r):'Estate '+r.name)+'</div><span>Point</span><div>'+r6(p[0])+', '+r6(p[1])+'</div>'+(k.altM!=null?'<span>Height</span><div>about '+k.altM+' m</div>':'')+(k.note?'<span>Note</span><div>'+esc(k.note)+'</div>':'')+'</div><div class="row no-print" style="margin-top:10px"><a class="btn small" href="'+gmap(p)+'" target="_blank" rel="noopener">Google Maps</a><button class="btn small" id="kD">Delete spot</button></div>');
+ card('<b style="font-size:16px">'+esc(k.label||k.kind)+'</b><div class="kv" style="margin-top:8px"><span>Kind</span><div>'+esc(k.kind)+'</div><span>On</span><div>'+esc(t==='plot'?'Plot '+ptitle(r):'Estate '+r.name)+'</div><span>Point</span><div>'+r6(p[0])+', '+r6(p[1])+'</div>'+(k.altM!=null?'<span>Height</span><div>about '+k.altM+' m</div>':'')+(k.note?'<span>Note</span><div>'+esc(k.note)+'</div>':'')+'</div><div class="row no-print" style="margin-top:10px"><a class="btn small" href="'+gmap(p)+'" target="_blank" rel="noopener">Google Maps</a><button class="btn small" id="kE">Edit</button><button class="btn small" id="kD">Delete spot</button></div>');
+ $('#kE').onclick=()=>editMark(t,id,i);
  $('#kD').onclick=async()=>{if(!confirm('Delete this spot?'))return;r.marks.splice(i,1);await ORIGIN.put(r);await refresh();$('#info').innerHTML=''}}
+function editMark(t,id,i){const r=byId(t,id),k=r.marks[i];const kk=kAlias(k.kind);
+ card('<b>Edit spot</b><div class="row" style="margin-top:8px"><label class="f">Kind<select id="eK">'+KINDS.map(x=>'<option'+(x===kk?' selected':'')+'>'+x+'</option>').join('')+'</select></label><label class="f">Name<input id="eL" value="'+esc(k.label||'')+'"></label></div><div class="row"><label class="f">Note<input id="eN" value="'+esc(k.note||'')+'"></label><label class="f" style="flex:0 0 auto;min-width:0">Colour<input type="color" id="eC" value="'+(k.color||kcol(kk))+'" style="width:52px;height:44px;padding:2px"></label></div><div class="row" style="margin-top:8px"><button class="btn primary small" id="eS">Save</button><button class="btn small" id="eM">Move on map</button><button class="btn small" id="eX">Cancel</button></div><div class="mini" style="margin-top:6px">Colour follows the kind unless you change it here.</div>');
+ let cT=!!k.color;$('#eC').oninput=()=>{cT=true};$('#eK').onchange=()=>{if(!cT)$('#eC').value=kcol($('#eK').value)};
+ const save=async(extra)=>{Object.assign(k,{kind:$('#eK').value,label:$('#eL').value.trim(),note:$('#eN').value.trim(),color:cT?$('#eC').value:''},extra||{});await ORIGIN.put(r);await refresh();toast('Spot updated');showMark(k,t,id,i)};
+ $('#eS').onclick=()=>save();$('#eX').onclick=()=>showMark(k,t,id,i);
+ $('#eM').onclick=()=>{const keep={kind:$('#eK').value,label:$('#eL').value.trim(),note:$('#eN').value.trim(),color:cT?$('#eC').value:''};map.setView([k.lat,k.lng],Math.max(map.getZoom(),18));startDraw('tag',{cb:async pts=>{const h=await elev(pts[0][0],pts[0][1]);Object.assign(k,keep,{lat:r6(pts[0][0]),lng:r6(pts[0][1]),altM:h!=null?Math.round(h):k.altM});await ORIGIN.put(r);await refresh();toast('Spot moved');showMark(k,t,id,i)}});$('#bTag').classList.add('on');toast('Tap the new position');window.scrollTo({top:$('#map').getBoundingClientRect().top+scrollY-10,behavior:'smooth'})}}
+function editArea(eid,i){const e=byId('estate',eid),a=e.areas[i];const kk=kAlias(a.kind);
+ card('<b>Edit area</b><div class="row" style="margin-top:8px"><label class="f">Kind<select id="eK">'+AREA_KINDS.filter(x=>x!=='Plot').map(x=>'<option'+(x===kk?' selected':'')+'>'+x+'</option>').join('')+'</select></label><label class="f">Name<input id="eL" value="'+esc(a.name||'')+'"></label><label class="f" style="flex:0 0 auto;min-width:0">Colour<input type="color" id="eC" value="'+(a.color||kcol(kk))+'" style="width:52px;height:44px;padding:2px"></label></div><div class="row" style="margin-top:8px"><button class="btn primary small" id="eS">Save</button><button class="btn small" id="eR">Redraw outline</button><button class="btn small" id="eX">Cancel</button></div>');
+ let cT=!!a.color;$('#eC').oninput=()=>{cT=true};$('#eK').onchange=()=>{if(!cT)$('#eC').value=kcol($('#eK').value)};
+ $('#eS').onclick=async()=>{Object.assign(a,{kind:$('#eK').value,name:$('#eL').value.trim()||$('#eK').value,color:cT?$('#eC').value:''});await ORIGIN.put(e);await refresh();toast('Updated');showArea(eid,i)};$('#eX').onclick=()=>showArea(eid,i);
+ $('#eR').onclick=()=>{map.fitBounds(a.geo,{padding:[30,30]});startDraw('plot',{cb:async pts=>{if(pts.length<3)return;a.geo=pts.map(x=>[r6(x[0]),r6(x[1])]);await ORIGIN.put(e);await refresh();toast('Outline updated');showArea(eid,i)}});$('#bPlot').classList.add('on');window.scrollTo({top:$('#map').getBoundingClientRect().top+scrollY-10,behavior:'smooth'})}}
 async function showMeasure(pts){const line=L.polyline(pts,{color:'#ffd166',weight:4}).addTo(layer);const tot=perim(pts,false);
  const N=Math.min(80,Math.max(10,Math.round(tot/15)));const samp=[];let acc=0;const seg=[];for(let i=1;i<pts.length;i++){const d=dist(pts[i-1],pts[i]);seg.push([acc,d,pts[i-1],pts[i]]);acc+=d}
  for(let k=0;k<=N;k++){const s=tot*k/N;const g=seg.find(x=>s<=x[0]+x[1]+1e-9)||seg[seg.length-1];const f=g[1]?(s-g[0])/g[1]:0;samp.push([s,[g[2][0]+(g[3][0]-g[2][0])*f,g[2][1]+(g[3][1]-g[2][1])*f]])}
@@ -217,13 +250,13 @@ async function showMeasure(pts){const line=L.polyline(pts,{color:'#ffd166',weigh
  $('#mp').innerHTML='<svg class="prof" viewBox="0 0 '+W+' '+H+'"><polyline fill="none" stroke="#8d583b" stroke-width="2" points="'+ok.map(([s,h])=>X(s)+','+Y(h)).join(' ')+'"/><text x="2" y="'+(Y(mx)+4)+'" font-size="9" fill="#77716a">'+Math.round(mx)+'</text><text x="2" y="'+(Y(mn)+4)+'" font-size="9" fill="#77716a">'+Math.round(mn)+'</text><text x="'+(W-6)+'" y="'+(H-2)+'" font-size="9" text-anchor="end" fill="#77716a">'+fmtM(tot)+'</text><text x="'+P+'" y="'+(H-2)+'" font-size="9" fill="#77716a">0</text></svg><div class="mini">Height profile, metres. Satellite terrain, roughly 30 m grid.</div>'}
 // ---------- lists ----------
 function spotList(){const items=[];
- DB.plot.forEach(p=>{if(geoOf(p)||pinOf(p))items.push({kind:'Plot',name:ptitle(p),sub:[byId('estate',p.estateId)?.name,p.variety,geoOf(p)?fmtA(areaM2(p.geo)).split(' · ')[0]:''],col:p.color||kcol('Plot'),go:()=>{const g=geoOf(p);g?map.fitBounds(g,{padding:[30,30]}):map.setView(pinOf(p),18);showPlot(p)}});(p.marks||[]).forEach((k,i)=>items.push({kind:k.kind,name:k.label||k.kind,sub:['Plot '+ptitle(p),k.altM!=null?'about '+k.altM+' m':''],col:k.color||kcol(k.kind),go:()=>{map.setView([k.lat,k.lng],Math.max(map.getZoom(),17));showMark(k,'plot',p.id,i)}}))});
- DB.estate.forEach(e=>{(e.areas||[]).forEach((a,i)=>items.push({kind:a.kind,name:a.name||a.kind,sub:[e.name,a.geo?fmtA(areaM2(a.geo)).split(' · ')[0]:''],col:a.color||kcol(a.kind),go:()=>{map.fitBounds(a.geo,{padding:[30,30]});showArea(e.id,i)}}));(e.marks||[]).forEach((k,i)=>items.push({kind:k.kind,name:k.label||k.kind,sub:[e.name,k.altM!=null?'about '+k.altM+' m':''],col:k.color||kcol(k.kind),go:()=>{map.setView([k.lat,k.lng],Math.max(map.getZoom(),17));showMark(k,'estate',e.id,i)}}))});
+ DB.plot.forEach(p=>{if(geoOf(p)||pinOf(p))items.push({kind:'Plot',name:ptitle(p),sub:[byId('estate',p.estateId)?.name,p.variety,geoOf(p)?fmtA(areaM2(p.geo)).split(' · ')[0]:''],col:p.color||kcol('Plot'),go:()=>{const g=geoOf(p);g?map.fitBounds(g,{padding:[30,30]}):map.setView(pinOf(p),18);showPlot(p)}});(p.marks||[]).forEach((k,i)=>items.push({kind:kAlias(k.kind),name:k.label||k.kind,sub:['Plot '+ptitle(p),k.altM!=null?'about '+k.altM+' m':''],col:k.color||kcol(k.kind),go:()=>{map.setView([k.lat,k.lng],Math.max(map.getZoom(),17));showMark(k,'plot',p.id,i)}}))});
+ DB.estate.forEach(e=>{(e.areas||[]).forEach((a,i)=>items.push({kind:kAlias(a.kind),name:a.name||a.kind,sub:[e.name,a.geo?fmtA(areaM2(a.geo)).split(' · ')[0]:''],col:a.color||kcol(a.kind),go:()=>{map.fitBounds(a.geo,{padding:[30,30]});showArea(e.id,i)}}));(e.marks||[]).forEach((k,i)=>items.push({kind:kAlias(k.kind),name:k.label||k.kind,sub:[e.name,k.altM!=null?'about '+k.altM+' m':''],col:k.color||kcol(k.kind),go:()=>{map.setView([k.lat,k.lng],Math.max(map.getZoom(),17));showMark(k,'estate',e.id,i)}}))});
  const el=$('#spots');if(!items.length){el.innerHTML='<div class="mini">Nothing marked yet. Tap Mark an area for plots, stores, drying yards and so on, or Add a spot for single points.</div>';return}
  const groups=AREA_KINDS.map(k=>[k,items.filter(x=>x.kind===k)]).filter(g=>g[1].length);let n=0;const flat=[];
  el.innerHTML=groups.map(([k,arr])=>'<div class="ghead"><span class="sw" style="background:'+kcol(k)+'"></span>'+esc(k)+' ('+arr.length+')'+(shown(k)?'':' · hidden')+'</div>'+arr.map(x=>{flat.push(x);return '<div class="it"><div><b><span class="sw" style="background:'+x.col+'"></span>'+esc(x.name)+'</b><div class="mini">'+esc(x.sub.filter(Boolean).join(' · '))+'</div></div><button class="btn small" data-pi="'+(n++)+'">Show</button></div>'}).join('')).join('');
  el.querySelectorAll('[data-pi]').forEach(b=>b.onclick=()=>{const x=flat[+b.dataset.pi];if(!shown(x.kind)){LAY.hide[x.kind]=false;saveLay();drawAll();layersPanel(true)}x.go();window.scrollTo({top:$('#map').getBoundingClientRect().top+scrollY-10,behavior:'smooth'})})}
-function layersPanel(keep){const el=$('#lay');if(!keep&&el.hidden)return;const cnt={};DB.plot.forEach(p=>{if(geoOf(p)||pinOf(p))cnt.Plot=(cnt.Plot||0)+1;(p.marks||[]).forEach(k=>cnt[k.kind]=(cnt[k.kind]||0)+1)});DB.estate.forEach(e=>{(e.areas||[]).forEach(a=>cnt[a.kind]=(cnt[a.kind]||0)+1);(e.marks||[]).forEach(k=>cnt[k.kind]=(cnt[k.kind]||0)+1)});
+function layersPanel(keep){const el=$('#lay');if(!keep&&el.hidden)return;const cnt={};DB.plot.forEach(p=>{if(geoOf(p)||pinOf(p))cnt.Plot=(cnt.Plot||0)+1;(p.marks||[]).forEach(k=>cnt[kAlias(k.kind)]=(cnt[kAlias(k.kind)]||0)+1)});DB.estate.forEach(e=>{(e.areas||[]).forEach(a=>cnt[kAlias(a.kind)]=(cnt[kAlias(a.kind)]||0)+1);(e.marks||[]).forEach(k=>cnt[kAlias(k.kind)]=(cnt[kAlias(k.kind)]||0)+1)});
  el.innerHTML='<div class="row" style="justify-content:space-between"><b>Layers and colours</b><div class="row"><button class="btn small" id="lyAll">Show all</button><button class="btn small" id="lyNone">Hide all</button></div></div><div class="mini" style="margin:4px 0 6px">Tick to show a kind on the map. Tap a colour to change it for that kind. Remembered on this phone.</div>'+
   AREA_KINDS.map(k=>'<div class="lrow2"><input type="checkbox" data-lk="'+esc(k)+'"'+(shown(k)?' checked':'')+'><span>'+esc(k)+'</span><span class="mini">'+(cnt[k]||0)+'</span><input type="color" data-lc="'+esc(k)+'" value="'+kcol(k)+'"></div>').join('')+'<div class="row" style="margin-top:8px"><button class="btn small" id="lyReset">Default colours</button></div>';
  el.querySelectorAll('[data-lk]').forEach(c=>c.onchange=()=>{LAY.hide[c.dataset.lk]=!c.checked;saveLay();drawAll();spotList()});
@@ -256,7 +289,7 @@ async function boot(){initMap();const b=await refresh();
   card('<b>You are here</b><div class="kv" style="margin-top:6px"><span>Point</span><div>'+r6(p[0])+', '+r6(p[1])+' (±'+Math.round(pos.coords.accuracy)+' m)</div>'+(pos.coords.altitude!=null?'<span>Phone height</span><div>'+Math.round(pos.coords.altitude)+' m'+(pos.coords.altitudeAccuracy?' (±'+Math.round(pos.coords.altitudeAccuracy)+' m)':'')+'</div>':'')+'<span>Terrain</span><div id="hereE">Reading…</div></div><div class="row no-print" style="margin-top:8px"><a class="btn small" href="'+gmap(p)+'" target="_blank" rel="noopener">Google Maps</a><button class="btn small" id="hereTag">Save as a spot</button></div>');
   elev(p[0],p[1]).then(h=>{const el=$('#hereE');if(el)el.textContent=h!=null?'about '+Math.round(h)+' m':'not available offline'});$('#hereTag').onclick=()=>newMark(p)},e=>toast('Could not get location'),{enableHighAccuracy:true,timeout:15000})};
  $('#bPlot').onclick=e=>setMode(e.currentTarget,'plot');
- const nb=$('#bNames');const nbt=()=>{nb.textContent=LAY.names?'Hide names':'Show names';nb.classList.toggle('on',!LAY.names)};nbt();nb.onclick=()=>{LAY.names=!LAY.names;saveLay();nbt();drawAll()};
+ const nb=$('#bNames');const NM={auto:'Names: tidy',all:'Names: all',off:'Names: off'},NX={auto:'all',all:'off',off:'auto'};const nbt=()=>{nb.textContent=NM[LAY.names]||NM.auto;nb.classList.toggle('on',LAY.names!=='auto')};nbt();nb.onclick=()=>{LAY.names=NX[LAY.names]||'auto';saveLay();nbt();drawAll();toast(LAY.names==='auto'?'Overlapping names become numbers':LAY.names==='all'?'Showing every name':'Names hidden. Tap a place to see it')};
  $('#bLay').onclick=e=>{const el=$('#lay');el.hidden=!el.hidden;e.currentTarget.classList.toggle('on',!el.hidden);if(!el.hidden){layersPanel(true);el.scrollIntoView({behavior:'smooth',block:'nearest'})}};$('#bTag').onclick=e=>setMode(e.currentTarget,'tag');$('#bMeasure').onclick=e=>setMode(e.currentTarget,'measure');
  $('#bBase').onclick=e=>{map.removeLayer(base[baseName]);baseName=baseName==='sat'?'street':'sat';base[baseName].addTo(map);e.currentTarget.textContent=baseName==='sat'?'Street map':'Satellite'};
  $('#q').addEventListener('keydown',async e=>{if(e.key!=='Enter')return;const v=e.target.value.trim();const ll=v.match(/^\s*(-?\d+(\.\d+)?)\s*[, ]\s*(-?\d+(\.\d+)?)\s*$/);if(ll){map.setView([+ll[1],+ll[3]],17);return}
