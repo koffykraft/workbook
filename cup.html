@@ -118,8 +118,11 @@ function fmtDate(d){if(!d)return '';const x=new Date(d.length===10?d+'T00:00':d)
 // ---------- roasts (this device + cloud) ----------
 let ROASTS=[],DB={brew:[],cupping:[],tasting:[]};
 async function localRoasts(){try{return await new Promise(ok=>{const q=indexedDB.open('KoffyKraftTemporaryRoastbook');q.onsuccess=()=>{const db=q.result;if(!db.objectStoreNames.contains('roasts')){db.close();ok([]);return}const t=db.transaction('roasts','readonly').objectStore('roasts').getAll();t.onsuccess=()=>{db.close();ok(t.result||[])};t.onerror=()=>{db.close();ok([])}};q.onerror=()=>ok([]);q.onupgradeneeded=e=>e.target.transaction.abort()})}catch{return[]}}
-let CLOUD=null;async function cloudRoasts(){if(CLOUD)return CLOUD;if(typeof SYNC==='undefined'||!SYNC.isAuthenticated()||!navigator.onLine)return[];try{const res=await SYNC.loadRoasts();CLOUD=(res.items||[]).map(r=>{let n={};try{n=typeof r.notes==='string'?JSON.parse(r.notes):(r.notes||{})}catch(e){n={bean:r.notes}}return{id:r.id,estate:n.estate||'',coffeeCode:n.coffeeCode||'',bean:n.bean||'',roastNo:r.roast_number,roastDate:r.roast_date,finishedAt:n.finishedAt||r.ended_at||(r.created_at?String(r.created_at).replace(' ','T')+'Z':''),greenLotId:n.greenLotId||'',targetColor:r.target_color,finalColor:r.final_color}});return CLOUD}catch(e){return[]}}
-async function loadAll(){DB.brew=await ORIGIN.all('brew');DB.cupping=await ORIGIN.all('cupping');DB.tasting=await ORIGIN.all('tasting');const m=new Map((await localRoasts()).map(r=>[r.id,r]));for(const r of await cloudRoasts())if(!m.has(r.id))m.set(r.id,r);ROASTS=[...m.values()].sort((a,b)=>String(b.finishedAt||b.roastDate||'').localeCompare(String(a.finishedAt||a.roastDate||'')))}
+let CLOUD=null;
+function cachedCloud(){if(CLOUD)return CLOUD;try{const c=JSON.parse(sessionStorage.getItem('kk_cloud_roasts_c')||'null');if(c&&c.items){CLOUD=c.items;if(Date.now()-c.at<6e5)CLOUD.fresh=1}}catch(e){}return CLOUD||[]}
+let CC_BUSY=false;function refreshCloud(){if(CC_BUSY||(CLOUD&&CLOUD.fresh))return;CC_BUSY=true;const before=(CLOUD||[]).length;CLOUD=null;cloudRoasts().then(x=>{CC_BUSY=false;if(!x||!x.length){CLOUD=Object.assign([],{fresh:1});return}x.fresh=1;try{sessionStorage.setItem('kk_cloud_roasts_c',JSON.stringify({at:Date.now(),items:x}))}catch(e){}if(x.length!==before&&!location.hash.startsWith('#edit/'))route()}).catch(()=>{CC_BUSY=false})}
+async function cloudRoasts(){if(CLOUD)return CLOUD;if(typeof SYNC==='undefined'||!SYNC.isAuthenticated()||!navigator.onLine)return[];try{const res=await SYNC.loadRoasts();CLOUD=(res.items||[]).map(r=>{let n={};try{n=typeof r.notes==='string'?JSON.parse(r.notes):(r.notes||{})}catch(e){n={bean:r.notes}}return{id:r.id,estate:n.estate||'',coffeeCode:n.coffeeCode||'',bean:n.bean||'',roastNo:r.roast_number,roastDate:r.roast_date,finishedAt:n.finishedAt||r.ended_at||(r.created_at?String(r.created_at).replace(' ','T')+'Z':''),greenLotId:n.greenLotId||'',targetColor:r.target_color,finalColor:r.final_color}});return CLOUD}catch(e){return[]}}
+async function loadAll(){const A=await ORIGIN.allTypes(['brew','cupping','tasting']);DB.brew=A.brew;DB.cupping=A.cupping;DB.tasting=A.tasting;const m=new Map((await localRoasts()).map(r=>[r.id,r]));const cr=cachedCloud();refreshCloud();for(const r of cr)if(!m.has(r.id))m.set(r.id,r);ROASTS=[...m.values()].sort((a,b)=>String(b.finishedAt||b.roastDate||'').localeCompare(String(a.finishedAt||a.roastDate||'')))}
 function roastById(id){return ROASTS.find(r=>String(r.id)===String(id))}
 function roastLabel(r){if(!r)return '';return [r.estate||r.coffeeCode||r.bean||'Roast',r.roastNo?'#'+r.roastNo:'',r.roastDate?fmtDate(r.roastDate):''].filter(Boolean).join(' · ')}
 function roastedAt(r){if(!r)return null;const t=r.finishedAt||r.roastDate;const d=new Date(t&&t.length===10?t+'T12:00':t);return isNaN(d)?null:d}
@@ -588,7 +591,7 @@ async function save(){const miss=F[CUR_T].filter(f=>f.req&&(CUR[f.k]==null||Stri
  if($('#alsoCloud')&&$('#alsoCloud').checked)CUR.cloud=true;await ORIGIN.put(CUR);toast('Saved');go(CUR_T)}
 async function del(){if(!confirm('Delete this record?'))return;await ORIGIN.remove(CUR.id);toast('Deleted');go(CUR_T)}
 ORIGIN.onSync(s=>{refreshSyncBadge.last=s;refreshSyncBadge(s);if(s.status==='synced'&&s.changed&&!location.hash.startsWith('#edit/'))route()});
-PREFS.pull().then(route).then(()=>ORIGIN.sync().catch(()=>{}));
+route().then(()=>PREFS.pull()).then(()=>ORIGIN.sync().catch(()=>{}));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 <script src="pv.js" defer></script>

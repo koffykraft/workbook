@@ -265,8 +265,11 @@ setInterval(()=>{document.querySelectorAll('[data-srun]').forEach(el=>{const s=C
 
 // ---------- data helpers ----------
 let DB={estate:[],plot:[],harvest:[],process:[],green:[]};let ROASTS=[];
-async function loadAll(){for(const t of ORIGIN.TYPES)DB[t]=await ORIGIN.all(t);const local=await loadRoasts();const m=new Map(local.map(r=>[r.id,r]));for(const r of await cloudRoasts())if(!m.has(r.id))m.set(r.id,r);ROASTS=[...m.values()]}
-let CLOUD_ROASTS=null;async function cloudRoasts(){if(CLOUD_ROASTS)return CLOUD_ROASTS;if(typeof SYNC==='undefined'||!SYNC.isAuthenticated()||!navigator.onLine)return [];try{const res=await SYNC.loadRoasts();CLOUD_ROASTS=(res.items||[]).map(r=>{let n={};try{n=typeof r.notes==='string'?JSON.parse(r.notes):(r.notes||{})}catch(e){}return{id:r.id,greenLotId:n.greenLotId||'',greenWeight:r.green_weight}});return CLOUD_ROASTS}catch(e){return []}}
+async function loadAll(){Object.assign(DB,await ORIGIN.allTypes());const local=await loadRoasts();const m=new Map(local.map(r=>[r.id,r]));for(const r of cachedCloudRoasts())if(!m.has(r.id))m.set(r.id,r);ROASTS=[...m.values()];refreshCloudRoasts()}
+let CLOUD_ROASTS=null;// Cloud roasts never block the page: use what we have, refresh in the background at most every 10 minutes.
+function cachedCloudRoasts(){if(CLOUD_ROASTS)return CLOUD_ROASTS;try{const c=JSON.parse(sessionStorage.getItem('kk_cloud_roasts_o')||'null');if(c&&c.items){CLOUD_ROASTS=c.items;if(Date.now()-c.at<6e5)CLOUD_ROASTS.fresh=1}}catch(e){}return CLOUD_ROASTS||[]}
+let CR_BUSY=false;function refreshCloudRoasts(){if(CR_BUSY||(CLOUD_ROASTS&&CLOUD_ROASTS.fresh))return;CR_BUSY=true;const before=(CLOUD_ROASTS||[]).length;cloudRoasts().then(x=>{CR_BUSY=false;if(!x||!x.length){CLOUD_ROASTS=Object.assign([],{fresh:1});return}x.fresh=1;try{sessionStorage.setItem('kk_cloud_roasts_o',JSON.stringify({at:Date.now(),items:x}))}catch(e){}if(x.length!==before&&!location.hash.startsWith('#edit/'))route()}).catch(()=>{CR_BUSY=false})}
+async function cloudRoasts(){if(typeof SYNC==='undefined'||!SYNC.isAuthenticated()||!navigator.onLine)return [];try{const res=await SYNC.loadRoasts();CLOUD_ROASTS=(res.items||[]).map(r=>{let n={};try{n=typeof r.notes==='string'?JSON.parse(r.notes):(r.notes||{})}catch(e){}return{id:r.id,greenLotId:n.greenLotId||'',greenWeight:r.green_weight}});return CLOUD_ROASTS}catch(e){return []}}
 function byId(t,id){return DB[t].find(x=>x.id===id)}
 function harvestKg(h){const b=(h.baskets||[]).map(x=>num(x.kg)).filter(x=>x!=null);return b.length?b.reduce((a,c)=>a+c,0):num(h.cherryKg)}
 function processSummary(p){const hs=(p.harvestIds||[]).map(id=>byId('harvest',id)).filter(Boolean);const fromH=hs.reduce((a,h)=>a+(harvestKg(h)||0),0);const cherry=num(p.cherryIn)||fromH||null;const steps=p.steps||[];let green=null;for(const s of steps)if(['Hulling','Grading / sorting'].includes(s.type)&&num(s.outKg))green=num(s.outKg);const starts=steps.map(s=>s.start).filter(Boolean).sort(),ends=steps.map(s=>s.end||s.start).filter(Boolean).sort();const days=starts.length&&ends.length?hours(starts[0],ends[ends.length-1])/24:null;let moist=null;for(const s of steps)for(const r of s.readings||[])if(num(r.moisture)!=null)moist=num(r.moisture);return{cherry,green,outturn:cherry&&green?green/cherry*100:null,days,moist,harvests:hs}}
@@ -421,7 +424,7 @@ async function del(){const t=CUR_T,id=CUR.id;const uses={estate:()=>DB.plot.filt
 // ---------- sync status ----------
 function refreshSyncBadge(s){const el=$('#syncState');if(!el)return;const st=s||refreshSyncBadge.last;if(!st)return;el.className='sync '+(st.status||'');el.querySelector('span').textContent=({local:'Saved on this device',offline:'Offline, will sync later',syncing:'Syncing…',error:'Sync failed, will retry'}[st.status])||cloudModeText('origin')}
 ORIGIN.onSync(s=>{refreshSyncBadge.last=s;refreshSyncBadge(s);if(s.status==='synced'&&s.changed&&!location.hash.startsWith('#edit/'))route()});
-PREFS.pull().then(route).then(()=>ORIGIN.sync().catch(()=>{}));
+route().then(()=>PREFS.pull()).then(()=>ORIGIN.sync().catch(()=>{}));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 <script src="pv.js" defer></script>

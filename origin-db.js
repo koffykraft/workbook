@@ -3,8 +3,10 @@
 const ORIGIN = (() => {
   const NAME = 'KoffyKraftOrigin', STORE = 'records';
   const TYPES = ['estate', 'plot', 'harvest', 'process', 'green', 'brew', 'cupping', 'tasting'];
+  let DBP = null;
   function open() {
-    return new Promise((ok, no) => {
+    if (DBP) return DBP;
+    DBP = new Promise((ok, no) => {
       let r;
       try { r = indexedDB.open(NAME, 1); } catch (e) { no(e); return; }
       r.onupgradeneeded = e => {
@@ -14,25 +16,32 @@ const ORIGIN = (() => {
           s.createIndex('type', 'type');
         }
       };
-      r.onsuccess = () => { const db = r.result; db.onversionchange = () => db.close(); ok(db); };
-      r.onerror = () => no(r.error);
+      r.onsuccess = () => { const db = r.result; db.onversionchange = () => { db.close(); DBP = null; }; db.onclose = () => { DBP = null; }; ok(db); };
+      r.onerror = () => { DBP = null; no(r.error); };
     });
+    return DBP;
   }
   async function tx(mode, fn) {
-    const db = await open();
-    try {
-      return await new Promise((ok, no) => {
-        const t = db.transaction(STORE, mode), s = t.objectStore(STORE);
-        let out; Promise.resolve(fn(s)).then(v => { out = v; });
-        t.oncomplete = () => ok(out); t.onerror = () => no(t.error); t.onabort = () => no(t.error);
-      });
-    } finally { db.close(); }
+    let db = await open(), t;
+    try { t = db.transaction(STORE, mode); } catch (e) { DBP = null; db = await open(); t = db.transaction(STORE, mode); }
+    return new Promise((ok, no) => {
+      const s = t.objectStore(STORE);
+      let out; Promise.resolve(fn(s)).then(v => { out = v; });
+      t.oncomplete = () => ok(out); t.onerror = () => no(t.error); t.onabort = () => no(t.error);
+    });
   }
   const req = q => new Promise((ok, no) => { q.onsuccess = () => ok(q.result); q.onerror = () => no(q.error); });
   function newId(type) { return type + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8); }
   async function all(type) {
     const rows = await tx('readonly', s => req(type ? s.index('type').getAll(type) : s.getAll()));
     return (rows || []).filter(r => !r.deleted);
+  }
+  // Several types in one read: { plot: [...], harvest: [...] }
+  async function allTypes(types) {
+    const rows = await tx('readonly', s => req(s.getAll()));
+    const out = {}; (types || TYPES).forEach(t => out[t] = []);
+    (rows || []).forEach(r => { if (!r.deleted && out[r.type]) out[r.type].push(r); });
+    return out;
   }
   async function get(id) { const r = await tx('readonly', s => req(s.get(id))); return r && !r.deleted ? r : null; }
   async function put(rec) {
@@ -77,18 +86,25 @@ const ORIGIN = (() => {
           }
         });
       }
-      const resp = await fetch('/api/origin', { headers });
+      // Pull only what changed on the server since our last pull (server clock), not every record.
+      const SK = 'kk_origin_since_' + (localStorage.getItem('kk_user_id') || '');
+      const since = localStorage.getItem(SK) || '';
+      const resp = await fetch('/api/origin' + (since ? '?since=' + encodeURIComponent(since) : ''), { headers });
       if (!resp.ok) throw new Error('pull failed ' + resp.status);
-      const { items } = await resp.json();
+      const { items, now } = await resp.json();
       let changed = 0;
-      await tx('readwrite', async s => {
-        for (const remote of items || []) {
+      if (items && items.length) {
+        const mine = new Map(local.map(r => [r.id, r]));
+        const put = [];
+        for (const remote of items) {
           if (modeOf(remote.type) === 'off') continue;
-          const cur = await req(s.get(remote.id));
-          if (!cur || (!cur.dirty && String(remote.updatedAt) > String(cur.updatedAt || ''))) { await req(s.put({ ...remote, cloud: true })); changed++; }
-          else if (!cur.cloud) { await req(s.put({ ...cur, cloud: true })); }
+          const cur = mine.get(remote.id);
+          if (!cur || (!cur.dirty && String(remote.updatedAt) > String(cur.updatedAt || ''))) { put.push({ ...remote, cloud: true }); changed++; }
+          else if (!cur.cloud) put.push({ ...cur, cloud: true });
         }
-      });
+        if (put.length) await tx('readwrite', s => { put.forEach(r => s.put(r)); });
+      }
+      if (now) localStorage.setItem(SK, now);
       emit({ status: 'synced', changed, at: new Date() });
       return changed;
     })().catch(e => { emit({ status: 'error', error: String(e.message || e) }); throw e; }).finally(() => { running = null; });
@@ -118,5 +134,5 @@ const ORIGIN = (() => {
     return pick.length;
   }
   window.addEventListener('online', () => scheduleSync());
-  return { TYPES, all, get, put, remove, sync, onSync, newId, setCloud, markAll };
+  return { TYPES, all, allTypes, get, put, remove, sync, onSync, newId, setCloud, markAll };
 })();

@@ -88,7 +88,7 @@ async function elevStats(poly){const lats=poly.map(p=>p[0]),lngs=poly.map(p=>p[1
  const hs=(await Promise.all(pts.map(p=>elev(p[0],p[1])))).map((h,i)=>({h,p:pts[i]})).filter(x=>x.h!=null);if(!hs.length)return null;hs.sort((x,y)=>x.h-y.h);return{min:hs[0],max:hs[hs.length-1],avg:hs.reduce((s,x)=>s+x.h,0)/hs.length,n:hs.length}}
 // ---------- data ----------
 let DB={estate:[],plot:[],harvest:[],process:[],green:[]};const byId=(t,id)=>DB[t].find(x=>x.id===id);
-async function loadAll(){for(const t of ['estate','plot','harvest','process','green'])DB[t]=await ORIGIN.all(t)}
+async function loadAll(){Object.assign(DB,await ORIGIN.allTypes(['estate','plot','harvest','process','green']))}
 const ptitle=p=>[p.block,p.name].filter(Boolean).join(' / ')||'Plot';
 const geoOf=p=>Array.isArray(p.geo)&&p.geo.length>=3?p.geo:null;
 const pinOf=p=>num(p.lat)!=null&&num(p.lng)!=null?[num(p.lat),num(p.lng)]:geoOf(p)?centroid(p.geo):null;

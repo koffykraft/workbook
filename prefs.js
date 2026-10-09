@@ -14,6 +14,7 @@ const PREFS = (() => {
   async function set(section, mode) {
     if (!SECTIONS[section] || !MODES.includes(mode)) return;
     const p = read(); p[section] = mode; localStorage.setItem(KEY, JSON.stringify(p));
+    Object.keys(localStorage).filter(k => k.startsWith('kk_origin_since_')).forEach(k => localStorage.removeItem(k));
     if (signedIn()) { try { await fetch('/api/prefs', { method: 'POST', headers: headers(), body: JSON.stringify({ sync: p }) }); } catch (e) {} }
   }
   async function pull() {

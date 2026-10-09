@@ -1,6 +1,17 @@
 // KoffyKraft Cloud Sync Module
 // Handles authentication, roast saving, and data sync between local and cloud
 
+(() => {
+  if (window.__kkFetchTimeout) return; window.__kkFetchTimeout = true;
+  const f = window.fetch.bind(window);
+  window.fetch = (u, o) => {
+    o = o || {};
+    const url = typeof u === 'string' ? u : (u && u.url) || '';
+    if (o.signal || !/^\/api\/|\/api\//.test(url.replace(location.origin, ''))) return f(u, o);
+    const c = new AbortController(), t = setTimeout(() => c.abort(), 12000);
+    return f(u, { ...o, signal: c.signal }).finally(() => clearTimeout(t));
+  };
+})();
 const SYNC = (() => {
   const API_BASE = '/api';
   let token = null;
