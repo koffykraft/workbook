@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fff">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>KoffyKraft Map</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b;--soft:#faf7f2;--ok:#3f6b5a;--bad:#b4432f}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;color:var(--ink);background:var(--bg)}
+.app{max-width:760px;margin:auto;padding:24px 16px 60px}
+h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 4px}.sub{color:var(--muted);font-size:13px;margin-bottom:12px;line-height:1.5}.sub a{color:var(--coffee)}
+h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:20px 0 8px}
+#map{height:62vh;min-height:340px;border-radius:16px;border:1px solid var(--line);overflow:hidden;background:#dfe6df}
+.tools{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;cursor:pointer;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:6px;touch-action:manipulation}
+.btn.on,.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}.btn.small{font-size:13px;padding:7px 11px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:8px 0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}.kv span{color:var(--muted)}
+.mini{font-size:12.5px;color:var(--muted);line-height:1.45}
+.drawbar{position:absolute;left:8px;right:8px;bottom:8px;z-index:800;background:rgba(23,21,18,.92);color:#fff;border-radius:14px;padding:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.drawbar .btn{background:transparent;color:#fff;border-color:rgba(255,255,255,.35)}.drawbar .btn.primary{background:#fff;color:var(--ink)}
+.drawbar b{font-weight:600;font-size:13px;flex:1;min-width:120px}
+.wrap{position:relative}
+.lab{background:rgba(255,255,255,.88);border:0;border-radius:8px;box-shadow:none;font-size:12px;font-weight:600;color:#171512;padding:2px 6px}
+.lab:before{display:none}
+.vx{width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #171512;font-size:11px;font-weight:700;display:grid;place-items:center;color:#171512}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600;flex:1;min-width:140px}
+input,select{font:inherit;font-size:16px;padding:10px 11px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);width:100%}
+.list .it{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 0;border-top:1px solid #f0ebe3}.list .it:first-child{border-top:0}
+.tag{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;background:#efe6da;color:#8d583b;white-space:nowrap}.tag.no{background:#eee;color:#888}
+.prof{width:100%;height:auto;display:block;margin-top:6px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#171512;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:.2s;pointer-events:none;z-index:2000}.toast.on{opacity:1}
+.north{position:absolute;top:10px;right:10px;z-index:700;background:#fff;border-radius:10px;padding:4px 7px;font-weight:800;font-size:12px;text-align:center;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+@media print{header,.tools,.no-print,.drawbar,.leaflet-control-zoom,.toast{display:none!important}.app{max-width:none;padding:0}#map{height:12cm;border-radius:0}.card{break-inside:avoid}body{background:#fff}}
+</style>
+<link rel="stylesheet" href="kk.css"></head>
+<body><main class="app">
+<header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="roastbooks.html">KoffyKraft</a><a class="kkh-acct" href="account.html" aria-label="Account">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html" aria-current="page">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
+<h1>Map</h1>
+<div class="sub no-print">Mark your estate, plots and spots: harvest points, trees, water. See area, distance and height, then share a map link, a KML or GeoJSON file, or a printed sheet. <a href="origin.html">Back to Origin</a></div>
+<div class="sub" id="printHead" hidden></div>
+<div class="wrap"><div id="map"></div><div class="north" title="North">▲<br>N</div><div class="drawbar" id="drawbar" hidden></div></div>
+<div class="tools no-print">
+ <button class="btn" id="bLoc">◎ My location</button>
+ <button class="btn" id="bPlot">Mark a plot</button>
+ <button class="btn" id="bTag">Add a spot</button>
+ <button class="btn" id="bMeasure">Measure</button>
+ <button class="btn" id="bBase">Street map</button>
+ <input id="q" placeholder="Find a place or paste lat, lng" style="flex:1;min-width:180px;border-radius:999px">
+</div>
+<div id="info"></div>
+<h2>Plots</h2>
+<div class="card list" id="plots"></div>
+<h2 class="no-print">Save and share</h2>
+<div class="card no-print"><div class="row">
+ <button class="btn small" id="xGeo">GeoJSON file</button><button class="btn small" id="xKml">KML file (Google Earth)</button><button class="btn small" id="xPrint">Print or save PDF sheet</button><button class="btn small" id="xShare">Share</button></div>
+ <div class="mini" style="margin-top:8px">Files carry each plot's outline, name, variety, area and height, and each spot's label. Attach them to a crop record, a sale, or a green lot so the roaster and the brewer can see where the coffee grew.</div></div>
+<div class="card mini" id="about">Heights come from free satellite terrain data (SRTM, about 30 m grid, through the Terrain Tiles open dataset) or your phone's GPS. Both can be off by 10 m or more: good for the lie of the land and the height of an estate, not for a single terrace step. If you know a surveyed height, type it on the plot in Origin and it is used first. Map imagery: Esri World Imagery and OpenStreetMap contributors. Place search: OpenStreetMap Nominatim.</div>
+</main>
+<div class="toast" id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="sync.js"></script><script src="origin-db.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const n=parseFloat(v);return Number.isFinite(n)?n:null};
+const r1=v=>Math.round(v*10)/10,r6=v=>Math.round(v*1e6)/1e6;
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),2000)}
+// ---------- geometry ----------
+const R=6371008.8,rad=d=>d*Math.PI/180;
+function dist(a,b){const dLat=rad(b[0]-a[0]),dLng=rad(b[1]-a[1]);const h=Math.sin(dLat/2)**2+Math.cos(rad(a[0]))*Math.cos(rad(b[0]))*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+function areaM2(pts){if(pts.length<3)return 0;let s=0;for(let i=0;i<pts.length;i++){const p=pts[i],q=pts[(i+1)%pts.length];s+=rad(q[1]-p[1])*(2+Math.sin(rad(p[0]))+Math.sin(rad(q[0])))}return Math.abs(s*R*R/2)}
+function perim(pts,closed){let s=0;for(let i=0;i<pts.length-(closed?0:1);i++)s+=dist(pts[i],pts[(i+1)%pts.length]);return s}
+function centroid(pts){const n=pts.length;return[pts.reduce((a,p)=>a+p[0],0)/n,pts.reduce((a,p)=>a+p[1],0)/n]}
+function inside(pt,poly){let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>pt[1])!==(b[1]>pt[1])&&pt[0]<(b[0]-a[0])*(pt[1]-a[1])/(b[1]-a[1])+a[0])c=!c}return c}
+const fmtM=m=>m<1000?Math.round(m)+' m':r1(m/1000)+' km';
+const fmtA=m2=>{const ac=m2/4046.856;return (ac>=0.1?r1(ac)+' acre':Math.round(m2)+' m²')+' · '+(m2/10000).toFixed(m2<10000?3:2)+' ha · '+r1(ac*100)+' cent'};
+const gmap=p=>'https://www.google.com/maps?q='+r6(p[0])+','+r6(p[1]);
+// ---------- terrain heights from Terrain Tiles (terrarium encoding) ----------
+const TZ=14,TILES=new Map();
+function tile(x,y){const k=x+'/'+y;if(TILES.has(k))return TILES.get(k);const p=new Promise(ok=>{const im=new Image();im.crossOrigin='anonymous';im.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.drawImage(im,0,0);ok(g.getImageData(0,0,256,256).data)}catch(e){ok(null)}};im.onerror=()=>ok(null);im.src='https://s3.amazonaws.com/elevation-tiles-prod/terrarium/'+TZ+'/'+x+'/'+y+'.png'});TILES.set(k,p);return p}
+async function elev(lat,lng){const n=2**TZ,xf=(lng+180)/360*n,yf=(1-Math.log(Math.tan(rad(lat))+1/Math.cos(rad(lat)))/Math.PI)/2*n;const x=Math.floor(xf),y=Math.floor(yf);const d=await tile(x,y);if(!d)return null;const px=Math.min(255,Math.floor((xf-x)*256)),py=Math.min(255,Math.floor((yf-y)*256)),i=(py*256+px)*4;return (d[i]*256+d[i+1]+d[i+2]/256)-32768}
+async function elevStats(poly){const lats=poly.map(p=>p[0]),lngs=poly.map(p=>p[1]);const a=Math.min(...lats),b=Math.max(...lats),c=Math.min(...lngs),d=Math.max(...lngs);const pts=[...poly];const N=7;for(let i=0;i<=N;i++)for(let j=0;j<=N;j++){const p=[a+(b-a)*i/N,c+(d-c)*j/N];if(inside(p,poly))pts.push(p)}
+ const hs=(await Promise.all(pts.map(p=>elev(p[0],p[1])))).map((h,i)=>({h,p:pts[i]})).filter(x=>x.h!=null);if(!hs.length)return null;hs.sort((x,y)=>x.h-y.h);return{min:hs[0],max:hs[hs.length-1],avg:hs.reduce((s,x)=>s+x.h,0)/hs.length,n:hs.length}}
+// ---------- data ----------
+let DB={estate:[],plot:[],harvest:[],process:[],green:[]};const byId=(t,id)=>DB[t].find(x=>x.id===id);
+async function loadAll(){for(const t of ['estate','plot','harvest','process','green'])DB[t]=await ORIGIN.all(t)}
+const ptitle=p=>[p.block,p.name].filter(Boolean).join(' / ')||'Plot';
+const geoOf=p=>Array.isArray(p.geo)&&p.geo.length>=3?p.geo:null;
+const pinOf=p=>num(p.lat)!=null&&num(p.lng)!=null?[num(p.lat),num(p.lng)]:geoOf(p)?centroid(p.geo):null;
+const altM=p=>{const a=num(p.altitude);if(a==null)return null;return (p.altUnit||'ft')==='m'?a:a*0.3048};
+const KINDS=['Harvest point','Variety block','Mother tree','Shade tree','Water source','Nursery','Drying yard','Pulping','Store','Gate / road','Other'];
+// ---------- map ----------
+let map,base={},baseName='sat',layer,draft=null,HL=null;
+function initMap(){map=L.map('map',{zoomControl:true,attributionControl:true}).setView([10.3,76.6],8);
+ base.sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:18,maxZoom:21,attribution:'Esri, Maxar, Earthstar Geographics'});
+ base.street=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,maxNativeZoom:19,attribution:'© OpenStreetMap contributors'});
+ base.sat.addTo(map);L.control.scale({metric:true,imperial:false}).addTo(map);layer=L.layerGroup().addTo(map);
+ map.on('click',e=>{if(draft)addVertex([e.latlng.lat,e.latlng.lng])})}
+function drawAll(){layer.clearLayers();const bounds=[];
+ DB.plot.forEach(p=>{const g=geoOf(p),pin=pinOf(p),hl=HL&&HL.has(p.id),col=hl?'#ffd166':'#ffffff';
+  if(g){const pg=L.polygon(g,{color:col,weight:hl?4:2.5,fillColor:hl?'#ffd166':'#8d583b',fillOpacity:hl?.35:.18}).addTo(layer);pg.bindTooltip(esc(ptitle(p))+(p.variety?'<br>'+esc(p.variety):''),{permanent:true,direction:'center',className:'lab'});pg.on('click',e=>{if(draft)return;L.DomEvent.stop(e);showPlot(p)});g.forEach(x=>bounds.push(x))}
+  else if(pin){const m=L.circleMarker(pin,{radius:8,color:'#fff',weight:2,fillColor:'#8d583b',fillOpacity:1}).addTo(layer);m.bindTooltip(esc(ptitle(p)),{permanent:true,direction:'right',className:'lab',offset:[8,0]});m.on('click',e=>{if(draft)return;L.DomEvent.stop(e);showPlot(p)});bounds.push(pin)}
+  (p.marks||[]).forEach((k,i)=>markLayer(k,'plot',p.id,i,bounds))});
+ DB.estate.forEach(e=>(e.marks||[]).forEach((k,i)=>markLayer(k,'estate',e.id,i,bounds)));
+ DB.harvest.forEach(h=>{if(num(h.lat)!=null&&num(h.lng)!=null){const p=[num(h.lat),num(h.lng)];L.circleMarker(p,{radius:6,color:'#fff',weight:2,fillColor:'#b4432f',fillOpacity:1}).addTo(layer).bindTooltip('Harvest '+esc(h.code||''),{className:'lab'});bounds.push(p)}});
+ return bounds}
+function markLayer(k,t,id,i,bounds){const p=[k.lat,k.lng];const m=L.circleMarker(p,{radius:7,color:'#171512',weight:2,fillColor:'#ffd166',fillOpacity:1}).addTo(layer);m.bindTooltip(esc(k.label||k.kind),{permanent:true,direction:'right',className:'lab',offset:[8,0]});m.on('click',e=>{if(draft)return;L.DomEvent.stop(e);showMark(k,t,id,i)});bounds.push(p)}
+function fit(b){if(b.length===1)map.setView(b[0],17);else if(b.length)map.fitBounds(b,{padding:[30,30],maxZoom:18})}
+// ---------- drawing (own taps, visible numbered nodes, undo) ----------
+function startDraw(mode,opts){stopDraw();draft={mode,pts:[],opts:opts||{},grp:L.layerGroup().addTo(map)};map.doubleClickZoom.disable();$('#map').style.cursor='crosshair';barHtml()}
+function stopDraw(){if(draft){map.removeLayer(draft.grp);draft=null}map.doubleClickZoom.enable();$('#map').style.cursor='';$('#drawbar').hidden=true;document.querySelectorAll('.tools .btn').forEach(b=>b.classList.remove('on'))}
+function addVertex(p){if(draft.mode==='tag'){draft.pts=[p];renderDraft();finishDraw();return}draft.pts.push(p);renderDraft()}
+function renderDraft(){const d=draft;d.grp.clearLayers();if(!d.pts.length){barHtml();return}
+ if(d.mode==='plot'&&d.pts.length>=3)L.polygon(d.pts,{color:'#ffd166',weight:3,dashArray:'6 6',fillOpacity:.15}).addTo(d.grp);else L.polyline(d.pts,{color:'#ffd166',weight:3,dashArray:'6 6'}).addTo(d.grp);
+ d.pts.forEach((p,i)=>L.marker(p,{icon:L.divIcon({className:'',html:'<div class="vx">'+(i+1)+'</div>',iconSize:[22,22],iconAnchor:[11,11]})}).addTo(d.grp));
+ for(let i=1;i<d.pts.length;i++){const a=d.pts[i-1],b=d.pts[i];L.marker([(a[0]+b[0])/2,(a[1]+b[1])/2],{icon:L.divIcon({className:'',html:'<span class="lab" style="display:inline-block;white-space:nowrap">'+fmtM(dist(a,b))+'</span>',iconSize:null})}).addTo(d.grp)}
+ barHtml()}
+function barHtml(){const d=draft,bar=$('#drawbar');if(!d){bar.hidden=true;return}bar.hidden=false;const n=d.pts.length;
+ const msg=d.mode==='plot'?(n<3?'Tap each corner of the plot ('+n+' so far, need 3)':'Area '+fmtA(areaM2(d.pts)).split(' · ')[0]+' · '+n+' corners'):d.mode==='measure'?(n<2?'Tap points along the way':'Total '+fmtM(perim(d.pts,false))+' · '+n+' points'):'Tap where the spot is';
+ bar.innerHTML='<b>'+msg+'</b>'+(d.mode!=='tag'?'<button class="btn small" id="dU"'+(n?'':' disabled')+'>Undo</button>':'')+(d.mode!=='tag'?'<button class="btn small primary" id="dF">'+(d.mode==='measure'?'Done':'Finish')+'</button>':'')+'<button class="btn small" id="dX">Cancel</button>';
+ const u=$('#dU');if(u)u.onclick=e=>{e.stopPropagation();d.pts.pop();renderDraft()};const f=$('#dF');if(f)f.onclick=e=>{e.stopPropagation();finishDraw()};$('#dX').onclick=e=>{e.stopPropagation();stopDraw()}}
+async function finishDraw(){const d=draft;if(d.mode==='plot'&&d.pts.length<3){toast('Tap at least 3 corners');return}if(d.mode==='measure'&&d.pts.length<2){toast('Tap at least 2 points');return}
+ const pts=d.pts.slice(),mode=d.mode,opts=d.opts;stopDraw();
+ if(mode==='plot')return assignPlot(pts,opts.plotId);if(mode==='tag')return newMark(pts[0]);if(mode==='measure')return showMeasure(pts)}
+// ---------- panels ----------
+function card(h){$('#info').innerHTML='<div class="card">'+h+'</div>';$('#info').scrollIntoView({behavior:'smooth',block:'nearest'})}
+async function showPlot(p){const g=geoOf(p),pin=pinOf(p),e=byId('estate',p.estateId);
+ const rows=[['Estate',e?esc(e.name):''],['Variety',esc([p.species,p.variety].filter(Boolean).join(' · '))]];
+ if(g){rows.push(['Area on map',fmtA(areaM2(g))]);rows.push(['Boundary',fmtM(perim(g,true))+', '+g.length+' corners']);if(num(p.area))rows.push(['Area recorded',esc(p.area+' '+(p.areaUnit||'acre'))])}
+ if(pin)rows.push(['Centre',r6(pin[0])+', '+r6(pin[1])]);
+ const a=altM(p);if(a!=null)rows.push(['Height recorded',Math.round(a)+' m'+(p.altSource==='satellite'?' (from satellite)':'')]);
+ card('<b style="font-size:17px">'+esc(ptitle(p))+'</b><div class="kv" style="margin-top:8px">'+rows.filter(r=>r[1]).map(r=>'<span>'+r[0]+'</span><div>'+r[1]+'</div>').join('')+'<span>Terrain</span><div id="elv">'+(g||pin?'Reading heights…':'Mark the plot first')+'</div></div>'+
+  (g?'<div class="mini" style="margin-top:6px">Sides: '+g.map((x,i)=>fmtM(dist(x,g[(i+1)%g.length]))).join(', ')+'</div>':'')+
+  '<div class="row no-print" style="margin-top:10px">'+(pin?'<a class="btn small" href="'+gmap(pin)+'" target="_blank" rel="noopener">Google Maps</a>':'')+'<button class="btn small" id="pRe">'+(g?'Redraw outline':'Mark outline')+'</button><a class="btn small" href="origin.html#edit/plot/'+esc(p.id)+'">Open in Origin</a><button class="btn small" id="pGeo">GeoJSON</button><button class="btn small" id="pKml">KML</button></div>');
+ $('#pRe').onclick=()=>{if(g)map.fitBounds(g,{padding:[30,30]});else if(pin)map.setView(pin,18);startDraw('plot',{plotId:p.id});$('#bPlot').classList.add('on');window.scrollTo({top:$('#map').getBoundingClientRect().top+scrollY-10,behavior:'smooth'})};
+ $('#pGeo').onclick=()=>download(ptitle(p)+'.geojson',JSON.stringify(geojson([p]),null,1),'application/geo+json');$('#pKml').onclick=()=>download(ptitle(p)+'.kml',kml([p]),'application/vnd.google-earth.kml+xml');
+ const el=$('#elv');if(!el||!(g||pin))return;const st=g?await elevStats(g):null;const one=!g&&pin?await elev(pin[0],pin[1]):null;
+ if(st){const span=st.max.h-st.min.h,run=dist(st.min.p,st.max.p);el.innerHTML='About <b>'+Math.round(st.avg)+' m</b> ('+Math.round(st.avg/0.3048)+' ft), lowest '+Math.round(st.min.h)+', highest '+Math.round(st.max.h)+' m. Fall across the plot about '+Math.round(span)+' m'+(run>20?' over '+fmtM(run)+' (about '+Math.round(span/run*100)+'% slope)':'')+'.';if(altM(p)==null)fillAlt(p,st.avg)}
+ else if(one!=null){el.innerHTML='About <b>'+Math.round(one)+' m</b> ('+Math.round(one/0.3048)+' ft)';if(altM(p)==null)fillAlt(p,one)}
+ else el.textContent='Terrain heights not available offline.'}
+async function fillAlt(p,m){p.altitude=String(Math.round(m/((p.altUnit||'ft')==='m'?1:0.3048)));p.altSource='satellite';try{await ORIGIN.put(p);toast('Height saved on the plot (from satellite)')}catch(e){}}
+async function assignPlot(pts,plotId){const c=centroid(pts);
+ if(plotId){const p=byId('plot',plotId);p.geo=pts.map(x=>[r6(x[0]),r6(x[1])]);p.lat=r6(c[0]);p.lng=r6(c[1]);await ORIGIN.put(p);await refresh();toast('Outline saved');return showPlot(p)}
+ const free=DB.plot;card('<b>New outline</b><div class="mini">'+fmtA(areaM2(pts))+' · boundary '+fmtM(perim(pts,true))+'</div><div class="row" style="margin-top:10px"><label class="f">Save to plot<select id="aSel">'+(free.length?free.map(p=>'<option value="'+esc(p.id)+'">'+esc(ptitle(p))+(geoOf(p)?' (replace outline)':'')+'</option>').join(''):'')+(DB.estate.length?'<option value="__new">New plot…</option>':'')+'</select></label><label class="f" id="aNewL" hidden>New plot name<input id="aNew" placeholder="P3"></label><label class="f" id="aEstL" hidden>Estate<select id="aEst">'+DB.estate.map(e=>'<option value="'+esc(e.id)+'">'+esc(e.name)+'</option>').join('')+'</select></label></div><div class="row" style="margin-top:8px"><button class="btn primary small" id="aSave">Save</button><button class="btn small" id="aCancel">Discard</button></div>'+(DB.estate.length?'':'<div class="mini" style="margin-top:6px">Add an estate in Origin first, then you can save new plots here.</div>'));
+ const sel=$('#aSel'),tg=()=>{const n=sel.value==='__new';$('#aNewL').hidden=!n;$('#aEstL').hidden=!n};if(sel)sel.onchange=tg;tg();
+ const prev=L.polygon(pts,{color:'#ffd166',weight:3,fillOpacity:.2}).addTo(map);$('#aCancel').onclick=()=>{map.removeLayer(prev);$('#info').innerHTML=''};
+ $('#aSave').onclick=async()=>{let p;if(!sel||!sel.value){toast('No plot to save to');return}if(sel.value==='__new'){const nm=$('#aNew').value.trim();if(!nm){toast('Name the plot');return}p={type:'plot',id:ORIGIN.newId('plot'),estateId:$('#aEst').value,name:nm}}else p=byId('plot',sel.value);
+  p.geo=pts.map(x=>[r6(x[0]),r6(x[1])]);p.lat=r6(c[0]);p.lng=r6(c[1]);await ORIGIN.put(p);map.removeLayer(prev);await refresh();toast('Plot saved');showPlot(byId('plot',p.id))}}
+function owners(){return DB.plot.map(p=>['plot',p.id,'Plot '+ptitle(p)]).concat(DB.estate.map(e=>['estate',e.id,'Estate '+e.name]))}
+function newMark(pt){const own=owners();const inP=DB.plot.find(p=>geoOf(p)&&inside(pt,p.geo));
+ if(!own.length){card('<b>Spot</b><div class="mini">'+r6(pt[0])+', '+r6(pt[1])+' · <a href="'+gmap(pt)+'" target="_blank" rel="noopener">Google Maps</a></div><div class="mini" style="margin-top:6px">Add an estate or plot in Origin to save spots.</div>');return}
+ const tmp=L.circleMarker(pt,{radius:8,color:'#171512',fillColor:'#ffd166',fillOpacity:1}).addTo(map);
+ card('<b>New spot</b><div class="mini">'+r6(pt[0])+', '+r6(pt[1])+' <span id="mE"></span></div><div class="row" style="margin-top:8px"><label class="f">Kind<select id="mK">'+KINDS.map(k=>'<option>'+k+'</option>').join('')+'</select></label><label class="f">Label<input id="mL" placeholder="SLN 795 block, big jack tree…"></label></div><div class="row"><label class="f">Belongs to<select id="mO">'+own.map(([t,id,l])=>'<option value="'+t+'|'+esc(id)+'"'+(inP&&inP.id===id?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select></label><label class="f">Note<input id="mN" placeholder="Optional"></label></div><div class="row" style="margin-top:8px"><button class="btn primary small" id="mS">Save spot</button><button class="btn small" id="mX">Discard</button></div>');
+ elev(pt[0],pt[1]).then(h=>{const el=$('#mE');if(el&&h!=null){el.textContent='· about '+Math.round(h)+' m';el.dataset.h=h}});
+ $('#mX').onclick=()=>{map.removeLayer(tmp);$('#info').innerHTML=''};
+ $('#mS').onclick=async()=>{const [t,id]=$('#mO').value.split('|');const r=byId(t,id);const h=num(($('#mE')||{}).dataset?.h);r.marks=[...(r.marks||[]),{kind:$('#mK').value,label:$('#mL').value.trim(),note:$('#mN').value.trim(),lat:r6(pt[0]),lng:r6(pt[1]),altM:h!=null?Math.round(h):null,at:new Date().toISOString()}];await ORIGIN.put(r);map.removeLayer(tmp);await refresh();toast('Spot saved');$('#info').innerHTML=''}}
+function showMark(k,t,id,i){const r=byId(t,id);const p=[k.lat,k.lng];
+ card('<b style="font-size:16px">'+esc(k.label||k.kind)+'</b><div class="kv" style="margin-top:8px"><span>Kind</span><div>'+esc(k.kind)+'</div><span>On</span><div>'+esc(t==='plot'?'Plot '+ptitle(r):'Estate '+r.name)+'</div><span>Point</span><div>'+r6(p[0])+', '+r6(p[1])+'</div>'+(k.altM!=null?'<span>Height</span><div>about '+k.altM+' m</div>':'')+(k.note?'<span>Note</span><div>'+esc(k.note)+'</div>':'')+'</div><div class="row no-print" style="margin-top:10px"><a class="btn small" href="'+gmap(p)+'" target="_blank" rel="noopener">Google Maps</a><button class="btn small" id="kD">Delete spot</button></div>');
+ $('#kD').onclick=async()=>{if(!confirm('Delete this spot?'))return;r.marks.splice(i,1);await ORIGIN.put(r);await refresh();$('#info').innerHTML=''}}
+async function showMeasure(pts){const line=L.polyline(pts,{color:'#ffd166',weight:4}).addTo(layer);const tot=perim(pts,false);
+ const N=Math.min(80,Math.max(10,Math.round(tot/15)));const samp=[];let acc=0;const seg=[];for(let i=1;i<pts.length;i++){const d=dist(pts[i-1],pts[i]);seg.push([acc,d,pts[i-1],pts[i]]);acc+=d}
+ for(let k=0;k<=N;k++){const s=tot*k/N;const g=seg.find(x=>s<=x[0]+x[1]+1e-9)||seg[seg.length-1];const f=g[1]?(s-g[0])/g[1]:0;samp.push([s,[g[2][0]+(g[3][0]-g[2][0])*f,g[2][1]+(g[3][1]-g[2][1])*f]])}
+ card('<b>Measured line</b><div class="kv" style="margin-top:6px"><span>Distance</span><div>'+fmtM(tot)+'</div><span>Legs</span><div>'+seg.map(x=>fmtM(x[1])).join(', ')+'</div><span>Heights</span><div id="mh">Reading…</div></div><div id="mp"></div><div class="row no-print" style="margin-top:8px"><button class="btn small" id="mClr">Clear line</button></div>');
+ $('#mClr').onclick=()=>{layer.removeLayer(line);$('#info').innerHTML=''};
+ const hs=await Promise.all(samp.map(([,p])=>elev(p[0],p[1])));const ok=samp.map((s,i)=>[s[0],hs[i]]).filter(x=>x[1]!=null);if(ok.length<2){$('#mh').textContent='Not available offline.';return}
+ const a=ok[0][1],b=ok[ok.length-1][1],mn=Math.min(...ok.map(x=>x[1])),mx=Math.max(...ok.map(x=>x[1]));let up=0,dn=0;for(let i=1;i<ok.length;i++){const d=ok[i][1]-ok[i-1][1];if(d>0)up+=d;else dn-=d}
+ $('#mh').innerHTML='Start about '+Math.round(a)+' m, end '+Math.round(b)+' m: '+(b>=a?'rises ':'falls ')+Math.round(Math.abs(b-a))+' m ('+r1(Math.abs(b-a)/tot*100)+'% average). Climbs '+Math.round(up)+' m and drops '+Math.round(dn)+' m along the way.';
+ const W=320,H=110,P=28,X=v=>P+v/tot*(W-P-6),Y=v=>8+(mx-v)/Math.max(1,mx-mn)*(H-26);
+ $('#mp').innerHTML='<svg class="prof" viewBox="0 0 '+W+' '+H+'"><polyline fill="none" stroke="#8d583b" stroke-width="2" points="'+ok.map(([s,h])=>X(s)+','+Y(h)).join(' ')+'"/><text x="2" y="'+(Y(mx)+4)+'" font-size="9" fill="#77716a">'+Math.round(mx)+'</text><text x="2" y="'+(Y(mn)+4)+'" font-size="9" fill="#77716a">'+Math.round(mn)+'</text><text x="'+(W-6)+'" y="'+(H-2)+'" font-size="9" text-anchor="end" fill="#77716a">'+fmtM(tot)+'</text><text x="'+P+'" y="'+(H-2)+'" font-size="9" fill="#77716a">0</text></svg><div class="mini">Height profile, metres. Satellite terrain, roughly 30 m grid.</div>'}
+// ---------- lists ----------
+function plotList(){const el=$('#plots');if(!DB.plot.length){el.innerHTML='<div class="mini">No plots yet. Add an estate and plots in Origin, or tap Mark a plot to draw one.</div>';return}
+ el.innerHTML=DB.plot.map(p=>{const g=geoOf(p),pin=pinOf(p),e=byId('estate',p.estateId);return '<div class="it"><div><b>'+esc(ptitle(p))+'</b><div class="mini">'+esc([e&&e.name,p.variety,g?fmtA(areaM2(g)).split(' · ')[0]:''].filter(Boolean).join(' · '))+'</div></div><div class="row"><span class="tag'+(g||pin?'':' no')+'">'+(g?'Outlined':pin?'Pin only':'Not on map')+'</span><button class="btn small" data-go="'+esc(p.id)+'">'+(g||pin?'Show':'Mark')+'</button></div></div>'}).join('');
+ el.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const p=byId('plot',b.dataset.go),g=geoOf(p),pin=pinOf(p);window.scrollTo({top:$('#map').getBoundingClientRect().top+scrollY-10,behavior:'smooth'});if(g){map.fitBounds(g,{padding:[30,30]});showPlot(p)}else if(pin){map.setView(pin,18);showPlot(p)}else{startDraw('plot',{plotId:p.id});$('#bPlot').classList.add('on');toast('Tap each corner of '+ptitle(p))}})}
+// ---------- export ----------
+function feats(plots){const F=[];plots.forEach(p=>{const e=byId('estate',p.estateId);const props={kind:'plot',name:ptitle(p),estate:e?e.name:'',species:p.species||'',variety:p.variety||'',altitude_m:altM(p)!=null?Math.round(altM(p)):null,area_recorded:p.area?p.area+' '+(p.areaUnit||'acre'):'',shade:p.shade||'',google_maps:pinOf(p)?gmap(pinOf(p)):''};const g=geoOf(p);
+  if(g){props.area_mapped_ha=+(areaM2(g)/10000).toFixed(4);F.push({type:'Feature',properties:props,geometry:{type:'Polygon',coordinates:[[...g,g[0]].map(x=>[x[1],x[0]])]}})}else if(pinOf(p)){const q=pinOf(p);F.push({type:'Feature',properties:props,geometry:{type:'Point',coordinates:[q[1],q[0]]}})}
+  (p.marks||[]).forEach(k=>F.push(markFeat(k,ptitle(p))))});return F}
+function markFeat(k,on){return{type:'Feature',properties:{kind:k.kind,name:k.label||k.kind,on,note:k.note||'',altitude_m:k.altM,google_maps:gmap([k.lat,k.lng])},geometry:{type:'Point',coordinates:[k.lng,k.lat]}}}
+function geojson(plots){const F=feats(plots);if(plots.length===DB.plot.length)DB.estate.forEach(e=>(e.marks||[]).forEach(k=>F.push(markFeat(k,e.name))));return{type:'FeatureCollection',name:'KoffyKraft origin map',features:F}}
+function kml(plots){const x=s=>String(s??'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));const pm=geojson(plots).features.map(f=>{const p=f.properties,desc=Object.entries(p).filter(([k,v])=>v!=null&&v!==''&&k!=='name').map(([k,v])=>k.replace(/_/g,' ')+': '+v).join('\n');const geom=f.geometry.type==='Polygon'?'<Polygon><outerBoundaryIs><LinearRing><coordinates>'+f.geometry.coordinates[0].map(c=>c[0]+','+c[1]+',0').join(' ')+'</coordinates></LinearRing></outerBoundaryIs></Polygon>':'<Point><coordinates>'+f.geometry.coordinates[0]+','+f.geometry.coordinates[1]+',0</coordinates></Point>';return '<Placemark><name>'+x(p.name)+'</name><description>'+x(desc)+'</description>'+(f.geometry.type==='Polygon'?'<styleUrl>#plot</styleUrl>':'')+geom+'</Placemark>'}).join('\n');
+ return '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>KoffyKraft origin map</name><Style id="plot"><LineStyle><color>ff3b588d</color><width>2</width></LineStyle><PolyStyle><color>553b588d</color></PolyStyle></Style>\n'+pm+'\n</Document></kml>'}
+function download(name,text,type){const b=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name.replace(/[\\/:*?"<>|]/g,'-');document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+// ---------- wire up ----------
+async function refresh(){await loadAll();const b=drawAll();plotList();return b}
+function setMode(btn,mode){if(draft&&draft.mode===mode){stopDraw();return}startDraw(mode);btn.classList.add('on')}
+async function boot(){initMap();const b=await refresh();
+ const h=decodeURIComponent(location.hash.slice(1));let m;
+ if((m=h.match(/^plot\/(.+)$/))&&byId('plot',m[1])){const p=byId('plot',m[1]);HL=new Set([p.id]);drawAll();const g=geoOf(p),pin=pinOf(p);if(g)map.fitBounds(g,{padding:[30,30]});else if(pin)map.setView(pin,18);showPlot(p);if(!g&&!pin){startDraw('plot',{plotId:p.id});toast('Tap each corner of '+ptitle(p))}}
+ else if((m=h.match(/^green\/(.+)$/))&&byId('green',m[1])){const g=byId('green',m[1]);const pr=g.processId&&byId('process',g.processId);const hs=pr?(pr.harvestIds||[]).map(id=>byId('harvest',id)).filter(Boolean):[];const ids=[...new Set(hs.flatMap(x=>x.plotIds||[]))];HL=new Set(ids);drawAll();const pts=ids.map(id=>byId('plot',id)).filter(Boolean).flatMap(p=>geoOf(p)||(pinOf(p)?[pinOf(p)]:[]));fit(pts.length?pts:b);
+  $('#printHead').hidden=false;$('#printHead').innerHTML='Where green lot <b>'+esc(g.code)+(g.name?' · '+esc(g.name):'')+'</b> grew: '+(ids.length?ids.map(id=>esc(ptitle(byId('plot',id)))).join(', '):'no plots linked yet')+'.'}
+ else fit(b);
+ $('#bLoc').onclick=()=>{if(!navigator.geolocation){toast('Location not available');return}toast('Finding you…');navigator.geolocation.getCurrentPosition(pos=>{const p=[pos.coords.latitude,pos.coords.longitude];map.setView(p,18);L.circle(p,{radius:pos.coords.accuracy,color:'#2b6cb0',weight:1,fillOpacity:.1}).addTo(layer);L.circleMarker(p,{radius:7,color:'#fff',weight:2,fillColor:'#2b6cb0',fillOpacity:1}).addTo(layer);
+  card('<b>You are here</b><div class="kv" style="margin-top:6px"><span>Point</span><div>'+r6(p[0])+', '+r6(p[1])+' (±'+Math.round(pos.coords.accuracy)+' m)</div>'+(pos.coords.altitude!=null?'<span>Phone height</span><div>'+Math.round(pos.coords.altitude)+' m'+(pos.coords.altitudeAccuracy?' (±'+Math.round(pos.coords.altitudeAccuracy)+' m)':'')+'</div>':'')+'<span>Terrain</span><div id="hereE">Reading…</div></div><div class="row no-print" style="margin-top:8px"><a class="btn small" href="'+gmap(p)+'" target="_blank" rel="noopener">Google Maps</a><button class="btn small" id="hereTag">Save as a spot</button></div>');
+  elev(p[0],p[1]).then(h=>{const el=$('#hereE');if(el)el.textContent=h!=null?'about '+Math.round(h)+' m':'not available offline'});$('#hereTag').onclick=()=>newMark(p)},e=>toast('Could not get location'),{enableHighAccuracy:true,timeout:15000})};
+ $('#bPlot').onclick=e=>setMode(e.currentTarget,'plot');$('#bTag').onclick=e=>setMode(e.currentTarget,'tag');$('#bMeasure').onclick=e=>setMode(e.currentTarget,'measure');
+ $('#bBase').onclick=e=>{map.removeLayer(base[baseName]);baseName=baseName==='sat'?'street':'sat';base[baseName].addTo(map);e.currentTarget.textContent=baseName==='sat'?'Street map':'Satellite'};
+ $('#q').addEventListener('keydown',async e=>{if(e.key!=='Enter')return;const v=e.target.value.trim();const ll=v.match(/^\s*(-?\d+(\.\d+)?)\s*[, ]\s*(-?\d+(\.\d+)?)\s*$/);if(ll){map.setView([+ll[1],+ll[3]],17);return}
+  try{const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=in&q='+encodeURIComponent(v));const j=await r.json();if(j[0])map.setView([+j[0].lat,+j[0].lon],15);else toast('Not found')}catch(x){toast('Search needs a connection')}});
+ $('#xGeo').onclick=()=>download('koffykraft-origin-map.geojson',JSON.stringify(geojson(DB.plot),null,1),'application/geo+json');
+ $('#xKml').onclick=()=>download('koffykraft-origin-map.kml',kml(DB.plot),'application/vnd.google-earth.kml+xml');
+ $('#xPrint').onclick=()=>{$('#printHead').hidden=false;if(!$('#printHead').innerHTML)$('#printHead').innerHTML='KoffyKraft origin map · '+new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});setTimeout(()=>window.print(),300)};
+ $('#xShare').onclick=async()=>{const lines=DB.plot.filter(pinOf).map(p=>{const g=geoOf(p);return ptitle(p)+(p.variety?' ('+p.variety+')':'')+(g?', '+fmtA(areaM2(g)).split(' · ')[0]:'')+(altM(p)!=null?', about '+Math.round(altM(p))+' m':'')+': '+gmap(pinOf(p))});const text='Our coffee plots\n'+lines.join('\n');
+  const file=new File([JSON.stringify(geojson(DB.plot))],'koffykraft-origin-map.geojson',{type:'application/geo+json'});
+  try{if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({title:'Origin map',text,files:[file]});else if(navigator.share)await navigator.share({title:'Origin map',text});else{await navigator.clipboard.writeText(text);toast('Copied map links')}}catch(e){}}}
+if(typeof L==='undefined'){document.getElementById('map').innerHTML='<div class="mini" style="padding:20px">The map needs a connection the first time. Check your internet and reload.</div>'}else boot();
+</script>
+</body>
+</html>
