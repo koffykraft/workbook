@@ -55,6 +55,8 @@ input,select{font:inherit;font-size:16px;padding:10px 11px;border:1px solid var(
 <div id="info"></div>
 <h2>Plots</h2>
 <div class="card list" id="plots"></div>
+<h2>Spots</h2>
+<div class="card list" id="spots"></div>
 <h2 class="no-print">Save and share</h2>
 <div class="card no-print"><div class="row">
  <button class="btn small" id="xGeo">GeoJSON file</button><button class="btn small" id="xKml">KML file (Google Earth)</button><button class="btn small" id="xPrint">Print or save PDF sheet</button><button class="btn small" id="xShare">Share</button></div>
@@ -99,7 +101,7 @@ let map,base={},baseName='sat',layer,draft=null,HL=null;
 function initMap(){map=L.map('map',{zoomControl:true,attributionControl:true}).setView([10.3,76.6],8);
  base.sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:18,maxZoom:21,attribution:'Esri, Maxar, Earthstar Geographics'});
  base.street=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,maxNativeZoom:19,attribution:'© OpenStreetMap contributors'});
- base.sat.addTo(map);L.control.scale({metric:true,imperial:false}).addTo(map);layer=L.layerGroup().addTo(map);
+ base.sat.addTo(map);map.createPane('spots').style.zIndex=650;L.control.scale({metric:true,imperial:false}).addTo(map);layer=L.layerGroup().addTo(map);
  map.on('click',e=>{if(draft)addVertex([e.latlng.lat,e.latlng.lng])})}
 function drawAll(){layer.clearLayers();const bounds=[];
  DB.plot.forEach(p=>{const g=geoOf(p),pin=pinOf(p),hl=HL&&HL.has(p.id),col=hl?'#ffd166':'#ffffff';
@@ -109,7 +111,7 @@ function drawAll(){layer.clearLayers();const bounds=[];
  DB.estate.forEach(e=>(e.marks||[]).forEach((k,i)=>markLayer(k,'estate',e.id,i,bounds)));
  DB.harvest.forEach(h=>{if(num(h.lat)!=null&&num(h.lng)!=null){const p=[num(h.lat),num(h.lng)];L.circleMarker(p,{radius:6,color:'#fff',weight:2,fillColor:'#b4432f',fillOpacity:1}).addTo(layer).bindTooltip('Harvest '+esc(h.code||''),{className:'lab'});bounds.push(p)}});
  return bounds}
-function markLayer(k,t,id,i,bounds){const p=[k.lat,k.lng];const m=L.circleMarker(p,{radius:7,color:'#171512',weight:2,fillColor:'#ffd166',fillOpacity:1}).addTo(layer);m.bindTooltip(esc(k.label||k.kind),{permanent:true,direction:'right',className:'lab',offset:[8,0]});m.on('click',e=>{if(draft)return;L.DomEvent.stop(e);showMark(k,t,id,i)});bounds.push(p)}
+function markLayer(k,t,id,i,bounds){const p=[k.lat,k.lng];const m=L.circleMarker(p,{pane:'spots',radius:9,color:'#171512',weight:3,fillColor:'#ffd166',fillOpacity:1}).addTo(layer);m.bindTooltip(esc(k.label||k.kind),{permanent:true,direction:'right',className:'lab',offset:[10,0],pane:'spots'});m.on('click',e=>{if(draft)return;L.DomEvent.stop(e);showMark(k,t,id,i)});bounds.push(p)}
 function fit(b){if(b.length===1)map.setView(b[0],17);else if(b.length)map.fitBounds(b,{padding:[30,30],maxZoom:18})}
 // ---------- drawing (own taps, visible numbered nodes, undo) ----------
 function startDraw(mode,opts){stopDraw();draft={mode,pts:[],opts:opts||{},grp:L.layerGroup().addTo(map)};map.doubleClickZoom.disable();$('#map').style.cursor='crosshair';barHtml()}
@@ -153,12 +155,17 @@ async function assignPlot(pts,plotId){const c=centroid(pts);
   p.geo=pts.map(x=>[r6(x[0]),r6(x[1])]);p.lat=r6(c[0]);p.lng=r6(c[1]);await ORIGIN.put(p);map.removeLayer(prev);await refresh();toast('Plot saved');showPlot(byId('plot',p.id))}}
 function owners(){return DB.plot.map(p=>['plot',p.id,'Plot '+ptitle(p)]).concat(DB.estate.map(e=>['estate',e.id,'Estate '+e.name]))}
 function newMark(pt){const own=owners();const inP=DB.plot.find(p=>geoOf(p)&&inside(pt,p.geo));
- if(!own.length){card('<b>Spot</b><div class="mini">'+r6(pt[0])+', '+r6(pt[1])+' · <a href="'+gmap(pt)+'" target="_blank" rel="noopener">Google Maps</a></div><div class="mini" style="margin-top:6px">Add an estate or plot in Origin to save spots.</div>');return}
  const tmp=L.circleMarker(pt,{radius:8,color:'#171512',fillColor:'#ffd166',fillOpacity:1}).addTo(map);
- card('<b>New spot</b><div class="mini">'+r6(pt[0])+', '+r6(pt[1])+' <span id="mE"></span></div><div class="row" style="margin-top:8px"><label class="f">Kind<select id="mK">'+KINDS.map(k=>'<option>'+k+'</option>').join('')+'</select></label><label class="f">Label<input id="mL" placeholder="SLN 795 block, big jack tree…"></label></div><div class="row"><label class="f">Belongs to<select id="mO">'+own.map(([t,id,l])=>'<option value="'+t+'|'+esc(id)+'"'+(inP&&inP.id===id?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select></label><label class="f">Note<input id="mN" placeholder="Optional"></label></div><div class="row" style="margin-top:8px"><button class="btn primary small" id="mS">Save spot</button><button class="btn small" id="mX">Discard</button></div>');
+ card('<b>New spot</b><div class="mini">'+r6(pt[0])+', '+r6(pt[1])+' <span id="mE"></span></div><div class="row" style="margin-top:8px"><label class="f">Kind<select id="mK">'+KINDS.map(k=>'<option>'+k+'</option>').join('')+'</select></label><label class="f">Label<input id="mL" placeholder="SLN 795 block, big jack tree…"></label></div><div class="row">'+(own.length?'<label class="f">Belongs to<select id="mO">'+own.map(([t,id,l])=>'<option value="'+t+'|'+esc(id)+'"'+(inP&&inP.id===id?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select></label>':'<label class="f">Farm or place name<input id="mF" placeholder="Thumpassery Estate"></label>')+'<label class="f">Note<input id="mN" placeholder="Optional"></label></div><div class="row" style="margin-top:8px"><button class="btn primary small" id="mS">Save spot</button><button class="btn small" id="mX">Discard</button></div>');
  elev(pt[0],pt[1]).then(h=>{const el=$('#mE');if(el&&h!=null){el.textContent='· about '+Math.round(h)+' m';el.dataset.h=h}});
  $('#mX').onclick=()=>{map.removeLayer(tmp);$('#info').innerHTML=''};
- $('#mS').onclick=async()=>{const [t,id]=$('#mO').value.split('|');const r=byId(t,id);const h=num(($('#mE')||{}).dataset?.h);r.marks=[...(r.marks||[]),{kind:$('#mK').value,label:$('#mL').value.trim(),note:$('#mN').value.trim(),lat:r6(pt[0]),lng:r6(pt[1]),altM:h!=null?Math.round(h):null,at:new Date().toISOString()}];await ORIGIN.put(r);map.removeLayer(tmp);await refresh();toast('Spot saved');$('#info').innerHTML=''}}
+ $('#mS').onclick=async()=>{const btn=$('#mS');btn.disabled=true;btn.textContent='Saving…';try{let r,t,id;
+  if($('#mO')){[t,id]=$('#mO').value.split('|');r=byId(t,id)}else{const nm=$('#mF').value.trim();if(!nm){toast('Name the farm or place');btn.disabled=false;btn.textContent='Save spot';return}t='estate';r={type:'estate',id:ORIGIN.newId('estate'),name:nm,country:'India'};id=r.id}
+  const h=num(($('#mE')||{}).dataset?.h);const at=new Date().toISOString();r.marks=[...(r.marks||[]),{kind:$('#mK').value,label:$('#mL').value.trim(),note:$('#mN').value.trim(),lat:r6(pt[0]),lng:r6(pt[1]),altM:h!=null?Math.round(h):null,at}];
+  await ORIGIN.put(r);map.removeLayer(tmp);await refresh();const o=byId(t,id),i=o&&o.marks?o.marks.findIndex(k=>k.at===at):-1;
+  if(i<0){toast('Could not save the spot. Try again.');btn.disabled=false;btn.textContent='Save spot';return}
+  map.setView(pt,Math.max(map.getZoom(),17));toast('Spot saved');showMark(o.marks[i],t,id,i);window.scrollTo({top:$('#map').getBoundingClientRect().top+scrollY-10,behavior:'smooth'})}
+  catch(e){toast('Could not save: '+(e.message||e));btn.disabled=false;btn.textContent='Save spot'}}}
 function showMark(k,t,id,i){const r=byId(t,id);const p=[k.lat,k.lng];
  card('<b style="font-size:16px">'+esc(k.label||k.kind)+'</b><div class="kv" style="margin-top:8px"><span>Kind</span><div>'+esc(k.kind)+'</div><span>On</span><div>'+esc(t==='plot'?'Plot '+ptitle(r):'Estate '+r.name)+'</div><span>Point</span><div>'+r6(p[0])+', '+r6(p[1])+'</div>'+(k.altM!=null?'<span>Height</span><div>about '+k.altM+' m</div>':'')+(k.note?'<span>Note</span><div>'+esc(k.note)+'</div>':'')+'</div><div class="row no-print" style="margin-top:10px"><a class="btn small" href="'+gmap(p)+'" target="_blank" rel="noopener">Google Maps</a><button class="btn small" id="kD">Delete spot</button></div>');
  $('#kD').onclick=async()=>{if(!confirm('Delete this spot?'))return;r.marks.splice(i,1);await ORIGIN.put(r);await refresh();$('#info').innerHTML=''}}
@@ -173,6 +180,10 @@ async function showMeasure(pts){const line=L.polyline(pts,{color:'#ffd166',weigh
  const W=320,H=110,P=28,X=v=>P+v/tot*(W-P-6),Y=v=>8+(mx-v)/Math.max(1,mx-mn)*(H-26);
  $('#mp').innerHTML='<svg class="prof" viewBox="0 0 '+W+' '+H+'"><polyline fill="none" stroke="#8d583b" stroke-width="2" points="'+ok.map(([s,h])=>X(s)+','+Y(h)).join(' ')+'"/><text x="2" y="'+(Y(mx)+4)+'" font-size="9" fill="#77716a">'+Math.round(mx)+'</text><text x="2" y="'+(Y(mn)+4)+'" font-size="9" fill="#77716a">'+Math.round(mn)+'</text><text x="'+(W-6)+'" y="'+(H-2)+'" font-size="9" text-anchor="end" fill="#77716a">'+fmtM(tot)+'</text><text x="'+P+'" y="'+(H-2)+'" font-size="9" fill="#77716a">0</text></svg><div class="mini">Height profile, metres. Satellite terrain, roughly 30 m grid.</div>'}
 // ---------- lists ----------
+function spotList(){const all=[];DB.plot.forEach(p=>(p.marks||[]).forEach((k,i)=>all.push([k,'plot',p.id,i,'Plot '+ptitle(p)])));DB.estate.forEach(e=>(e.marks||[]).forEach((k,i)=>all.push([k,'estate',e.id,i,e.name])));const el=$('#spots');
+ if(!all.length){el.innerHTML='<div class="mini">No spots yet. Tap Add a spot, then tap the map where it is.</div>';return}
+ all.sort((a,b)=>String(b[0].at||'').localeCompare(String(a[0].at||'')));el.innerHTML=all.map(([k,t,id,i,on],n)=>'<div class="it"><div><b>'+esc(k.label||k.kind)+'</b><div class="mini">'+esc([k.kind,on,k.altM!=null?'about '+k.altM+' m':''].filter(Boolean).join(' · '))+'</div></div><button class="btn small" data-sp="'+n+'">Show</button></div>').join('');
+ el.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{const [k,t,id,i]=all[+b.dataset.sp];map.setView([k.lat,k.lng],Math.max(map.getZoom(),17));showMark(k,t,id,i);window.scrollTo({top:$('#map').getBoundingClientRect().top+scrollY-10,behavior:'smooth'})})}
 function plotList(){const el=$('#plots');if(!DB.plot.length){el.innerHTML='<div class="mini">No plots yet. Add an estate and plots in Origin, or tap Mark a plot to draw one.</div>';return}
  el.innerHTML=DB.plot.map(p=>{const g=geoOf(p),pin=pinOf(p),e=byId('estate',p.estateId);return '<div class="it"><div><b>'+esc(ptitle(p))+'</b><div class="mini">'+esc([e&&e.name,p.variety,g?fmtA(areaM2(g)).split(' · ')[0]:''].filter(Boolean).join(' · '))+'</div></div><div class="row"><span class="tag'+(g||pin?'':' no')+'">'+(g?'Outlined':pin?'Pin only':'Not on map')+'</span><button class="btn small" data-go="'+esc(p.id)+'">'+(g||pin?'Show':'Mark')+'</button></div></div>'}).join('');
  el.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const p=byId('plot',b.dataset.go),g=geoOf(p),pin=pinOf(p);window.scrollTo({top:$('#map').getBoundingClientRect().top+scrollY-10,behavior:'smooth'});if(g){map.fitBounds(g,{padding:[30,30]});showPlot(p)}else if(pin){map.setView(pin,18);showPlot(p)}else{startDraw('plot',{plotId:p.id});$('#bPlot').classList.add('on');toast('Tap each corner of '+ptitle(p))}})}
@@ -186,7 +197,7 @@ function kml(plots){const x=s=>String(s??'').replace(/[<>&]/g,c=>({'<':'&lt;','>
  return '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>KoffyKraft origin map</name><Style id="plot"><LineStyle><color>ff3b588d</color><width>2</width></LineStyle><PolyStyle><color>553b588d</color></PolyStyle></Style>\n'+pm+'\n</Document></kml>'}
 function download(name,text,type){const b=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name.replace(/[\\/:*?"<>|]/g,'-');document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 // ---------- wire up ----------
-async function refresh(){await loadAll();const b=drawAll();plotList();return b}
+async function refresh(){await loadAll();const b=drawAll();plotList();spotList();return b}
 function setMode(btn,mode){if(draft&&draft.mode===mode){stopDraw();return}startDraw(mode);btn.classList.add('on')}
 async function boot(){initMap();const b=await refresh();
  const h=decodeURIComponent(location.hash.slice(1));let m;
