@@ -50,6 +50,7 @@ textarea{min-height:76px;resize:vertical}
 .checks label{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink);font-weight:400;background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px 12px}
 .checks input{width:auto}
 .fld .mini,details.mini,.calc .mini{font-size:12.5px;color:var(--muted);line-height:1.45}details.mini summary{cursor:pointer;color:var(--coffee);font-weight:600}details.mini a{color:var(--coffee)}
+.flag-alarm{color:#b4432f;font-weight:600}.flag-warn{color:#9a6b00;font-weight:600}
 .pgrp{display:grid;gap:4px;margin:8px 0}.pgrp>b{font-size:14px}.pgrp .mini{font-size:12px;color:var(--muted)}.stg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.stg label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600}.sth{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;border-top:1px solid #f0ebe3}
 .lst{display:grid;gap:6px}
 .lrow{display:grid;gap:6px;align-items:center}
@@ -182,7 +183,7 @@ const F={
 const STEP_TYPES={
  'Sorting / floating':{f:['start','inKg','outKg','floatKg','notes']},
  'Pulping':{f:['start','inKg','outKg','method','notes'],methods:['Disc pulper','Drum pulper','Eco-pulper','Hand']},
- 'Fermentation':{f:['start','end','method','vessel','notes'],methods:['Dry','Underwater','Anaerobic','Carbonic','With yeast / starter','Other'],read:['temp','ph','brix']},
+ 'Fermentation':{f:['start','end','inKg','method','vessel','notes'],methods:['Dry','Underwater','Anaerobic','Carbonic','With yeast / starter','Other'],read:['temp','ph','brix']},
  'Washing':{f:['start','method','notes'],methods:['Channel','Tank','Machine']},
  'Drying':{f:['start','end','method','location','layer','outKg','notes'],methods:['Raised beds','Patio','Tarpaulin','Mechanical dryer','Other'],read:['moisture','temp']},
  'Resting':{f:['start','end','method','location','notes'],methods:['In cherry','In parchment','As green'],read:['moisture','aw']},
@@ -191,7 +192,7 @@ const STEP_TYPES={
  'Other':{f:['name','start','end','inKg','outKg','notes']}};
 const STEP_LABELS={start:'Start',end:'End',inKg:'In kg',outKg:'Out kg',floatKg:'Floaters kg',method:'Method',vessel:'Vessel',location:'Location / bed',layer:'Layer cm',defects:'Defects',notes:'Notes',name:'Step name'};
 const READ_LABELS={temp:'Temp °C',ph:'pH',brix:'°Brix',moisture:'Moisture %',aw:'Water activity',air:'Air °C',rh:'Air RH %',sampleG:'Sample g',pressure:'Pressure bar',ec:'EC µS/cm'};
-const MEAS_OPT={'Sorting / floating':['brix'],'Fermentation':['temp','ph','brix','air','pressure','ec'],'Drying':['moisture','temp','air','rh','aw','sampleG'],'Resting':['moisture','aw','temp','rh']};
+const MEAS_OPT={'Sorting / floating':['brix'],'Fermentation':['temp','ph','brix','air','rh','pressure','ec'],'Drying':['moisture','temp','air','rh','aw','sampleG'],'Resting':['moisture','aw','temp','rh']};
 function measuresFor(s){const d=STEP_TYPES[s.type]||STEP_TYPES.Other;return s.measures||d.read||[]}
 function measureOpts(s){return MEAS_OPT[s.type]||Object.keys(READ_LABELS)}
 // Guide values. Sources listed in GUIDE_SRC; the user can treat them as starting points.
@@ -256,6 +257,46 @@ function chartHtml(s,k){const rd=(s.readings||[]).map(r=>({t:new Date(r.at),v:nu
  const band=g.okLo!=null&&g.okHi!=null?'<rect x="8" width="'+(W-16)+'" y="'+Y(g.okHi)+'" height="'+(Y(g.okLo)-Y(g.okHi))+'" fill="#e3eee8"></rect>':'';const th=[g.warnLo,g.warnHi].filter(x=>x!=null).map(v=>'<line x1="8" x2="'+(W-8)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#c47f1d" stroke-dasharray="4 4"></line>').join('')+(g.alarmLo!=null?'<line x1="8" x2="'+(W-8)+'" y1="'+Y(g.alarmLo)+'" y2="'+Y(g.alarmLo)+'" stroke="#b4432f" stroke-dasharray="2 3"></line>':'');
  const pts=rd.map((p,j)=>X(xs[j]).toFixed(1)+','+Y(p.v).toFixed(1)).join(' ');const last=rd[rd.length-1];
  return '<div class="pchart"><div class="mini"><b>'+READ_LABELS[k]+'</b> · '+r2(rd[0].v)+' to '+r2(last.v)+' over '+fmtDur(xs[xs.length-1])+'</div><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="'+READ_LABELS[k]+' over time">'+band+th+'<polyline points="'+pts+'" fill="none" stroke="#8d583b" stroke-width="2.2" vector-effect="non-scaling-stroke"></polyline>'+rd.map((p,j)=>'<circle cx="'+X(xs[j]).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="2.6" fill="#8d583b"></circle>').join('')+'</svg></div>'}
+// ---------- inoculation with selected yeasts and bacteria ----------
+// KoffyKraft summary in our own words. Figures only where Lallemand publishes them:
+// dose 1 g per kg coffee, 10x water, 15 to 37 °C, 20 to 30 min rehydration, 18 h minimum after inoculation,
+// ideal 20 to 24 °C (LalCafe BSC technical sheet); typical durations by process (LalCafe BSC page).
+const LC='https://www.lalcafebylallemand.com/en/products/';
+const INOC=[['LalCafé INICIO','yeast','Everyday reliable fermentation in all processes, Arabica and Robusta. Keeps acidity, light fruit.',0,'lalcafe-inicio/'],
+ ['LalCafé BSC','yeast','Clean, classic cup without a strong flavour change. Natural, pulped dry and pulped wet.',1,'lalcafe-bsc/'],
+ ['LalCafé BRIOSA','yeast','Faster mucilage removal; keeps the variety\'s own aroma; longer green-coffee shelf life.',0,'lalcafe-briosa/'],
+ ['LalCafé LDP','yeast','Fine Robusta, natural process. Sweet, cocoa notes; winey if run past 84 h. Copes with cherry about 60% ripe.',1,'lalcafe-ldp/'],
+ ['LalCafé ORO','yeast','Fruity, sweet, more body and mouthfeel. Wet or natural.',1,'lalcafe-oro/'],
+ ['LalCafé CIMA','yeast','Citrus and fresh fruit, balanced acidity, less astringency. Natural or pulped.',1,'lalcafe-cima/'],
+ ['LalCafé INTENSO','yeast','Floral and tropical fruit, more mouthfeel. Arabica and Fine Robusta, natural or pulped.',0,'lalcafe-intenso/'],
+ ['LalCafé BACTI-FRESH','bacteria','Lactic acid bacteria: fresher, brighter acidity alone; more fruit or floral with INTENSO or ORO.',0,'lalcafe-bacti-fresh/'],
+ ['LalCafé BACTI-FRUIT','bacteria','Bacteria for fruit-forward flavours and complexity.',0,'lalcafe-bacti-fruit/'],
+ ['Other','','',0,'']];
+const INOC_PICK=[['Cleaner, more consistent coffee','LalCafé INICIO or BSC'],['Keep my variety\'s own character','LalCafé BRIOSA'],['Robusta, natural process','LalCafé LDP'],['Bright, citrus, fresh fruit','LalCafé CIMA'],['Sweet, fruity, more body','LalCafé ORO'],['Floral, tropical, complex','LalCafé INTENSO'],['Extra acidity and freshness for a microlot','Add LalCafé BACTI-FRESH to a yeast']];
+function inocOf(n){return INOC.find(x=>x[0]===n)}
+function inocPrice(n){try{return num((JSON.parse(localStorage.getItem('kk_inoc_price')||'{}'))[n])}catch(e){return null}}
+function setInocPrice(n,v){try{const o=JSON.parse(localStorage.getItem('kk_inoc_price')||'{}');o[n]=v;localStorage.setItem('kk_inoc_price',JSON.stringify(o))}catch(e){}}
+function stepKg(s,i){const k=num(s.inKg);if(k)return k;for(let j=i-1;j>=0;j--){const o=num(CUR.steps[j].outKg);if(o)return o}const ps=processSummary(CUR);return ps&&ps.cherry?ps.cherry:null}
+function procKind(s){const pw=String(CUR.pathway||'');if(/natural|carbonic/i.test(pw)&&!/pulped|washed/i.test(pw))return 'natural';if(/washed/i.test(pw)&&/underwater/i.test(s.method||''))return 'wet';if(/washed/i.test(pw))return 'wet';return 'dry'}
+function inocCalc(s,i){if(!(/yeast|starter/i.test(s.method||'')||s.inoc))return '';const P=inocOf(s.inoc),kg=stepKg(s,i),g=num(s.inocG),out=[];
+ if(kg)out.push('Suggested dose <b>'+r1(kg)+' g</b> for '+r1(kg)+' kg coffee (1 g per kg)'+(g?(Math.abs(g-kg)/kg>0.1?'. Yours: '+g+' g, '+r2(g/kg)+' g per kg.':'. Yours is close.'):'.'));
+ const dg=g||kg;if(dg)out.push('Rehydrate in about <b>'+r1(dg*10/1000)+' L</b> clean water (10 times the weight), 15 to 37 °C, 20 to 30 minutes, then spread through the coffee as the tank fills.');
+ const wt=num(s.inocWaterC);if(wt!=null&&(wt<15||wt>37))out.push('<span class="flag-alarm">Water '+wt+' °C is outside 15 to 37 °C.</span>');
+ const rm=num(s.inocMin);if(rm!=null&&P&&P[1]==='yeast'&&(rm<20||rm>30))out.push('<span class="flag-warn">Rehydration '+rm+' min; the sheet gives 20 to 30.</span>');
+ if(P&&P[1]==='bacteria')out.push('<span class="mini">Bacteria may need a different rehydration. Check the product sheet.</span>');
+ const temps=(s.readings||[]).map(r=>num(r.temp)).filter(x=>x!=null);if(temps.length){const lo=Math.min(...temps),hi=Math.max(...temps);out.push('Tank '+(lo===hi?lo:lo+' to '+hi)+' °C. Ideal 20 to 24 °C'+(P&&P[3]?'; this strain works down to 10 °C':'')+'.'+(lo<(P&&P[3]?10:15)?' <span class="flag-alarm">Too cold for the yeast to lead.</span>':''))}
+ const at=s.inocAt||s.start;const h=at?hours(at,s.end||new Date().toISOString()):null;const K=procKind(s),TR={natural:[36,96,'natural'],dry:[24,72,'pulped dry'],wet:[24,48,'pulped wet']}[K];
+ if(h!=null)out.push((s.end?'Ran ':'Running ')+'<b>'+r1(h)+' h</b> since inoculation. At least 18 h after inoculation; typical '+TR[2]+' '+TR[0]+' to '+TR[1]+' h.'+(h>TR[1]?' <span class="flag-warn">Past the typical range: taste and check for off smells.</span>':''));
+ else out.push('Typical '+TR[2]+' fermentation '+TR[0]+' to '+TR[1]+' h, at least 18 h after inoculation.');
+ const pr=s.inoc?inocPrice(s.inoc):null;if(pr&&dg)out.push('Cost about <b>₹'+Math.round(dg/1000*pr)+'</b>'+(kg?' (₹'+r2(dg/1000*pr/kg)+' per kg coffee)':'')+' plus GST, at ₹'+pr+' per kg.');
+ return out.join('<br>')}
+function inocHtml(s,i){if(!/yeast|starter/i.test(s.method||'')&&!s.inoc)return '';const P=inocOf(s.inoc);
+ const f=(k,l,t,ph)=>'<label class="mini" style="display:flex;flex-direction:column;gap:3px'+(t==='datetime-local'?';grid-column:1/-1':'')+'">'+l+'<input data-si="'+i+'" data-sk="'+k+'" type="'+t+'"'+(t==='number'?' step="any" inputmode="decimal"':'')+' value="'+esc(s[k])+'"'+(ph?' placeholder="'+ph+'"':'')+'></label>';
+ return '<div class="rd" style="margin-top:6px"><b class="mini" style="color:var(--ink)">Inoculation</b><div class="grid2"><label class="mini" style="display:flex;flex-direction:column;gap:3px;grid-column:1/-1">Product<select data-si="'+i+'" data-sk="inoc"><option value="">Choose…</option>'+INOC.map(x=>'<option'+(s.inoc===x[0]?' selected':'')+'>'+esc(x[0])+'</option>').join('')+'</select></label>'+
+  (s.inoc==='Other'?f('inocName','Product name','text'):'')+f('inocG','Grams used','number')+f('inocWaterC','Rehydration water °C','number')+f('inocMin','Rehydration minutes','number')+f('inocPrice','Price ₹ per kg (remembered)','number',s.inoc&&inocPrice(s.inoc)?String(inocPrice(s.inoc)):'')+f('inocAt','Added to the tank','datetime-local')+'</div>'+
+  (P&&P[2]?'<div class="mini">'+esc(P[2])+(P[4]?' <a href="'+LC+P[4]+'" target="_blank" rel="noopener">Product page</a>':'')+'</div>':'')+
+  '<div class="mini" data-inoc="'+i+'">'+inocCalc(s,i)+'</div>'+
+  '<details class="mini"><summary>Which product?</summary>'+INOC_PICK.map(([q,a])=>'<div style="margin-top:4px">'+esc(q)+': <b>'+esc(a)+'</b></div>').join('')+'<p>KoffyKraft summary from Lallemand\'s product pages; not advice from Lallemand. Dose, rehydration and times from the LalCafé BSC technical sheet. Always follow the sheet for your product. <a href="'+LC+'" target="_blank" rel="noopener">All LalCafé products</a></p></details></div>'}
 function readsHtml(s,i){const opts=measureOpts(s);const ms=measuresFor(s);if(!ms.length&&!(STEP_TYPES[s.type]||{}).read&&!s.measures&&!MEAS_OPT[s.type])return '<details class="mini"><summary>Add measurements</summary><div class="chips">'+opts.map(k=>'<button type="button" class="chip" data-mt="'+i+':'+k+'">'+READ_LABELS[k]+'</button>').join('')+'</div></details>';
  const chips='<div class="chips">'+opts.map(k=>'<button type="button" class="chip'+(ms.includes(k)?' on':'')+'" data-mt="'+i+':'+k+'" aria-pressed="'+ms.includes(k)+'">'+READ_LABELS[k]+'</button>').join('')+'</div>';
  const gl=ms.map(k=>{const g=guide(s,k);return g&&g.text?'<li><b>'+READ_LABELS[k]+':</b> '+esc(g.text)+'</li>':''}).join('')+(()=>{if(!ms.includes('moisture')||!/Drying|Resting/.test(s.type))return '';const last=[...(s.readings||[])].reverse().find(r=>num(r.moisture)!=null);if(!last)return '';const h=awEstHtml(last.moisture,last.aw);return h?'<li>'+h+'</li>':''})();
@@ -398,8 +439,8 @@ function detailsState(r){const c={},o={};if(r)r.querySelectorAll('details').forE
 function restoreDetails(r,o){const c={};if(r)r.querySelectorAll('details').forEach(d=>{const k=(d.querySelector('summary')||{}).textContent||'';const n=c[k]=(c[k]||0)+1;if(o[k+'#'+n]!==undefined)d.open=o[k+'#'+n]})}
 function safeBackdrop(el,fn){let down=false;el.addEventListener('pointerdown',e=>{down=e.target===el});el.addEventListener('click',e=>{if(down&&e.target===el)fn();down=false})}
 function renderSteps(focusLast){const box=$('#steps');const steps=CUR.steps||[];const _ds=detailsState(box);box.innerHTML=steps.length?steps.map((s,i)=>stepHtml(s,i)).join('')+(steps.some(x=>measuresFor(x).length)?guideSourcesHtml():''):'<div class="empty">No steps yet. Add them as you go: each step keeps its own times, weights and readings.</div>';
- restoreDetails(box,_ds); box.querySelectorAll('[data-si]').forEach(el=>el.addEventListener('input',()=>{const s=CUR.steps[+el.dataset.si];s[el.dataset.sk]=el.value;if(el.dataset.sk==='type'){renderSteps();return}updateStepCalc(+el.dataset.si);refreshCalcs()}));
- box.querySelectorAll('[data-ri]').forEach(el=>el.addEventListener('input',()=>{CUR.steps[+el.dataset.si].readings[+el.dataset.ri][el.dataset.rk]=el.value;refreshCalcs()}));
+ restoreDetails(box,_ds); box.querySelectorAll('[data-si]').forEach(el=>el.addEventListener('input',()=>{const s=CUR.steps[+el.dataset.si];s[el.dataset.sk]=el.value;if(el.dataset.sk==='inocPrice'&&s.inoc){setInocPrice(s.inoc,el.value)}if(['type','method','inoc'].includes(el.dataset.sk)){renderSteps();return}updateStepCalc(+el.dataset.si);const ic=box.querySelector('[data-inoc="'+el.dataset.si+'"]');if(ic)ic.innerHTML=inocCalc(s,+el.dataset.si);refreshCalcs()}));
+ box.querySelectorAll('[data-ri]').forEach(el=>el.addEventListener('input',()=>{const si=+el.dataset.si;CUR.steps[si].readings[+el.dataset.ri][el.dataset.rk]=el.value;const ic=box.querySelector('[data-inoc="'+si+'"]');if(ic)ic.innerHTML=inocCalc(CUR.steps[si],si);refreshCalcs()}));
  box.querySelectorAll('[data-radd]').forEach(b=>b.onclick=()=>{const s=CUR.steps[+b.dataset.radd];s.readings=[...(s.readings||[]),{at:nowLocal()}];renderSteps()});
  box.querySelectorAll('[data-rrm]').forEach(b=>b.onclick=()=>{const [si,ri]=b.dataset.rrm.split(':').map(Number);CUR.steps[si].readings.splice(ri,1);renderSteps();refreshCalcs()});
  box.querySelectorAll('[data-srm]').forEach(b=>b.onclick=()=>{if(!confirm('Remove this step?'))return;CUR.steps.splice(+b.dataset.srm,1);renderSteps();refreshCalcs()});
@@ -408,11 +449,11 @@ function renderSteps(focusLast){const box=$('#steps');const steps=CUR.steps||[];
  box.querySelectorAll('[data-snow]').forEach(b=>b.onclick=()=>{const [si,k]=b.dataset.snow.split(':');CUR.steps[+si][k]=nowLocal();renderSteps();refreshCalcs()});
  box.querySelectorAll('[data-rk]').forEach(el=>{if(el.dataset.rk==='at')return;el.addEventListener('input',()=>{const st=CUR.steps[+el.dataset.si];const lab=el.closest('.rv');if(lab)lab.className='mini rv '+flagOf(st,el.dataset.rk,el.value)});el.addEventListener('change',()=>{const si=+el.dataset.si,st=CUR.steps[si];const c=box.querySelector('[data-charts="'+si+'"]');if(c)c.innerHTML=measuresFor(st).map(k=>chartHtml(st,k)).join('')})});
  refreshCalcs();if(focusLast)[...box.querySelectorAll('.step')].pop()?.scrollIntoView({behavior:'smooth',block:'center'})}
-function stepCalc(s){const p=[];const h=hours(s.start,s.end);if(h!=null)p.push(fmtDur(h));const a=num(s.inKg),b=num(s.outKg);if(a&&b)p.push('yield '+r1(b/a*100)+'%');const rd=(s.readings||[]);if(rd.length)p.push(rd.length+' readings');return p.join(' · ')}
+function stepCalc(s){const p=[];if(s.inoc)p.push((s.inoc==='Other'?(s.inocName||'inoculated'):s.inoc)+(num(s.inocG)?' '+s.inocG+' g':''));const h=hours(s.start,s.end);if(h!=null)p.push(fmtDur(h));const a=num(s.inKg),b=num(s.outKg);if(a&&b)p.push('yield '+r1(b/a*100)+'%');const rd=(s.readings||[]);if(rd.length)p.push(rd.length+' readings');return p.join(' · ')}
 function updateStepCalc(i){const el=document.querySelector('[data-scalc="'+i+'"]');if(el)el.textContent=stepCalc(CUR.steps[i])}
 function stepHtml(s,i){const def=STEP_TYPES[s.type]||STEP_TYPES.Other;const inp=(k)=>{const lab=STEP_LABELS[k];if(k==='notes')return '<textarea data-si="'+i+'" data-sk="notes" placeholder="Notes" style="grid-column:1/-1;min-height:56px">'+esc(s.notes)+'</textarea>';if(k==='method'&&def.methods)return '<select data-si="'+i+'" data-sk="method" aria-label="Method"><option value="">Method</option>'+def.methods.map(m=>'<option'+(s.method===m?' selected':'')+'>'+m+'</option>').join('')+'</select>';const type=k==='start'||k==='end'?'datetime-local':['inKg','outKg','floatKg','layer'].includes(k)?'number':'text';return '<label class="mini'+(type==='datetime-local'?' dt':'')+'" style="display:flex;flex-direction:column;gap:3px">'+lab+'<input data-si="'+i+'" data-sk="'+k+'" type="'+type+'"'+(type==='number'?' step="any" inputmode="decimal"':'')+' value="'+esc(s[k])+'"></label>'};
  const reads=readsHtml(s,i);
- return '<div class="step"><div class="sh"><span class="mini">'+(i+1)+'</span><select data-si="'+i+'" data-sk="type" aria-label="Step type">'+Object.keys(STEP_TYPES).map(t=>'<option'+(s.type===t?' selected':'')+'>'+t+'</option>').join('')+'</select>'+(i>0?'<button type="button" class="x" data-sup="'+i+'" aria-label="Move up">↑</button>':'')+'<button type="button" class="x" data-srm="'+i+'" aria-label="Remove step">×</button></div>'+runHtml(s,i)+'<div class="grid2">'+def.f.map(inp).join('')+'</div>'+reads+'<div class="mini" data-scalc="'+i+'">'+esc(stepCalc(s))+'</div></div>'}
+ return '<div class="step"><div class="sh"><span class="mini">'+(i+1)+'</span><select data-si="'+i+'" data-sk="type" aria-label="Step type">'+Object.keys(STEP_TYPES).map(t=>'<option'+(s.type===t?' selected':'')+'>'+t+'</option>').join('')+'</select>'+(i>0?'<button type="button" class="x" data-sup="'+i+'" aria-label="Move up">↑</button>':'')+'<button type="button" class="x" data-srm="'+i+'" aria-label="Remove step">×</button></div>'+runHtml(s,i)+'<div class="grid2">'+def.f.map(inp).join('')+'</div>'+(s.type==='Fermentation'?inocHtml(s,i):'')+reads+'<div class="mini" data-scalc="'+i+'">'+esc(stepCalc(s))+'</div></div>'}
 function getGps(){if(!navigator.geolocation){toast('Location not available on this device');return}$('#gpsInfo').textContent='Getting location…';navigator.geolocation.getCurrentPosition(p=>{CUR.lat=r6(p.coords.latitude);CUR.lng=r6(p.coords.longitude);CUR.gpsAcc=p.coords.accuracy;$('#f_lat').value=CUR.lat;$('#f_lng').value=CUR.lng;if(p.coords.altitude!=null&&!CUR.altitude){const m=p.coords.altitude;CUR.altitude=Math.round((CUR.altUnit||'ft')==='ft'?m*3.28084:m);const a=$('#f_altitude');if(a)a.value=CUR.altitude}$('#gpsInfo').innerHTML='<a href="https://maps.google.com/?q='+CUR.lat+','+CUR.lng+'" target="_blank" rel="noopener">Open in map</a> · ±'+Math.round(p.coords.accuracy)+' m'},e=>{$('#gpsInfo').textContent='Could not get location: '+e.message},{enableHighAccuracy:true,timeout:20000})}
 function r6(v){return Math.round(v*1e6)/1e6}
 async function save(){const miss=F[CUR_T].filter(f=>f.req&&(CUR[f.k]==null||String(CUR[f.k]).trim()===''));if(miss.length){toast('Fill in: '+miss.map(f=>f.l).join(', '));const el=$('#'+fid(miss[0].k));el&&el.focus();return}
