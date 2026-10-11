@@ -176,6 +176,133 @@ h2 {
   font-weight: 600;
   margin-top: 10px;
 }
+
+.guide {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 15px;
+  margin: 16px 0 6px;
+}
+.guide .gh {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.guide .gh b {
+  font-size: 17px;
+}
+.guide .gh button {
+  font: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  padding: 8px 0;
+  min-height: 36px;
+  cursor: pointer;
+}
+.roles {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 10px 0 4px;
+}
+.roles button {
+  font: inherit;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 8px 14px;
+  min-height: 40px;
+  cursor: pointer;
+}
+.roles button.on {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+  font-weight: 600;
+}
+.steps {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.steps li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-top: 1px solid #f0ebe3;
+}
+.steps .dot {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+.steps li.done .dot {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: #fff;
+}
+.steps li.next .dot {
+  border-color: var(--ink);
+  color: var(--ink);
+  font-weight: 700;
+}
+.steps .tx {
+  flex: 1;
+  font-size: 14.5px;
+  line-height: 1.4;
+}
+.steps .tx small {
+  display: block;
+  color: var(--muted);
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+.steps li.done .tx {
+  color: var(--muted);
+}
+.steps li.done .tx b {
+  text-decoration: line-through;
+  text-decoration-color: #c9c3ba;
+}
+.steps .go {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 8px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  min-height: 38px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.gbar {
+  height: 4px;
+  background: #f0ebe3;
+  border-radius: 4px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+.gbar i {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+}
 </style>
 <link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script><script src="i18n.js" defer></script></head>
 <body><main class="app">
@@ -185,6 +312,7 @@ h2 {
 <p>Free tools for growers, roasters and brewers. Keep records of your plots, harvests, processing and roasts, brew and cup better, and follow every coffee back to where it grew.</p>
 <p style="font-size:13.5px;color:var(--muted)">No account needed. Works on your phone, even without signal. Made in Kerala, with Indian coffee and Robusta built in.</p>
 </section>
+<div id="guide"></div>
 <div id="mine"></div>
 <h2>Start here</h2>
 <div class="paths">
@@ -192,7 +320,7 @@ h2 {
  <a class="path" href="roastbooks.html"><b><i>🔥</i>I roast coffee</b><span>Roast timer, curves, development, colour check and a roastbook to compare roasts.</span></a>
  <a class="path" href="cup.html"><b><i>☕</i>I brew and taste</b><span>Brew log with dial-in help, cupping forms, blind tests and palate training.</span></a>
 </div>
-<div class="links"><a href="contents.html">All features</a><a href="profile.html">My profile</a><a href="share.html">Shared spaces</a><a href="trace.html">Lot passports</a><a href="journey.html">Journey of the bean</a><a href="methods.html">Brew guide</a><a href="crop.html">Crop care</a><a href="map.html">Map</a><a href="water.html">Water</a></div>
+<div class="links"><a href="#" onclick="try{localStorage.removeItem('kk_guide_hidden')}catch(e){}location.reload();return false">First steps</a><a href="contents.html">All features</a><a href="profile.html">My profile</a><a href="share.html">Shared spaces</a><a href="trace.html">Lot passports</a><a href="journey.html">Journey of the bean</a><a href="methods.html">Brew guide</a><a href="crop.html">Crop care</a><a href="map.html">Map</a><a href="water.html">Water</a></div>
 <h2>What to expect</h2>
 <div class="card facts">
  <div>Free, with no ads and nothing to buy.</div>
@@ -247,6 +375,7 @@ h2 {
     brews = n('brew'),
     cups = n('cupping');
   const total = plots + lots + brews + cups + roasts + n('harvest') + n('process');
+  firstSteps({ A, n, roasts });
   if (!total) return;
   let h =
     '<h2>Your records on this phone</h2><div class="me"><a href="origin.html#farm"><b>' +
@@ -270,6 +399,207 @@ h2 {
       '<div class="warn" style="margin-top:8px"><b>Keep a copy.</b> Your records live only in this browser. Clearing browser data or losing the phone would erase them. <a href="data.html">Save a backup file</a> now and then, or <a href="account.html">sign in</a> to sync.</div>';
   el.innerHTML = h;
 })();
+
+// First steps: a short checklist for the role the person picks. Each step ticks itself off
+// from the records actually on this phone, so there is nothing to mark by hand.
+function firstSteps({ A, n, roasts }) {
+  const el = document.getElementById('guide');
+  const get = k => {
+    try {
+      return localStorage.getItem(k);
+    } catch (e) {
+      return null;
+    }
+  };
+  const set = (k, v) => {
+    try {
+      v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v);
+    } catch (e) {}
+  };
+  if (get('kk_guide_hidden') === '1') {
+    el.innerHTML = '';
+    return;
+  }
+  const plotsWithPlace = (A.plot || []).filter(p => p.lat != null && p.lng != null).length;
+  const passports = (A.green || []).filter(g => g.traceLot).length;
+  const firstGreen = (A.green || [])[0];
+  const ROLES = {
+    grow: {
+      name: 'I grow',
+      steps: [
+        [
+          'Add your estate',
+          'Name and where it is.',
+          n('estate') > 0,
+          'origin.html#edit/estate/new',
+          'Add estate',
+        ],
+        [
+          'Add a plot and its location',
+          'Variety, altitude, and tap Use my location in the field.',
+          plotsWithPlace > 0,
+          n('plot') ? 'origin.html#farm' : 'origin.html#edit/plot/new',
+          n('plot') ? 'Open plots' : 'Add plot',
+        ],
+        [
+          'Record a harvest',
+          'Date, plot and cherry weight. Baskets add up for you.',
+          n('harvest') > 0,
+          'origin.html#edit/harvest/new',
+          'Add harvest',
+        ],
+        [
+          'Record the processing',
+          'Pick a method; add steps, readings and weights as you go.',
+          n('process') > 0,
+          'origin.html#edit/process/new',
+          'Start processing',
+        ],
+        [
+          'Add the green lot',
+          'Weight, moisture and grade when it is dry and hulled.',
+          n('green') > 0,
+          'origin.html#edit/green/new',
+          'Add green lot',
+        ],
+        [
+          'Make its passport',
+          'A QR for the bag that any buyer can check.',
+          passports > 0,
+          firstGreen ? 'origin.html#edit/green/' + encodeURIComponent(firstGreen.id) : 'origin.html#green',
+          'Open the lot',
+        ],
+      ],
+    },
+    roast: {
+      name: 'I roast',
+      steps: [
+        [
+          'Add your green coffee',
+          'So every roast links to the lot it came from. Optional, but worth it.',
+          n('green') > 0 || roasts > 0,
+          'origin.html#edit/green/new',
+          'Add green lot',
+        ],
+        [
+          'Time your first roast',
+          'Mark charge, turning point, first crack and drop; log temperatures.',
+          roasts > 0,
+          'roast-timer-v14.html',
+          'Open Timer',
+        ],
+        [
+          'Taste it',
+          'Log a brew or a cupping of that roast.',
+          n('brew') + n('cupping') > 0,
+          'cup.html',
+          'Open Cup',
+        ],
+        [
+          'Compare two roasts',
+          'Change one thing, roast again, compare curves side by side.',
+          roasts > 1,
+          'roasts.html',
+          'Open Roastbook',
+        ],
+      ],
+    },
+    brew: {
+      name: 'I brew',
+      steps: [
+        [
+          'Read how your brewer works',
+          'Step by step, with a timer that walks you through the pour.',
+          get('kk_seen_methods') === '1',
+          'methods.html',
+          'Brew guide',
+        ],
+        [
+          'Log your first brew',
+          'Dose, water, grind, time, and how it tasted.',
+          n('brew') > 0,
+          'cup.html#brew',
+          'Log a brew',
+        ],
+        [
+          'Change one thing and brew again',
+          'Grind is usually the first dial. The log shows what moved.',
+          n('brew') > 1,
+          'cup.html#brew',
+          'Log another',
+        ],
+        [
+          'Taste blind',
+          'A cupping or a blind test trains your palate fastest.',
+          n('cupping') > 0,
+          'cup.html#cupping',
+          'Start cupping',
+        ],
+      ],
+    },
+  };
+  const role = get('kk_role');
+  let h =
+    '<div class="guide"><div class="gh"><b>First steps</b><button type="button" id="gHide">Hide</button></div>';
+  h +=
+    '<div class="roles">' +
+    Object.entries(ROLES)
+      .map(
+        ([k, r]) =>
+          '<button type="button" data-role="' +
+          k +
+          '"' +
+          (k === role ? ' class="on"' : '') +
+          '>' +
+          r.name +
+          '</button>'
+      )
+      .join('') +
+    '</div>';
+  if (!ROLES[role])
+    h +=
+      '<div class="steps" style="font-size:13.5px;color:var(--muted);padding-top:4px">Pick what you do, and KoffyKraft shows the few steps to get going. You can switch any time.</div>';
+  else {
+    const st = ROLES[role].steps,
+      done = st.filter(x => x[2]).length,
+      next = st.findIndex(x => !x[2]);
+    h += '<div class="gbar"><i style="width:' + Math.round((done / st.length) * 100) + '%"></i></div>';
+    h +=
+      '<ol class="steps">' +
+      st
+        .map(
+          (x, i) =>
+            '<li class="' +
+            (x[2] ? 'done' : i === next ? 'next' : '') +
+            '"><span class="dot">' +
+            (x[2] ? '✓' : i + 1) +
+            '</span><span class="tx"><b>' +
+            x[0] +
+            '</b><small>' +
+            x[1] +
+            '</small>' +
+            (i === next ? '<a class="go" href="' + x[3] + '">' + x[4] + ' →</a>' : '') +
+            '</span></li>'
+        )
+        .join('') +
+      '</ol>';
+    if (next < 0)
+      h +=
+        '<div style="margin-top:10px;font-size:14px"><b>All set.</b> You know the basics. <a href="contents.html">See everything else KoffyKraft does</a>.</div>';
+  }
+  el.innerHTML = h + '</div>';
+  el.querySelectorAll('[data-role]').forEach(
+    b =>
+      (b.onclick = () => {
+        set('kk_role', b.dataset.role);
+        firstSteps({ A, n, roasts });
+      })
+  );
+  document.getElementById('gHide').onclick = () => {
+    set('kk_guide_hidden', '1');
+    firstSteps({ A, n, roasts });
+  };
+}
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 </script><script src="pv.js" defer></script>
 </body>

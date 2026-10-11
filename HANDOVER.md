@@ -44,6 +44,9 @@ Roast timer and graph, roastbooks, cup and brew pages, water, colour.js, varieti
 - Server: worker.js (routes), trace-api.js (passports), migrations/.
 - Not KoffyKraft: tagrobuild.html (a TAGRO ledger page) and post (an Instagram preview) sit in the repo and are publicly served; the owner should decide whether they belong here.
 
+## First steps guide (11 Oct 2026)
+- home.html: role chips (grow, roast, brew) stored in localStorage kk_role; steps tick from real records (ORIGIN counts, roast count, kk_seen_methods set by methods.html). Hide stores kk_guide_hidden; the First steps link on home brings it back.
+
 ## Pending
 - CoffeeMind guide points deployed (cache v86, 11 Oct 2026). The Cloudflare token was pasted in chat: roll it after the new app is set up.
 - User checks: two-phone shared space test, Gmail sign-in, feedback email arriving, Malayalam wording review, profile logo and colour.

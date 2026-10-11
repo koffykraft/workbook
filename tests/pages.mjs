@@ -155,6 +155,15 @@ export async function run(root, t) {
       const bad = await q.$eval('#view', e => e.innerText); tr.events = JSON.parse(keep);
       if (!/do not check out/.test(bad) || !bad.includes('Changed after signing')) throw new Error('tamper not shown');
     });
+    await t.acheck('First steps guide picks a role and ticks steps from real records', async () => {
+      await q.goto(base + 'home.html'); await q.evaluate(() => { localStorage.removeItem('kk_guide_hidden'); localStorage.removeItem('kk_role') }); await q.reload(); await q.waitForSelector('[data-role=grow]');
+      await q.click('[data-role=grow]'); await q.waitForSelector('.steps li');
+      await q.evaluate(async () => ORIGIN.put({ type: 'estate', id: 'e-guide', name: 'Guide Estate' })); await q.reload(); await q.waitForSelector('.steps li');
+      const first = await q.$eval('.steps li', e => e.className); if (first !== 'done') throw new Error('estate step not ticked: ' + first);
+      const go = await q.$eval('.steps li.next .go', e => e.getAttribute('href')); if (!/edit\/plot\/new/.test(go)) throw new Error('next step link: ' + go);
+      await q.click('#gHide'); if (await q.$('.guide')) throw new Error('did not hide');
+      await q.evaluate(() => localStorage.removeItem('kk_guide_hidden'));
+    });
     await t.acheck('Malayalam shows explanations only, labels stay English', async () => {
       await q.goto(base + 'home.html'); await q.evaluate(() => localStorage.setItem('kk_lang', 'ml'));
       await q.goto(base + 'crop.html'); await q.waitForTimeout(700);

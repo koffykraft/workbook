@@ -369,6 +369,7 @@ const LV = [
 let level = 1;
 try {
   level = +localStorage.getItem('kk_brew_level') || 1;
+  localStorage.setItem('kk_seen_methods', '1');
 } catch (e) {}
 function src(k) {
   const s = K.S[k];
