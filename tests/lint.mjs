@@ -15,7 +15,7 @@ const RULES = {
   'getter-return': 'error', 'no-dupe-class-members': 'error', 'no-empty-character-class': 'error', 'no-invalid-regexp': 'error',
   'no-obj-calls': 'error', 'no-sparse-arrays': 'error', 'no-unexpected-multiline': 'error', 'no-redeclare': ['error', { builtinGlobals: false }],
 };
-const SKIP = /^(index_previous|tagrobuild)/;
+const SKIP = /^(index_previous)/;
 const NOLINT = new Set(['qrcode.js']); // third-party, unchanged
 const MODULES = new Set(['worker.js', 'trace-api.js']);
 

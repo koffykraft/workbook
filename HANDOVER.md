@@ -42,7 +42,7 @@ Roast timer and graph, roastbooks, cup and brew pages, water, colour.js, varieti
 - Pages: home (start), origin (farm records), roast-timer-v14 (live roast), roast-graph, roasts (Roastbook), cup (brews and cupping), methods (brew guide), water, crop, map, journey, contents (all features), share (spaces), profile (me and send-out profile), trace (lot passports), account, data, license, privacy, terms. Smaller tools: capture, ocr, process, process-run, rehydration, stats, roastbook, roastbooks, brew, index.
 - Shared scripts: kk-base (helpers), kk.css + tap.js (look, tap sizes, update notice), i18n.js + lang/ (languages), sync.js (sign-in and cloud), origin-db.js and koffykraft-db.js (local databases), prefs.js, cloud-ui.js, snap.js (record snapshots for sharing), sharecard.js (images and PDF), export.js, howto.js and brewkb.js (guide content), colour.js, varieties.js, contents.js, feedback.js, pv.js, trace-core.js, qrcode.js (third party).
 - Server: worker.js (routes), trace-api.js (passports), migrations/.
-- Not KoffyKraft: tagrobuild.html (a TAGRO ledger page) and post (an Instagram preview) sit in the repo and are publicly served; the owner should decide whether they belong here.
+- Not KoffyKraft: post (an Instagram preview) sits in the repo and is publicly served. tagrobuild.html was removed on 11 Oct 2026.
 
 ## First steps guide (11 Oct 2026)
 - home.html: role chips (grow, roast, brew) stored in localStorage kk_role; steps tick from real records (ORIGIN counts, roast count, kk_seen_methods set by methods.html). Hide stores kk_guide_hidden; the First steps link on home brings it back.

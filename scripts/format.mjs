@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const prettier = await import(path.join(root, 'node_modules/prettier/index.mjs'));
 const OPTS = { printWidth: 110, singleQuote: true, arrowParens: 'avoid', trailingComma: 'es5', endOfLine: 'lf' };
-const SKIP = /^(index_previous|tagrobuild|qrcode\.js)/; // old backups and unchanged third-party code
+const SKIP = /^(index_previous|qrcode\.js)/; // old backups and unchanged third-party code
 const check = process.argv.includes('--check');
 let changed = 0;
 
