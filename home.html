@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff">
+<meta name="description" content="Free tools for coffee from farm to cup: origin and processing records, roast timer and roastbook, brewing, cupping and maps. Works on your phone, without an account.">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>KoffyKraft: farm to cup</title>
+<style>
+:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b;--ok:#3f6b5a}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;color:var(--ink);background:var(--bg)}
+.app{max-width:680px;margin:auto;padding:24px 16px 60px}
+.hero{padding:6px 0 4px}.hero h1{font-size:36px;letter-spacing:-.045em;line-height:1.05;margin:4px 0 10px}.hero p{font-size:15.5px;line-height:1.55;color:#3d3a35;margin:0 0 6px}
+h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:24px 0 8px}
+.paths{display:grid;gap:10px}
+.path{display:block;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;text-decoration:none;color:var(--ink)}
+.path b{font-size:18px;display:flex;align-items:center;gap:10px}.path b i{font-style:normal;font-size:22px}
+.path span{display:block;font-size:13.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+.links{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.links a{font-size:13.5px;border:1px solid var(--line);border-radius:999px;padding:7px 12px;color:var(--ink);text-decoration:none;background:#faf7f2}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:8px 0}
+.facts{display:grid;gap:8px;font-size:14px;line-height:1.5}.facts div{display:flex;gap:10px}.facts div:before{content:'✓';color:var(--ok);font-weight:700}
+.me{display:flex;gap:8px;flex-wrap:wrap}.me a{flex:1;min-width:120px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;text-decoration:none;color:var(--ink)}.me a b{display:block;font-size:22px}.me a span{font-size:12.5px;color:var(--muted)}
+.warn{background:#fff6e6;border:1px solid #efd9ae;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.5}.warn a{color:var(--coffee);font-weight:600}
+.foot{font-size:12.5px;color:var(--muted);line-height:1.6;margin-top:20px}.foot a{color:var(--muted)}
+.big{display:block;text-align:center;background:var(--ink);color:#fff;border-radius:999px;padding:13px;text-decoration:none;font-weight:600;margin-top:10px}
+</style>
+<link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script></head>
+<body><main class="app">
+<header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="account.html" aria-label="Account">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
+<section class="hero">
+<h1>Coffee, from farm to cup.</h1>
+<p>Free tools for growers, roasters and brewers. Keep records of your plots, harvests, processing and roasts, brew and cup better, and follow every coffee back to where it grew.</p>
+<p style="font-size:13.5px;color:var(--muted)">No account needed. Works on your phone, even without signal. Made in Kerala, with Indian coffee and Robusta built in.</p>
+</section>
+<div id="mine"></div>
+<h2>Start here</h2>
+<div class="paths">
+ <a class="path" href="origin.html"><b><i>🌱</i>I grow coffee</b><span>Plots, soil, flowering, harvests, processing and green lots. Mark your farm on a map.</span></a>
+ <a class="path" href="roastbooks.html"><b><i>🔥</i>I roast coffee</b><span>Roast timer, curves, development, colour check and a roastbook to compare roasts.</span></a>
+ <a class="path" href="cup.html"><b><i>☕</i>I brew and taste</b><span>Brew log with dial-in help, cupping forms, blind tests and palate training.</span></a>
+</div>
+<div class="links"><a href="contents.html">All features</a><a href="journey.html">Journey of the bean</a><a href="methods.html">Brew guide</a><a href="crop.html">Crop care</a><a href="map.html">Map</a><a href="water.html">Water</a></div>
+<h2>What to expect</h2>
+<div class="card facts">
+ <div>Free, with no ads and nothing to buy.</div>
+ <div>Your records stay on this phone unless you choose cloud sync.</div>
+ <div>Export anything as CSV or JSON; roasts also to Artisan and Cropster files; maps to Google Earth.</div>
+ <div>Advice is a guide, not a guarantee. Every tip names its source: studies, the Coffee Board, or common practice.</div>
+ <div>Open source: anyone can read the code.</div>
+</div>
+<h2>Feedback</h2>
+<div class="card" id="feedback"></div>
+<div class="foot">KoffyKraft · Thumpassery, Kerala · <a href="https://github.com/koffykraft/workbook" target="_blank" rel="noopener">Source code</a> (AGPL-3.0) · <a href="license.html">Licence</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="data.html">My data</a></div>
+</main>
+<script src="sync.js"></script><script src="origin-db.js"></script><script src="feedback.js"></script>
+<script>
+(async()=>{const el=document.getElementById('mine');let A={},roasts=0;
+ try{A=await ORIGIN.allTypes()}catch(e){}
+ try{roasts=await new Promise(ok=>{const q=indexedDB.open('KoffyKraftTemporaryRoastbook');q.onupgradeneeded=e=>{e.target.transaction.abort();ok(0)};q.onsuccess=()=>{const db=q.result;if(!db.objectStoreNames.contains('roasts')){db.close();ok(0);return}const t=db.transaction('roasts','readonly').objectStore('roasts').count();t.onsuccess=()=>{db.close();ok(t.result||0)};t.onerror=()=>{db.close();ok(0)}};q.onerror=()=>ok(0)})}catch(e){}
+ const n=k=>(A[k]||[]).length;const plots=n('plot'),lots=n('green'),brews=n('brew'),cups=n('cupping');const total=plots+lots+brews+cups+roasts+n('harvest')+n('process');
+ if(!total)return;
+ let h='<h2>Your records on this phone</h2><div class="me"><a href="origin.html#farm"><b>'+plots+'</b><span>plots</span></a><a href="origin.html#green"><b>'+lots+'</b><span>green lots</span></a><a href="roasts.html"><b>'+roasts+'</b><span>roasts</span></a><a href="cup.html#brew"><b>'+brews+'</b><span>brews</span></a><a href="cup.html#cupping"><b>'+cups+'</b><span>cuppings</span></a></div>';
+ const signed=typeof SYNC!=='undefined'&&SYNC.isAuthenticated();let last=0;try{last=+localStorage.getItem('kk_last_backup')||0}catch(e){}
+ if(!signed&&Date.now()-last>14*864e5)h+='<div class="warn" style="margin-top:8px"><b>Keep a copy.</b> Your records live only in this browser. Clearing browser data or losing the phone would erase them. <a href="data.html">Save a backup file</a> now and then, or <a href="account.html">sign in</a> to sync.</div>';
+ el.innerHTML=h})();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script><script src="pv.js" defer></script>
+</body>
+</html>

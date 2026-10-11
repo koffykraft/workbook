@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Journey of the Bean</title>
+<style>
+:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;color:var(--ink);background:var(--bg)}
+.app{max-width:680px;margin:auto;padding:24px 16px 60px}
+h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 4px}.sub{color:var(--muted);font-size:13.5px;margin-bottom:14px;line-height:1.55}.sub a{color:var(--coffee)}
+.tl{position:relative;padding-left:34px;margin-top:10px}.tl:before{content:'';position:absolute;left:13px;top:6px;bottom:6px;width:2px;background:linear-gradient(#4f7d3a,#c0392b 30%,#8d583b 60%,#3b2417)}
+.st{position:relative;margin:0 0 10px}.st .dot{position:absolute;left:-34px;top:12px;width:28px;height:28px;border-radius:50%;background:var(--c);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;border:3px solid var(--bg)}
+details.st{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+details.st>summary{cursor:pointer;list-style:none}details.st>summary::-webkit-details-marker{display:none}
+summary b{font-size:16px}summary span{display:block;font-size:13px;color:var(--muted);margin-top:2px;line-height:1.4}
+.bd{font-size:14.5px;line-height:1.6;margin-top:8px}.bd p{margin:6px 0}
+.help{margin-top:8px;font-size:13.5px;background:#faf7f2;border-radius:10px;padding:8px 10px}.help a{color:var(--coffee);font-weight:600}
+.row{display:flex;gap:8px;margin:6px 0 12px}.row button{font:inherit;font-size:13.5px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;cursor:pointer}
+</style>
+<link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script></head>
+<body><main class="app">
+<header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="account.html" aria-label="Account">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
+<h1>Journey of the bean</h1>
+<div class="sub">From a seed in a nursery to the cup in your hand. Twelve stages, each with what happens, why it matters for taste, and where KoffyKraft helps you keep track. An optional read. <a href="contents.html">All features</a></div>
+<div class="row"><button type="button" id="all">Open all</button><button type="button" id="none">Close all</button></div>
+<div class="tl" id="tl"></div>
+<div class="sub" style="margin-top:16px">Figures for India follow the Coffee Board of India's research institute (CCRI) guide; the rest is general coffee knowledge in our own words. Every farm, roast and cup differs.</div>
+</main>
+<script>
+const S=[
+['#4f7d3a','Seed and nursery','A coffee bean is a seed. Sown in a nursery, it becomes a plant.',
+ '<p>Selected seed is sown in nursery beds or bags. It sprouts after about six weeks, opens its first leaves, and grows in the nursery for some months before it is planted out, usually as the monsoon begins.</p><p>The variety chosen here decides much of what follows: yield, disease resistance, and the flavours the cup can reach.</p>',
+ 'Record variety and planting year on each plot, and look varieties up in <a href="origin.html">Coffee varieties and words</a>.'],
+['#4f7d3a','The plant and its place','Soil, shade, slope and altitude shape the plant for decades.',
+ '<p>In India, Arabica is mostly grown higher, around 1000 to 1500 m, and Robusta lower, in warmer valleys. Cooler places ripen cherry slowly, which tends to give denser beans and more complex cups.</p><p>Shade trees, mulch and living soil protect the roots and keep the plant steady through dry months. A plant usually starts bearing a real crop after three or four years.</p>',
+ 'Map the plot, note shade and soil, log soil tests and inputs: <a href="map.html">Map</a>, <a href="origin.html#farm">Plots</a>, <a href="crop.html">Crop care</a>.'],
+['#d1c3e8','Flowering','A good shower wakes the flower buds. The estate turns white and smells of jasmine for a few days.',
+ '<p>Buds form over the dry season and wait. The blossom shower, natural or by sprinkler, opens them all at once. A second, backing shower about two to three weeks later helps the young fruit set.</p><p>If the shower is too light, buds can turn pink and drop: a lost crop before it starts.</p>',
+ 'Enter blossom and backing dates on the plot; the app shows when backing is due and when fruit drop peaks. <a href="crop.html#s-flower">Flowering guide</a>.'],
+['#7fb069','Green cherry','Through the monsoon the cherry swells. The plant must feed every fruit.',
+ '<p>Waterlogged roots, stress and disease make the plant shed some fruit. A little drop is normal; more means something to fix, like drainage.</p><p>Inside, the seed fills and builds the sugars, acids and other compounds that roasting will later turn into flavour.</p>',
+ '<a href="crop.html#s-set">Fruit set and retention</a> in Crop care.'],
+['#c0392b','Ripe cherry and harvest','Picked when ripe, the cherry is sweet, red and soft enough that the bean pops out when squeezed.',
+ '<p>Arabica is mostly picked from October to January and Robusta from December to March in India, in several rounds as fruit ripens. Unripe cherry gives thin, astringent cups; overripe gives fermented, "foxy" ones.</p><p>Clean bags, picking mats, and same-day processing protect what the farm has grown.</p>',
+ 'Log each picking, ripeness and Brix in <a href="origin.html#harvest">Harvest</a>; read <a href="crop.html#s-harvest">what to pick and how</a>.'],
+['#a33d2d','Processing','The fruit is removed from the seed: washed, natural, honey and newer methods.',
+ '<p>Washed coffee is pulped and fermented so the sticky mucilage comes away, then washed clean. Natural coffee dries whole in its fruit. Honey keeps some mucilage on. Each gives a different cup: washed often cleaner and brighter, natural fruitier and heavier.</p><p>Fermentation is microbes at work. Time, temperature and hygiene decide whether it adds sweetness and fruit or sour, vinegary defects. Some farms add selected yeasts to steer it.</p>',
+ 'Run each batch step by step with readings, timers and guide ranges: <a href="origin.html#process">Processing</a>.'],
+['#b8742a','Drying','Slow, even drying fixes the quality the farm has built.',
+ '<p>Parchment or cherry is spread on beds or patios and turned often until moisture falls to about 11 to 12 percent. Too fast cracks beans; too slow invites mould.</p><p>Water activity, a measure of how free the water is, tells you whether the coffee is safe to store.</p>',
+ 'Record moisture and water activity on drying steps; the app estimates water activity from moisture.'],
+['#9c6b3c','Rest, hulling and grading','The dried coffee rests, loses its husk, and is sorted into green coffee.',
+ '<p>Resting lets moisture even out. Hulling removes parchment or dried husk. Beans are then sorted by size, density and colour, and defects are picked out. What leaves the farm is green coffee, sold in bags.</p>',
+ 'Create a <a href="origin.html#green">Green lot</a> with moisture, density, screen size and grade. It keeps its whole history.'],
+['#8d583b','Roasting','Heat turns a hard, grassy seed into brown, aromatic coffee in about ten to fifteen minutes.',
+ '<p>The bean dries, yellows, then browns as sugars and amino acids react. At first crack it pops as steam escapes. The time after first crack, development, shapes sweetness, acidity and body. Lighter roasts keep more fruit and acidity; darker roasts bring bitterness, body and roast flavour.</p>',
+ 'Plan, time and review every roast: <a href="roast-timer-v14.html">Timer</a>, <a href="roast-graph.html">Graph</a>, <a href="roasts.html">Roastbook</a> with colour check.'],
+['#6b4226','Resting the roast','Fresh roast gives off carbon dioxide for days.',
+ '<p>Brewing too soon can taste sharp and uneven as gas pushes water away from the grounds. Filter roasts are often best after several days; espresso often a little later. The best rest depends on the coffee, so taste over time.</p>',
+ 'The Cup page counts rest days for every brew automatically.'],
+['#4a2e1c','Grinding and brewing','Water dissolves flavour from the grounds. How much, and how strong, is up to you.',
+ '<p>Grind size, water temperature, time and ratio decide how much of the coffee dissolves (extraction) and how concentrated the cup is (strength). Too little extraction tastes sour and thin; too much tastes bitter and drying.</p>',
+ 'Log brews and follow dial-in pathways in <a href="cup.html#brew">Cup</a>; read the <a href="methods.html">Brew guide</a> and make better <a href="water.html">Water</a>.'],
+['#3b2417','The cup','Tasting closes the circle: what you taste tells the farm and the roaster what to keep.',
+ '<p>Cupping is a standard way to taste many coffees side by side and score them. Notes on sweetness, acidity, body and defects travel back up the chain, to the roast profile, the processing, and the plot.</p>',
+ 'Cup with SCA or Robusta forms, run blind tests, and see cup scores by plot: <a href="cup.html#cupping">Cupping</a>, <a href="cup.html#tasting">Tests</a>.']];
+document.getElementById('tl').innerHTML=S.map(([c,t,s,b,h],i)=>'<details class="st"><summary><span class="dot" style="--c:'+c+'">'+(i+1)+'</span><b>'+t+'</b><span>'+s+'</span></summary><div class="bd">'+b+'<div class="help"><b>In KoffyKraft:</b> '+h+'</div></div></details>').join('');
+document.getElementById('all').onclick=()=>document.querySelectorAll('details.st').forEach(d=>d.open=true);
+document.getElementById('none').onclick=()=>document.querySelectorAll('details.st').forEach(d=>d.open=false);
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script><script src="pv.js" defer></script>
+</body>
+</html>

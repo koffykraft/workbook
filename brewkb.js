@@ -11,6 +11,9 @@ const S={
  C:{t:'Cameron, Hendon, Foster et al., Matter (2020)',u:'https://scholar.google.com/scholar?q=Systematically+Improving+Espresso+Insights+from+Mathematical+Modeling+and+Experiment'},
  K:{t:'Cordoba et al., Scientific Reports (2019)',u:'https://scholar.google.com/scholar?q=Cordoba+2019+cold+brew+coffee+grind+size+steeping+time+sensory'},
  N:{t:'National Coffee Association, Cold Brew toolkit (2018)',u:'https://www.ncausa.org'},
+ M:{t:'Moccamaster: SCA certified brewers and the Golden Cup standard',u:'https://us.moccamaster.com/blogs/blog/certified-by-the-sca-moccamaster-and-the-golden-cup-standard'},
+ B:{t:'Five Senses Coffee: Batch brew fundamentals',u:'https://fivesenses.com.au/blogs/news/batch-brew-fundamentals'},
+ R:{t:'Scott Rao: Bed depth, why it matters (2025)',u:'https://www.scottrao.com/blog/2025/11/11/bed-depth-why-it-matters'},
  P:{t:'Common practice',u:''}
 };
 // Level: 1 basic, 2 intermediate, 3 advanced. Each tip: [level, text, source]
@@ -69,7 +72,22 @@ const M=[
  ['hoop','Ceado Hoop','drip','paper','15 g : 250 g, medium, about 3:00',[[1,'A ring spreads water evenly; pour it all in at once.','P']]],
  ['pulsar','Pulsar','drip','paper','20 g : 320 g, medium-fine, about 3:30',[[1,'Valve and shower screen let you steep then drain, with little bypass.','P']]],
  ['nel','Nel drip (cloth)','drip','cloth','25 g : 250 g, medium-coarse, slow pour, about 4:00',[[1,'Flannel cloth: rich yet clean. Keep it wet and chilled between uses; never dry it or use soap.','P']]],
- ['batch','Batch brewer','drip','paper','60 to 65 g per litre, medium',[[1,'Set the ratio by weight, not scoops.','P'],[2,'Bigger batches need a slightly coarser grind as contact time grows.','P']]],
+ ['batch','Batch brewer','drip','paper','60 g per litre (55 to 65), medium-coarse, 4 to 8 min contact, water about 92 to 96 °C',[
+  [1,'Weigh coffee and water. Start at 60 g per litre: 120 g for 2 L. Weak: go to 65. Too strong: go to 55.','B'],
+  [1,'Sour or thin: grind finer. Bitter or drying: grind coarser. Keep the ratio the same while you change the grind.','B'],
+  [1,'Rinse the paper with hot water first, and check the brewer and basket sit level so water spreads evenly.','B'],
+  [1,'Serve within about an hour. Stir the pot or airpot once after brewing: the first and last coffee out differ in strength.','B'],
+  [2,'SCA certified brewers keep water at 92 to 96 °C, finish a full batch in 4 to 8 minutes of contact, and hold the coffee at 80 to 85 °C without boiling it.','M'],
+  [2,'Bigger batches need a coarser grind. Total contact for a 2 L batch is about 5:30 to 6:30.','B'],
+  [2,'Aim for a coffee bed 3 to 5 cm deep. Small batches in a big basket make a shallow bed that channels and tastes drying; use a smaller basket or a half-batch setting.','R'],
+  [3,'Test the brewer: run a cycle with no coffee and weigh what comes out, to check it delivers the water you think it does.','B'],
+  [3,'Clean the basket, shower head and pot daily. Old coffee oils taste stale and murky in the next batch.','B']]],
+ ['moccamaster','Moccamaster','drip','paper','About 62 g per litre (1:16), medium-coarse, 4 to 6 min',[
+  [1,'Fill the tank with cold or room-temperature water to the line for your batch; the machine heats it. 31 g for 0.5 L, 62 g for 1 L, 78 g for 1.25 L is a common start.','P'],
+  [1,'All current Moccamaster models are SCA certified: they heat water to the brewing range and finish in the certified time.','M'],
+  [2,'Bloom: close the drip-stop, switch on, and when the basket is about half full switch off and stir gently. Then open the drip-stop and switch on again.','P'],
+  [2,'Brewing less than a full tank: use the half-carafe setting on models that have it, and grind slightly finer, since a shallow bed drains faster.','P'],
+  [3,'If a full tank runs over about 6 minutes the grind is likely too fine; under about 4, too coarse.','P']]],
  ['iced','Japanese iced pour-over','drip','paper','20 g : 200 g hot water over 120 g ice',[[1,'Brew hot and stronger straight onto ice so it chills without tasting diluted.','P']]],
  ['aeropress','AeroPress','drip','paper','15 g : 230 g, medium-fine, about 2:00',[[1,'Steep then press through paper. Very flexible: almost any recipe works.','P'],[2,'Inverted or upright, keep one way while you dial in.','P']]],
  ['press','French press','drip','metal','30 g : 500 g, coarse, 4:00',[[1,'Metal mesh lets oils and fine particles through: full body, some sediment.','P'],[1,'Break the crust, skim the foam, wait a few minutes, then plunge gently and pour slowly.','P']]],
