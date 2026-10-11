@@ -102,7 +102,7 @@ export async function run(root, t) {
     });
     await t.acheck('Brew guide shows step-by-step and runs the step timer', async () => {
       await q.goto(base + 'methods.html'); await q.evaluate(() => localStorage.setItem('kk_brew_level', '3')); await q.reload(); await q.waitForTimeout(500);
-      for (const id of ['v60', 'kalita', 'chemex', 'aeropress', 'press', 'moka', 'southindian', 'batch', 'moccamaster', 'nel']) {
+      for (const id of Object.keys(await q.evaluate(() => window.KK_HOWTO.H))) {
         const n = await q.$$eval('#m-' + id + ' ol.steps li', a => a.length); if (n < 6) throw new Error(id + ' has only ' + n + ' steps');
       }
       const pro = await q.$$eval('#protocols ~ details.card[id^="p-"]', a => a.length); if (pro < 6) throw new Error('protocols: ' + pro);
