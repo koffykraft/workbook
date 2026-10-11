@@ -68,5 +68,14 @@
 "One coffee, many hands. Create a space, invite people by email, and each adds their own brews, roasts, cuppings or process runs. Everyone sees and comments.": "ഒരു കാപ്പി, പല കൈകൾ. ഒരു സ്പേസ് ഉണ്ടാക്കുക, ആളുകളെ ഇമെയിൽ വഴി ക്ഷണിക്കുക. ഓരോരുത്തരും സ്വന്തം ബ്രൂവുകളും റോസ്റ്റുകളും കപ്പിംഗുകളും സംസ്കരണങ്ങളും ചേർക്കുന്നു. എല്ലാവർക്കും കാണാനും അഭിപ്രായം പറയാനും കഴിയും.",
 "Producer book: every lot, run and picking, newest first. Tap one to open it in Origin.": "ഉത്പാദക പുസ്തകം: എല്ലാ ലോട്ടുകളും സംസ്കരണങ്ങളും പറിക്കലുകളും, പുതിയത് ആദ്യം. Origin-ൽ തുറക്കാൻ ഒന്നിൽ തൊടുക.",
 "Brewer book: brews and cupping sessions. Tap one to open it in Cup.": "ബ്രൂവർ പുസ്തകം: ബ്രൂവുകളും കപ്പിംഗ് സെഷനുകളും. Cup-ൽ തുറക്കാൻ ഒന്നിൽ തൊടുക.",
-"A one-page profile to send out: your name or business, logo, colour, what you do and the records you choose. Save it as PDF from this phone, or publish a link. Only what you pick here is shown.": "അയച്ചുകൊടുക്കാൻ ഒരു പേജുള്ള പ്രൊഫൈൽ: നിങ്ങളുടെ പേര് അല്ലെങ്കിൽ സ്ഥാപനം, ലോഗോ, നിറം, നിങ്ങൾ ചെയ്യുന്നത്, നിങ്ങൾ തിരഞ്ഞെടുക്കുന്ന രേഖകൾ. ഈ ഫോണിൽ നിന്ന് PDF ആയി സേവ് ചെയ്യാം, അല്ലെങ്കിൽ ഒരു ലിങ്ക് പ്രസിദ്ധീകരിക്കാം. നിങ്ങൾ ഇവിടെ തിരഞ്ഞെടുക്കുന്നത് മാത്രമേ കാണിക്കൂ."
+"A one-page profile to send out: your name or business, logo, colour, what you do and the records you choose. Save it as PDF from this phone, or publish a link. Only what you pick here is shown.": "അയച്ചുകൊടുക്കാൻ ഒരു പേജുള്ള പ്രൊഫൈൽ: നിങ്ങളുടെ പേര് അല്ലെങ്കിൽ സ്ഥാപനം, ലോഗോ, നിറം, നിങ്ങൾ ചെയ്യുന്നത്, നിങ്ങൾ തിരഞ്ഞെടുക്കുന്ന രേഖകൾ. ഈ ഫോണിൽ നിന്ന് PDF ആയി സേവ് ചെയ്യാം, അല്ലെങ്കിൽ ഒരു ലിങ്ക് പ്രസിദ്ധീകരിക്കാം. നിങ്ങൾ ഇവിടെ തിരഞ്ഞെടുക്കുന്നത് മാത്രമേ കാണിക്കൂ.",
+
+// Brew guide: protocols
+"Repeatable ways of working, so results compare across days and people.": "ആവർത്തിക്കാവുന്ന രീതികൾ: പല ദിവസങ്ങളിലെയും പല ആളുകളുടെയും ഫലങ്ങൾ താരതമ്യം ചെയ്യാൻ.",
+"One fixed recipe you can repeat any day, so changes in taste come from the coffee, not the brew.": "ഏത് ദിവസവും ആവർത്തിക്കാവുന്ന ഒരു സ്ഥിരം രീതി. അപ്പോൾ രുചിയിലെ മാറ്റം ബ്രൂവിൽ നിന്നല്ല, കാപ്പിയിൽ നിന്നാണെന്ന് ഉറപ്പിക്കാം.",
+"How to take a reading you can trust with a coffee refractometer.": "കോഫി റിഫ്രാക്ടോമീറ്റർ ഉപയോഗിച്ച് വിശ്വസിക്കാവുന്ന അളവ് എങ്ങനെ എടുക്കാം.",
+"A short routine for the first few brews of a new bag.": "പുതിയ ഒരു പാക്കറ്റിലെ ആദ്യ കുറച്ച് ബ്രൂവുകൾക്കുള്ള ഒരു ചെറിയ രീതി.",
+"Roasted coffee changes every day. Space, oxygen, heat and time take its aroma.": "റോസ്റ്റ് ചെയ്ത കാപ്പി ഓരോ ദിവസവും മാറുന്നു. ഒഴിഞ്ഞ ഇടം, ഓക്സിജൻ, ചൂട്, സമയം എന്നിവ അതിന്റെ സുഗന്ധം കുറയ്ക്കുന്നു.",
+"Brewed with room-temperature water over many hours: lower acidity, sweet and smooth.": "സാധാരണ താപനിലയിലുള്ള വെള്ളത്തിൽ മണിക്കൂറുകളോളം വെച്ച് ഉണ്ടാക്കുന്നത്: പുളിപ്പ് കുറവ്, മധുരവും മൃദുവും.",
+"For roasters: a fair way to taste what a roast change did.": "റോസ്റ്റർമാർക്ക്: റോസ്റ്റിലെ ഒരു മാറ്റം രുചിയിൽ എന്ത് ചെയ്തു എന്ന് ന്യായമായി രുചിച്ചറിയാനുള്ള രീതി."
 };

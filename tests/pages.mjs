@@ -100,6 +100,16 @@ export async function run(root, t) {
       await q.goto(base + 'profile.html'); await q.waitForTimeout(600);
       if (!(await q.$eval('#view', e => e.innerText)).includes('brews')) throw new Error('no totals');
     });
+    await t.acheck('Brew guide shows step-by-step and runs the step timer', async () => {
+      await q.goto(base + 'methods.html'); await q.evaluate(() => localStorage.setItem('kk_brew_level', '3')); await q.reload(); await q.waitForTimeout(500);
+      for (const id of ['v60', 'kalita', 'chemex', 'aeropress', 'press', 'moka', 'southindian', 'batch', 'moccamaster', 'nel']) {
+        const n = await q.$$eval('#m-' + id + ' ol.steps li', a => a.length); if (n < 6) throw new Error(id + ' has only ' + n + ' steps');
+      }
+      const pro = await q.$$eval('#protocols ~ details.card[id^="p-"]', a => a.length); if (pro < 6) throw new Error('protocols: ' + pro);
+      await q.evaluate(() => document.getElementById('m-v60').open = true); await q.click('[data-run="v60"]'); await q.click('#rGo'); await q.waitForTimeout(400);
+      if (!(await q.$eval('#rNow', e => e.innerText)).includes('Bloom')) throw new Error('timer did not start on the bloom');
+      await q.click('#rClose'); await q.evaluate(() => localStorage.setItem('kk_brew_level', '1'));
+    });
     await t.acheck('Malayalam shows explanations only, labels stay English', async () => {
       await q.goto(base + 'home.html'); await q.evaluate(() => localStorage.setItem('kk_lang', 'ml'));
       await q.goto(base + 'crop.html'); await q.waitForTimeout(700);
