@@ -78,5 +78,8 @@ async function open(items,opt){opt=opt||{};if(!items||!items.length)return;const
  el.querySelector('#kcS').onclick=dl;
  el.querySelector('#kcG').onclick=async()=>{try{if(navigator.canShare&&navigator.canShare({files})){await navigator.share({files,title:opt.heading||'KoffyKraft'});return}}catch(e){if(e&&e.name==='AbortError')return}dl()};
  await build()}
-window.KKCARD={open,render,pdf};
+// small previews for the album picker, drawn one at a time so the page stays responsive
+async function thumbs(items,each){const b=brand('');b.img=await loadImg(b.logo);const prof=b.name!=='KoffyKraft';
+ for(let i=0;i<items.length;i++){await new Promise(r=>setTimeout(r,0));const it=items[i];const c=render(it,270,338,prof||!it.brand?b:Object.assign({},b,{name:it.brand}),{notes:false,loc:false});if(each(i,c.toDataURL('image/jpeg',.72))===false)return}}
+window.KKCARD={open,render,pdf,thumbs};
 })();

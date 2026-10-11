@@ -122,6 +122,13 @@ export async function run(root, t) {
       if (!(await q.$eval('#selBar', e => e.innerText)).includes('1 selected')) throw new Error('selection failed');
       await q.click('#selBar >> text=Done');
     });
+    await t.acheck('Album picker selects by heading and everything', async () => {
+      await q.goto(base + 'origin.html'); await q.waitForTimeout(600); await q.click('text=Share'); await q.waitForSelector('#picker.on');
+      await q.click('#pkAll'); const all = await q.$eval('#pkN', e => e.innerText);
+      await q.click('#pkAll'); await q.click('[data-pg="green"]'); const one = await q.$eval('#pkN', e => e.innerText);
+      if (!/selected/.test(all) || one !== '1 selected') throw new Error(all + ' / ' + one);
+      await q.click('#pkX');
+    });
     await t.acheck('Malayalam shows explanations only, labels stay English', async () => {
       await q.goto(base + 'home.html'); await q.evaluate(() => localStorage.setItem('kk_lang', 'ml'));
       await q.goto(base + 'crop.html'); await q.waitForTimeout(700);
