@@ -1,3 +1,4 @@
+// KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // KoffyKraft Cloud Sync Module
 // Handles authentication, roast saving, and data sync between local and cloud
 

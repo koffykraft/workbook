@@ -1,3 +1,4 @@
+// KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // KoffyKraft brewing knowledge. Guides, not guarantees.
 // Findings are credited where they come from a study; everything else is common practice and says so.
 // Studies: Frost, Ristenpart and Guinard, J. Food Science 85 (2020) "Effects of brew strength, brew yield, and roast

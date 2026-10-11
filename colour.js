@@ -1,3 +1,4 @@
+// KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // KoffyKraft roast colour check from a phone photo.
 // Relative comparison only: the white card sets the white point (a von Kries style scaling),
 // sRGB is converted to CIE XYZ (D65) and CIELAB, and batches are compared with CIEDE2000.

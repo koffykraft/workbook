@@ -1,20 +1,60 @@
 KoffyKraft
 Copyright (C) 2026 T M Thomas, Thumpassery Estate, Punalur 691333, Kerala, India.
-
-This program is free software: you can redistribute it and/or modify it under
-the terms of the GNU Affero General Public License, version 3 (see LICENSE).
-
-What the licence asks of anyone who reuses this code:
-- Keep this notice and the copyright lines intact.
-- Publish the full source of any changed version, under the same licence,
-  including when it is only offered as a website or app over a network.
-- Say clearly that the work is changed, and when.
-
-The name "KoffyKraft" and its logo are not covered by the code licence.
-A copy or fork must use its own name and logo and must not present itself as
-KoffyKraft or as endorsed by it.
-
-Guide texts, crop and brew advice are written in our own words from the public
-sources each page names. Credit those sources, and KoffyKraft, when you reuse them.
-
 Source: https://github.com/koffykraft/workbook
+Live app: https://roast.koffykraft.coffee
+
+1. CODE: GNU AFFERO GENERAL PUBLIC LICENSE, VERSION 3, WITH ADDITIONAL TERMS
+
+The program is free software: you can redistribute it and/or modify it under the
+terms of the GNU Affero General Public License, version 3 (see LICENSE), together
+with the following additional terms, which the copyright holder adds under
+section 7 of that licence. They apply to every file in this repository written
+by the copyright holder.
+
+ a) Attribution (section 7(b)). Any copy or modified version that is run for
+    users, including as a website or app used over a network, must keep a
+    visible notice in its user interface reading "Made with KoffyKraft" or
+    "Based on KoffyKraft", linked to https://roast.koffykraft.coffee or to
+    https://github.com/koffykraft/workbook. The notice must sit in the work's
+    Appropriate Legal Notices: a footer, or an About or Licence page that can
+    be reached from the main screen. The copyright line above must also be kept.
+
+ b) Changed versions (section 7(c)). A modified version must be clearly marked
+    as changed, with the date of the change, and must not be presented as the
+    original KoffyKraft or as made or endorsed by its copyright holder.
+
+ c) Names and logos (section 7(e)). No rights are granted to use the names
+    "KoffyKraft" or "Thumpassery", or their logos, except as needed for the
+    attribution in (a) and to state truthfully where the work comes from.
+    "KoffyKraft" is a trade mark of T M Thomas.
+
+Everything else in the AGPL applies as written. In particular, anyone who runs a
+changed version for others must offer them its complete source code under the
+same licence and these same terms.
+
+2. GUIDE TEXT: CREATIVE COMMONS ATTRIBUTION-SHAREALIKE 4.0 (CC BY-SA 4.0)
+
+The written guide content is also licensed under CC BY-SA 4.0
+(https://creativecommons.org/licenses/by-sa/4.0/). This covers the brew guide
+(brewkb.js, methods.html), crop care (crop.html), journey of the bean
+(journey.html), water (water.html), coffee varieties (varieties.js), the
+contents page texts (contents.js), and the tips, guide ranges and explanations
+written into origin.html and cup.html.
+
+You may copy, translate and adapt that text, also for commercial use, if you:
+ - credit it as: "From KoffyKraft (roast.koffykraft.coffee), (C) T M Thomas,
+   CC BY-SA 4.0", with a link where the medium allows;
+ - say if you changed it;
+ - share your adapted text under CC BY-SA 4.0 as well.
+
+The text names its public sources (studies, the Coffee Board of India and its
+research institute, and others). Facts and figures belong to no one; the words
+used to explain them here are ours. Material owned by those sources stays theirs
+and is credited where it is used.
+
+3. COMMERCIAL LICENCE
+
+To use the code in a closed or paid product without the AGPL obligations, ask
+for a separate commercial licence: info@koffykraft.com.
+
+The program comes with no warranty. See sections 15 and 16 of the AGPL.

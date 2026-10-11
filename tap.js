@@ -1,3 +1,4 @@
+// KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // KoffyKraft tap feedback: every tap shows a ripple where the finger landed,
 // and the tapped button dips for a moment, so you know the tap registered.
 (function(){

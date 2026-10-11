@@ -1,3 +1,4 @@
+// KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 (()=>{
 const NAME='KoffyKraftRoastbooks',VERSION=1;
 const STORES=['roasts','plans','captures'];

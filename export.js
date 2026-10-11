@@ -1,3 +1,4 @@
+// KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // KoffyKraft export: any list of records to CSV (opens in Excel or Sheets) or JSON (full detail, re-importable on My Data).
 (function(){
  if(window.KKX)return;

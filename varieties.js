@@ -1,3 +1,4 @@
+// KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // Coffee variety reference. Facts only, written for KoffyKraft, with sources credited.
 // IN  = Central Coffee Research Institute (CCRI, Coffee Board of India) releases, as listed by
 //       TNAU Agritech Portal and Counter Culture Coffee, "India's Arabica Coffee Varieties".

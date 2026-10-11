@@ -1,3 +1,4 @@
+// KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 const JSON_HEADERS={"content-type":"application/json; charset=utf-8","cache-control":"no-store"};
 const j=(v,s=200)=>new Response(JSON.stringify(v),{status:s,headers:JSON_HEADERS});
 function bearer(r){const h=r.headers.get("authorization")||"";return h.startsWith("Bearer ")?h.slice(7):""}

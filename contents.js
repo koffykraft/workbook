@@ -1,3 +1,4 @@
+// KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // Everything KoffyKraft can do, in one list. [name, one line, more detail, link]
 window.KK_CONTENTS=[
  ['farm','Farm and origin','Your estate, plots, harvests, processing and green lots, linked from plant to bag.',[

@@ -1,3 +1,4 @@
+// KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // KoffyKraft cloud sync preferences, per section.
 // off: stays on this device. selected: only records the user saves to the cloud. all: everything syncs.
 const PREFS = (() => {

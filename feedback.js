@@ -1,3 +1,4 @@
+// KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // Feedback box: anonymous by default, contact optional. Drops into any element with id="feedback".
 (function(){
  function mount(el){if(!el)return;const page=location.pathname.replace(/^\//,'')||'home';

@@ -1,3 +1,4 @@
+// KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // Cloud status row and buttons for Origin and Cup records.
 function kkSignedIn() { return typeof SYNC !== 'undefined' && SYNC.isAuthenticated(); }
 function cloudRowHtml(rec) {

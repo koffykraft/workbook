@@ -1,3 +1,4 @@
+// KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // KoffyKraft Origin store: estates, plots, harvests, processing runs and green lots.
 // Works offline in IndexedDB; when signed in, syncs to /api/origin (last write wins).
 const ORIGIN = (() => {
