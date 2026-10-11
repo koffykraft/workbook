@@ -100,6 +100,15 @@ export async function run(root, t) {
       await q.goto(base + 'profile.html'); await q.waitForTimeout(600);
       if (!(await q.$eval('#view', e => e.innerText)).includes('brews')) throw new Error('no totals');
     });
+    await t.acheck('Malayalam shows explanations only, labels stay English', async () => {
+      await q.goto(base + 'home.html'); await q.evaluate(() => localStorage.setItem('kk_lang', 'ml'));
+      await q.goto(base + 'crop.html'); await q.waitForTimeout(700);
+      const ml = await q.$$eval('[lang=ml]', a => a.length); if (ml < 3) throw new Error('only ' + ml + ' Malayalam blocks');
+      const nav = await q.$eval('.kkh-nav', e => e.innerText); if (!nav.includes('Origin') || !nav.includes('Roastbook')) throw new Error('menu changed');
+      const chips = await q.$eval('#lvl', e => e.innerText); if (!chips.includes('Basic')) throw new Error('chips changed');
+      await q.selectOption('.kk-lang', 'en'); await q.waitForTimeout(600);
+      if (await q.$$eval('[lang=ml]', a => a.length)) throw new Error('English did not come back');
+    });
     await t.acheck('no script errors during the journeys', async () => { if (errs.length) throw new Error(errs[0]) });
   } finally {
     await browser.close(); srv.close();

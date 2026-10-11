@@ -30,6 +30,12 @@ To use this code in a closed or paid product without the AGPL obligations, you n
 
 The KoffyKraft name and logo are not covered by the code licence and may not be used for other products.
 
+## Languages
+
+Overviews and explanations can be shown in another language; every label, field, button, number and tip stays in English, so a translation cannot break how a page works. The picker sits next to the account button.
+
+Each language is one file in `lang/`, for example `lang/ml.js` for Malayalam. The left side is the English exactly as it appears on the page, the right side the translation. To add a language, copy `lang/ml.js`, translate the right-hand side, add the code to `LANGS` in `i18n.js` and the file to `sw.js`. If the English on a page changes, that line falls back to English until the translation is updated.
+
 ## Checks before every deploy
 
 `npm test` runs about 220 automatic checks in roughly 15 seconds:
