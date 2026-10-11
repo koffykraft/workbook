@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>KoffyKraft Shared</title>
+<style>
+:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b;--ok:#3f6b5a;--bad:#b4432f}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;color:var(--ink);background:var(--bg)}
+.app{max-width:720px;margin:auto;padding:24px 16px 60px}
+h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 4px}.sub{color:var(--muted);font-size:13.5px;margin-bottom:12px;line-height:1.5}.sub a{color:var(--coffee)}
+h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:22px 0 8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px 15px;margin:8px 0}
+.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;cursor:pointer;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}.btn.small{font-size:13px;padding:7px 11px}.btn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+input,textarea,select{font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);width:100%}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600;margin:6px 0}
+.sp{display:block;text-decoration:none;color:var(--ink)}.sp b{font-size:16px}.mini{font-size:12.5px;color:var(--muted);line-height:1.45}
+.kind{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;text-transform:uppercase;letter-spacing:.04em;margin-right:6px}
+.k-brew{background:#e3efe8;color:#2f5d4a}.k-roast{background:#f3e3d6;color:#8d583b}.k-cupping{background:#ece4f3;color:#5b3f7a}.k-process{background:#e6eef6;color:#2e5677}.k-note{background:#eee;color:#555}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:14px;margin-top:6px}.kv span{color:var(--muted)}
+.cm{border-top:1px solid #f0ebe3;padding:7px 0;font-size:14px}.cm small{color:var(--muted)}
+.cmf{display:flex;gap:6px;margin-top:6px}.cmf input{flex:1;font-size:15px;padding:8px 10px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px 6px;border-bottom:1px solid #f0ebe3;white-space:nowrap}th{color:var(--muted);font-weight:600}
+.tw{overflow-x:auto}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#171512;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:.2s;pointer-events:none;z-index:2000}.toast.on{opacity:1}
+.pick{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 0;border-top:1px solid #f0ebe3}
+svg.curve{width:100%;height:auto;margin-top:6px}
+</style>
+<link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script></head>
+<body><main class="app">
+<header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="account.html" aria-label="Account">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
+<div id="view"></div>
+</main>
+<div class="toast" id="toast"></div>
+<script src="sync.js"></script><script src="origin-db.js"></script>
+<script>
+const $=s=>document.querySelector(s);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const n=parseFloat(v);return Number.isFinite(n)?n:null};const r1=v=>Math.round(v*10)/10;
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),2000)}
+const signed=()=>typeof SYNC!=='undefined'&&SYNC.isAuthenticated();
+async function api(path,opt){opt=opt||{};const h={'content-type':'application/json'};if(signed())h.authorization='Bearer '+SYNC.getToken();const r=await fetch('/api'+path,{method:opt.method||'GET',headers:h,body:opt.body?JSON.stringify(opt.body):undefined});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('Error '+r.status));return j}
+const fmtD=d=>{const x=new Date(d);return isNaN(x)?'':x.toLocaleString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})};
+const KN={brew:'Brew',roast:'Roast',cupping:'Cupping',process:'Origin process',note:'Note'};
+// ---------- snapshots of my own records (a copy is shared, your record stays yours) ----------
+function brewSnap(b){const d=num(b.dose),w=num(b.water),t=num(b.tds);let bev=num(b.beverage);const esp=/espresso|moka/i.test(b.method||'');if(!bev&&w&&d)bev=esp?w:w-2*d;const ey=t&&d&&bev?r1(t*bev/d):null;
+ return{title:(b.roastLabel||b.coffee||'Brew')+' · '+(b.method||''),data:{coffee:b.roastLabel||b.coffee||'',method:b.method,brewer:b.brewer,dose:d,water:w,ratio:d&&w?r1(w/d):null,waterTemp:b.waterTemp,grinder:b.grinder,grind:b.grind,bloom:b.bloom,time:b.time,pours:b.pours,waterType:b.waterType,tds:t,ey,restDays:b.restDays!=null?r1(b.restDays):null,rating:b.rating,descriptors:b.descriptors,notes:b.notes,brewedAt:b.brewedAt}}}
+function cupSnap(c){return{title:'Cupping · '+(c.protocol||'SCA')+' · '+((c.samples||[]).length)+' sample'+((c.samples||[]).length===1?'':'s'),data:{protocol:c.protocol||'SCA',at:c.at,samples:(c.samples||[]).map(s=>({name:s.roastLabel||s.label||'Sample',total:s.total!=null?r1(s.total):null,notes:s.notes||s.descriptors||'',restDays:s.restDays!=null?r1(s.restDays):null}))}}}
+function procSnap(p,A){const hs=(p.harvestIds||[]).map(id=>(A.harvest||[]).find(h=>h.id===id)).filter(Boolean);const plots=[...new Set(hs.flatMap(h=>h.plotIds||[]))].map(id=>(A.plot||[]).find(x=>x.id===id)).filter(Boolean);
+ const hrs=(a,b)=>{if(!a||!b)return null;const h=(new Date(b)-new Date(a))/36e5;return h>=0?r1(h):null};
+ return{title:(p.code||'Process')+' · '+(p.pathway||''),data:{pathway:p.pathway,started:p.started,varieties:[...new Set(plots.map(x=>x.variety).filter(Boolean))].join(', '),altitude:plots.map(x=>x.altitude?x.altitude+' '+(x.altUnit||'ft'):'').filter(Boolean).join(', '),steps:(p.steps||[]).map(s=>({type:s.type,method:s.method||'',hours:hrs(s.start,s.end),inKg:s.inKg||'',outKg:s.outKg||'',inoc:s.inoc||'',readings:(s.readings||[]).length,last:(s.readings||[]).slice(-1)[0]||null})),notes:p.notes||''}}}
+function roastSnap(r){const ev=(Array.isArray(r.events)?r.events:Object.values(r.events||{})).filter(Boolean);const rd=r.readings||{};const bt=Array.isArray(rd.bean)?rd.bean:[],ex=Array.isArray(rd.exhaust)?rd.exhaust:[];
+ const maxT=Math.max(0,...[...ev,...bt,...ex].map(x=>num(x&&x.time)||0),num(r.elapsed)||0);const f=maxT>7200?1/1000:1;const ds=a=>{const s=a.map(x=>({t:Math.round((num(x.time)||0)*f),v:num(x.temp)})).filter(x=>x.v!=null).sort((a,b)=>a.t-b.t);const k=Math.max(1,Math.ceil(s.length/150));return s.filter((_,i)=>i%k===0)};
+ const evs=ev.map(x=>({name:x.name,t:Math.round((num(x.time)||0)*f),bean:x.bean,exhaust:x.exhaust})).sort((a,b)=>a.t-b.t);const fc=evs.find(x=>/first crack/i.test(x.name)),drop=evs.find(x=>/drop|end/i.test(x.name));const total=drop?drop.t:(num(r.elapsed)!=null?Math.round(num(r.elapsed)*f):null);
+ const g=num(r.greenWeight),rw=num(r.roastedWeight);
+ return{title:[r.estate||r.coffeeCode||r.bean||'Roast',r.roastNo?'#'+r.roastNo:''].filter(Boolean).join(' '),data:{coffee:r.estate||r.bean||'',code:r.coffeeCode||'',roastDate:r.roastDate,machine:r.machineName||'',green:g,roasted:rw,loss:g&&rw?r1((g-rw)/g*100):null,charge:r.chargeTemp||'',total,dev:fc&&total?total-fc.t:null,dtr:fc&&total?r1((total-fc.t)/total*100):null,finalColor:r.finalColor||'',events:evs,bean:ds(bt),exhaust:ds(ex)}}}
+async function myRoasts(){return await new Promise(ok=>{const q=indexedDB.open('KoffyKraftTemporaryRoastbook');q.onupgradeneeded=e=>{e.target.transaction.abort();ok([])};q.onsuccess=()=>{const db=q.result;if(!db.objectStoreNames.contains('roasts')){db.close();ok([]);return}const t=db.transaction('roasts','readonly').objectStore('roasts').getAll();t.onsuccess=()=>{db.close();ok(t.result||[])};t.onerror=()=>{db.close();ok([])}};q.onerror=()=>ok([])})}
+// ---------- rendering ----------
+const mmss=s=>s==null?'':Math.floor(s/60)+':'+String(Math.round(s%60)).padStart(2,'0');
+function curve(d){if(!d.bean||d.bean.length<3)return '';const all=[...d.bean,...(d.exhaust||[])];const t1=Math.max(...all.map(x=>x.t)),v0=Math.min(...all.map(x=>x.v)),v1=Math.max(...all.map(x=>x.v));const W=320,H=120,X=t=>8+t/t1*(W-16),Y=v=>8+(v1-v)/Math.max(1,v1-v0)*(H-24);
+ const pl=(a,c)=>a.length>1?'<polyline fill="none" stroke="'+c+'" stroke-width="2" points="'+a.map(x=>X(x.t)+','+Y(x.v)).join(' ')+'"/>':'';
+ return '<svg class="curve" viewBox="0 0 '+W+' '+H+'">'+pl(d.exhaust||[],'#c9a27e')+pl(d.bean,'#8d583b')+(d.events||[]).map(e=>'<line x1="'+X(e.t)+'" x2="'+X(e.t)+'" y1="8" y2="'+(H-16)+'" stroke="#ddd8d0" stroke-dasharray="2 3"/><text x="'+X(e.t)+'" y="'+(H-4)+'" font-size="8" text-anchor="middle" fill="#77716a">'+esc(String(e.name).slice(0,6))+'</text>').join('')+'</svg>'}
+function summary(e){const d=e.data||{},rows=[];const add=(k,v)=>{if(v!=null&&v!=='')rows.push([k,v])};
+ if(e.kind==='brew'){add('Coffee',d.coffee);add('Method',[d.method,d.brewer].filter(Boolean).join(' · '));add('Recipe',[d.dose?d.dose+' g':'',d.water?d.water+' g water':'',d.ratio?'1:'+d.ratio:''].filter(Boolean).join(', '));add('Grind',[d.grinder,d.grind].filter(Boolean).join(' '));add('Water',[d.waterTemp?d.waterTemp+' °C':'',d.waterType].filter(Boolean).join(', '));add('Time',d.time);add('Strength',[d.tds?d.tds+'% TDS':'',d.ey?d.ey+'% extraction':''].filter(Boolean).join(', '));add('Rest',d.restDays!=null?d.restDays+' days':'');add('Rating',d.rating?d.rating+' / 10':'');add('Tasted',d.descriptors);add('Notes',d.notes)}
+ if(e.kind==='roast'){add('Coffee',[d.coffee,d.code].filter(Boolean).join(' · '));add('Date',d.roastDate);add('Machine',d.machine);add('Weights',[d.green?d.green+' g green':'',d.roasted?d.roasted+' g roasted':'',d.loss?d.loss+'% loss':''].filter(Boolean).join(', '));add('Time',[d.total?mmss(d.total)+' total':'',d.dev?mmss(d.dev)+' development':'',d.dtr?d.dtr+'% DTR':''].filter(Boolean).join(', '));add('Colour',d.finalColor)}
+ if(e.kind==='cupping'){add('Form',d.protocol);add('Date',d.at?fmtD(d.at):'');(d.samples||[]).forEach(s=>add(s.name,[s.total!=null?s.total+' pts':'',s.notes].filter(Boolean).join(' · ')))}
+ if(e.kind==='process'){add('Pathway',d.pathway);add('Variety',d.varieties);add('Altitude',d.altitude);(d.steps||[]).forEach(s=>add(s.type,[s.method,s.hours!=null?s.hours+' h':'',s.inKg&&s.outKg?s.inKg+' → '+s.outKg+' kg':'',s.inoc].filter(Boolean).join(' · ')));add('Notes',d.notes)}
+ if(e.kind==='note')add('',d.text);
+ return '<div class="kv">'+rows.map(([k,v])=>'<span>'+esc(k)+'</span><div>'+esc(v)+'</div>').join('')+'</div>'+(e.kind==='roast'?curve(d):'')}
+function brewTable(es){const b=es.filter(e=>e.kind==='brew');if(b.length<2)return '';return '<div class="card tw"><b>Brews side by side</b><table><tr><th>Who</th><th>Method</th><th>Dose</th><th>Ratio</th><th>Grind</th><th>°C</th><th>Time</th><th>TDS</th><th>EY</th><th>Rating</th></tr>'+b.map(e=>{const d=e.data;return '<tr><td>'+esc(e.author_name)+'</td><td>'+esc(d.method||'')+'</td><td>'+(d.dose||'')+'</td><td>'+(d.ratio?'1:'+d.ratio:'')+'</td><td>'+esc(d.grind||'')+'</td><td>'+(d.waterTemp||'')+'</td><td>'+esc(d.time||'')+'</td><td>'+(d.tds||'')+'</td><td>'+(d.ey||'')+'</td><td>'+(d.rating||'')+'</td></tr>'}).join('')+'</table></div>'}
+// ---------- views ----------
+let CUR=null,TAB='all';
+async function route(){const h=decodeURIComponent(location.hash.slice(1));const v=$('#view');let m;
+ if((m=h.match(/^p\/([a-f0-9]{32})$/)))return spaceView(null,m[1]);
+ if(!signed()){v.innerHTML='<h1>Shared spaces</h1><div class="sub">Brew, roast, cup or process the same coffee with others, in different places, and see what each person did. The owner of a space invites people by email; everyone adds their own records and comments.</div><div class="card"><b>Sign in to create or join a space.</b><div class="mini" style="margin:6px 0 10px">Sharing needs an account so the owner can invite you by email. Your own records stay on your phone; only what you choose to add to a space is shared.</div><a class="btn primary" href="account.html">Sign in</a></div>';return}
+ if((m=h.match(/^s\/([\w-]+)$/)))return spaceView(m[1]);
+ if((m=h.match(/^add\/(brew|cupping|process|roast)\/(.+)$/)))return addTo(m[1],m[2]);
+ return listView()}
+async function listView(){const v=$('#view');v.innerHTML='<h1>Shared spaces</h1><div class="sub">One coffee, many hands. Create a space, invite people by email, and each adds their own brews, roasts, cuppings or process runs. Everyone sees and comments. <a href="contents.html">All features</a></div><div id="ls" class="mini">Loading…</div>';
+ let j;try{j=await api('/spaces')}catch(e){$('#ls').textContent=e.message;return}
+ $('#ls').outerHTML='<div class="card"><b>New space</b><label class="f">Name<input id="nN" placeholder="Thumpassery SLN 795, Oct brew circle"></label><label class="f">Coffee (optional)<input id="nC" placeholder="Lot, roast or blend everyone is using"></label><label class="f">About (optional)<textarea id="nA" rows="2" placeholder="What we are comparing and how"></textarea></label><button class="btn primary" id="nS">Create space</button></div>'+
+  '<h2>Your spaces</h2>'+((j.items||[]).length?(j.items).map(s=>'<a class="card sp" href="#s/'+s.id+'"><b>'+esc(s.name)+'</b><div class="mini">'+esc([s.mine?'You own this':'Member',s.coffee,s.entries+' entries',s.members+' invited',s.public?'Public link on':''].filter(Boolean).join(' · '))+'</div></a>').join(''):'<div class="mini">None yet. Create one, or ask a space owner to invite your email ('+esc(SYNC.getUserEmail?SYNC.getUserEmail():'')+').</div>');
+ $('#nS').onclick=async()=>{const name=$('#nN').value.trim();if(!name){toast('Give the space a name');return}try{const r=await api('/spaces',{method:'POST',body:{name,coffee:$('#nC').value.trim(),about:$('#nA').value.trim()}});location.hash='s/'+r.id}catch(e){toast(e.message)}}}
+async function spaceView(id,tok){const v=$('#view');v.innerHTML='<div class="mini">Loading…</div>';let j;try{j=tok?await api('/public/space/'+tok):await api('/spaces/'+id)}catch(e){v.innerHTML='<h1>Shared space</h1><div class="card">'+esc(e.message)+'</div>';return}CUR=j;CUR.id=id;CUR.tok=tok;renderSpace()}
+function renderSpace(){const j=CUR,s=j.space,own=j.role==='owner',pub=j.role==='public',v=$('#view');
+ const ents=j.entries.filter(e=>TAB==='all'||e.kind===TAB);const cnt=k=>j.entries.filter(e=>e.kind===k).length;
+ let h='<div class="sub">'+(pub?'Shared from KoffyKraft · read only':'<a href="share.html">All spaces</a>')+'</div><h1>'+esc(s.name)+'</h1><div class="sub">'+esc([s.coffee,s.owner?'Owner: '+s.owner:''].filter(Boolean).join(' · '))+(s.about?'<br>'+esc(s.about):'')+'</div>';
+ if(!pub)h+='<div class="row" style="margin-bottom:6px"><button class="btn primary" id="add">+ Add from my records</button><button class="btn" id="note">Write a note</button>'+(own?'<button class="btn" id="mng">Members and sharing</button>':'<button class="btn" id="leave">Leave</button>')+'</div><div id="panel"></div>';
+ h+='<div class="row" style="margin:10px 0">'+[['all','All',j.entries.length],['brew','Brews',cnt('brew')],['roast','Roasts',cnt('roast')],['cupping','Cupping',cnt('cupping')],['process','Origin',cnt('process')],['note','Notes',cnt('note')]].filter(x=>x[0]==='all'||x[2]).map(([k,l,n])=>'<button class="btn small'+(TAB===k?' on':'')+'" data-tab="'+k+'">'+l+' ('+n+')</button>').join('')+'</div>';
+ if(TAB==='brew'||TAB==='all')h+=brewTable(ents);
+ h+=ents.length?ents.map(e=>{const cs=j.comments.filter(c=>c.entry_id===e.id);return '<div class="card"><div><span class="kind k-'+e.kind+'">'+KN[e.kind]+'</span><b>'+esc(e.title||KN[e.kind])+'</b></div><div class="mini">'+esc(e.author_name||'')+' · '+fmtD(e.created_at)+(!pub&&(e.mine||own)?' · <a href="#" data-del="'+e.id+'" style="color:var(--bad)">Remove</a>':'')+'</div>'+summary(e)+
+  '<div style="margin-top:8px">'+cs.map(c=>'<div class="cm"><small>'+esc(c.author_name||'')+' · '+fmtD(c.created_at)+((c.mine||own)&&!pub?' · <a href="#" data-cdel="'+c.id+'" style="color:var(--muted)">delete</a>':'')+'</small><div>'+esc(c.text)+'</div></div>').join('')+(pub?'':'<div class="cmf"><input data-cin="'+e.id+'" placeholder="Comment"><button class="btn small" data-cs="'+e.id+'">Send</button></div>')+'</div></div>'}).join(''):'<div class="card mini">Nothing here yet.'+(pub?'':' Tap "Add from my records" to share a brew, roast, cupping or process run.')+'</div>';
+ v.innerHTML=h;
+ v.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;renderSpace()});
+ if(pub)return;
+ $('#add').onclick=()=>addPanel();$('#note').onclick=()=>{$('#panel').innerHTML='<div class="card"><label class="f">Note<textarea id="ntx" rows="3" placeholder="A tip, a question, a plan for the next round"></textarea></label><button class="btn primary small" id="nts">Post</button></div>';$('#nts').onclick=async()=>{const t=$('#ntx').value.trim();if(!t)return;await post('note','Note',{text:t})}};
+ if(own)$('#mng').onclick=()=>manage();else $('#leave').onclick=async()=>{if(!confirm('Leave this space? Your entries stay unless you remove them first.'))return;try{await api('/spaces/'+CUR.id+'/members/'+encodeURIComponent((SYNC.getUserEmail&&SYNC.getUserEmail())||''),{method:'DELETE'});location.hash=''}catch(e){toast(e.message)}};
+ v.querySelectorAll('[data-del]').forEach(a=>a.onclick=async ev=>{ev.preventDefault();if(!confirm('Remove this entry and its comments?'))return;try{await api('/spaces/'+CUR.id+'/entries/'+a.dataset.del,{method:'DELETE'});spaceView(CUR.id)}catch(e){toast(e.message)}});
+ v.querySelectorAll('[data-cdel]').forEach(a=>a.onclick=async ev=>{ev.preventDefault();try{await api('/spaces/'+CUR.id+'/comments/'+a.dataset.cdel,{method:'DELETE'});spaceView(CUR.id)}catch(e){toast(e.message)}});
+ v.querySelectorAll('[data-cs]').forEach(b=>b.onclick=async()=>{const inp=v.querySelector('[data-cin="'+b.dataset.cs+'"]');const t=inp.value.trim();if(!t)return;b.disabled=true;try{await api('/spaces/'+CUR.id+'/entries/'+b.dataset.cs+'/comments',{method:'POST',body:{text:t}});spaceView(CUR.id)}catch(e){toast(e.message);b.disabled=false}})}
+async function post(kind,title,data){try{await api('/spaces/'+CUR.id+'/entries',{method:'POST',body:{kind,title,data}});toast('Added');spaceView(CUR.id)}catch(e){toast(e.message)}}
+async function addPanel(){const p=$('#panel');p.innerHTML='<div class="card"><div class="row">'+[['brew','Brew'],['roast','Roast'],['cupping','Cupping'],['process','Origin process']].map(([k,l])=>'<button class="btn small" data-ak="'+k+'">'+l+'</button>').join('')+'</div><div id="plist" class="mini" style="margin-top:8px">Pick what to share. A copy is added; your own record stays yours and unchanged.</div></div>';
+ p.querySelectorAll('[data-ak]').forEach(b=>b.onclick=async()=>{p.querySelectorAll('[data-ak]').forEach(x=>x.classList.toggle('on',x===b));const k=b.dataset.ak,el=$('#plist');let items=[];const A=await ORIGIN.allTypes();
+  if(k==='brew')items=(A.brew||[]).sort((a,c)=>String(c.brewedAt).localeCompare(String(a.brewedAt))).map(x=>[x,brewSnap(x),fmtD(x.brewedAt)]);
+  if(k==='cupping')items=(A.cupping||[]).sort((a,c)=>String(c.at).localeCompare(String(a.at))).map(x=>[x,cupSnap(x),fmtD(x.at)]);
+  if(k==='process')items=(A.process||[]).sort((a,c)=>String(c.started).localeCompare(String(a.started))).map(x=>[x,procSnap(x,A),x.started||'']);
+  if(k==='roast')items=(await myRoasts()).sort((a,c)=>String(c.roastDate||'').localeCompare(String(a.roastDate||''))).map(x=>[x,roastSnap(x),x.roastDate||'']);
+  el.innerHTML=items.length?items.slice(0,60).map(([x,s,d],i)=>'<div class="pick"><div><b>'+esc(s.title)+'</b><div class="mini">'+esc(d)+'</div></div><button class="btn small" data-pk="'+i+'">Share</button></div>').join(''):'Nothing of this kind on this phone yet.';
+  el.querySelectorAll('[data-pk]').forEach(bb=>bb.onclick=async()=>{bb.disabled=true;const s=items[+bb.dataset.pk][1];await post(k,s.title,s.data)})})}
+async function manage(){const j=CUR,s=j.space,p=$('#panel');const link=s.public_token?location.origin+location.pathname+'#p/'+s.public_token:'';
+ p.innerHTML='<div class="card"><b>Members</b><div class="mini">Invite by the email they sign in with. They see the space once they sign in.</div>'+(j.members||[]).map(m=>'<div class="pick"><span>'+esc(m.email)+'</span><button class="btn small" data-rm="'+esc(m.email)+'">Remove</button></div>').join('')+'<div class="cmf"><input id="iem" type="email" placeholder="name@example.com"><button class="btn small primary" id="inv">Invite</button></div>'+
+  '<div style="margin-top:14px"><b>Public link</b><div class="mini">Anyone with the link can read the space, without signing in. Emails are never shown.</div><div class="row" style="margin-top:6px"><button class="btn small'+(link?' on':'')+'" id="pub">'+(link?'Public link is on: turn off':'Turn on public link')+'</button>'+(link?'<button class="btn small" id="cpy">Copy link</button><button class="btn small" id="shr">Share</button>':'')+'</div>'+(link?'<div class="mini" style="word-break:break-all;margin-top:4px">'+esc(link)+'</div>':'')+'</div>'+
+  '<div style="margin-top:14px"><b>Details</b><label class="f">Name<input id="en" value="'+esc(s.name)+'"></label><label class="f">Coffee<input id="ec" value="'+esc(s.coffee||'')+'"></label><label class="f">About<textarea id="ea" rows="2">'+esc(s.about||'')+'</textarea></label><div class="row"><button class="btn small primary" id="esv">Save details</button><button class="btn small" id="dsp" style="color:var(--bad)">Delete space</button></div></div></div>';
+ p.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{try{await api('/spaces/'+CUR.id+'/members/'+encodeURIComponent(b.dataset.rm),{method:'DELETE'});await spaceView(CUR.id);manage()}catch(e){toast(e.message)}});
+ $('#inv').onclick=async()=>{const em=$('#iem').value.trim();if(!em)return;try{await api('/spaces/'+CUR.id+'/members',{method:'POST',body:{email:em}});toast('Invited. Tell them to sign in with '+em);await spaceView(CUR.id);manage()}catch(e){toast(e.message)}};
+ $('#pub').onclick=async()=>{try{await api('/spaces/'+CUR.id,{method:'PATCH',body:{public:!link}});await spaceView(CUR.id);manage()}catch(e){toast(e.message)}};
+ if(link){$('#cpy').onclick=async()=>{try{await navigator.clipboard.writeText(link);toast('Link copied')}catch(e){toast('Copy failed')}};$('#shr').onclick=async()=>{try{if(navigator.share)await navigator.share({title:s.name,text:s.name+' on KoffyKraft',url:link});else{await navigator.clipboard.writeText(link);toast('Link copied')}}catch(e){}}}
+ $('#esv').onclick=async()=>{try{await api('/spaces/'+CUR.id,{method:'PATCH',body:{name:$('#en').value.trim()||s.name,coffee:$('#ec').value.trim(),about:$('#ea').value.trim()}});toast('Saved');spaceView(CUR.id)}catch(e){toast(e.message)}};
+ $('#dsp').onclick=async()=>{if(!confirm('Delete this space with all its entries and comments for everyone?'))return;try{await api('/spaces/'+CUR.id,{method:'DELETE'});location.hash=''}catch(e){toast(e.message)}}}
+async function addTo(kind,rid){const v=$('#view');let snap=null;const A=await ORIGIN.allTypes();let pre=null;try{pre=JSON.parse(sessionStorage.getItem('kk_share_rec')||'null');if(pre&&String(pre.id)!==rid)pre=null}catch(e){}
+ if(kind==='roast'){const r=pre||(await myRoasts()).find(x=>String(x.id)===rid);if(r)snap=roastSnap(r)}else{const rec=pre||(A[kind]||[]).find(x=>x.id===rid);if(rec)snap=kind==='brew'?brewSnap(rec):kind==='cupping'?cupSnap(rec):procSnap(rec,A)}
+ if(!snap){v.innerHTML='<div class="card">That record was not found on this phone. Save it first.</div>';return}
+ let j;try{j=await api('/spaces')}catch(e){v.innerHTML='<div class="card">'+esc(e.message)+'</div>';return}
+ v.innerHTML='<h1>Share to a space</h1><div class="card"><span class="kind k-'+kind+'">'+KN[kind]+'</span><b>'+esc(snap.title)+'</b>'+summary({kind,data:snap.data})+'</div><h2>Choose a space</h2>'+((j.items||[]).length?j.items.map(s=>'<div class="pick"><span><b>'+esc(s.name)+'</b><br><span class="mini">'+esc(s.coffee||'')+'</span></span><button class="btn small" data-to="'+s.id+'">Add here</button></div>').join(''):'<div class="mini">No spaces yet. <a href="share.html">Create one</a> first.</div>');
+ v.querySelectorAll('[data-to]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{await api('/spaces/'+b.dataset.to+'/entries',{method:'POST',body:{kind,title:snap.title,data:snap.data}});location.hash='s/'+b.dataset.to}catch(e){toast(e.message);b.disabled=false}})}
+window.addEventListener('hashchange',route);route();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script><script src="pv.js" defer></script>
+</body>
+</html>
