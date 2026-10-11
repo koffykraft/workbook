@@ -110,6 +110,18 @@ export async function run(root, t) {
       if (!(await q.$eval('#rNow', e => e.innerText)).includes('Bloom')) throw new Error('timer did not start on the bloom');
       await q.click('#rClose'); await q.evaluate(() => localStorage.setItem('kk_brew_level', '1'));
     });
+    await t.acheck('Origin records share as image and as a valid PDF', async () => {
+      await q.goto(base + 'origin.html#edit/green/g1'); await q.waitForTimeout(700);
+      await q.click('.imgbtn'); await q.waitForSelector('#kkcard .pv img', { timeout: 8000 });
+      await q.click('[data-fmt=pdf]'); await q.waitForTimeout(1500);
+      const info = await q.$eval('#kcInfo', e => e.innerText); if (!/\.pdf/.test(info)) throw new Error('no pdf: ' + info);
+      const head = await q.evaluate(async () => { const c = document.createElement('canvas'); c.width = 20; c.height = 28; const b = KKCARD.pdf([c]); const t = await b.text(); return t.slice(0, 8) + '|' + t.includes('%%EOF') });
+      if (head !== '%PDF-1.4|true') throw new Error('pdf malformed: ' + head);
+      await q.click('#kcX');
+      await q.goto(base + 'origin.html#green'); await q.waitForTimeout(600); await q.click('#selToggle'); await q.click('#listBody .card');
+      if (!(await q.$eval('#selBar', e => e.innerText)).includes('1 selected')) throw new Error('selection failed');
+      await q.click('#selBar >> text=Done');
+    });
     await t.acheck('Malayalam shows explanations only, labels stay English', async () => {
       await q.goto(base + 'home.html'); await q.evaluate(() => localStorage.setItem('kk_lang', 'ml'));
       await q.goto(base + 'crop.html'); await q.waitForTimeout(700);
