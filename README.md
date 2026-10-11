@@ -18,7 +18,7 @@ These apply on top of the AGPL. The full wording is in [NOTICE](NOTICE).
 
 - **Credit stays visible.** Any copy or changed version that people use must show "Made with KoffyKraft" or "Based on KoffyKraft" in its interface, linked to roast.koffykraft.coffee or this repository, and keep the copyright line.
 - **Changed versions say so.** Mark them as changed, with the date, and do not present them as the original KoffyKraft.
-- **Names and logos are not licensed.** "KoffyKraft" is a trade mark of T M Thomas. Use it only for the credit above and to state truthfully where the work comes from.
+- **Names and logos are not licensed.** "KoffyKraft" is a registered trade mark of T M Thomas in India (No. 5518179, Class 30), and is also used by him as a trade mark for this app. Use it only for the credit above and to state truthfully where the work comes from.
 
 ### Guide text: CC BY-SA 4.0
 
