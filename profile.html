@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>KoffyKraft Profile</title>
+<style>
+:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b;--ok:#3f6b5a;--bad:#b4432f;--ac:#8d583b}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;color:var(--ink);background:var(--bg)}
+.app{max-width:720px;margin:auto;padding:24px 16px 60px}
+h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 4px}.sub{color:var(--muted);font-size:13.5px;margin-bottom:12px;line-height:1.5}.sub a{color:var(--coffee)}
+h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:22px 0 8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px 15px;margin:8px 0}
+a.card{display:block;text-decoration:none;color:var(--ink)}a.card b{font-size:15.5px}
+.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;cursor:pointer;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}.btn.small{font-size:13px;padding:7px 11px}.btn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+input,textarea,select{font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);width:100%}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600;margin:6px 0}
+.mini{font-size:12.5px;color:var(--muted);line-height:1.45}
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:#ece7df;border-radius:14px;padding:4px;margin:6px 0 12px}
+.tabs a{text-align:center;font-size:13.5px;padding:9px 2px;border-radius:10px;text-decoration:none;color:var(--ink)}.tabs a.on{background:#fff;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;text-decoration:none;color:var(--ink)}.tile b{display:block;font-size:21px;letter-spacing:-.02em}.tile span{font-size:12px;color:var(--muted)}
+@media(max-width:420px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.feed a{display:flex;gap:10px;align-items:baseline;padding:9px 0;border-top:1px solid #f0ebe3;text-decoration:none;color:var(--ink);font-size:14px}.feed a:first-child{border-top:0}
+.feed i{flex:0 0 9px;height:9px;border-radius:50%;display:inline-block;transform:translateY(1px)}.feed small{margin-left:auto;color:var(--muted);white-space:nowrap;font-size:12px}
+.kind{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;text-transform:uppercase;letter-spacing:.04em;margin-right:6px}
+.k-brew{background:#e3efe8;color:#2f5d4a}.k-roast{background:#f3e3d6;color:#8d583b}.k-cupping{background:#ece4f3;color:#5b3f7a}.k-process{background:#e6eef6;color:#2e5677}.k-green{background:#eaf1df;color:#4f6b2a}.k-harvest{background:#f6e3e0;color:#9a3b2e}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:14px;margin-top:6px}.kv span{color:var(--muted)}
+.facts{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;color:var(--muted);margin-top:4px}.facts b{color:var(--ink);font-weight:600}
+svg.curve{width:100%;height:auto;margin-top:6px}
+.search input{margin:4px 0 6px}
+.pick{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #f0ebe3;font-size:14px}.pick input{width:22px;height:22px;flex:0 0 22px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chips button{font:inherit;font-size:13.5px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;cursor:pointer}.chips button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.logo-row{display:flex;gap:12px;align-items:center}.logo-row img{width:64px;height:64px;object-fit:contain;border-radius:14px;border:1px solid var(--line);background:#fff}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#171512;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:.2s;pointer-events:none;z-index:2000}.toast.on{opacity:1}
+/* the send-out sheet */
+.sheet{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;margin:10px 0}
+.sh-top{border-top:6px solid var(--ac);padding:18px 18px 8px;display:flex;gap:14px;align-items:center}
+.sh-top img{width:76px;height:76px;object-fit:contain;border-radius:16px;flex:0 0 76px}
+.sh-top h1{font-size:27px;margin:0;line-height:1.1}.sh-tag{color:var(--muted);font-size:14.5px;margin-top:4px;line-height:1.4}
+.sh-body{padding:4px 18px 16px}
+.sh-roles{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.sh-roles span{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--ac);color:var(--ac);border-radius:999px;padding:3px 9px}
+.sh-about{font-size:15px;line-height:1.6;margin:8px 0;white-space:pre-line}
+.sh-contact{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;margin:6px 0}.sh-contact a{color:var(--ac);text-decoration:none;font-weight:600}
+.sh-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin:12px 0}.sh-stats div{background:#faf7f2;border-radius:12px;padding:9px 10px}.sh-stats b{display:block;font-size:19px}.sh-stats span{font-size:12px;color:var(--muted)}
+.sh-h{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ac);margin:16px 0 4px;font-weight:700}
+.sh-item{border-top:1px solid #f0ebe3;padding:10px 0}
+.sh-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid #f0ebe3;padding:10px 18px;font-size:11.5px;color:#9a948c;background:#fcfbf8}
+.sh-foot a{color:#9a948c;text-decoration:none}.sh-foot a b{font-weight:400;letter-spacing:.06em}
+@media print{
+ body{background:#fff}.app{padding:0;max-width:none}
+ body.printing .app>*:not(#view),body.printing #view>*:not(.sheet){display:none!important}
+ .sheet{border:0;border-radius:0;margin:0}.sh-item{break-inside:avoid}
+ *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+<link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script></head>
+<body><main class="app">
+<header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="profile.html" aria-label="Profile">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
+<div id="view"><div class="mini">Loading…</div></div>
+</main>
+<div class="toast" id="toast"></div>
+<script src="sync.js"></script><script src="origin-db.js"></script><script src="snap.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),2200)}
+const signed=()=>typeof SYNC!=='undefined'&&SYNC.isAuthenticated();
+async function api(path,opt){opt=opt||{};const h={'content-type':'application/json'};if(signed())h.authorization='Bearer '+SYNC.getToken();const r=await fetch('/api'+path,{method:opt.method||'GET',headers:h,body:opt.body?JSON.stringify(opt.body):undefined});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('Error '+r.status));return j}
+const fmtDay=d=>{const x=new Date(d);return isNaN(x)?'':x.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})};
+const COL={harvest:'#c0392b',process:'#2e5677',green:'#4f7d3a',roast:'#8d583b',brew:'#2f5d4a',cupping:'#5b3f7a'};
+const KNAME={harvest:'Harvest',process:'Process run',green:'Green lot',roast:'Roast',brew:'Brew',cupping:'Cupping'};
+let A=null,R=null;
+async function load(){if(A)return;try{A=await ORIGIN.allTypes()}catch(e){A={}}try{R=await myRoasts()}catch(e){R=[]}}
+const hKg=h=>{const b=(h.baskets||[]).map(x=>num(x.kg)).filter(x=>x!=null);return b.length?b.reduce((a,c)=>a+c,0):(num(h.cherryKg)||num(h.kg)||0)};
+const sum=(a,f)=>a.reduce((s,x)=>s+(f(x)||0),0);
+const fmtKg=v=>v>=1000?r1(v/1000)+' t':Math.round(v)+' kg';
+// every record as one dated line: kind, title, date, link
+function rows(){const o=[];
+ (A.harvest||[]).forEach(h=>o.push({k:'harvest',t:(h.code||'Harvest')+(hKg(h)?' · '+r1(hKg(h))+' kg cherry':''),d:h.date,u:'origin.html#edit/harvest/'+encodeURIComponent(h.id)}));
+ (A.process||[]).forEach(p=>o.push({k:'process',t:(p.code||'Process')+(p.pathway?' · '+p.pathway:''),d:p.started,u:'origin.html#edit/process/'+encodeURIComponent(p.id)}));
+ (A.green||[]).forEach(g=>o.push({k:'green',t:(g.code||'Lot')+(g.name?' · '+g.name:''),d:g.date,u:'origin.html#edit/green/'+encodeURIComponent(g.id)}));
+ (R||[]).forEach(r=>{const s=roastSnap(r);o.push({k:'roast',t:s.title,d:r.roastDate||r.finishedAt,u:'roasts.html#r/'+encodeURIComponent(r.id),s})});
+ (A.brew||[]).forEach(b=>o.push({k:'brew',t:brewSnap(b).title,d:b.brewedAt,u:'cup.html#edit/brew/'+encodeURIComponent(b.id)}));
+ (A.cupping||[]).forEach(c=>o.push({k:'cupping',t:cupSnap(c).title,d:c.at,u:'cup.html#edit/cupping/'+encodeURIComponent(c.id)}));
+ return o.filter(x=>x.d).sort((a,b)=>String(b.d).localeCompare(String(a.d)))}
+function stats(){const roastG=sum(R,r=>num(r.greenWeight));return[
+ ['plots',(A.plot||[]).length,'plots','origin.html#farm'],['harvest',fmtKg(sum(A.harvest||[],hKg)),'cherry picked','origin.html#harvest'],['process',(A.process||[]).length,'process runs','origin.html#process'],['green',fmtKg(sum(A.green||[],g=>num(g.weightKg))),'green coffee','origin.html#green'],
+ ['roast',(R||[]).length,'roasts','roasts.html'],['roastkg',fmtKg(roastG/1000),'green roasted','roasts.html'],['brew',(A.brew||[]).length,'brews','cup.html#brew'],['cupping',(A.cupping||[]).length,'cuppings','cup.html#cupping']]}
+function monthChart(o){const now=new Date(),ms=[];for(let i=11;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);ms.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),l:d.toLocaleDateString('en-IN',{month:'short'}),n:0})}
+ o.forEach(x=>{const m=ms.find(m=>String(x.d).startsWith(m.key))||ms.find(m=>{const d=new Date(x.d);return !isNaN(d)&&m.key===d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')});if(m)m.n++});
+ const mx=Math.max(1,...ms.map(m=>m.n)),W=340,H=110,bw=W/12;
+ return '<svg viewBox="0 0 '+W+' '+(H+18)+'" style="width:100%;height:auto" role="img" aria-label="Records per month, last 12 months">'+ms.map((m,i)=>{const h=m.n?Math.max(3,m.n/mx*H):0;return '<rect x="'+(i*bw+4)+'" y="'+(H-h)+'" width="'+(bw-8)+'" height="'+h+'" rx="3" fill="#8d583b"><title>'+m.l+': '+m.n+'</title></rect>'+(m.n?'<text x="'+(i*bw+bw/2)+'" y="'+(H-h-3)+'" font-size="9" text-anchor="middle" fill="#77716a">'+m.n+'</text>':'')+'<text x="'+(i*bw+bw/2)+'" y="'+(H+13)+'" font-size="9.5" text-anchor="middle" fill="#77716a">'+m.l+'</text>'}).join('')+'<line x1="0" x2="'+W+'" y1="'+H+'" y2="'+H+'" stroke="#ddd8d0"/></svg>'}
+// ---------- tabs ----------
+const TABS=[['','Activity'],['grow','Grow'],['roast','Roast'],['brew','Brew'],['send','Profile']];
+function head(cur){const em=signed()&&SYNC.getUserEmail?SYNC.getUserEmail():'';return '<h1>Me</h1><div class="sub">'+(em?'Signed in as '+esc(em)+' · ':'Records on this phone · ')+'<a href="account.html">Account and sign-in</a> · <a href="share.html">Shared spaces</a> · <a href="data.html">My data</a></div><nav class="tabs">'+TABS.map(([k,l])=>'<a href="#'+k+'" class="'+(cur===k?'on':'')+'">'+l+'</a>').join('')+'</nav>'}
+async function route(){const h=decodeURIComponent(location.hash.slice(1));let m;
+ if((m=h.match(/^u\/([a-f0-9]{32})$/)))return publicView(m[1]);
+ await load();const v=$('#view');
+ if(h==='grow')return growView(v);if(h==='roast')return roastView(v);if(h==='brew')return brewView(v);if(h==='send')return sendView(v);
+ const o=rows(),st=stats();
+ v.innerHTML=head('')+(o.length?'<div class="tiles">'+st.map(([k,n,l,u])=>'<a class="tile" href="'+u+'"><b>'+esc(n)+'</b><span>'+esc(l)+'</span></a>').join('')+'</div><h2>Last 12 months</h2><div class="card">'+monthChart(o)+'</div><h2>Recent</h2><div class="card feed">'+o.slice(0,30).map(x=>'<a href="'+x.u+'"><i style="background:'+COL[x.k]+'"></i><span><span class="mini">'+KNAME[x.k]+'</span><br>'+esc(x.t)+'</span><small>'+fmtDay(x.d)+'</small></a>').join('')+'</div>':
+ '<div class="card"><b>Nothing recorded on this phone yet.</b><div class="mini" style="margin-top:6px">Start in <a href="origin.html">Origin</a> if you grow, the <a href="roast-timer-v14.html">Timer</a> if you roast, or <a href="cup.html">Cup</a> if you brew. Your activity shows up here.</div></div>')}
+function searchBox(id){return '<div class="search"><input id="'+id+'" type="search" placeholder="Search" autocomplete="off"></div>'}
+function bindSearch(id){const i=$('#'+id);i.oninput=()=>{const q=i.value.trim().toLowerCase();document.querySelectorAll('[data-q]').forEach(c=>c.hidden=!!q&&!c.dataset.q.includes(q))}}
+function itemCard(kind,title,date,facts,u){const q=(title+' '+facts.join(' ')).replace(/\u0001|<\/?b>/g,'').toLowerCase();return '<a class="card" href="'+u+'" data-q="'+esc(q)+'"><span class="kind k-'+kind+'">'+KNAME[kind]+'</span><b>'+esc(title)+'</b><div class="facts">'+(date?'<span>'+fmtDay(date)+'</span>':'')+facts.filter(Boolean).map(f=>'<span>'+(String(f).startsWith('\u0001')?String(f).replace(/\u0001/g,''):esc(f))+'</span>').join('')+'</div></a>'}
+// B() marks trusted markup with \u0001; anything else in a card is escaped
+const B=(v,u)=>v==null||v===''?'':'\u0001<b>'+esc(v)+'</b>'+(u?(/^%/.test(u)?'':' ')+esc(u):'');
+function growView(v){const G=[...(A.green||[])].sort((a,b)=>String(b.date).localeCompare(String(a.date))),P=[...(A.process||[])].sort((a,b)=>String(b.started).localeCompare(String(a.started))),H=[...(A.harvest||[])].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+ v.innerHTML=head('grow')+'<div class="sub">Producer book: every lot, run and picking, newest first. Tap one to open it in Origin.</div>'+searchBox('qg')+
+ '<h2>Green lots ('+G.length+')</h2>'+(G.map(g=>{const s=greenSnap(g,A).data;return itemCard('green',(g.code||'Lot')+(g.name?' · '+g.name:''),g.date,[B(s.kg,'kg'),s.pathway,s.varieties,s.grade,s.moisture?B(s.moisture,'% moisture'):'',s.score?B(s.score,'pts'):''],'origin.html#edit/green/'+encodeURIComponent(g.id))}).join('')||'<div class="mini">None yet.</div>')+
+ '<h2>Process runs ('+P.length+')</h2>'+(P.map(p=>{const s=procSnap(p,A).data;const hrs=s.steps.reduce((a,x)=>a+(x.hours||0),0);return itemCard('process',(p.code||'Process'),p.started,[s.pathway,s.varieties,B(s.steps.length,s.steps.length===1?'step':'steps'),hrs?B(Math.round(hrs),'h logged'):''],'origin.html#edit/process/'+encodeURIComponent(p.id))}).join('')||'<div class="mini">None yet.</div>')+
+ '<h2>Harvests ('+H.length+')</h2>'+(H.map(h=>itemCard('harvest',h.code||'Harvest',h.date,[hKg(h)?B(r1(hKg(h)),'kg cherry'):'',h.pickType,h.ripePct?B(h.ripePct,'% ripe'):''],'origin.html#edit/harvest/'+encodeURIComponent(h.id))).join('')||'<div class="mini">None yet.</div>');bindSearch('qg')}
+function roastView(v){const rs=[...(R||[])].map(r=>({r,s:roastSnap(r).data})).sort((a,b)=>String(b.r.roastDate||b.r.finishedAt||'').localeCompare(String(a.r.roastDate||a.r.finishedAt||'')));
+ const dtrs=rs.map(x=>x.s.dtr).filter(x=>x!=null),loss=rs.map(x=>x.s.loss).filter(x=>x!=null);const avg=a=>a.length?r1(a.reduce((s,x)=>s+x,0)/a.length):null;
+ v.innerHTML=head('roast')+'<div class="sub">Roaster book: roasts saved on this phone. For cloud roasts, curves and comparisons, open the <a href="roasts.html">Roastbook</a>.</div>'+
+ (rs.length?'<div class="tiles"><div class="tile"><b>'+rs.length+'</b><span>roasts</span></div><div class="tile"><b>'+fmtKg(sum(rs,x=>x.s.green)/1000)+'</b><span>green roasted</span></div><div class="tile"><b>'+(avg(dtrs)??'–')+'%</b><span>average DTR</span></div><div class="tile"><b>'+(avg(loss)??'–')+'%</b><span>average loss</span></div></div>':'')+searchBox('qr')+
+ (rs.map(({r,s})=>itemCard('roast',roastSnap(r).title,r.roastDate||r.finishedAt,[s.machine,s.green?B(s.green,'g'):'',s.total?B(mmss(s.total)):'',s.dtr!=null?B(s.dtr,'% DTR'):'',s.loss!=null?B(s.loss,'% loss'):'',s.finalColor?B(s.finalColor,'colour'):''],'roasts.html#r/'+encodeURIComponent(r.id))).join('')||'<div class="mini">No roasts on this phone yet. Use the <a href="roast-timer-v14.html">Timer</a>.</div>');bindSearch('qr')}
+function brewView(v){const bs=[...(A.brew||[])].sort((a,b)=>String(b.brewedAt).localeCompare(String(a.brewedAt))),cs=[...(A.cupping||[])].sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+ const rat=bs.map(b=>num(b.rating)).filter(x=>x!=null);const meth={};bs.forEach(b=>{if(b.method)meth[b.method]=(meth[b.method]||0)+1});const fav=Object.entries(meth).sort((a,b)=>b[1]-a[1])[0];
+ v.innerHTML=head('brew')+'<div class="sub">Brewer book: brews and cupping sessions. Tap one to open it in Cup.</div>'+
+ (bs.length?'<div class="tiles"><div class="tile"><b>'+bs.length+'</b><span>brews</span></div><div class="tile"><b>'+(rat.length?r1(rat.reduce((a,c)=>a+c,0)/rat.length):'–')+'</b><span>average rating</span></div><div class="tile"><b style="font-size:16px">'+esc(fav?fav[0]:'–')+'</b><span>most used</span></div><div class="tile"><b>'+cs.length+'</b><span>cuppings</span></div></div>':'')+searchBox('qb')+
+ '<h2>Brews ('+bs.length+')</h2>'+(bs.map(b=>{const d=brewSnap(b).data;return itemCard('brew',brewSnap(b).title,b.brewedAt,[d.dose&&d.water?B(d.dose,'g')+' : '+B(d.water,'g'):'',d.ratio?B('1:'+d.ratio):'',d.ey?B(d.ey,'% EY'):'',d.rating?B(d.rating,'/ 10'):''],'cup.html#edit/brew/'+encodeURIComponent(b.id))}).join('')||'<div class="mini">None yet.</div>')+
+ '<h2>Cupping ('+cs.length+')</h2>'+(cs.map(c=>{const d=cupSnap(c).data;const top=d.samples.map(s=>s.total).filter(x=>x!=null);return itemCard('cupping',cupSnap(c).title,c.at,[top.length?B(Math.max(...top),'pts, top score'):''],'cup.html#edit/cupping/'+encodeURIComponent(c.id))}).join('')||'<div class="mini">None yet.</div>');bindSearch('qb')}
+// ---------- send-out profile ----------
+const PK='kk_profile_v1';const ROLES=['Grower','Processor','Roaster','Brewer','Café','Trader'];
+function cfg(){try{return Object.assign({title:'',tagline:'',roles:[],place:'',about:'',logo:'',accent:'#8d583b',web:'',insta:'',email:'',phone:'',showStats:true,items:[]},JSON.parse(localStorage.getItem(PK)||'{}'))}catch(e){return{title:'',roles:[],items:[],accent:'#8d583b',showStats:true}}}
+function saveCfg(c){try{localStorage.setItem(PK,JSON.stringify(c))}catch(e){toast('Could not save on this phone: storage is full')}}
+const okLogo=s=>/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(s||'');
+const okCol=s=>/^#[0-9a-f]{6}$/i.test(s||'')?s:'#8d583b';
+function webUrl(u){u=String(u||'').trim();if(!u)return '';if(!/^https?:\/\//i.test(u))u='https://'+u;try{const x=new URL(u);return /^https?:$/.test(x.protocol)?x.href:''}catch(e){return ''}}
+// what gets published: settings plus a copy of the chosen records, never the records themselves
+function buildData(c){const pick=[];(c.items||[]).forEach(({k,id})=>{let s=null;
+ if(k==='roast'){const r=(R||[]).find(x=>String(x.id)===String(id));if(r)s=roastSnap(r)}
+ else{const rec=(A[k]||[]).find(x=>x.id===id);if(rec)s=k==='brew'?brewSnap(rec):k==='cupping'?cupSnap(rec):k==='green'?greenSnap(rec,A):procSnap(rec,A)}
+ if(s)pick.push({kind:k,title:s.title,data:s.data})});
+ return{v:1,title:c.title.trim(),tagline:c.tagline.trim(),roles:c.roles,place:c.place.trim(),about:c.about.trim(),logo:okLogo(c.logo)?c.logo:'',accent:okCol(c.accent),web:webUrl(c.web),insta:String(c.insta||'').replace(/[^A-Za-z0-9._]/g,'').slice(0,30),email:/^\S+@\S+\.\S+$/.test(c.email||'')?c.email.trim():'',phone:String(c.phone||'').replace(/[^0-9+ ]/g,'').trim(),stats:c.showStats?stats().filter(([k,n])=>n&&n!=='0 kg'&&n!==0).map(([k,n,l])=>[String(n),l]):[],items:pick,at:new Date().toISOString()}}
+function sheet(d,pub){const yr=new Date(d.at||Date.now()).getFullYear();const tel=(d.phone||'').replace(/[^0-9+]/g,'');
+ return '<article class="sheet" style="--ac:'+okCol(d.accent)+'"><div class="sh-top">'+(okLogo(d.logo)?'<img src="'+d.logo+'" alt="">':'')+'<div><h1>'+esc(d.title||'Your name or business')+'</h1>'+(d.tagline?'<div class="sh-tag">'+esc(d.tagline)+'</div>':'')+'</div></div><div class="sh-body">'+
+ ((d.roles||[]).length?'<div class="sh-roles">'+d.roles.filter(r=>ROLES.includes(r)).map(r=>'<span>'+esc(r)+'</span>').join('')+'</div>':'')+
+ (d.place?'<div class="mini" style="font-size:14px">'+esc(d.place)+'</div>':'')+(d.about?'<div class="sh-about">'+esc(d.about)+'</div>':'')+
+ ((d.web||d.insta||d.email||tel)?'<div class="sh-contact">'+(d.web?'<a href="'+esc(d.web)+'" target="_blank" rel="noopener nofollow">'+esc(d.web.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,''))+'</a>':'')+(d.insta?'<a href="https://instagram.com/'+esc(d.insta)+'" target="_blank" rel="noopener nofollow">@'+esc(d.insta)+'</a>':'')+(d.email?'<a href="mailto:'+esc(d.email)+'">'+esc(d.email)+'</a>':'')+(tel?'<a href="tel:'+esc(tel)+'">'+esc(d.phone)+'</a>':'')+'</div>':'')+
+ ((d.stats||[]).length?'<div class="sh-stats">'+d.stats.map(([n,l])=>'<div><b>'+esc(n)+'</b><span>'+esc(l)+'</span></div>').join('')+'</div>':'')+
+ ((d.items||[]).length?'<div class="sh-h">Records</div>'+d.items.map(e=>'<div class="sh-item"><span class="kind k-'+esc(e.kind)+'">'+esc(KNAME[e.kind]||e.kind)+'</span><b>'+esc(e.title)+'</b>'+summary(e)+'</div>').join(''):'')+
+ '</div><div class="sh-foot"><span>© '+yr+' '+esc(d.title||'')+'. Shared by its owner.</span><a href="https://roast.koffykraft.coffee/" target="_blank" rel="noopener">Made with <b>KoffyKraft</b></a></div></article>'}
+function sendView(v){const c=cfg();const pubTok=localStorage.getItem('kk_profile_token')||'';
+ const groups=[['green','Green lots',(A.green||[]).map(g=>[g.id,(g.code||'Lot')+(g.name?' · '+g.name:''),g.date])],['process','Process runs',(A.process||[]).map(p=>[p.id,(p.code||'Process')+(p.pathway?' · '+p.pathway:''),p.started])],['roast','Roasts',(R||[]).map(r=>[r.id,roastSnap(r).title,r.roastDate])],['brew','Brews',(A.brew||[]).map(b=>[b.id,brewSnap(b).title,b.brewedAt])],['cupping','Cupping',(A.cupping||[]).map(x=>[x.id,cupSnap(x).title,x.at])]].filter(g=>g[2].length);
+ const has=(k,id)=>(c.items||[]).some(x=>x.k===k&&String(x.id)===String(id));
+ v.innerHTML=head('send')+'<div class="sub">A one-page profile to send out: your name or business, logo, colour, what you do and the records you choose. Save it as PDF from this phone, or publish a link. Only what you pick here is shown.</div>'+
+ '<div class="card"><label class="f">Name or business<input id="pT" maxlength="70" placeholder="Thumpassery Estate" value="'+esc(c.title)+'"></label><label class="f">Tagline<input id="pG" maxlength="120" placeholder="Shade-grown Robusta and Arabica, Kollam" value="'+esc(c.tagline)+'"></label>'+
+ '<div class="f" style="font-size:12px;color:var(--muted);font-weight:600;margin:8px 0 4px">What you do</div><div class="chips" id="pR">'+ROLES.map(r=>'<button type="button" class="'+(c.roles.includes(r)?'on':'')+'" data-r="'+r+'">'+r+'</button>').join('')+'</div>'+
+ '<label class="f">Place<input id="pP" maxlength="80" placeholder="Karavaloor, Kollam, Kerala" value="'+esc(c.place)+'"></label><label class="f">About<textarea id="pA" rows="4" maxlength="800" placeholder="Who you are, how you grow, roast or brew">'+esc(c.about)+'</textarea></label>'+
+ '<div class="f" style="font-size:12px;color:var(--muted);font-weight:600;margin:8px 0 4px">Logo and colour</div><div class="logo-row">'+(okLogo(c.logo)?'<img src="'+c.logo+'" alt="Logo">':'')+'<label class="btn small" style="cursor:pointer">'+(c.logo?'Change logo':'Add logo')+'<input id="pL" type="file" accept="image/png,image/jpeg,image/webp" style="display:none"></label>'+(c.logo?'<button type="button" class="btn small" id="pLx">Remove</button>':'')+'<input id="pC" type="color" value="'+okCol(c.accent)+'" style="width:48px!important;height:40px;padding:2px;border-radius:10px" aria-label="Accent colour"></div>'+
+ '<div class="f" style="font-size:12px;color:var(--muted);font-weight:600;margin:12px 0 0">Contact (optional, shown to anyone you send this to)</div><label class="f">Website<input id="pW" maxlength="120" placeholder="koffykraft.coffee" value="'+esc(c.web)+'"></label><label class="f">Instagram<input id="pI" maxlength="31" placeholder="handle" value="'+esc(c.insta)+'"></label><label class="f">Email<input id="pE" type="email" maxlength="120" value="'+esc(c.email)+'"></label><label class="f">Phone or WhatsApp<input id="pN" type="tel" maxlength="20" value="'+esc(c.phone)+'"></label>'+
+ '<label class="pick" style="border:0"><input type="checkbox" id="pS"'+(c.showStats?' checked':'')+'><span>Show my totals (plots, kg, roasts, brews)</span></label></div>'+
+ '<h2>Records to show (up to 12)</h2><div class="card">'+(groups.length?groups.map(([k,l,list])=>'<div class="mini" style="margin-top:6px;font-weight:700">'+l+'</div>'+list.sort((a,b)=>String(b[2]||'').localeCompare(String(a[2]||''))).slice(0,40).map(([id,t,d])=>'<label class="pick"><input type="checkbox" data-k="'+k+'" data-id="'+esc(id)+'"'+(has(k,id)?' checked':'')+'><span>'+esc(t)+'<br><span class="mini">'+fmtDay(d)+'</span></span></label>').join('')).join(''):'<div class="mini">No records on this phone yet.</div>')+'</div>'+
+ '<h2>Preview</h2><div id="prev"></div>'+
+ '<div class="row" style="margin:8px 0"><button class="btn primary" id="pPrint">Save as PDF or print</button><button class="btn" id="pPub">'+(pubTok?'Update public link':'Publish a link')+'</button>'+(pubTok?'<button class="btn" id="pCopy">Copy link</button><button class="btn" id="pOff" style="color:var(--bad)">Unpublish</button>':'')+'</div>'+
+ '<div class="mini" id="pLink">'+(pubTok?'Public link: <a href="profile.html#u/'+pubTok+'" style="color:var(--coffee);word-break:break-all">'+esc(location.origin+location.pathname+'#u/'+pubTok)+'</a>. Anyone with the link can see it. Changes here go live when you tap Update.':'Publishing needs sign-in. The link shows a copy of this page; your records stay yours.')+'</div>';
+ const upd=()=>{const n=cfg();n.title=$('#pT').value;n.tagline=$('#pG').value;n.place=$('#pP').value;n.about=$('#pA').value;n.accent=$('#pC').value;n.web=$('#pW').value;n.insta=$('#pI').value;n.email=$('#pE').value;n.phone=$('#pN').value;n.showStats=$('#pS').checked;
+  n.roles=[...document.querySelectorAll('#pR .on')].map(b=>b.dataset.r);n.items=[...document.querySelectorAll('[data-k]:checked')].map(i=>({k:i.dataset.k,id:i.dataset.id}));saveCfg(n);$('#prev').innerHTML=sheet(buildData(n))};
+ v.querySelectorAll('input:not([type=file]),textarea').forEach(i=>i.addEventListener('input',upd));
+ v.querySelectorAll('[data-k]').forEach(i=>i.addEventListener('change',()=>{if(document.querySelectorAll('[data-k]:checked').length>12){i.checked=false;toast('Up to 12 records')}upd()}));
+ v.querySelectorAll('#pR button').forEach(b=>b.onclick=()=>{b.classList.toggle('on');upd()});
+ $('#pL').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const url=await shrink(f);const n=cfg();n.logo=url;saveCfg(n);sendView(v)}catch(err){toast('Could not read that image')}};
+ if($('#pLx'))$('#pLx').onclick=()=>{const n=cfg();n.logo='';saveCfg(n);sendView(v)};
+ $('#pPrint').onclick=()=>{upd();document.body.classList.add('printing');setTimeout(()=>{window.print();setTimeout(()=>document.body.classList.remove('printing'),500)},50)};
+ $('#pPub').onclick=async()=>{upd();const d=buildData(cfg());if(!d.title){toast('Add a name first');$('#pT').focus();return}if(!signed()){if(confirm('Publishing a link needs sign-in. Open sign-in now? Your profile settings stay saved on this phone.'))location.href='account.html';return}
+  const b=$('#pPub');b.disabled=true;b.textContent='Publishing…';try{const r=await api('/profile',{method:'PUT',body:{data:d}});localStorage.setItem('kk_profile_token',r.token);toast('Published');sendView(v)}catch(e){toast(e.message);b.disabled=false;b.textContent='Publish a link'}};
+ if($('#pCopy'))$('#pCopy').onclick=async()=>{const link=location.origin+location.pathname+'#u/'+pubTok;try{if(navigator.share)await navigator.share({title:c.title||'Profile',url:link});else{await navigator.clipboard.writeText(link);toast('Link copied')}}catch(e){}};
+ if($('#pOff'))$('#pOff').onclick=async()=>{if(!confirm('Take the public link down? Anyone who has it will see "not found".'))return;try{await api('/profile',{method:'DELETE'});localStorage.removeItem('kk_profile_token');toast('Unpublished');sendView(v)}catch(e){toast(e.message)}};
+ upd();
+ if(signed()&&!pubTok)api('/profile').then(r=>{if(r.published){localStorage.setItem('kk_profile_token',r.token);if(location.hash==='#send')sendView(v)}}).catch(()=>{})}
+// logo: square-fit into 320 px, keep PNG transparency, otherwise JPEG
+function shrink(f){return new Promise((ok,no)=>{const fr=new FileReader();fr.onerror=no;fr.onload=()=>{const im=new Image();im.onerror=no;im.onload=()=>{const M=320,s=Math.min(1,M/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=Math.round(im.width*s);cv.height=Math.round(im.height*s);const x=cv.getContext('2d');const png=f.type==='image/png';if(!png){x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height)}x.drawImage(im,0,0,cv.width,cv.height);ok(cv.toDataURL(png?'image/png':'image/jpeg',.86))};im.src=fr.result};fr.readAsDataURL(f)})}
+async function publicView(tok){const v=$('#view');v.innerHTML='<div class="mini">Loading…</div>';try{const r=await api('/public/profile/'+tok);document.title=(r.data.title||'Profile')+' · KoffyKraft';v.innerHTML=sheet(r.data,true)+'<div class="row" style="margin-top:8px"><button class="btn" id="pPrint">Save as PDF or print</button><a class="btn" href="home.html">What is KoffyKraft?</a></div>';$('#pPrint').onclick=()=>{document.body.classList.add('printing');setTimeout(()=>{window.print();setTimeout(()=>document.body.classList.remove('printing'),500)},50)}}catch(e){v.innerHTML='<h1>Profile</h1><div class="card">This profile is not available. The owner may have taken it down.</div>'}}
+window.addEventListener('hashchange',route);route();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script><script src="pv.js" defer></script>
+</body>
+</html>

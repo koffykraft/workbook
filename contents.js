@@ -30,6 +30,7 @@ window.KK_CONTENTS=[
  ['data','Your data','Yours to keep, move and share.',[
   ['Works without an account','Everything saves on this phone. Nothing is sent unless you choose cloud sync.','Pages open from the phone even without signal.','account.html'],
   ['Cloud sync (optional)','Sign in with email to keep records on several devices.','Choose per section: off, only what you pick, or everything.','account.html'],
+  ['Me: profile and activity','Everything you have recorded, as a grower, roaster and brewer, in one place.','Activity totals, a 12-month chart and recent records. Producer, roaster and brewer books list every lot, roast and brew. Make a one-page profile with your own name, logo and colour, pick the records to show, and save it as PDF or publish a link. Tap the person icon at the top of any page.','profile.html'],
   ['Shared spaces','Brew, roast, cup or process one coffee with others and compare.','The owner creates a space and invites people by email. Each person adds a copy of their own brews, roasts, cuppings or process runs, and everyone comments. The owner can also turn on a read-only public link. Needs sign-in. Open any brew, cupping, process run or roast and tap Share to a space.','share.html'],
   ['Export','CSV or JSON from Origin, Cup, Roastbook and Map.','Look for Export on each page. CSV opens in Excel or Sheets.','data.html'],
   ['Full backup','One file with all your KoffyKraft data, and import it back.','Use it before changing phones or clearing the browser.','data.html']]],
