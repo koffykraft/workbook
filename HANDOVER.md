@@ -77,6 +77,7 @@ Roast timer and graph, roastbooks, cup and brew pages, water, colour.js, varieti
 - trail.html: AllTrails-style walk recorder. GPS path (watchPosition, fixes worse than 50 m skipped, a point every 5 m or 30 s), wake lock, stops with kind, notes and photos (shrunk to 1600 px JPEG). IndexedDB KoffyKraftTrails (trails, photos). Never synced, no sync.js on the page.
 - Save: trail pack zip (index.html viewer, GPX, KML, GeoJSON, koffykraft-trail.json, photos/), or GPX, KML, GeoJSON alone; Share sheet with the zip. Open a trail file: our zip, GPX, GeoJSON. Own zip writer (stored) and reader (stored or deflate-raw).
 - Phones stop giving location to web pages with the screen off; the page says so.
+- Backups: "Back up all trails" makes one zip (index.html plus trails/NN-name/ folders, each a full pack); Share backup sends it to Files, iCloud, Dropbox, Drive through the phone's share sheet. Each trail keeps changed and savedAt; a trail is "not saved" until its pack or a backup has been saved or shared since the last change, and the list shows a reminder. Opening a backup restores every trail; ones already on the device with the same content are skipped. No direct Dropbox or Google sign-in, on purpose.
 
 ## Local words (11 Oct 2026)
 - COFFEE_WORDS group 'Local words at origin' (Uganda, Kenya, Brazil, Latin America, Indonesia, Vietnam, India), sources in the comment and footer.

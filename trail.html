@@ -341,7 +341,14 @@ const req = r =>
 const T = {
   all: () => tx('trails', 'readonly', s => req(s.getAll())),
   get: id => tx('trails', 'readonly', s => req(s.get(id))),
-  put: t => tx('trails', 'readwrite', s => req(s.put({ ...t, updated: new Date().toISOString() }))),
+  // changed: when the trail's content last changed; savedAt: when it was last saved or shared as a
+  // file. keep = true leaves changed alone (for marking a save).
+  put: (t, keep) => {
+    const now = new Date().toISOString();
+    return tx('trails', 'readwrite', s =>
+      req(s.put({ ...t, updated: now, changed: keep ? t.changed || now : now }))
+    );
+  },
   del: async id => {
     const ps = await P.of(id);
     await tx('photos', 'readwrite', s => ps.forEach(p => s.delete(p.id)));
@@ -354,6 +361,21 @@ const P = {
   of: trailId => tx('photos', 'readonly', s => req(s.index('trail').getAll(trailId))),
   del: id => tx('photos', 'readwrite', s => req(s.delete(id))),
 };
+const unsaved = t => !t.draft && (!t.savedAt || t.savedAt < (t.changed || t.updated || ''));
+async function markSaved(list) {
+  const now = new Date().toISOString();
+  for (const t of list) {
+    const cur = (await T.get(t.id)) || t;
+    cur.changed = cur.changed || cur.updated || now;
+    cur.savedAt = now;
+    await T.put(cur, true);
+  }
+}
+const slug = t =>
+  (t.name || 'trail')
+    .replace(/[^\w-]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 40) || 'trail';
 const uid = () =>
   crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
 
@@ -497,9 +519,22 @@ async function listView() {
   stopWatch();
   const v = $('#view');
   const ts = (await T.all()).sort((a, b) => (b.created || '').localeCompare(a.created || ''));
+  const open = ts.filter(unsaved);
+  const done = ts.filter(t => !t.draft);
   v.innerHTML =
     '<h1>Trails</h1><div class="sub">Walk an estate, a drying yard or a buyer\'s visit. The phone records the path; you add stops with notes and photos. Like a hiking trail app, for coffee. <b>Trails stay on this device</b>: nothing goes to the cloud. Save a trail pack to your phone or computer to keep it safe or send it to someone.</div>' +
     '<div class="row"><a class="btn primary" href="#rec">● Start a trail</a><label class="btn" style="cursor:pointer">Open a trail file<input id="imp" type="file" accept=".zip,.gpx,.geojson,.json,application/zip,application/gpx+xml" hidden></label></div>' +
+    (open.length
+      ? '<div class="card" id="nag" style="border-color:var(--coffee)"><b>' +
+        open.length +
+        (open.length > 1 ? ' trails are' : ' trail is') +
+        ' not saved yet.</b><div class="mini">They live only in this browser. Back up all trails to one file, then keep it in Files, iCloud, Dropbox or Google Drive.</div></div>'
+      : '') +
+    (done.length
+      ? '<div class="row" style="margin-top:8px"><button class="btn small primary" id="bk">Back up all trails (.zip)</button>' +
+        (navigator.canShare ? '<button class="btn small" id="bkS">Share backup</button>' : '') +
+        '</div>'
+      : '') +
     '<h2>Your trails</h2>' +
     (ts.length
       ? ts
@@ -517,7 +552,11 @@ async function listView() {
               ' · ' +
               (t.stops || []).length +
               ' stops' +
-              (t.draft ? ' · <b style="color:var(--bad)">not finished</b>' : '') +
+              (t.draft
+                ? ' · <b style="color:var(--bad)">not finished</b>'
+                : unsaved(t)
+                  ? ' · <b style="color:var(--coffee)">not saved</b>'
+                  : ' · saved ' + when(t.savedAt)) +
               '</div></a></div>'
             );
           })
@@ -525,6 +564,23 @@ async function listView() {
       : '<div class="card mini">No trails yet. Tap Start a trail, then walk. Keep the screen on while you walk: phones stop giving the location to web pages when the screen is off.</div>') +
     '<div class="card mini">Map imagery: Esri World Imagery and OpenStreetMap contributors. Heights come from the phone\'s GPS and can be off by 10 m or more. Photos are made smaller on the phone (longest side 1600 px) before they are kept.</div>';
   $('#imp').onchange = e => importFile(e.target.files[0]);
+  const name = 'koffykraft-trails-' + new Date().toISOString().slice(0, 10) + '.zip';
+  if ($('#bk'))
+    $('#bk').onclick = async () => {
+      save(await backupAll(done), name);
+      await markSaved(done);
+      listView();
+    };
+  if ($('#bkS'))
+    $('#bkS').onclick = async () => {
+      const f = new File([await backupAll(done)], name, { type: 'application/zip' });
+      if (!navigator.canShare({ files: [f] })) return save(f, name);
+      try {
+        await navigator.share({ files: [f], title: 'KoffyKraft trails' });
+        await markSaved(done);
+        listView();
+      } catch (e) {}
+    };
 }
 
 // ---------- recording ----------
@@ -857,23 +913,28 @@ async function trailView(id, edit) {
         document.body.appendChild(o);
       })
   );
-  const base =
-    (t.name || 'trail')
-      .replace(/[^\w-]+/g, '-')
-      .replace(/^-|-$/g, '')
-      .slice(0, 40) || 'trail';
+  const base = slug(t);
   $('#xGpx').onclick = () => save(new Blob([gpx(t)], { type: 'application/gpx+xml' }), base + '.gpx');
   $('#xKml').onclick = () =>
     save(new Blob([kml(t)], { type: 'application/vnd.google-earth.kml+xml' }), base + '.kml');
   $('#xGeo').onclick = () =>
     save(new Blob([JSON.stringify(geo(t), null, 1)], { type: 'application/geo+json' }), base + '.geojson');
-  $('#xZip').onclick = async () => save(await pack(t, photos), base + '.zip');
+  // only the full pack (with photos) counts as a backup
+  $('#xZip').onclick = async () => {
+    save(await pack(t, photos), base + '.zip');
+    await markSaved([t]);
+  };
   if ($('#xShare'))
     $('#xShare').onclick = async () => {
       const f = new File([await pack(t, photos)], base + '.zip', { type: 'application/zip' });
-      if (navigator.canShare({ files: [f] }))
-        navigator.share({ files: [f], title: t.name, text: 'Trail: ' + t.name }).catch(() => {});
-      else save(f, base + '.zip');
+      if (!navigator.canShare({ files: [f] })) {
+        save(f, base + '.zip');
+        return markSaved([t]);
+      }
+      try {
+        await navigator.share({ files: [f], title: t.name, text: 'Trail: ' + t.name });
+        await markSaved([t]);
+      } catch (e) {}
     };
   $('#del').onclick = async () => {
     if (!confirm('Delete this trail and its photos from this device?')) return;
@@ -1065,6 +1126,41 @@ function packPage(t, names) {
   );
 }
 async function pack(t, photos) {
+  return new Blob([zip(await packFiles(t, photos, ''))], { type: 'application/zip' });
+}
+// One folder per trail inside a single zip, with a page listing them all.
+async function backupAll(list) {
+  const files = [],
+    rows = [];
+  let i = 0;
+  for (const t of list) {
+    const photos = {};
+    for (const p of await P.of(t.id)) photos[p.id] = p;
+    const dir = 'trails/' + String(++i).padStart(2, '0') + '-' + slug(t) + '/';
+    files.push(...(await packFiles(t, photos, dir)));
+    rows.push(
+      '<li><a href="' +
+        dir +
+        'index.html">' +
+        x(t.name || 'Trail') +
+        '</a> <span class="m">' +
+        x(when(t.created)) +
+        '</span></li>'
+    );
+  }
+  files.unshift([
+    'index.html',
+    new TextEncoder().encode(
+      '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KoffyKraft trails</title><style>body{font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:760px;margin:auto;padding:20px;color:#171512;background:#f7f5f0}.m{color:#77716a;font-size:14px}li{margin:8px 0}</style><h1>KoffyKraft trails</h1><p class="m">Backed up ' +
+        x(when(new Date().toISOString())) +
+        '. To restore, choose Open a trail file in KoffyKraft Trails and pick this .zip.</p><ul>' +
+        rows.join('') +
+        '</ul>'
+    ),
+  ]);
+  return new Blob([zip(files)], { type: 'application/zip' });
+}
+async function packFiles(t, photos, dir) {
   const names = {},
     files = [];
   let n = 0;
@@ -1073,18 +1169,19 @@ async function pack(t, photos) {
       const p = photos[id];
       if (!p) continue;
       names[id] = 'photos/' + String(++n).padStart(3, '0') + '.jpg';
-      files.push([names[id], new Uint8Array(await p.blob.arrayBuffer())]);
+      files.push([dir + names[id], new Uint8Array(await p.blob.arrayBuffer())]);
     }
   const enc = new TextEncoder();
   const keep = { ...t, photoFiles: names };
+  delete keep.savedAt;
   files.unshift(
-    ['index.html', enc.encode(packPage(t, names))],
-    ['trail.gpx', enc.encode(gpx(t))],
-    ['trail.kml', enc.encode(kml(t))],
-    ['trail.geojson', enc.encode(JSON.stringify(geo(t, names), null, 1))],
-    ['koffykraft-trail.json', enc.encode(JSON.stringify(keep))]
+    [dir + 'index.html', enc.encode(packPage(t, names))],
+    [dir + 'trail.gpx', enc.encode(gpx(t))],
+    [dir + 'trail.kml', enc.encode(kml(t))],
+    [dir + 'trail.geojson', enc.encode(JSON.stringify(geo(t, names), null, 1))],
+    [dir + 'koffykraft-trail.json', enc.encode(JSON.stringify(keep))]
   );
-  return new Blob([zip(files)], { type: 'application/zip' });
+  return files;
 }
 
 // Minimal zip, files stored as they are (photos are already compressed). CRC-32 as the format needs.
@@ -1181,41 +1278,65 @@ async function unzip(buf) {
   }
   return out;
 }
+// One trail out of a pack. dir: its folder inside the zip ('' for a single trail pack).
+// A trail already on this device with the same content is skipped, so a backup can be opened twice.
+async function importPack(z, dir) {
+  const t = JSON.parse(new TextDecoder().decode(z[dir + 'koffykraft-trail.json']));
+  const names = t.photoFiles || {};
+  delete t.photoFiles;
+  const here = t.id && (await T.get(t.id));
+  if (here && (here.changed || here.updated) === (t.changed || t.updated)) return null;
+  if (!t.id || here) t.id = uid();
+  const idMap = {},
+    photos = [];
+  for (const [oldId, path] of Object.entries(names))
+    if (z[dir + path]) {
+      const nid = uid();
+      idMap[oldId] = nid;
+      photos.push({ id: nid, trailId: t.id, blob: new Blob([z[dir + path]], { type: 'image/jpeg' }) });
+    }
+  for (const s of t.stops || []) s.photos = (s.photos || []).map(id => idMap[id]).filter(Boolean);
+  for (const p of photos) p.stopId = ((t.stops || []).find(s => s.photos.includes(p.id)) || {}).id;
+  t.draft = false;
+  t.changed = t.changed || t.updated || new Date().toISOString();
+  t.savedAt = new Date().toISOString(); // it came from a file, so a copy exists
+  await T.put(t, true);
+  for (const p of photos) await P.put(p);
+  return t.id;
+}
 async function importFile(f) {
   if (!f) return;
   try {
     const name = f.name.toLowerCase();
     let t;
-    const photos = [];
     if (name.endsWith('.zip')) {
       const z = await unzip(await f.arrayBuffer());
-      const j = z['koffykraft-trail.json'];
-      if (j) {
-        t = JSON.parse(new TextDecoder().decode(j));
-        const names = t.photoFiles || {};
-        delete t.photoFiles;
-        const idMap = {};
-        for (const [oldId, path] of Object.entries(names))
-          if (z[path]) {
-            const nid = uid();
-            idMap[oldId] = nid;
-            photos.push({ id: nid, blob: new Blob([z[path]], { type: 'image/jpeg' }) });
-          }
-        t.id = uid();
-        for (const s of t.stops || []) s.photos = (s.photos || []).map(id => idMap[id]).filter(Boolean);
-        for (const p of photos) {
-          p.trailId = t.id;
-          p.stopId = (t.stops.find(s => s.photos.includes(p.id)) || {}).id;
+      const packs = Object.keys(z).filter(k => /(^|\/)koffykraft-trail\.json$/.test(k));
+      if (packs.length) {
+        const ids = [];
+        let skipped = 0;
+        for (const k of packs) {
+          const id = await importPack(z, k.slice(0, -'koffykraft-trail.json'.length));
+          if (id) ids.push(id);
+          else skipped++;
         }
-      } else if (z['trail.gpx']) t = fromGpx(new TextDecoder().decode(z['trail.gpx']));
+        toast(
+          (ids.length ? 'Opened ' + ids.length + ' trail' + (ids.length > 1 ? 's' : '') : 'Nothing new') +
+            (skipped ? '; ' + skipped + ' already on this device' : '')
+        );
+        if (ids.length === 1 && packs.length === 1) location.hash = '#t/' + ids[0];
+        else if (location.hash) location.hash = '';
+        else listView();
+        return;
+      }
+      if (z['trail.gpx']) t = fromGpx(new TextDecoder().decode(z['trail.gpx']));
       else throw new Error('no trail inside this zip');
     } else if (name.endsWith('.gpx')) t = fromGpx(await f.text());
     else t = fromGeo(JSON.parse(await f.text()));
-    t.id = t.id || uid();
+    t.id = uid();
     t.draft = false;
     t.imported = new Date().toISOString();
     await T.put(t);
-    for (const p of photos) await P.put(p);
     toast('Trail opened and kept on this device');
     location.hash = '#t/' + t.id;
   } catch (e) {

@@ -277,6 +277,32 @@ export async function run(root, t) {
       if (r.cloud) throw new Error('trail page loads cloud sync');
       const listed = await q.evaluate(async () => { location.hash = ''; await new Promise(o => setTimeout(o, 400)); return document.body.innerText.includes('Thumpassery walk') });
       if (!listed) throw new Error('not in list');
+    });
+    await t.acheck('Trail: unsaved reminder, back up all, restore without duplicates', async () => {
+      if (!(await q.$('#nag'))) throw new Error('no reminder for an unsaved trail');
+      const r = await q.evaluate(async () => {
+        const done = (await T.all()).filter(t => !t.draft);
+        const blob = await backupAll(done);
+        const z = await unzip(await blob.arrayBuffer());
+        await markSaved(done);
+        const saved = (await T.all()).every(t => !unsaved(t));
+        const id = done[0].id;
+        await T.del(id);
+        await importFile(new File([blob], 'backup.zip'));
+        await new Promise(o => setTimeout(o, 300));
+        const back = await T.get(id);
+        const photos = back ? (await P.of(id)).length : 0;
+        await importFile(new File([blob], 'backup.zip'));
+        await new Promise(o => setTimeout(o, 300));
+        return { files: Object.keys(z), saved, back: !!back, photos, count: (await T.all()).length, stillSaved: back && !unsaved(back) };
+      });
+      if (!r.files.includes('index.html') || !r.files.some(f => /^trails\/01-.*\/koffykraft-trail\.json$/.test(f)) || !r.files.some(f => /^trails\/01-.*\/photos\/001\.jpg$/.test(f))) throw new Error('backup files: ' + r.files.join(', '));
+      if (!r.saved) throw new Error('still marked unsaved after backup');
+      if (!r.back || r.photos !== 1) throw new Error('restore lost the trail or photo');
+      if (r.count !== 1) throw new Error('restoring twice made ' + r.count + ' trails');
+      if (!r.stillSaved) throw new Error('restored trail shows as unsaved');
+      await q.goto(base + 'trail.html'); await q.waitForTimeout(400);
+      if (await q.$('#nag')) throw new Error('reminder still shown');
       await q.unroute(/leaflet.*\.js/);
     });
     await t.acheck('no script errors during the journeys', async () => { if (errs.length) throw new Error(errs[0]) });
