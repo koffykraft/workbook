@@ -201,7 +201,7 @@ export async function run(root, t) {
     await t.acheck('Coffee words include world terms, grades and units; robusta clones listed', async () => {
       const r = await q.evaluate(() => ({ w: COFFEE_WORDS.map(x => x[1]).join('|'), v: KK_VARIETIES.map(x => x.n + '|' + (x.a || '')).join('|'), robusta: KK_VARIETIES.filter(x => x.sp === 'Robusta').length }));
       for (const w of ['Giling basah', 'Beneficio', 'Supremo', 'Export bag', 'Quintal']) if (!r.w.includes(w)) throw new Error('word missing: ' + w);
-      for (const v of ['TR9', 'KR6', 'BRS 1216', 'Roubi 1', 'Balehonnur', 'Vitória Incaper 8142', 'Castillo', '74110']) if (!r.v.includes(v)) throw new Error('variety missing: ' + v);
+      for (const v of ['TR9', 'KR6', 'BRS 1216', 'Roubi 1', 'Balehonnur', 'Vitória Incaper 8142', 'Castillo', '74110', 'BPL10', 'Esperanza', 'IPR 107', 'S4808']) if (!r.v.includes(v)) throw new Error('variety missing: ' + v);
       if (r.robusta < 50) throw new Error('robusta entries: ' + r.robusta);
     });
     await t.acheck('Malayalam shows explanations only, labels stay English', async () => {

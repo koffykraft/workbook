@@ -60,6 +60,12 @@ Roast timer and graph, roastbooks, cup and brew pages, water, colour.js, varieti
 - Offers not yet decided: evidence labels on every tip (Study / Standard or maker / Expert practice / Common practice); a rate-of-rise span setting (Rao suggests 15 s or less, we use about 30 s).
 - Backlog: LalCafé TDS PDFs, water sheet, charge temperature "8250" explanation, Probat/Neotec conversion, Malayalam chart labels, live probe reading in the Timer, commercial licence email (.com or .coffee).
 
+## Processing and world coffees (11 Oct 2026)
+- origin.html STEP_TYPES: pulping machines, demucilaging, enzyme fermentation, post-wash soaking, density channel washing (P1, P2, lights kg), skin drying, drying methods (patio, clay yard, raised beds, polytunnel, shade, mechanical rotary/box/vertical) with turns and cover. Duration hints cite TechnoServe, ICO, Coffee Board.
+- PROTOCOLS (preset select on a new process run): washed arabica and robusta (Indian estate), East African raised beds, Kenyan double fermentation, eco-pulper, natural.
+- varieties.js: 46 robusta clones and 10 more arabicas from the WCR Arabica + Robusta catalog (2026), Vitória Incaper 8142, all in our own words (WCR is CC BY-NC-ND, do not copy text). Aliases in `a` (e.g. KR6, Balehonnur).
+- COFFEE_WORDS: processing words around the world, export grades, bags and units (Sweet Maria's, My Coffee Explorer, Cafe Imports, Royal Coffee).
+
 ## Lot passports (built 11 Oct 2026)
 - Files: trace-core.js (hash, chain, signatures, weight check, OpenTimestamps file; shared by browser, server and tests), trace-api.js (server, imported by worker.js), trace.html (pages), qrcode.js (MIT, vendored), migrations/0015_trace.sql.
 - Flow: Origin green lot > Passport and QR > trace.html#seal signs new or changed records and roasts with this phone's key (WebCrypto ECDSA P-256, private key in IndexedDB KoffyKraftTrace, one per account) > #lot/<id> QR, labels, send to buyer by email > buyer confirms weight on trace.html (adds a green record with traceLot in their Origin) and seals their roasts > public #p/<token> checks everything in the reader's browser.
