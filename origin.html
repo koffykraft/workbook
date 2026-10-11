@@ -1093,7 +1093,7 @@ const F = {
     { k: 'awEst', t: 'calc', fn: r => awEstHtml(r.moisture, r.aw) },
     { k: 'density', l: 'Density g/L', t: 'num' },
     { k: 'screen', l: 'Screen size', t: 'text', ph: '17/18' },
-    { k: 'grade', l: 'Grade', t: 'text', ph: 'AA, A, PB' },
+    { k: 'grade', l: 'Grade', t: 'text', ph: 'AA, PB, G1, Supremo, SHB, NY 2/3' },
     { k: 'score', l: 'Cup score', t: 'num' },
     { k: 'storage', l: 'Storage', t: 'text', full: 1, ph: 'GrainPro, store room 2' },
     { k: 'stockCalc', t: 'calc', fn: r => stockHtml(r) },
@@ -1122,23 +1122,58 @@ const STEP_TYPES = {
       'Sugar or jaggery',
       'Fruit or juice',
       'With yeast / starter',
+      'Clean water, after washing',
       'Other',
     ],
     read: ['temp', 'ph', 'brix'],
   },
   Pulping: {
     f: ['start', 'inKg', 'outKg', 'method', 'notes'],
-    methods: ['Disc pulper', 'Drum pulper', 'Eco-pulper', 'Hand'],
+    methods: ['Disc pulper', 'Drum pulper', 'Screen pulper', 'Eco-pulper', 'Hand'],
+  },
+  Demucilaging: {
+    f: ['start', 'inKg', 'outKg', 'method', 'notes'],
+    methods: ['Mechanical demucilager', 'Eco-pulper', 'Enzyme (pectinase)', 'Other'],
   },
   Fermentation: {
     f: ['start', 'end', 'inKg', 'method', 'vessel', 'notes'],
-    methods: ['Dry', 'Underwater', 'Anaerobic', 'Carbonic', 'With yeast / starter', 'Other'],
+    methods: [
+      'Dry',
+      'Underwater',
+      'Anaerobic',
+      'Carbonic',
+      'With yeast / starter',
+      'Enzyme (pectinase)',
+      'Other',
+    ],
     read: ['temp', 'ph', 'brix'],
   },
-  Washing: { f: ['start', 'method', 'notes'], methods: ['Channel', 'Tank', 'Machine'] },
+  Washing: {
+    f: ['start', 'method', 'p1Kg', 'p2Kg', 'lightsKg', 'notes'],
+    methods: ['Channel, grading by density', 'Channel', 'Tank', 'Machine'],
+  },
+  'Skin drying': {
+    f: ['start', 'end', 'method', 'layer', 'notes'],
+    methods: ['Shaded tables', 'Wire mesh trays', 'Other'],
+    read: ['moisture'],
+  },
   Drying: {
-    f: ['start', 'end', 'method', 'location', 'layer', 'outKg', 'notes'],
-    methods: ['Raised beds', 'Patio', 'Tarpaulin', 'Mechanical dryer', 'Other'],
+    f: ['start', 'end', 'method', 'location', 'layer', 'turns', 'cover', 'outKg', 'notes'],
+    methods: [
+      'Raised beds',
+      'Patio',
+      'Patio / barbecue (cement)',
+      'Clay-lined yard',
+      'Tarpaulin',
+      'Polytunnel or solar dryer',
+      'Shade drying',
+      'Sun pre-dry, then dryer',
+      'Mechanical dryer',
+      'Mechanical dryer, rotary drum',
+      'Mechanical dryer, static box or silo',
+      'Mechanical dryer, vertical',
+      'Other',
+    ],
     read: ['moisture', 'temp'],
   },
   Resting: {
@@ -1166,6 +1201,11 @@ const STEP_LABELS = {
   vessel: 'Vessel',
   location: 'Location / bed',
   layer: 'Layer cm',
+  turns: 'Turns a day',
+  cover: 'Covered when',
+  p1Kg: 'Parchment 1 kg',
+  p2Kg: 'Parchment 2 kg',
+  lightsKg: 'Lights kg',
   defects: 'Defects',
   notes: 'Notes',
   name: 'Step name',
@@ -1188,6 +1228,7 @@ const MEAS_OPT = {
   Soaking: ['temp', 'ph', 'brix', 'ec'],
   Fermentation: ['temp', 'ph', 'brix', 'air', 'rh', 'pressure', 'ec'],
   Drying: ['moisture', 'temp', 'air', 'rh', 'aw', 'sampleG'],
+  'Skin drying': ['moisture', 'temp', 'air', 'rh'],
   Resting: ['moisture', 'aw', 'temp', 'rh'],
 };
 function measuresFor(s) {
@@ -1639,6 +1680,7 @@ function flagOf(s, k, v) {
 }
 function durGuide(s) {
   const m = String(s.method || '');
+  if (s.guide) return s.guide;
   if (s.type === 'Holding (paused)') {
     if (/frozen/i.test(m))
       return 'Freezing stops fermentation for now. Ice can break cells, so thawed cherry may behave differently: note when it comes out and how long it thaws.';
@@ -1646,20 +1688,170 @@ function durGuide(s) {
       return 'Cold slows fermentation but does not stop it. Note the temperature and keep the pause short.';
     return 'Cherry starts to ferment soon after picking. Note when the pause began and how warm it was.';
   }
+  if (s.type === 'Pulping')
+    return 'Pulp the same day, within 6 to 8 hours of picking. Check: under 10% unpulped cherry, under 5% cut or white beans (TechnoServe).';
+  if (s.type === 'Demucilaging')
+    return /enzyme/i.test(m)
+      ? 'Follow the product sheet for dose, temperature and time.'
+      : 'Removes the mucilage by machine instead of fermentation. Eco-pulpers can cut water use by up to 80% (TechnoServe).';
   if (s.type === 'Soaking')
-    return 'Note water, salt and anything added, with start and end. The app works out the salt %, so runs can be compared.';
+    return /after washing/i.test(m)
+      ? 'Coffee Board: an optional 4 to 6 h soak after washing. TechnoServe: long soaks, up to 24 h, add cost and are generally not recommended.'
+      : 'Note water, salt and anything added, with start and end. The app works out the salt %, so runs can be compared.';
   if (s.type === 'Fermentation') {
     if (/anaerobic/i.test(m)) return 'Sealed: quality tends to fall after 72 h.';
     if (/carbonic/i.test(m)) return '';
-    return 'Washed: arabica about 24 to 36 h, robusta about 72 h.';
+    if (/enzyme/i.test(m)) return 'Follow the product sheet for dose, temperature and time.';
+    return 'Washed: arabica about 24 to 36 h, robusta about 72 h. Done when the parchment feels gritty, not slimy, and a stick pushed in leaves a hole that holds. Keep the mass at 20 to 25 °C (TechnoServe).';
   }
-  if (s.type === 'Drying')
-    return /mechanical/i.test(m)
-      ? 'Dryer after sun pre-drying: about 3 days parchment, 6 days cherry.'
-      : 'Sun: parchment about 7 to 10 days, cherry 12 to 15.';
+  if (s.type === 'Washing')
+    return 'Wash until the water runs clean. In a channel, heavy Parchment 1 settles first, Parchment 2 next, and Lights float to the end: aim for about 90% Parchment 1 and under 2% Lights (TechnoServe).';
+  if (s.type === 'Skin drying')
+    return 'Under a roof, out of direct sun, about 5 cm deep, turned often, until moisture falls from about 60% to 45% (TechnoServe).';
+  if (s.type === 'Drying') {
+    if (/pre-dry/i.test(m))
+      return 'Sun dry to about 30% moisture first, then finish in the dryer: the yard needed falls to about a third (ICO). Keep grain below 45 °C.';
+    if (/mechanical/i.test(m))
+      return 'Dryer after sun pre-drying: about 3 days parchment, 6 days cherry. Keep grain below 45 °C (ICO).';
+    if (/polytunnel|solar/i.test(m))
+      return 'Ventilate well and keep beans below 40 °C, ideally 35 °C (TechnoServe). Covered tables keep drying slowly through rain (ICO).';
+    if (/raised/i.test(m))
+      return 'Raised beds: 5 to 7 cm deep, turn every 2 to 3 hours and at least 4 times a day, cover over midday heat, at night and in rain; finish at 10 to 12% (TechnoServe).';
+    if (/patio|barbecue|yard/i.test(m))
+      return 'Yard: parchment 4 to 7 cm deep, cherry 7 to 8 cm; stir hourly, heap and cover in the evening. Parchment about 7 to 10 days to 11%, cherry 10 to 12 days to 12 to 12.5% (Coffee Board).';
+    return 'Sun: parchment about 7 to 10 days, cherry 12 to 15.';
+  }
   return '';
 }
+// Ready-made step lists. Each step carries its own guidance and names its source.
+const PROTOCOLS = [
+  {
+    n: 'Washed arabica, Indian estate',
+    pathway: 'Washed',
+    src: 'Coffee Board of India',
+    steps: [
+      [
+        'Sorting / floating',
+        '',
+        'Float off light and damaged cherry. Pulp the same day; if not, keep cherry under clean water and pulp next day (Coffee Board).',
+      ],
+      ['Pulping', 'Disc pulper', ''],
+      [
+        'Fermentation',
+        'Dry',
+        'About 24 to 36 h, longer when cool. Done when washed parchment no longer sticks to the hand and feels gritty (Coffee Board).',
+      ],
+      ['Washing', 'Channel', 'Wash 3 to 4 times in clean water, or in a washing machine (Coffee Board).'],
+      ['Soaking', 'Clean water, after washing', ''],
+      [
+        'Drying',
+        'Patio / barbecue (cement)',
+        'Wire mesh trays first to drain, then a clean cement or clay-lined yard, 4 to 7 cm deep. Turn at least hourly, avoid the hottest sun around noon on days 3 and 4, heap and cover at night. About 7 to 10 days to 11% (Coffee Board).',
+      ],
+      ['Resting', 'In parchment', 'Bag in clean, dry gunny bags on raised wooden platforms (Coffee Board).'],
+    ],
+  },
+  {
+    n: 'Washed robusta (parchment), Indian estate',
+    pathway: 'Washed',
+    src: 'Coffee Board of India',
+    steps: [
+      ['Sorting / floating', '', ''],
+      ['Pulping', 'Disc pulper', ''],
+      ['Fermentation', 'Dry', 'Robusta takes longer than arabica: about 72 h.'],
+      ['Washing', 'Channel', ''],
+      ['Drying', 'Patio / barbecue (cement)', ''],
+      ['Resting', 'In parchment', ''],
+    ],
+  },
+  {
+    n: 'Washed, raised beds (East African wet mill)',
+    pathway: 'Washed',
+    src: 'TechnoServe wet mill guide',
+    steps: [
+      [
+        'Sorting / floating',
+        '',
+        'Over 90% ripe cherry. Ripe cherry is over 30% heavier than unripe or overripe (TechnoServe).',
+      ],
+      ['Pulping', 'Disc pulper', ''],
+      ['Fermentation', 'Dry', ''],
+      ['Washing', 'Channel, grading by density', ''],
+      ['Skin drying', 'Shaded tables', ''],
+      ['Drying', 'Raised beds', ''],
+      ['Resting', 'In parchment', ''],
+    ],
+  },
+  {
+    n: 'Kenyan-style double fermentation',
+    pathway: 'Washed',
+    src: 'Barista Magazine; TechnoServe',
+    steps: [
+      ['Sorting / floating', '', ''],
+      ['Pulping', 'Disc pulper', ''],
+      ['Fermentation', 'Dry', 'First fermentation, then wash and grade.'],
+      ['Washing', 'Channel, grading by density', ''],
+      [
+        'Soaking',
+        'Clean water, after washing',
+        'Second stage: the washed parchment rests under clean water, which keeps it cool until drying space is free. Defects can be picked out again, then it is re-washed (Barista Magazine).',
+      ],
+      ['Washing', 'Channel', 'Final re-wash.'],
+      ['Skin drying', 'Shaded tables', ''],
+      ['Drying', 'Raised beds', ''],
+      ['Resting', 'In parchment', ''],
+    ],
+  },
+  {
+    n: 'Mechanically demucilaged (eco-pulper)',
+    pathway: 'Washed',
+    src: 'TechnoServe wet mill guide',
+    steps: [
+      ['Sorting / floating', '', ''],
+      [
+        'Pulping',
+        'Eco-pulper',
+        'Pulps, removes mucilage and washes in one machine, with no fermentation tank.',
+      ],
+      ['Demucilaging', 'Eco-pulper', ''],
+      ['Skin drying', 'Shaded tables', ''],
+      ['Drying', 'Raised beds', ''],
+      ['Resting', 'In parchment', ''],
+    ],
+  },
+  {
+    n: 'Natural, Indian estate',
+    pathway: 'Natural',
+    src: 'Coffee Board of India',
+    steps: [
+      ['Sorting / floating', '', ''],
+      [
+        'Drying',
+        'Patio / barbecue (cement)',
+        'Cherry 7 to 8 cm deep on a clean cement or clay-lined yard, never cow dung or mud. Stir and ridge at least hourly, heap and cover in the evening. About 10 to 12 days in bright weather to 12 to 12.5%: the beans rattle, and a sample weighs the same two days running (Coffee Board).',
+      ],
+      ['Resting', 'In cherry', ''],
+      ['Hulling', '', ''],
+    ],
+  },
+];
 const GUIDE_SRC = [
+  [
+    'TechnoServe, coffee wet mill processing guide',
+    'https://www.technoserve.org/wp-content/uploads/2022/03/TechnoServe-Wet-Mill-Processing-Guide.pdf',
+  ],
+  [
+    'ICO, introduction to coffee drying',
+    'https://ico.org/projects/Good-Hygiene-Practices/cnt/cnt_sp/sec_3/docs_3.2/Intro%20coffee%20drying.pdf',
+  ],
+  [
+    'Coffee Board of India, coffee cultivation guide',
+    'https://static.vikaspedia.in/mediastorage/document/coffee_cultivation_guide.pdf',
+  ],
+  [
+    'Barista Magazine, understanding double fermentation',
+    'https://baristamagazine.com/understanding-the-process-double-fermentation',
+  ],
   [
     'Cafe Imports, water activity in specialty green coffee (Fretheim, 2019)',
     'https://www.cafeimports.com/north-america/water-activity-in-specialty-green-coffee',
@@ -3808,7 +4000,15 @@ function fieldHtml(f) {
       return (
         '<div class="' +
         cls +
-        '"><div class="lst" id="steps"></div><div class="row" style="margin-top:6px"><select id="newStep" style="flex:1">' +
+        '">' +
+        ((CUR.steps || []).length
+          ? ''
+          : '<label class="mini" style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px">Start from a ready-made protocol (optional)<select id="preset"><option value="">Choose…</option>' +
+            PROTOCOLS.map(
+              (p, i) => '<option value="' + i + '">' + esc(p.n) + ' (' + esc(p.src) + ')</option>'
+            ).join('') +
+            '</select></label>') +
+        '<div class="lst" id="steps"></div><div class="row" style="margin-top:6px"><select id="newStep" style="flex:1">' +
         Object.keys(STEP_TYPES)
           .map(s => '<option>' + s + '</option>')
           .join('') +
@@ -3856,6 +4056,20 @@ function bindForm() {
   );
   bindSoilTest();
   if ($('#gpsBtn')) $('#gpsBtn').onclick = getGps;
+  if ($('#preset'))
+    $('#preset').onchange = e => {
+      const P = PROTOCOLS[+e.target.value];
+      if (!P) return;
+      CUR.steps = P.steps.map(([type, method, guide]) => ({ type, method, ...(guide ? { guide } : {}) }));
+      if (!CUR.pathway) {
+        CUR.pathway = P.pathway;
+        const pw = $('#f_pathway');
+        if (pw) pw.value = P.pathway;
+      }
+      e.target.closest('label').remove();
+      renderSteps(true);
+      toast(P.steps.length + ' steps added. Fill in times and weights as you go.');
+    };
   if ($('#steps')) {
     renderSteps();
     $('#addStep').onclick = () => {
@@ -4148,7 +4362,18 @@ function stepHtml(s, i) {
     const type =
       k === 'start' || k === 'end'
         ? 'datetime-local'
-        : ['inKg', 'outKg', 'floatKg', 'layer', 'water', 'salt'].includes(k)
+        : [
+              'inKg',
+              'outKg',
+              'floatKg',
+              'layer',
+              'water',
+              'salt',
+              'turns',
+              'p1Kg',
+              'p2Kg',
+              'lightsKg',
+            ].includes(k)
           ? 'number'
           : 'text';
     return (

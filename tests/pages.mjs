@@ -189,6 +189,21 @@ export async function run(root, t) {
       res = await q.$eval('#result', e => e.innerText);
       if (!/L\* 40\.0 · a\* 10\.0 · b\* 20\.0/.test(res) || !/#78583E/.test(res)) throw new Error('hunter: ' + res.slice(0, 400));
     });
+    await t.acheck('A processing run can start from a ready-made washed protocol', async () => {
+      await q.goto(base + 'origin.html#edit/process/new'); await q.waitForSelector('#preset');
+      const names = await q.$$eval('#preset option', o => o.map(x => x.text).join('|')); if (!/Kenyan/.test(names) || !/demucilaged/.test(names) || !/robusta/i.test(names)) throw new Error('protocols: ' + names);
+      await q.selectOption('#preset', '0'); await q.waitForTimeout(300);
+      const steps = await q.$$eval('#steps .step', a => a.length); if (steps < 6) throw new Error('steps added: ' + steps);
+      const txt = await q.$eval('#steps', e => e.innerText); if (!/Coffee Board/.test(txt)) throw new Error('step guidance missing');
+      const opts = await q.$$eval('#steps select[data-sk=method]', a => a.flatMap(s => [...s.options].map(o => o.text)));
+      for (const m of ['Patio / barbecue (cement)', 'Polytunnel', 'Mechanical dryer, rotary drum', 'Enzyme (pectinase)']) if (!opts.some(o => o.includes(m))) throw new Error('method missing: ' + m);
+    });
+    await t.acheck('Coffee words include world terms, grades and units; robusta clones listed', async () => {
+      const r = await q.evaluate(() => ({ w: COFFEE_WORDS.map(x => x[1]).join('|'), v: KK_VARIETIES.map(x => x.n + '|' + (x.a || '')).join('|'), robusta: KK_VARIETIES.filter(x => x.sp === 'Robusta').length }));
+      for (const w of ['Giling basah', 'Beneficio', 'Supremo', 'Export bag', 'Quintal']) if (!r.w.includes(w)) throw new Error('word missing: ' + w);
+      for (const v of ['TR9', 'KR6', 'BRS 1216', 'Roubi 1', 'Balehonnur', 'Vitória Incaper 8142', 'Castillo', '74110']) if (!r.v.includes(v)) throw new Error('variety missing: ' + v);
+      if (r.robusta < 50) throw new Error('robusta entries: ' + r.robusta);
+    });
     await t.acheck('Malayalam shows explanations only, labels stay English', async () => {
       await q.goto(base + 'home.html'); await q.evaluate(() => localStorage.setItem('kk_lang', 'ml'));
       await q.goto(base + 'crop.html'); await q.waitForTimeout(700);
