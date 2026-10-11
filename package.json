@@ -5,11 +5,16 @@
   "type": "commonjs",
   "scripts": {
     "test": "node tests/run.mjs",
-    "test:fast": "node tests/run.mjs static api",
+    "test:fast": "node tests/run.mjs static lint api",
     "deploy": "bash scripts/deploy.sh"
   },
   "devDependencies": {
-    "playwright": "^1.48.0"
+    "eslint": "^9.13.0",
+    "globals": "^15.11.0",
+    "playwright": "^1.48.0",
+    "prettier": "^3.3.3"
   },
-  "engines": { "node": ">=22.5" }
+  "engines": {
+    "node": ">=22.5"
+  }
 }

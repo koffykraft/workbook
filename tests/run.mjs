@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 process.removeAllListeners('warning');
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const want = process.argv.slice(2);
-const suites = ['static', 'api', 'pages'].filter(s => !want.length || want.includes(s));
+const suites = ['static', 'lint', 'api', 'pages'].filter(s => !want.length || want.includes(s));
 let pass = 0, fail = 0, skipped = 0; const fails = [];
 const t = {
   check(name, fn) { try { fn(); pass++ } catch (e) { fail++; fails.push(name + ': ' + e.message) } },
