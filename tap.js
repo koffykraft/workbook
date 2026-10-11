@@ -25,14 +25,12 @@
  ['pointerup','pointercancel','pointerleave','scroll'].forEach(ev=>document.addEventListener(ev,release,{capture:true,passive:true}));
 })();
 // New version notice: the offline cache shows the saved copy first. When a newer copy
-// arrives, offer a one-tap refresh instead of reloading by itself (a roast may be running).
+// arrives it is remembered here, and offered only on the Account page (App version card).
 (function(){
  if(!('serviceWorker'in navigator)||window.__kkUpd)return;window.__kkUpd=true;
- let shown=false;const had=!!navigator.serviceWorker.controller;
- function bar(){if(shown)return;shown=true;const b=document.createElement('button');b.type='button';b.textContent='New version ready · Tap to refresh';
-  b.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:2147483645;font:600 14px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial;background:#171512;color:#fff;border:0;border-radius:999px;padding:11px 18px;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:calc(100% - 32px)';
-  b.onclick=()=>location.reload();(document.body||document.documentElement).appendChild(b)}
- navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.kk==='updated')bar()});
- navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had)bar()});
+ const had=!!navigator.serviceWorker.controller;
+ function mark(){try{localStorage.setItem('kk_update_ready','1')}catch(e){}window.dispatchEvent(new Event('kk-update'))}
+ navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.kk==='updated')mark()});
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had)mark()});
  window.addEventListener('load',()=>{navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{})});
 })();

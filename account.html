@@ -77,6 +77,11 @@ Keep your own copies of important roasts. Export to Dropbox, Google Drive, or yo
 </div>
 </div>
 
+<div class="card" id="appVer"><b>App version</b><div class="meta" id="appVerMsg">This phone keeps a copy of the app so it opens fast and works offline. New versions arrive in the background.</div><div style="margin-top:10px"><button type="button" id="appVerBtn" style="font:inherit;font-size:13px;padding:8px 12px;border:1px solid #ddd8d0;background:#fff;border-radius:999px;cursor:pointer">Check for updates</button></div></div>
+
+<div class="card"><b>Feedback</b><div id="feedback" style="margin-top:8px"></div></div>
+<div id="adminFb"></div>
+
 </main>
 
 <p style="max-width:680px;margin:24px auto 40px;padding:0 16px;font-size:12px;color:#77716a;line-height:1.5">© 2026 T M Thomas · Open source under <a href="license.html" style="color:#8d583b">AGPL-3.0</a> · Commercial licence: info@koffykraft.com · <a href="terms.html" style="color:#8d583b">Terms</a></p>
@@ -144,6 +149,17 @@ logoutBtn.onclick=async()=>{
 };
 
 check();
+</script>
+<script src="feedback.js"></script>
+<script>
+// App version: the update notice lives here only.
+(function(){const msg=document.getElementById('appVerMsg'),btn=document.getElementById('appVerBtn');let ready=false;try{ready=localStorage.getItem('kk_update_ready')==='1'}catch(e){}
+ const show=()=>{msg.innerHTML='<b style="color:#3f6b5a">A new version is ready.</b> Tap Refresh to load it.';btn.textContent='Refresh now';btn.style.background='#171512';btn.style.color='#fff';btn.style.borderColor='#171512';ready=true};
+ if(ready)show();window.addEventListener('kk-update',show);
+ btn.onclick=async()=>{if(ready){try{localStorage.removeItem('kk_update_ready')}catch(e){}location.reload();return}btn.disabled=true;btn.textContent='Checking…';try{const r=await navigator.serviceWorker.getRegistration();if(r)await r.update();await fetch('account.html',{cache:'no-store'})}catch(e){}setTimeout(()=>{btn.disabled=false;if(!ready){btn.textContent='Check for updates';msg.textContent='You have the latest version.'}},2500)}})();
+// Feedback received: admins only. The server refuses this list to everyone else.
+(async()=>{try{if(typeof SYNC==='undefined'||!SYNC.isAuthenticated())return;const r=await fetch('/api/feedback',{headers:{authorization:'Bearer '+SYNC.getToken()}});if(!r.ok)return;const j=await r.json();const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ document.getElementById('adminFb').innerHTML='<div class="card"><b>Feedback received</b> <span class="meta">(only admins see this)</span>'+((j.items||[]).map(x=>'<div style="border-top:1px solid #f0ebe3;padding:8px 0;font-size:14px"><div class="meta">'+esc(String(x.created_at).slice(0,16).replace('T',' '))+' · '+esc(x.kind||'')+' · '+esc(x.page||'')+(x.contact?' · '+esc(x.contact):'')+'</div><div>'+esc(x.message)+'</div></div>').join('')||'<div class="meta">None yet.</div>')+'</div>'}catch(e){}})();
 </script>
 <script src="pv.js" defer></script>
 </body>

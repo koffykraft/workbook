@@ -34,7 +34,6 @@ mark{background:#f5e3b5;border-radius:3px}
 <div id="out"></div>
 <h2 id="fb">Feedback</h2>
 <div class="card" id="feedback"></div>
-<div id="adminFb"></div>
 </main>
 <script src="contents.js"></script><script src="feedback.js"></script>
 <script>
@@ -45,8 +44,6 @@ function render(){const q=$('#q').value.trim().toLowerCase();let h='';
   h+='<h2 id="g-'+id+'">'+esc(n)+'</h2><div class="gd">'+esc(d)+'</div>'+its.map(([a,b,c,u])=>'<details class="it"'+(q&&q.length>2?' open':'')+'><summary><b>'+hl(a,q)+'<span>'+hl(b,q)+'</span></b></summary>'+(c?'<div class="more">'+hl(c,q)+'</div>':'')+'<a class="go" href="'+u+'">Open</a></details>').join('')});
  $('#out').innerHTML=h||'<div class="sub">Nothing found. Tell us below what you were looking for.</div>'}
 $('#q').addEventListener('input',render);render();
-(async()=>{try{const t=localStorage.getItem('kk_auth_token');if(!t)return;const r=await fetch('/api/feedback',{headers:{authorization:'Bearer '+t}});if(!r.ok)return;const j=await r.json();
- $('#adminFb').innerHTML='<h2>Feedback received (admins only)</h2><div class="card">'+((j.items||[]).map(x=>'<div class="fbi"><small>'+esc(x.created_at.slice(0,16).replace('T',' '))+' · '+esc(x.kind||'')+' · '+esc(x.page||'')+(x.contact?' · '+esc(x.contact):'')+'</small><div>'+esc(x.message)+'</div></div>').join('')||'<div class="sub">None yet.</div>')+'</div>'}catch(e){}})();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script><script src="pv.js" defer></script>
 </body>
