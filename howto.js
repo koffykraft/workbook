@@ -67,6 +67,11 @@ const S={
  MD:{t:'Moustache Coffee Club: dialling in light roast',u:'https://www.moustachecoffeeclub.com/blog/how-to-dial-in-light-roast-coffee-for-home-baristas'},
  MR:{t:'Moustache Coffee Club: coffee resting time',u:'https://www.moustachecoffeeclub.com/blog/coffee-resting-time'},
  MC:{t:'Moustache Coffee Club: light roast cold brew',u:'https://www.moustachecoffeeclub.com/blog/light-roast-cold-brew'},
+ CM:{t:'Münchow, Alstrup, Steen and Giacalone, Beverages 6:29 (2020): roasting conditions and coffee flavour, a multi-study investigation (CoffeeMind and University of Copenhagen)',u:'https://doi.org/10.3390/beverages6020029'},
+ CP:{t:'Barista Magazine: CoffeeMind, roasting by colour and the colour palette',u:'https://www.baristamagazine.com/coffee-roasting-by-color-a-new-guide-to-simplify-roasting/'},
+ ML:{t:'Münchow and Alstrup: flavour development, the relationship between time and colour (Roast Magazine, via Daily Coffee News, 2020)',u:'https://dailycoffeenews.com/2020/08/26/flavor-development-the-relationship-between-time-and-color-in-coffee-roasting/'},
+ BY:{t:'SCA 25 Magazine issue 5: Modulating Perception (Alstrup, with Münchow), roast and body',u:'https://sca.coffee/sca-news/25-magazine/issue-5/modulating-perception-25-magazine-issue-5'},
+ DF:{t:'Giacalone, Degn, Yang, Liu, Fisk and Münchow: common roasting defects in coffee, aroma, sensory and consumer perception (Copenhagen, Nottingham, CoffeeMind)',u:'https://eprints.nottingham.ac.uk/51554/'},
  FG:{t:'Frost, Ristenpart and Guinard, J. Food Science (2020)',u:'https://scholar.google.com/scholar?q=Effects+of+brew+strength+brew+yield+and+roast+on+the+sensory+quality+of+drip+brewed+coffee'}
 };
 const H={
@@ -579,10 +584,13 @@ const PRO=[
   [1,'Taste on a timer so every bowl is tasted at a similar temperature. One or two slurps per bowl, and a few words each.','RU'],
   [2,'Write notes before anyone talks. Do not change grind or water to make one bowl taste better.','RU'],
   [2,'Put a competitor\'s coffee on the table for reference.','RU'],
+  [2,'Body: score how much there is (thin to heavy) apart from how it feels (smooth and round, or gritty and drying). More body is not always better body.','BY'],
   [3,'Test yourself: hide three bowls of the same coffee among the others, and cup the same coffee on several days.','RU'],
   [3,'For roast checks: if a roast tastes better ground coarser or with cooler water, suspect a roast defect.','RU'],
   [3,'When buying green from sample roasts, check the sample roasts are consistent first. A better-roasted sample can win over better green; learn to taste baking (less sweetness) and underdevelopment (less fruit) apart from the coffee itself.','RV']]},
  {id:'colour',n:'Measuring roast colour',d:'For roasters: readings you can compare from batch to batch.',steps:[
+  [1,'Colour is the roast number that matters most. Across several studies with trained tasters, roast colour predicted flavour better than development time, and the shape of the curve (rate of rise) mattered less again.','CM'],
+  [2,'Light, medium and dark mean different things to different roasters. Write the number and the meter, not just the word.','ML'],
   [1,'Measure ground coffee; whole-bean readings vary with the bean surface. Note both if you can.','RC'],
   [1,'Always use the same grinder and setting, fairly fine, and tamp the sample flat. Coarse grinds read lighter.','RC'],
   [1,'Read each batch as soon as it is cool, together with its weight loss.','RC'],
@@ -594,7 +602,8 @@ const PRO=[
   [3,'Agtron E20CP: grind like auto-drip (most particles 0.6 to 0.8 mm), level the dish with a straight edge without pressing. Too coarse ploughs waves; too fine cakes. Calibrate with the disk each session. Rao, using other meters, prefers a finer, tamped sample: whatever you choose, never change it.','AG'],
   [3,'Gourmet and Commercial scales: Commercial is about 1.2 + 0.744 × Gourmet (Gourmet 55 is Commercial 42). Agtron puts most specialty coffee at Gourmet 30 to 65 and commercial at 50 to 75. Always compare on the same scale and meter.','AG'],
   [3,'Colour in the cup is not colour of the grounds: a study found cold brews redder and hot brews browner from the same roast, and a light roast brewed hot looked like a medium brewed cold.','SC'],
-  [3,'Cross-check with weight loss: steady weight loss but jumping colour points to the measurement; steady colour but odd weight loss points to weighing or lost beans.','RC']]},
+  [3,'Cross-check with weight loss: steady weight loss but jumping colour points to the measurement; steady colour but odd weight loss points to weighing or lost beans.','RC'],
+  [3,'Training the eye: CoffeeMind uses a colour palette, a reference colour with sample cups around it, comparing beans pulled during the roast until they match.','CP']]},
  {id:'qc',n:'Roast QC routine',d:'For roasters: one roastery\'s way of keeping every batch on target.',steps:[
   [1,'Record development time, weight loss and ground colour for every batch.','RQ'],
   [1,'Cup every batch the morning after roasting, blind.','RQ'],
@@ -608,8 +617,10 @@ const PRO=[
   [1,'Score the roast separately from the coffee. A roast can only show the coffee\'s full potential (0) or fall short (minus).','RR'],
   [1,'Four parts, each 0, -1 or -2: development of the bean core; whether it shows the flavours you aimed for; baked; roasty (char, smoke, harsh). Total from -8 to 0.','RR'],
   [2,'Baked: -1 slightly baked but still fairly sweet; -2 clearly hollow and lacking sweetness. Roasty: -1 a hint of char or smoke; -2 strongly burnt or harsh.','RR'],
+  [2,'Five common faults tested side by side on one coffee: too light, too dark, scorched, baked and underdeveloped. 83 consumers clearly preferred the normal roast and called it harmonic, pleasant and balanced. Use these names in your notes so faults can be counted.','DF'],
   [3,'Do not subtract the roast score from the green score; keep the two judgements apart. Write the roast score in the cupping notes in Cup.','RR']]},
- {id:'roasttech',n:'Roasting choices: soak, espresso and milk',d:'For roasters: two decisions that shape the cup.',steps:[
+ {id:'roasttech',n:'Roasting choices: priorities, soak, espresso and milk',d:'For roasters: decisions that shape the cup.',steps:[
+  [1,'Where to put your attention: hit the colour first, then the development time (first crack to drop). The rate-of-rise curve comes after both, by the CoffeeMind studies.','CP'],
   [2,'The soak: charge with low gas, then raise to high within the first two minutes. Beans give off little moisture early, so they need less heat then. Rao warns against charging too hot or soaking with the gas fully off.','RO'],
   [2,'Black or milk matters more than filter or espresso. For milk drinks, a slightly darker roast is usually worth it.','RE'],
   [3,'Why espresso is often roasted darker: espresso extracts cooler (the first contact is around 70 °C, mixed around 79 °C, against about 90 °C for filter), which can taste sour. A little more development offsets that, especially if extraction is low.','RE'],
@@ -640,10 +651,13 @@ const PRO=[
   [1,'A simple fair recipe: 5.5 g coffee per 100 ml at 95 °C in a French press, steep 3:30, stir 10 times, skim, press at 4:00, taste from about 55 °C.','AL'],
   [2,'Development time (first crack to drop) changes taste even at the same colour. In one study, four roasts ended at the same colour (Agtron 76). The shortest development, 1:30, gave the most fruit, sweetness and acidity; 4:26 and 6:30 shifted toward roasty, nutty and bitter.','AL'],
   [2,'Colour alone does not describe a roast. Record development time with every colour reading.','AL'],
+  [2,'Body: in a study at one colour (Agtron 75), development from 1:15 to 6:32 changed body little. Body rose from light to medium and fell again darker, thickest near Agtron 75. To change body, change colour rather than stretch development.','BY'],
+  [3,'Development time is the time spent in the main aroma-forming phase after first crack. Treat it as the second dial after colour.','ML'],
   [3,'Longer, lower-temperature roasts raised pH (less perceived acidity) and lowered aroma intensity in a study of five origins.','GL'],
   [3,'Origins reacted differently to the same profile: some formed aroma early, others, including a robusta, much later. A profile that suits one coffee may not suit another; taste each.','GL'],
   [3,'Baked coffee tastes hollow, flat and less sweet. Rao now traces it mainly to a sharp crash in the rate of rise around first crack, not to long roasts as such.','RK'],
-  [3,'To see a crash: a thin bean probe (4 mm or less) that shows the turn by 1:30, readings every second, a rate-of-rise span of 15 seconds or less and no extra smoothing. Cup blind first, then compare with the curves.','RK']]}
+  [3,'To see a crash: a thin bean probe (4 mm or less) that shows the turn by 1:30, readings every second, a rate-of-rise span of 15 seconds or less and no extra smoothing. Cup blind first, then compare with the curves.','RK'],
+  [3,'Weigh the advice: CoffeeMind\'s university studies ranked rate of rise below colour and development time for flavour. Rao\'s rate-of-rise rules come from long practice; check them against your own blind cupping.','CP']]}
 ];
 window.KK_HOWTO={S,H,PRO};
 })();
