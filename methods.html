@@ -8,46 +8,342 @@
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>KoffyKraft Brew Guide</title>
 <style>
-:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b;--soft:#faf7f2;--ok:#3f6b5a}
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;color:var(--ink);background:var(--bg)}
-.app{max-width:680px;margin:auto;padding:24px 16px 60px}
-h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 4px}.sub{color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5}.sub a{color:var(--coffee)}
-h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:22px 0 8px}
-.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:8px 0}
-details.card>summary{cursor:pointer;font-weight:650;font-size:15.5px;list-style:none;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
-details.card>summary::-webkit-details-marker{display:none}details.card>summary::after{content:'+';color:var(--muted);font-weight:400}details.card[open]>summary::after{content:'−'}
-summary small{font-weight:500;color:var(--muted);font-size:12.5px;text-align:right}
-.bd{margin-top:8px;font-size:14px;line-height:1.55}
-.tip{padding:7px 0;border-top:1px solid #f0ebe3}.tip:first-child{border-top:0}
-.src{display:block;font-size:11.5px;color:var(--muted)}.src a{color:var(--muted)}
-.lv{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 7px;margin-right:6px;vertical-align:1px}
-.lv2{background:#efe6da;color:#8d583b}.lv3{background:#171512;color:#fff}
-.kv{font-size:13px;color:var(--muted)}.kv b{color:var(--ink);font-weight:600}
-.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{font:inherit;font-size:13.5px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 13px;cursor:pointer;color:var(--ink)}.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-.search{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0}
-.search input{font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;width:100%}
-.fam{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
-.fam a{display:block;text-decoration:none;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}
-.fam a b{display:block;font-size:15px}.fam a span{font-size:12.5px;color:var(--muted);line-height:1.4}
-.empty{color:var(--muted);font-size:14px;padding:10px 0}
-a.in{color:var(--coffee)}
-mark{background:#f5e3b5;border-radius:3px}
-.how{background:#faf7f2;border-radius:12px;padding:10px 12px;margin-top:8px}
-.how h4{margin:0 0 4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee)}
-ol.steps{margin:6px 0 4px;padding-left:22px}ol.steps li{margin:7px 0;line-height:1.5;font-size:14.5px}
-.tm{font-variant-numeric:tabular-nums;font-weight:700;color:var(--coffee);margin-right:6px;font-size:13px}
-.how .sub2{font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 2px;text-transform:uppercase;letter-spacing:.06em}
-.runbtn{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font:inherit;font-size:14px;font-weight:600;border:0;background:#171512;color:#fff;border-radius:999px;padding:10px 16px;cursor:pointer}
-#run{position:fixed;inset:0;z-index:3000;background:#171512;color:#f7f5f0;display:none;flex-direction:column;padding:calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom))}
-#run.on{display:flex}#run h3{margin:0;font-size:16px;font-weight:600;color:#c9b9a6}
-#run .clk{font-size:64px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin:10px 0 4px}
-#run .now{background:#2a2621;border-radius:16px;padding:16px;font-size:19px;line-height:1.5;margin:8px 0}
-#run .now small{display:block;font-size:12px;color:#c9b9a6;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
-#run .nxt{font-size:15px;line-height:1.5;color:#c9b9a6;padding:4px 2px}#run .nxt b{color:#f7f5f0}
-#run .rb{display:flex;gap:8px;margin-top:auto}#run .rb button{flex:1;font:inherit;font-size:16px;font-weight:600;border:0;border-radius:999px;padding:14px;cursor:pointer;background:#3a342e;color:#fff}#run .rb button.go{background:#f7f5f0;color:#171512}
-#run .bar{height:6px;background:#3a342e;border-radius:3px;overflow:hidden;margin-top:6px}#run .bar i{display:block;height:100%;background:#c9a27e;width:0}
+:root {
+  --bg: #f7f5f0;
+  --ink: #171512;
+  --muted: #77716a;
+  --line: #ddd8d0;
+  --coffee: #8d583b;
+  --soft: #faf7f2;
+  --ok: #3f6b5a;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial;
+  color: var(--ink);
+  background: var(--bg);
+}
+.app {
+  max-width: 680px;
+  margin: auto;
+  padding: 24px 16px 60px;
+}
+h1 {
+  font-size: 32px;
+  letter-spacing: -0.04em;
+  margin: 6px 0 4px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.sub a {
+  color: var(--coffee);
+}
+h2 {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--coffee);
+  margin: 22px 0 8px;
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin: 8px 0;
+}
+details.card > summary {
+  cursor: pointer;
+  font-weight: 650;
+  font-size: 15.5px;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+details.card > summary::-webkit-details-marker {
+  display: none;
+}
+details.card > summary::after {
+  content: '+';
+  color: var(--muted);
+  font-weight: 400;
+}
+details.card[open] > summary::after {
+  content: '−';
+}
+summary small {
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 12.5px;
+  text-align: right;
+}
+.bd {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.tip {
+  padding: 7px 0;
+  border-top: 1px solid #f0ebe3;
+}
+.tip:first-child {
+  border-top: 0;
+}
+.src {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.src a {
+  color: var(--muted);
+}
+.lv {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 1px 7px;
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+.lv2 {
+  background: #efe6da;
+  color: #8d583b;
+}
+.lv3 {
+  background: #171512;
+  color: #fff;
+}
+.kv {
+  font-size: 13px;
+  color: var(--muted);
+}
+.kv b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.chip {
+  font: inherit;
+  font-size: 13.5px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 13px;
+  cursor: pointer;
+  color: var(--ink);
+}
+.chip.on {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.search {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding: 8px 0;
+}
+.search input {
+  font: inherit;
+  font-size: 16px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #fff;
+  width: 100%;
+}
+.fam {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+.fam a {
+  display: block;
+  text-decoration: none;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+}
+.fam a b {
+  display: block;
+  font-size: 15px;
+}
+.fam a span {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.empty {
+  color: var(--muted);
+  font-size: 14px;
+  padding: 10px 0;
+}
+a.in {
+  color: var(--coffee);
+}
+mark {
+  background: #f5e3b5;
+  border-radius: 3px;
+}
+.how {
+  background: #faf7f2;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-top: 8px;
+}
+.how h4 {
+  margin: 0 0 4px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--coffee);
+}
+ol.steps {
+  margin: 6px 0 4px;
+  padding-left: 22px;
+}
+ol.steps li {
+  margin: 7px 0;
+  line-height: 1.5;
+  font-size: 14.5px;
+}
+.tm {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--coffee);
+  margin-right: 6px;
+  font-size: 13px;
+}
+.how .sub2 {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  margin: 10px 0 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.runbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  border: 0;
+  background: #171512;
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+#run {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: #171512;
+  color: #f7f5f0;
+  display: none;
+  flex-direction: column;
+  padding: calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));
+}
+#run.on {
+  display: flex;
+}
+#run h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #c9b9a6;
+}
+#run .clk {
+  font-size: 64px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  margin: 10px 0 4px;
+}
+#run .now {
+  background: #2a2621;
+  border-radius: 16px;
+  padding: 16px;
+  font-size: 19px;
+  line-height: 1.5;
+  margin: 8px 0;
+}
+#run .now small {
+  display: block;
+  font-size: 12px;
+  color: #c9b9a6;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+#run .nxt {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #c9b9a6;
+  padding: 4px 2px;
+}
+#run .nxt b {
+  color: #f7f5f0;
+}
+#run .rb {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+#run .rb button {
+  flex: 1;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  border: 0;
+  border-radius: 999px;
+  padding: 14px;
+  cursor: pointer;
+  background: #3a342e;
+  color: #fff;
+}
+#run .rb button.go {
+  background: #f7f5f0;
+  color: #171512;
+}
+#run .bar {
+  height: 6px;
+  background: #3a342e;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+#run .bar i {
+  display: block;
+  height: 100%;
+  background: #c9a27e;
+  width: 0;
+}
 </style>
-<link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script><script src="i18n.js" defer></script></head>
+<link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script><script src="i18n.js" defer></script><script src="kk-base.js"></script>
+</head>
 <body><main class="app">
 <header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="profile.html" aria-label="Me: profile and activity">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
 <h1>Brew guide</h1>
@@ -63,75 +359,488 @@ ol.steps{margin:6px 0 4px;padding-left:22px}ol.steps li{margin:7px 0;line-height
 <div id="run" role="dialog" aria-label="Brew with steps"></div>
 <script src="brewkb.js"></script><script src="howto.js"></script>
 <script>
-const K=window.KK_BREW,$=s=>document.querySelector(s);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const LV=[[1,'Basic','The essentials. Enough to brew well.'],[2,'Intermediate','Adds why it works and what studies found.'],[3,'Advanced','Adds measuring, edge cases and pro techniques.']];
-let level=1;try{level=+localStorage.getItem('kk_brew_level')||1}catch(e){}
-function src(k){const s=K.S[k];if(!s||k==='P')return '<span class="src">Common practice</span>';return '<span class="src">'+(s.u?'<a href="'+s.u+'" target="_blank" rel="noopener">'+esc(s.t)+'</a>':esc(s.t))+'</span>'}
-const HT=window.KK_HOWTO||{S:{},H:{},PRO:[]};
-function srcH(k){const s=HT.S[k];if(!s||k==='P')return '<span class="src">Common practice</span>';return '<span class="src">'+(s.u?'<a href="'+s.u+'" target="_blank" rel="noopener">'+esc(s.t)+'</a>':esc(s.t))+'</span>'}
-const mmss=t=>Math.floor(t/60)+':'+String(t%60).padStart(2,'0');
-const lvTag=l=>l>1?'<span class="lv lv'+l+'">'+(l===2?'Intermediate':'Advanced')+'</span>':'';
-const howText=id=>{const h=HT.H[id];return h?[h.need,...h.steps.map(x=>x[3]),...h.watch.map(x=>x[1]),...h.care.map(x=>x[1])].join(' '):''};
-function howHtml(x,q){const h=HT.H[x.id];if(!h)return '';const pick=a=>a.filter(z=>z[0]<=level||(q&&String(z[z.length-2]).toLowerCase().includes(q)));
- const st=h.steps.filter(z=>z[0]<=level||(q&&z[3].toLowerCase().includes(q)));const timed=h.steps.filter(z=>z[1]!=null&&z[0]<=level);
- let last=null;const li=([l,t,w,tx,sr],i,arr)=>{const nx=arr[i+1];const show=!nx||nx[4]!==sr;return '<li>'+(t!=null?'<span class="tm">'+mmss(t)+'</span>':'')+lvTag(l)+hl(tx,q)+(show?srcH(sr):'')+'</li>'};
- const tips=(a,lab)=>{const r=pick(a);return r.length?'<div class="sub2">'+lab+'</div>'+r.map(([l,t,sr])=>'<div class="tip">'+lvTag(l)+hl(t,q)+srcH(sr)+'</div>').join(''):''};
- return '<div class="how" id="h-'+x.id+'"><h4>How to brew</h4><div class="kv"><b>You need:</b> '+hl(h.need,q)+'</div><ol class="steps">'+st.map(li).join('')+'</ol>'+tips(h.watch,'Watch for')+tips(h.care,'Care')+(timed.length>1?'<button type="button" class="runbtn" data-run="'+x.id+'">▶ Brew with steps</button>':'')+'</div>'}
-function protoHtml(p,q){const ts=p.steps.filter(z=>z[0]<=level||(q&&z[1].toLowerCase().includes(q)));return '<details class="card" id="p-'+p.id+'"><summary><span>'+hl(p.n,q)+'</span><small>'+ts.length+' steps</small></summary><div class="bd"><div class="kv" style="margin-bottom:4px">'+hl(p.d,q)+'</div><ol class="steps">'+ts.map(([l,t,sr],i)=>'<li>'+lvTag(l)+hl(t,q)+((!ts[i+1]||ts[i+1][2]!==sr)?srcH(sr):'')+'</li>').join('')+'</ol></div></details>'}
-function tipHtml([l,t,s],q){return '<div class="tip">'+(l>1?'<span class="lv lv'+l+'">'+(l===2?'Intermediate':'Advanced')+'</span>':'')+hl(t,q)+src(s)+'</div>'}
-function hl(t,q){const e=esc(t);if(!q)return e;const i=e.toLowerCase().indexOf(q);return i<0?e:e.slice(0,i)+'<mark>'+e.slice(i,i+q.length)+'</mark>'+e.slice(i+q.length)}
-function tipsFor(arr,q){if(q){const m=arr.filter(x=>x[1].toLowerCase().includes(q));if(m.length)return m}return arr.filter(x=>x[0]<=level)}
-const famName={drip:'Drip and filter',esp:'Espresso',moka:'Moka pot',trad:'Traditional',cold:'Cold'};
-function render(){const q=$('#q').value.trim().toLowerCase(),open=new Set([...document.querySelectorAll('#out details[open]')].map(d=>d.id));let h='';
- const m=x=>!q||x.toLowerCase().includes(q);
- // families
- const fams=Object.entries(K.FAM).filter(([k,f])=>m(f.n+' '+f.d+' '+f.levers+' '+f.tips.map(t=>t[1]).join(' ')));
- if(!q)h+='<h2>Start here</h2><div class="fam">'+Object.entries(K.FAM).map(([k,f])=>'<a href="#f-'+k+'"><b>'+esc(f.n)+'</b><span>'+esc(f.levers)+'</span></a>').join('')+'<a href="#protocols"><b>Protocols</b><span>Standard cup, measuring, dial-in, freshness, cold brew, roast to cup.</span></a></div>';
- if(fams.length){h+='<h2>Families</h2>'+fams.map(([k,f])=>{const ts=tipsFor(f.tips,q);return '<details class="card" id="f-'+k+'"><summary><span>'+esc(f.n)+'</span><small>'+K.METHODS.filter(x=>x.f===k).length+' brewers</small></summary><div class="bd"><div>'+hl(f.d,q)+'</div><div class="kv" style="margin:6px 0"><b>Main levers:</b> '+hl(f.levers,q)+'</div>'+ts.map(t=>tipHtml(t,q)).join('')+'<div class="kv" style="margin-top:6px">Brewers: '+K.METHODS.filter(x=>x.f===k&&x.id!=='other').map(x=>'<a class="in" href="#m-'+x.id+'">'+esc(x.n)+'</a>').join(', ')+'</div></div></details>'}).join('')}
- // methods
- const ms=K.METHODS.filter(x=>x.id!=='other'&&m(x.n+' '+x.start+' '+x.fl+' '+famName[x.f]+' '+x.notes.map(t=>t[1]).join(' ')+' '+howText(x.id)));
- if(ms.length){h+='<h2>Brewers</h2>'+ms.map(x=>{const f=K.FAM[x.f];const own=tipsFor(x.notes,q);const fam=tipsFor(f.tips,q).filter(t=>t[0]===1||level>=t[0]);
-  return '<details class="card" id="m-'+x.id+'"><summary><span>'+hl(x.n,q)+'</span><small>'+esc(famName[x.f])+(HT.H[x.id]?' · step by step':'')+'</small></summary><div class="bd"><div class="kv"><b>Common start:</b> '+hl(x.start,q)+'</div><div class="kv"><b>Filter:</b> '+esc(x.fl)+' · <b>Levers:</b> '+esc(f.levers)+'</div>'+howHtml(x,q)+(own.length?'<div style="margin-top:6px">'+own.map(t=>tipHtml(t,q)).join('')+'</div>':'')+'<details style="margin-top:6px"><summary class="kv" style="cursor:pointer">'+esc(f.n)+' tips ('+fam.length+')</summary>'+fam.map(t=>tipHtml(t,q)).join('')+'</details><div class="kv" style="margin-top:8px"><a class="in" href="cup.html#edit/brew/new" data-pre="'+esc(x.n)+'">Log a brew with this</a></div></div></details>'}).join('')}
- // protocols
- const ps=HT.PRO.filter(p=>m(p.n+' '+p.d+' '+p.steps.map(z=>z[1]).join(' ')));
- if(ps.length)h+='<h2 id="protocols">Protocols</h2><div class="kv" style="margin:-2px 0 6px">Repeatable ways of working, so results compare across days and people.</div>'+ps.map(p=>protoHtml(p,q)).join('');
- // topics
- const ts=K.TOPICS.filter(x=>m(x.n+' '+x.tips.map(t=>t[1]).join(' ')));
- if(ts.length)h+='<h2>Topics</h2>'+ts.map(x=>'<details class="card" id="t-'+x.id+'"><summary><span>'+hl(x.n,q)+'</span></summary><div class="bd">'+tipsFor(x.tips,q).map(t=>tipHtml(t,q)).join('')+(x.id==='water'?'<div class="kv"><a class="in" href="water.html">Open the Water page</a></div>':'')+'</div></details>').join('');
- // words
- const ws=K.WORDS.filter(([,w,d])=>m(w+' '+d));
- if(ws.length)h+='<h2>Words</h2><div class="card bd">'+ws.map(([id,w,d])=>'<div class="tip" id="w-'+id+'"><b>'+hl(w,q)+'</b>: '+hl(d,q)+'</div>').join('')+'</div>';
- if(!h)h='<div class="empty">Nothing found for “'+esc(q)+'”. Try a brewer name or a taste, like sour.</div>';
- $('#out').innerHTML=h;
- document.querySelectorAll('#out details.card').forEach(d=>{if(open.has(d.id)||(q&&q.length>1&&document.querySelectorAll('#out details.card').length<=4))d.open=true});
- if(q&&q.length>1)document.querySelectorAll('#out details.card').forEach(d=>{if(d.querySelector('mark'))d.open=true});
+const K = window.KK_BREW,
+  $ = s => document.querySelector(s);
+const LV = [
+  [1, 'Basic', 'The essentials. Enough to brew well.'],
+  [2, 'Intermediate', 'Adds why it works and what studies found.'],
+  [3, 'Advanced', 'Adds measuring, edge cases and pro techniques.'],
+];
+let level = 1;
+try {
+  level = +localStorage.getItem('kk_brew_level') || 1;
+} catch (e) {}
+function src(k) {
+  const s = K.S[k];
+  if (!s || k === 'P') return '<span class="src">Common practice</span>';
+  return (
+    '<span class="src">' +
+    (s.u ? '<a href="' + s.u + '" target="_blank" rel="noopener">' + esc(s.t) + '</a>' : esc(s.t)) +
+    '</span>'
+  );
 }
-function renderLvl(){$('#lvl').innerHTML=LV.map(([n,l])=>'<button type="button" class="chip'+(n===level?' on':'')+'" data-l="'+n+'">'+l+'</button>').join('');$('#lvlNote').textContent=LV[level-1][2];
- document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{level=+b.dataset.l;try{localStorage.setItem('kk_brew_level',level)}catch(e){}renderLvl();render()})}
-function go(){const h=decodeURIComponent(location.hash.slice(1));if(!h)return;if(h.startsWith('q=')){$('#q').value=h.slice(2);render();return}
- if($('#q').value){$('#q').value='';render()}const el=document.getElementById(h);if(!el)return;if(el.tagName==='DETAILS')el.open=true;let p=el.parentElement;while(p){if(p.tagName==='DETAILS')p.open=true;p=p.parentElement}setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),30)}
-$('#srcs').innerHTML=[...Object.entries(K.S),...Object.entries(HT.S)].filter(([k,v],i,arr)=>k!=='P'&&v.u&&arr.findIndex(z=>z[1].u===v.u)===i).map(([k,s])=>'<div class="tip"><a class="in" href="'+s.u+'" target="_blank" rel="noopener">'+esc(s.t)+'</a></div>').join('')+'<div class="tip kv">Starting recipes and unlabelled tips are common practice, summarised by KoffyKraft. Study findings are in our own words.</div>';
-document.addEventListener('click',e=>{const a=e.target.closest('[data-pre]');if(a){try{sessionStorage.setItem('kk_brew_prefill',JSON.stringify({method:a.dataset.pre}))}catch(x){}}});
-let qt;$('#q').addEventListener('input',()=>{clearTimeout(qt);qt=setTimeout(render,120)});
+const HT = window.KK_HOWTO || { S: {}, H: {}, PRO: [] };
+function srcH(k) {
+  const s = HT.S[k];
+  if (!s || k === 'P') return '<span class="src">Common practice</span>';
+  return (
+    '<span class="src">' +
+    (s.u ? '<a href="' + s.u + '" target="_blank" rel="noopener">' + esc(s.t) + '</a>' : esc(s.t)) +
+    '</span>'
+  );
+}
+const mmss = t => Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+const lvTag = l =>
+  l > 1 ? '<span class="lv lv' + l + '">' + (l === 2 ? 'Intermediate' : 'Advanced') + '</span>' : '';
+const howText = id => {
+  const h = HT.H[id];
+  return h
+    ? [h.need, ...h.steps.map(x => x[3]), ...h.watch.map(x => x[1]), ...h.care.map(x => x[1])].join(' ')
+    : '';
+};
+function howHtml(x, q) {
+  const h = HT.H[x.id];
+  if (!h) return '';
+  const pick = a =>
+    a.filter(
+      z =>
+        z[0] <= level ||
+        (q &&
+          String(z[z.length - 2])
+            .toLowerCase()
+            .includes(q))
+    );
+  const st = h.steps.filter(z => z[0] <= level || (q && z[3].toLowerCase().includes(q)));
+  const timed = h.steps.filter(z => z[1] != null && z[0] <= level);
+  let last = null;
+  const li = ([l, t, w, tx, sr], i, arr) => {
+    const nx = arr[i + 1];
+    const show = !nx || nx[4] !== sr;
+    return (
+      '<li>' +
+      (t != null ? '<span class="tm">' + mmss(t) + '</span>' : '') +
+      lvTag(l) +
+      hl(tx, q) +
+      (show ? srcH(sr) : '') +
+      '</li>'
+    );
+  };
+  const tips = (a, lab) => {
+    const r = pick(a);
+    return r.length
+      ? '<div class="sub2">' +
+          lab +
+          '</div>' +
+          r.map(([l, t, sr]) => '<div class="tip">' + lvTag(l) + hl(t, q) + srcH(sr) + '</div>').join('')
+      : '';
+  };
+  return (
+    '<div class="how" id="h-' +
+    x.id +
+    '"><h4>How to brew</h4><div class="kv"><b>You need:</b> ' +
+    hl(h.need, q) +
+    '</div><ol class="steps">' +
+    st.map(li).join('') +
+    '</ol>' +
+    tips(h.watch, 'Watch for') +
+    tips(h.care, 'Care') +
+    (timed.length > 1
+      ? '<button type="button" class="runbtn" data-run="' + x.id + '">▶ Brew with steps</button>'
+      : '') +
+    '</div>'
+  );
+}
+function protoHtml(p, q) {
+  const ts = p.steps.filter(z => z[0] <= level || (q && z[1].toLowerCase().includes(q)));
+  return (
+    '<details class="card" id="p-' +
+    p.id +
+    '"><summary><span>' +
+    hl(p.n, q) +
+    '</span><small>' +
+    ts.length +
+    ' steps</small></summary><div class="bd"><div class="kv" style="margin-bottom:4px">' +
+    hl(p.d, q) +
+    '</div><ol class="steps">' +
+    ts
+      .map(
+        ([l, t, sr], i) =>
+          '<li>' + lvTag(l) + hl(t, q) + (!ts[i + 1] || ts[i + 1][2] !== sr ? srcH(sr) : '') + '</li>'
+      )
+      .join('') +
+    '</ol></div></details>'
+  );
+}
+function tipHtml([l, t, s], q) {
+  return (
+    '<div class="tip">' +
+    (l > 1 ? '<span class="lv lv' + l + '">' + (l === 2 ? 'Intermediate' : 'Advanced') + '</span>' : '') +
+    hl(t, q) +
+    src(s) +
+    '</div>'
+  );
+}
+function hl(t, q) {
+  const e = esc(t);
+  if (!q) return e;
+  const i = e.toLowerCase().indexOf(q);
+  return i < 0 ? e : e.slice(0, i) + '<mark>' + e.slice(i, i + q.length) + '</mark>' + e.slice(i + q.length);
+}
+function tipsFor(arr, q) {
+  if (q) {
+    const m = arr.filter(x => x[1].toLowerCase().includes(q));
+    if (m.length) return m;
+  }
+  return arr.filter(x => x[0] <= level);
+}
+const famName = {
+  drip: 'Drip and filter',
+  esp: 'Espresso',
+  moka: 'Moka pot',
+  trad: 'Traditional',
+  cold: 'Cold',
+};
+function render() {
+  const q = $('#q').value.trim().toLowerCase(),
+    open = new Set([...document.querySelectorAll('#out details[open]')].map(d => d.id));
+  let h = '';
+  const m = x => !q || x.toLowerCase().includes(q);
+  // families
+  const fams = Object.entries(K.FAM).filter(([k, f]) =>
+    m(f.n + ' ' + f.d + ' ' + f.levers + ' ' + f.tips.map(t => t[1]).join(' '))
+  );
+  if (!q)
+    h +=
+      '<h2>Start here</h2><div class="fam">' +
+      Object.entries(K.FAM)
+        .map(
+          ([k, f]) => '<a href="#f-' + k + '"><b>' + esc(f.n) + '</b><span>' + esc(f.levers) + '</span></a>'
+        )
+        .join('') +
+      '<a href="#protocols"><b>Protocols</b><span>Standard cup, measuring, dial-in, freshness, cold brew, roast to cup.</span></a></div>';
+  if (fams.length) {
+    h +=
+      '<h2>Families</h2>' +
+      fams
+        .map(([k, f]) => {
+          const ts = tipsFor(f.tips, q);
+          return (
+            '<details class="card" id="f-' +
+            k +
+            '"><summary><span>' +
+            esc(f.n) +
+            '</span><small>' +
+            K.METHODS.filter(x => x.f === k).length +
+            ' brewers</small></summary><div class="bd"><div>' +
+            hl(f.d, q) +
+            '</div><div class="kv" style="margin:6px 0"><b>Main levers:</b> ' +
+            hl(f.levers, q) +
+            '</div>' +
+            ts.map(t => tipHtml(t, q)).join('') +
+            '<div class="kv" style="margin-top:6px">Brewers: ' +
+            K.METHODS.filter(x => x.f === k && x.id !== 'other')
+              .map(x => '<a class="in" href="#m-' + x.id + '">' + esc(x.n) + '</a>')
+              .join(', ') +
+            '</div></div></details>'
+          );
+        })
+        .join('');
+  }
+  // methods
+  const ms = K.METHODS.filter(
+    x =>
+      x.id !== 'other' &&
+      m(
+        x.n +
+          ' ' +
+          x.start +
+          ' ' +
+          x.fl +
+          ' ' +
+          famName[x.f] +
+          ' ' +
+          x.notes.map(t => t[1]).join(' ') +
+          ' ' +
+          howText(x.id)
+      )
+  );
+  if (ms.length) {
+    h +=
+      '<h2>Brewers</h2>' +
+      ms
+        .map(x => {
+          const f = K.FAM[x.f];
+          const own = tipsFor(x.notes, q);
+          const fam = tipsFor(f.tips, q).filter(t => t[0] === 1 || level >= t[0]);
+          return (
+            '<details class="card" id="m-' +
+            x.id +
+            '"><summary><span>' +
+            hl(x.n, q) +
+            '</span><small>' +
+            esc(famName[x.f]) +
+            (HT.H[x.id] ? ' · step by step' : '') +
+            '</small></summary><div class="bd"><div class="kv"><b>Common start:</b> ' +
+            hl(x.start, q) +
+            '</div><div class="kv"><b>Filter:</b> ' +
+            esc(x.fl) +
+            ' · <b>Levers:</b> ' +
+            esc(f.levers) +
+            '</div>' +
+            howHtml(x, q) +
+            (own.length
+              ? '<div style="margin-top:6px">' + own.map(t => tipHtml(t, q)).join('') + '</div>'
+              : '') +
+            '<details style="margin-top:6px"><summary class="kv" style="cursor:pointer">' +
+            esc(f.n) +
+            ' tips (' +
+            fam.length +
+            ')</summary>' +
+            fam.map(t => tipHtml(t, q)).join('') +
+            '</details><div class="kv" style="margin-top:8px"><a class="in" href="cup.html#edit/brew/new" data-pre="' +
+            esc(x.n) +
+            '">Log a brew with this</a></div></div></details>'
+          );
+        })
+        .join('');
+  }
+  // protocols
+  const ps = HT.PRO.filter(p => m(p.n + ' ' + p.d + ' ' + p.steps.map(z => z[1]).join(' ')));
+  if (ps.length)
+    h +=
+      '<h2 id="protocols">Protocols</h2><div class="kv" style="margin:-2px 0 6px">Repeatable ways of working, so results compare across days and people.</div>' +
+      ps.map(p => protoHtml(p, q)).join('');
+  // topics
+  const ts = K.TOPICS.filter(x => m(x.n + ' ' + x.tips.map(t => t[1]).join(' ')));
+  if (ts.length)
+    h +=
+      '<h2>Topics</h2>' +
+      ts
+        .map(
+          x =>
+            '<details class="card" id="t-' +
+            x.id +
+            '"><summary><span>' +
+            hl(x.n, q) +
+            '</span></summary><div class="bd">' +
+            tipsFor(x.tips, q)
+              .map(t => tipHtml(t, q))
+              .join('') +
+            (x.id === 'water'
+              ? '<div class="kv"><a class="in" href="water.html">Open the Water page</a></div>'
+              : '') +
+            '</div></details>'
+        )
+        .join('');
+  // words
+  const ws = K.WORDS.filter(([, w, d]) => m(w + ' ' + d));
+  if (ws.length)
+    h +=
+      '<h2>Words</h2><div class="card bd">' +
+      ws
+        .map(
+          ([id, w, d]) => '<div class="tip" id="w-' + id + '"><b>' + hl(w, q) + '</b>: ' + hl(d, q) + '</div>'
+        )
+        .join('') +
+      '</div>';
+  if (!h)
+    h =
+      '<div class="empty">Nothing found for “' + esc(q) + '”. Try a brewer name or a taste, like sour.</div>';
+  $('#out').innerHTML = h;
+  document.querySelectorAll('#out details.card').forEach(d => {
+    if (open.has(d.id) || (q && q.length > 1 && document.querySelectorAll('#out details.card').length <= 4))
+      d.open = true;
+  });
+  if (q && q.length > 1)
+    document.querySelectorAll('#out details.card').forEach(d => {
+      if (d.querySelector('mark')) d.open = true;
+    });
+}
+function renderLvl() {
+  $('#lvl').innerHTML = LV.map(
+    ([n, l]) =>
+      '<button type="button" class="chip' +
+      (n === level ? ' on' : '') +
+      '" data-l="' +
+      n +
+      '">' +
+      l +
+      '</button>'
+  ).join('');
+  $('#lvlNote').textContent = LV[level - 1][2];
+  document.querySelectorAll('[data-l]').forEach(
+    b =>
+      (b.onclick = () => {
+        level = +b.dataset.l;
+        try {
+          localStorage.setItem('kk_brew_level', level);
+        } catch (e) {}
+        renderLvl();
+        render();
+      })
+  );
+}
+function go() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  if (!h) return;
+  if (h.startsWith('q=')) {
+    $('#q').value = h.slice(2);
+    render();
+    return;
+  }
+  if ($('#q').value) {
+    $('#q').value = '';
+    render();
+  }
+  const el = document.getElementById(h);
+  if (!el) return;
+  if (el.tagName === 'DETAILS') el.open = true;
+  let p = el.parentElement;
+  while (p) {
+    if (p.tagName === 'DETAILS') p.open = true;
+    p = p.parentElement;
+  }
+  setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30);
+}
+$('#srcs').innerHTML =
+  [...Object.entries(K.S), ...Object.entries(HT.S)]
+    .filter(([k, v], i, arr) => k !== 'P' && v.u && arr.findIndex(z => z[1].u === v.u) === i)
+    .map(
+      ([k, s]) =>
+        '<div class="tip"><a class="in" href="' +
+        s.u +
+        '" target="_blank" rel="noopener">' +
+        esc(s.t) +
+        '</a></div>'
+    )
+    .join('') +
+  '<div class="tip kv">Starting recipes and unlabelled tips are common practice, summarised by KoffyKraft. Study findings are in our own words.</div>';
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-pre]');
+  if (a) {
+    try {
+      sessionStorage.setItem('kk_brew_prefill', JSON.stringify({ method: a.dataset.pre }));
+    } catch (x) {}
+  }
+});
+let qt;
+$('#q').addEventListener('input', () => {
+  clearTimeout(qt);
+  qt = setTimeout(render, 120);
+});
 // Brew with steps: a timer that walks through the timed steps, with a buzz and a beep at each one.
-const RUN={};
-function beep(){try{const c=RUN.ac||(RUN.ac=new (window.AudioContext||window.webkitAudioContext)());const o=c.createOscillator(),g=c.createGain();o.frequency.value=880;g.gain.value=.12;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.18)}catch(e){}try{navigator.vibrate&&navigator.vibrate(220)}catch(e){}}
-function openRun(id){const h=HT.H[id],x=K.METHODS.find(m=>m.id===id);RUN.id=id;RUN.steps=h.steps.filter(z=>z[1]!=null&&z[0]<=level).sort((a,b)=>a[1]-b[1]);RUN.t0=null;RUN.el=0;RUN.cur=-1;RUN.name=x?x.n:id;
- const prep=h.steps.filter(z=>z[1]==null&&z[0]===1).slice(0,4);
- $('#run').innerHTML='<h3>'+esc(RUN.name)+' · brew with steps</h3><div class="clk" id="rClk">0:00</div><div class="bar"><i id="rBar"></i></div><div class="now" id="rNow"><small>Before you start</small>'+prep.map(z=>esc(z[3])).join('<br><br>')+'</div><div class="nxt" id="rNxt"><b>First:</b> '+esc(RUN.steps[0][3])+'</div><div class="rb"><button type="button" id="rClose">Close</button><button type="button" id="rReset">Reset</button><button type="button" class="go" id="rGo">Start</button></div>';
- $('#run').classList.add('on');document.body.style.overflow='hidden';
- $('#rGo').onclick=()=>{if(RUN.tick){pause()}else{start()}};$('#rReset').onclick=()=>{pause();RUN.el=0;RUN.cur=-1;draw()};$('#rClose').onclick=closeRun;draw()}
-async function start(){try{if(!RUN.lock&&navigator.wakeLock)RUN.lock=await navigator.wakeLock.request('screen')}catch(e){}RUN.t0=Date.now()-RUN.el*1000;RUN.tick=setInterval(()=>{RUN.el=Math.floor((Date.now()-RUN.t0)/1000);draw()},250);$('#rGo').textContent='Pause';draw()}
-function pause(){clearInterval(RUN.tick);RUN.tick=null;if($('#rGo'))$('#rGo').textContent='Start'}
-function closeRun(){pause();try{RUN.lock&&RUN.lock.release()}catch(e){}RUN.lock=null;$('#run').classList.remove('on');document.body.style.overflow=''}
-function draw(){const st=RUN.steps,e=RUN.el;let i=-1;st.forEach((z,k)=>{if(e>=z[1])i=k});
- if(RUN.tick&&i!==RUN.cur){RUN.cur=i;if(i>=0)beep()}
- $('#rClk').textContent=mmss(e);const end=st[st.length-1][1]||1;$('#rBar').style.width=Math.min(100,e/end*100)+'%';
- if(i>=0||RUN.tick){const z=st[Math.max(0,i)];$('#rNow').innerHTML='<small>Now'+(z[2]?' · total '+z[2]+' g':'')+'</small>'+esc(z[3])}
- const n=st[i+1];$('#rNxt').innerHTML=n?'<b>Next at '+mmss(n[1])+' (in '+mmss(Math.max(0,n[1]-e))+'):</b> '+esc(n[3]):(i>=0?'<b>Last step.</b> Log the brew when you are done.':'')}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-run]');if(b)openRun(b.dataset.run)});
-renderLvl();render();go();window.addEventListener('hashchange',go);
+const RUN = {};
+function beep() {
+  try {
+    const c = RUN.ac || (RUN.ac = new (window.AudioContext || window.webkitAudioContext)());
+    const o = c.createOscillator(),
+      g = c.createGain();
+    o.frequency.value = 880;
+    g.gain.value = 0.12;
+    o.connect(g);
+    g.connect(c.destination);
+    o.start();
+    o.stop(c.currentTime + 0.18);
+  } catch (e) {}
+  try {
+    navigator.vibrate && navigator.vibrate(220);
+  } catch (e) {}
+}
+function openRun(id) {
+  const h = HT.H[id],
+    x = K.METHODS.find(m => m.id === id);
+  RUN.id = id;
+  RUN.steps = h.steps.filter(z => z[1] != null && z[0] <= level).sort((a, b) => a[1] - b[1]);
+  RUN.t0 = null;
+  RUN.el = 0;
+  RUN.cur = -1;
+  RUN.name = x ? x.n : id;
+  const prep = h.steps.filter(z => z[1] == null && z[0] === 1).slice(0, 4);
+  $('#run').innerHTML =
+    '<h3>' +
+    esc(RUN.name) +
+    ' · brew with steps</h3><div class="clk" id="rClk">0:00</div><div class="bar"><i id="rBar"></i></div><div class="now" id="rNow"><small>Before you start</small>' +
+    prep.map(z => esc(z[3])).join('<br><br>') +
+    '</div><div class="nxt" id="rNxt"><b>First:</b> ' +
+    esc(RUN.steps[0][3]) +
+    '</div><div class="rb"><button type="button" id="rClose">Close</button><button type="button" id="rReset">Reset</button><button type="button" class="go" id="rGo">Start</button></div>';
+  $('#run').classList.add('on');
+  document.body.style.overflow = 'hidden';
+  $('#rGo').onclick = () => {
+    if (RUN.tick) {
+      pause();
+    } else {
+      start();
+    }
+  };
+  $('#rReset').onclick = () => {
+    pause();
+    RUN.el = 0;
+    RUN.cur = -1;
+    draw();
+  };
+  $('#rClose').onclick = closeRun;
+  draw();
+}
+async function start() {
+  try {
+    if (!RUN.lock && navigator.wakeLock) RUN.lock = await navigator.wakeLock.request('screen');
+  } catch (e) {}
+  RUN.t0 = Date.now() - RUN.el * 1000;
+  RUN.tick = setInterval(() => {
+    RUN.el = Math.floor((Date.now() - RUN.t0) / 1000);
+    draw();
+  }, 250);
+  $('#rGo').textContent = 'Pause';
+  draw();
+}
+function pause() {
+  clearInterval(RUN.tick);
+  RUN.tick = null;
+  if ($('#rGo')) $('#rGo').textContent = 'Start';
+}
+function closeRun() {
+  pause();
+  try {
+    RUN.lock && RUN.lock.release();
+  } catch (e) {}
+  RUN.lock = null;
+  $('#run').classList.remove('on');
+  document.body.style.overflow = '';
+}
+function draw() {
+  const st = RUN.steps,
+    e = RUN.el;
+  let i = -1;
+  st.forEach((z, k) => {
+    if (e >= z[1]) i = k;
+  });
+  if (RUN.tick && i !== RUN.cur) {
+    RUN.cur = i;
+    if (i >= 0) beep();
+  }
+  $('#rClk').textContent = mmss(e);
+  const end = st[st.length - 1][1] || 1;
+  $('#rBar').style.width = Math.min(100, (e / end) * 100) + '%';
+  if (i >= 0 || RUN.tick) {
+    const z = st[Math.max(0, i)];
+    $('#rNow').innerHTML = '<small>Now' + (z[2] ? ' · total ' + z[2] + ' g' : '') + '</small>' + esc(z[3]);
+  }
+  const n = st[i + 1];
+  $('#rNxt').innerHTML = n
+    ? '<b>Next at ' + mmss(n[1]) + ' (in ' + mmss(Math.max(0, n[1] - e)) + '):</b> ' + esc(n[3])
+    : i >= 0
+      ? '<b>Last step.</b> Log the brew when you are done.'
+      : '';
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-run]');
+  if (b) openRun(b.dataset.run);
+});
+renderLvl();
+render();
+go();
+window.addEventListener('hashchange', go);
 </script>
 </body>
 </html>

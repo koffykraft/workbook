@@ -35,7 +35,7 @@ export async function run(root, t) {
   await ctx.route(/cdnjs|tile|arcgis|openstreetmap|googleapis/, r => r.abort());
   try {
     // 1. every main page opens cleanly
-    const pages = ['home', 'origin', 'cup', 'roasts', 'roast-timer-v14', 'roast-graph', 'account', 'contents', 'journey', 'methods', 'crop', 'water', 'map', 'share', 'profile', 'trace', 'data', 'roastbooks', 'license', 'privacy', 'terms'];
+    const pages = ['home', 'origin', 'cup', 'roasts', 'roast-timer-v14', 'roast-graph', 'account', 'contents', 'journey', 'methods', 'crop', 'water', 'map', 'share', 'profile', 'trace', 'data', 'roastbooks', 'license', 'privacy', 'terms', 'brew', 'capture', 'index', 'ocr', 'process-run', 'process', 'rehydration', 'roastbook', 'stats'];
     const p = await ctx.newPage();
     await p.route('**/api/**', r => r.fulfill({ status: 401, contentType: 'application/json', body: '{"error":"authentication required"}' }));
     for (const f of pages) {

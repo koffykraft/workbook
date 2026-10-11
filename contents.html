@@ -8,25 +8,143 @@
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>KoffyKraft Contents</title>
 <style>
-:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b}
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;color:var(--ink);background:var(--bg)}
-.app{max-width:680px;margin:auto;padding:24px 16px 60px}
-h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 4px}.sub{color:var(--muted);font-size:13px;margin-bottom:12px;line-height:1.5}.sub a{color:var(--coffee)}
-h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:22px 0 4px}
-.gd{font-size:13px;color:var(--muted);margin:0 0 6px}
-details.it{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin:6px 0}
-details.it>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
-details.it>summary::-webkit-details-marker{display:none}details.it>summary::after{content:'+';color:var(--muted)}details.it[open]>summary::after{content:'−'}
-summary b{font-size:15px}summary span{display:block;font-size:13px;color:var(--muted);font-weight:400;margin-top:2px;line-height:1.4}
-.more{font-size:14px;line-height:1.55;margin-top:8px}
-.go{display:inline-block;margin-top:8px;font-size:14px;border:1px solid var(--line);border-radius:999px;padding:7px 14px;color:var(--ink);text-decoration:none;background:#fff}
-.search{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0}
-.search input{font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;width:100%}
-.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin:8px 0}
-mark{background:#f5e3b5;border-radius:3px}
-.fbi{border-top:1px solid #f0ebe3;padding:8px 0;font-size:14px}.fbi small{color:var(--muted)}
+:root {
+  --bg: #f7f5f0;
+  --ink: #171512;
+  --muted: #77716a;
+  --line: #ddd8d0;
+  --coffee: #8d583b;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial;
+  color: var(--ink);
+  background: var(--bg);
+}
+.app {
+  max-width: 680px;
+  margin: auto;
+  padding: 24px 16px 60px;
+}
+h1 {
+  font-size: 32px;
+  letter-spacing: -0.04em;
+  margin: 6px 0 4px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.sub a {
+  color: var(--coffee);
+}
+h2 {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--coffee);
+  margin: 22px 0 4px;
+}
+.gd {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 6px;
+}
+details.it {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 11px 14px;
+  margin: 6px 0;
+}
+details.it > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+}
+details.it > summary::-webkit-details-marker {
+  display: none;
+}
+details.it > summary::after {
+  content: '+';
+  color: var(--muted);
+}
+details.it[open] > summary::after {
+  content: '−';
+}
+summary b {
+  font-size: 15px;
+}
+summary span {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 400;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+.more {
+  font-size: 14px;
+  line-height: 1.55;
+  margin-top: 8px;
+}
+.go {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 14px;
+  color: var(--ink);
+  text-decoration: none;
+  background: #fff;
+}
+.search {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding: 8px 0;
+}
+.search input {
+  font: inherit;
+  font-size: 16px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #fff;
+  width: 100%;
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  margin: 8px 0;
+}
+mark {
+  background: #f5e3b5;
+  border-radius: 3px;
+}
+.fbi {
+  border-top: 1px solid #f0ebe3;
+  padding: 8px 0;
+  font-size: 14px;
+}
+.fbi small {
+  color: var(--muted);
+}
 </style>
-<link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script><script src="i18n.js" defer></script></head>
+<link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script><script src="i18n.js" defer></script><script src="kk-base.js"></script>
+</head>
 <body><main class="app">
 <header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="profile.html" aria-label="Me: profile and activity">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
 <h1>Contents</h1>
@@ -38,14 +156,51 @@ mark{background:#f5e3b5;border-radius:3px}
 </main>
 <script src="contents.js"></script><script src="feedback.js"></script>
 <script>
-const $=s=>document.querySelector(s);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function hl(t,q){const e=esc(t);if(!q)return e;const i=e.toLowerCase().indexOf(q);return i<0?e:e.slice(0,i)+'<mark>'+e.slice(i,i+q.length)+'</mark>'+e.slice(i+q.length)}
-function render(){const q=$('#q').value.trim().toLowerCase();let h='';
- KK_CONTENTS.forEach(([id,n,d,items])=>{const its=items.filter(([a,b,c])=>!q||(a+' '+b+' '+c+' '+n).toLowerCase().includes(q));if(!its.length)return;
-  h+='<h2 id="g-'+id+'">'+esc(n)+'</h2><div class="gd">'+esc(d)+'</div>'+its.map(([a,b,c,u])=>'<details class="it"'+(q&&q.length>2?' open':'')+'><summary><b>'+hl(a,q)+'<span>'+hl(b,q)+'</span></b></summary>'+(c?'<div class="more">'+hl(c,q)+'</div>':'')+'<a class="go" href="'+u+'">Open</a></details>').join('')});
- $('#out').innerHTML=h||'<div class="sub">Nothing found. Tell us below what you were looking for.</div>'}
-$('#q').addEventListener('input',render);render();
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+const $ = s => document.querySelector(s);
+function hl(t, q) {
+  const e = esc(t);
+  if (!q) return e;
+  const i = e.toLowerCase().indexOf(q);
+  return i < 0 ? e : e.slice(0, i) + '<mark>' + e.slice(i, i + q.length) + '</mark>' + e.slice(i + q.length);
+}
+function render() {
+  const q = $('#q').value.trim().toLowerCase();
+  let h = '';
+  KK_CONTENTS.forEach(([id, n, d, items]) => {
+    const its = items.filter(
+      ([a, b, c]) => !q || (a + ' ' + b + ' ' + c + ' ' + n).toLowerCase().includes(q)
+    );
+    if (!its.length) return;
+    h +=
+      '<h2 id="g-' +
+      id +
+      '">' +
+      esc(n) +
+      '</h2><div class="gd">' +
+      esc(d) +
+      '</div>' +
+      its
+        .map(
+          ([a, b, c, u]) =>
+            '<details class="it"' +
+            (q && q.length > 2 ? ' open' : '') +
+            '><summary><b>' +
+            hl(a, q) +
+            '<span>' +
+            hl(b, q) +
+            '</span></b></summary>' +
+            (c ? '<div class="more">' + hl(c, q) + '</div>' : '') +
+            '<a class="go" href="' +
+            u +
+            '">Open</a></details>'
+        )
+        .join('');
+  });
+  $('#out').innerHTML = h || '<div class="sub">Nothing found. Tell us below what you were looking for.</div>';
+}
+$('#q').addEventListener('input', render);
+render();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 </script><script src="pv.js" defer></script>
 </body>
 </html>

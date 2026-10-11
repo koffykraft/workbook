@@ -1,82 +1,929 @@
 // KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
-import {tracePublic,traceApi,traceAnchor} from "./trace-api.js";
-const JSON_HEADERS={"content-type":"application/json; charset=utf-8","cache-control":"no-store"};
-const j=(v,s=200)=>new Response(JSON.stringify(v),{status:s,headers:JSON_HEADERS});
-function bearer(r){const h=r.headers.get("authorization")||"";return h.startsWith("Bearer ")?h.slice(7):""}
-async function digest(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
-async function user(r,e){const t=bearer(r);if(!t)return null;const h=await digest(t);return await e.DB.prepare("SELECT u.id,u.email,u.display_name FROM auth_sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>datetime('now')").bind(h).first()}
-function clientIp(r,e){const via=r.headers.get("x-kk-proxy");if(e.PROXY_SECRET&&via&&via===e.PROXY_SECRET){const c=r.headers.get("x-kk-client-ip");if(c)return c}return r.headers.get("cf-connecting-ip")||""}
-async function canReceiveMail(domain){try{const res=await fetch("https://cloudflare-dns.com/dns-query?name="+encodeURIComponent(domain)+"&type=MX",{headers:{accept:"application/dns-json"}});if(!res.ok)return true;const d=await res.json();if(d.Status===3)return false;const mx=(d.Answer||[]).filter(a=>a.type===15);if(!mx.length)return false;if(mx.length===1&&/^0\s+\.?$/.test(String(mx[0].data).trim()))return false;return true}catch{return true}}
-async function body(r){try{return await r.json()}catch{return {}}}
-function token(){const a=new Uint8Array(32);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,"0")).join("")}
-function emailConfigured(e){return Boolean(e.RESEND_API_KEY||(e.AUTH_EMAIL_ENDPOINT&&e.AUTH_EMAIL_SECRET))}
-async function sendEmail(e,to,subject,text){try{if(e.RESEND_API_KEY){const resp=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"authorization":"Bearer "+e.RESEND_API_KEY,"content-type":"application/json"},body:JSON.stringify({from:e.AUTH_EMAIL_FROM||"KoffyKraft <onboarding@resend.dev>",to:[to],subject,text})});if(!resp.ok)console.error("resend send failed",resp.status,await resp.text());return{ok:resp.ok}}const form=new URLSearchParams({to,from:e.AUTH_EMAIL_FROM||"KoffyKraft <mailgun@sandboxb97fe0c72adc4feea556292b5ff5f544.mailgun.org>",subject,text});const resp=await fetch(e.AUTH_EMAIL_ENDPOINT,{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded","authorization":"Basic "+btoa("api:"+e.AUTH_EMAIL_SECRET)},body:form.toString()});if(!resp.ok)console.error("mailgun send failed",resp.status,await resp.text());return{ok:resp.ok}}catch(err){console.error("email send error",err);return{ok:false}}}
-export default{async fetch(r,e,ctx){const u=new URL(r.url),p=u.pathname;
- if(p==="/"||p==="/index.html"){const a=new URL(r.url);a.pathname="/home.html";return e.ASSETS.fetch(new Request(a,r))}
- if(!p.startsWith("/api/"))return e.ASSETS.fetch(r);
- if(r.method==="GET"&&p==="/api/status"){let database=false;try{await e.DB.prepare("SELECT 1 AS ok").first();database=true}catch{}return j({ok:true,email_login:emailConfigured(e),email_provider:e.RESEND_API_KEY?"resend":(e.AUTH_EMAIL_SECRET?"mailgun":"none"),database})}
- if(r.method==="POST"&&p==="/api/auth/request"){const b=await body(r),email=String(b.email||"").trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(email))return j({error:"valid email required"},400);if(!emailConfigured(e))return j({error:"email delivery not configured"},503);if(!(await canReceiveMail(email.split("@").pop())))return j({error:"That email address cannot receive mail. Check the spelling."},400);const ip=clientIp(r,e),reqId=crypto.randomUUID();try{const lim=await e.DB.prepare("SELECT (SELECT COUNT(*) FROM auth_requests WHERE email=? AND created_at>datetime('now','-1 hour')) AS byEmail,(SELECT COUNT(*) FROM auth_requests WHERE ip=? AND ip<>'' AND created_at>datetime('now','-1 hour')) AS byIp").bind(email,ip).first();if(lim.byEmail>=5||lim.byIp>=20)return j({error:"Too many sign-in requests. Wait an hour and try again."},429);await e.DB.batch([e.DB.prepare("INSERT INTO auth_requests(id,email,ip) VALUES(?,?,?)").bind(reqId,email,ip),e.DB.prepare("DELETE FROM auth_requests WHERE created_at<datetime('now','-1 day')")])}catch(err){console.error("rate limit check failed",err)}const id=crypto.randomUUID(),code=String(100000+(crypto.getRandomValues(new Uint32Array(1))[0]%900000)),ch=await digest(code);let row=await e.DB.prepare("SELECT id FROM users WHERE email=? LIMIT 1").bind(email).first();if(!row)row={id};await e.DB.prepare("DELETE FROM auth_codes WHERE email=? OR expires_at<=datetime('now')").bind(email).run();await e.DB.prepare("INSERT INTO auth_codes(id,email,user_id,code_hash,expires_at) VALUES(?,?,?,?,datetime('now','+10 minutes'))").bind(crypto.randomUUID(),email,row.id,ch).run();const subject="KoffyKraft sign-in code: "+code,text="Your KoffyKraft sign-in code is "+code+". It expires in 10 minutes.\n\nIf you did not ask for this, you can ignore this email.";const sent=await sendEmail(e,email,subject,text);if(!sent.ok){try{await e.DB.prepare("DELETE FROM auth_requests WHERE id=?").bind(reqId).run()}catch{}return j({error:"email delivery failed"},502)}return j({ok:true})}
- if(r.method==="POST"&&p==="/api/auth/verify"){const b=await body(r),email=String(b.email||"").trim().toLowerCase(),ch=await digest(String(b.code||"").trim());const a=await e.DB.prepare("SELECT * FROM auth_codes WHERE email=? AND expires_at>datetime('now') ORDER BY created_at DESC LIMIT 1").bind(email).first();if(!a)return j({error:"invalid or expired code"},401);if((a.attempts||0)>=5){await e.DB.prepare("DELETE FROM auth_codes WHERE email=?").bind(email).run();return j({error:"Too many wrong codes. Ask for a new code."},429)}if(a.code_hash!==ch){await e.DB.prepare("UPDATE auth_codes SET attempts=attempts+1 WHERE id=?").bind(a.id).run();return j({error:"invalid or expired code"},401)}let u=await e.DB.prepare("SELECT id FROM users WHERE email=? LIMIT 1").bind(email).first();if(!u){u={id:a.user_id||crypto.randomUUID()};await e.DB.prepare("INSERT INTO users(id,email,created_at) VALUES(?,?,CURRENT_TIMESTAMP)").bind(u.id,email).run()}const t=token(),th=await digest(t);await e.DB.batch([e.DB.prepare("DELETE FROM auth_codes WHERE email=?").bind(email),e.DB.prepare("INSERT INTO auth_sessions(id,user_id,token_hash,expires_at) VALUES(?,?,?,datetime('now','+30 days'))").bind(crypto.randomUUID(),u.id,th)]);return j({token:t,user_id:u.id})}
- if(r.method==="POST"&&p==="/api/pv"){const b=await body(r);let path=String(b.p||"").toLowerCase().replace(/\.html$/,"");if(path===""||path==="/"||path==="/index")path="/roasts";if(!/^\/[a-z0-9-]{1,40}$/.test(path))return new Response(null,{status:204});try{await e.DB.prepare("INSERT INTO page_views(day,path,views,new_devices) VALUES(date('now','+330 minutes'),?,1,?) ON CONFLICT(day,path) DO UPDATE SET views=views+1,new_devices=new_devices+excluded.new_devices").bind(path,b.n?1:0).run()}catch{}return new Response(null,{status:204})}
- if(r.method==="POST"&&p==="/api/feedback"){const b=await body(r);const msg=String(b.message||"").trim().slice(0,4000);if(msg.length<3)return j({error:"message required"},400);const ip=await digest("fb:"+(r.headers.get("cf-connecting-ip")||""));const n=await e.DB.prepare("SELECT COUNT(*) AS n FROM feedback WHERE ip_hash=? AND created_at>?").bind(ip,new Date(Date.now()-36e5).toISOString()).first();if(n&&n.n>=6)return j({error:"Thank you. Please try again in an hour."},429);let uid=null,uem='';try{const m=await user(r,e);uid=m?m.id:null;uem=m?m.email:''}catch{}await e.DB.prepare("INSERT INTO feedback(id,created_at,page,kind,message,contact,user_id,ip_hash) VALUES(?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),new Date().toISOString(),String(b.page||"").slice(0,80),String(b.kind||"").slice(0,30),msg,String(b.contact||"").slice(0,200),uid,ip).run();const kind=String(b.kind||"Feedback").slice(0,30),page=String(b.page||"").slice(0,80),contact=String(b.contact||"").slice(0,200);const mail=sendEmail(e,e.FEEDBACK_TO||"info@koffykraft.coffee","KoffyKraft feedback: "+kind+(page?" ("+page+")":""),msg+"\n\n---\nKind: "+kind+"\nPage: "+(page||"-")+"\nContact: "+(contact||"not given")+"\nSigned in: "+(uem||"no")+"\nTime: "+new Date().toISOString()+"\n\nAll feedback: https://roast.koffykraft.coffee/account.html").catch(()=>{});if(ctx&&ctx.waitUntil)ctx.waitUntil(mail);else await mail;return j({ok:true})}
- {const H={j,body,sendEmail};const x=await tracePublic(r,e,p,H);if(x)return x}
- if(r.method==="GET"&&p.startsWith("/api/public/profile/")){const tok=p.split("/").pop();if(!/^[a-f0-9]{32}$/.test(tok))return j({error:"not found"},404);const pr=await e.DB.prepare("SELECT data_json,updated_at FROM profiles WHERE token=?").bind(tok).first();if(!pr)return j({error:"not found"},404);return j({data:JSON.parse(pr.data_json||"{}"),updated_at:pr.updated_at})}
- if(r.method==="GET"&&p.startsWith("/api/public/space/")){const tok=p.split("/").pop();if(!/^[a-f0-9]{32}$/.test(tok))return j({error:"not found"},404);const sp=await e.DB.prepare("SELECT * FROM spaces WHERE public_token=?").bind(tok).first();if(!sp)return j({error:"not found"},404);const [ent,com]=await Promise.all([e.DB.prepare("SELECT id,author_name,kind,title,data_json,created_at FROM space_entries WHERE space_id=? ORDER BY created_at DESC LIMIT 500").bind(sp.id).all(),e.DB.prepare("SELECT id,entry_id,author_name,text,created_at FROM space_comments WHERE space_id=? ORDER BY created_at LIMIT 3000").bind(sp.id).all()]);return j({space:{name:sp.name,about:sp.about,coffee:sp.coffee},role:"public",entries:(ent.results||[]).map(x=>({...x,data:JSON.parse(x.data_json||"{}"),data_json:undefined})),comments:ent.results?com.results||[]:[]})}
- const me=await user(r,e);if(!me)return j({error:"authentication required"},401);
- const isAdmin=String(e.ADMIN_EMAILS||"").toLowerCase().split(",").map(x=>x.trim()).filter(Boolean).includes(String(me.email||"").toLowerCase());
- {const x=await traceApi(r,e,p,me,{j,body,sendEmail},isAdmin,ctx);if(x)return x}
- // ---- send-out profile ----
- if(p==="/api/profile"){const now=new Date().toISOString();
-  if(r.method==="GET"){const pr=await e.DB.prepare("SELECT token,data_json,updated_at FROM profiles WHERE user_id=?").bind(me.id).first();return j(pr?{published:true,token:pr.token,updated_at:pr.updated_at,data:JSON.parse(pr.data_json||"{}")}:{published:false})}
-  if(r.method==="PUT"){const b=await body(r);const d=b&&b.data;if(!d||typeof d!=="object")return j({error:"data required"},400);if(d.logo&&!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(d.logo))return j({error:"logo must be a PNG, JPEG or WebP image"},400);const txt=JSON.stringify(d);if(txt.length>400000)return j({error:"profile too large; use a smaller logo or fewer items"},400);const ex=await e.DB.prepare("SELECT token FROM profiles WHERE user_id=?").bind(me.id).first();const tok=ex?ex.token:crypto.randomUUID().replace(/-/g,"");if(ex)await e.DB.prepare("UPDATE profiles SET data_json=?,updated_at=? WHERE user_id=?").bind(txt,now,me.id).run();else await e.DB.prepare("INSERT INTO profiles(user_id,token,data_json,created_at,updated_at) VALUES(?,?,?,?,?)").bind(me.id,tok,txt,now,now).run();return j({ok:true,token:tok,updated_at:now})}
-  if(r.method==="DELETE"){await e.DB.prepare("DELETE FROM profiles WHERE user_id=?").bind(me.id).run();return j({ok:true})}}
- // ---- shared spaces ----
- if(p.startsWith("/api/spaces")){const now=new Date().toISOString(),em=String(me.email||"").toLowerCase(),nm=me.display_name||em.split("@")[0]||"Member";
-  const getSp=async id=>await e.DB.prepare("SELECT * FROM spaces WHERE id=?").bind(id).first();
-  const role=async sp=>{if(!sp)return null;if(sp.owner_user_id===me.id)return "owner";const m=await e.DB.prepare("SELECT 1 AS x FROM space_members WHERE space_id=? AND email=?").bind(sp.id,em).first();return m?"member":null};
-  const KINDS=["brew","roast","cupping","process","green","note"];let mm;
-  if(r.method==="GET"&&p==="/api/spaces"){const q=await e.DB.prepare("SELECT s.id,s.name,s.coffee,s.about,s.owner_user_id,s.public_token IS NOT NULL AS public,s.updated_at,(SELECT COUNT(*) FROM space_entries x WHERE x.space_id=s.id) AS entries,(SELECT COUNT(*) FROM space_members y WHERE y.space_id=s.id) AS members FROM spaces s WHERE s.owner_user_id=? OR s.id IN (SELECT space_id FROM space_members WHERE email=?) ORDER BY s.updated_at DESC LIMIT 200").bind(me.id,em).all();return j({items:(q.results||[]).map(x=>({...x,mine:x.owner_user_id===me.id,owner_user_id:undefined}))})}
-  if(r.method==="POST"&&p==="/api/spaces"){const b=await body(r);const name=String(b.name||"").trim().slice(0,80);if(!name)return j({error:"name required"},400);const c=await e.DB.prepare("SELECT COUNT(*) AS n FROM spaces WHERE owner_user_id=?").bind(me.id).first();if(c.n>=50)return j({error:"limit of 50 spaces"},400);const id=crypto.randomUUID();await e.DB.prepare("INSERT INTO spaces(id,owner_user_id,name,about,coffee,created_at,updated_at) VALUES(?,?,?,?,?,?,?)").bind(id,me.id,name,String(b.about||"").slice(0,1000),String(b.coffee||"").slice(0,120),now,now).run();return j({id})}
-  if((mm=p.match(/^\/api\/spaces\/([\w-]+)$/))){const sp=await getSp(mm[1]),ro=await role(sp);if(!ro)return j({error:"not found"},404);
-   if(r.method==="GET"){const [mem,ent,com]=await Promise.all([e.DB.prepare("SELECT email,added_at FROM space_members WHERE space_id=? ORDER BY added_at").bind(sp.id).all(),e.DB.prepare("SELECT id,author_user_id,author_name,kind,title,data_json,created_at,updated_at FROM space_entries WHERE space_id=? ORDER BY created_at DESC LIMIT 500").bind(sp.id).all(),e.DB.prepare("SELECT id,entry_id,author_user_id,author_name,text,created_at FROM space_comments WHERE space_id=? ORDER BY created_at LIMIT 3000").bind(sp.id).all()]);
-    const own=await e.DB.prepare("SELECT display_name,email FROM users WHERE id=?").bind(sp.owner_user_id).first();
-    return j({space:{id:sp.id,name:sp.name,about:sp.about,coffee:sp.coffee,public_token:ro==="owner"?sp.public_token:(sp.public_token?true:null),owner:own?(own.display_name||String(own.email||"").split("@")[0]):""},role:ro,me:me.id,members:ro==="owner"?(mem.results||[]):(mem.results||[]).length,entries:(ent.results||[]).map(x=>({...x,data:JSON.parse(x.data_json||"{}"),data_json:undefined,mine:x.author_user_id===me.id,author_user_id:undefined})),comments:(com.results||[]).map(x=>({...x,mine:x.author_user_id===me.id,author_user_id:undefined}))})}
-   if(r.method==="PATCH"){if(ro!=="owner")return j({error:"owner only"},403);const b=await body(r);let tok=sp.public_token;if(b.public===true&&!tok)tok=crypto.randomUUID().replace(/-/g,"");if(b.public===false)tok=null;await e.DB.prepare("UPDATE spaces SET name=?,about=?,coffee=?,public_token=?,updated_at=? WHERE id=?").bind(String(b.name??sp.name).slice(0,80),String(b.about??sp.about??"").slice(0,1000),String(b.coffee??sp.coffee??"").slice(0,120),tok,now,sp.id).run();return j({ok:true,public_token:tok})}
-   if(r.method==="DELETE"){if(ro!=="owner")return j({error:"owner only"},403);await e.DB.batch([e.DB.prepare("DELETE FROM space_comments WHERE space_id=?").bind(sp.id),e.DB.prepare("DELETE FROM space_entries WHERE space_id=?").bind(sp.id),e.DB.prepare("DELETE FROM space_members WHERE space_id=?").bind(sp.id),e.DB.prepare("DELETE FROM spaces WHERE id=?").bind(sp.id)]);return j({ok:true})}}
-  if((mm=p.match(/^\/api\/spaces\/([\w-]+)\/members$/))&&r.method==="POST"){const sp=await getSp(mm[1]);if(!sp||sp.owner_user_id!==me.id)return j({error:"owner only"},403);const b=await body(r);const x=String(b.email||"").trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(x))return j({error:"valid email required"},400);const c=await e.DB.prepare("SELECT COUNT(*) AS n FROM space_members WHERE space_id=?").bind(sp.id).first();if(c.n>=100)return j({error:"limit of 100 members"},400);await e.DB.prepare("INSERT OR IGNORE INTO space_members(space_id,email,added_at) VALUES(?,?,?)").bind(sp.id,x,now).run();return j({ok:true})}
-  if((mm=p.match(/^\/api\/spaces\/([\w-]+)\/members\/(.+)$/))&&r.method==="DELETE"){const sp=await getSp(mm[1]);const x=decodeURIComponent(mm[2]).toLowerCase();if(!sp||(sp.owner_user_id!==me.id&&x!==em))return j({error:"not allowed"},403);await e.DB.prepare("DELETE FROM space_members WHERE space_id=? AND email=?").bind(sp.id,x).run();return j({ok:true})}
-  if((mm=p.match(/^\/api\/spaces\/([\w-]+)\/entries$/))&&r.method==="POST"){const sp=await getSp(mm[1]);if(!await role(sp))return j({error:"not found"},404);const b=await body(r);const kind=String(b.kind||"");if(!KINDS.includes(kind))return j({error:"unknown kind"},400);const data=JSON.stringify(b.data||{});if(data.length>60000)return j({error:"entry too large"},400);const c=await e.DB.prepare("SELECT COUNT(*) AS n FROM space_entries WHERE space_id=?").bind(sp.id).first();if(c.n>=2000)return j({error:"space is full"},400);const id=crypto.randomUUID();await e.DB.batch([e.DB.prepare("INSERT INTO space_entries(id,space_id,author_user_id,author_name,kind,title,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)").bind(id,sp.id,me.id,nm,kind,String(b.title||"").slice(0,140),data,now,now),e.DB.prepare("UPDATE spaces SET updated_at=? WHERE id=?").bind(now,sp.id)]);return j({id})}
-  if((mm=p.match(/^\/api\/spaces\/([\w-]+)\/entries\/([\w-]+)$/))){const sp=await getSp(mm[1]),ro=await role(sp);if(!ro)return j({error:"not found"},404);const en=await e.DB.prepare("SELECT * FROM space_entries WHERE id=? AND space_id=?").bind(mm[2],sp.id).first();if(!en)return j({error:"not found"},404);
-   if(r.method==="DELETE"){if(en.author_user_id!==me.id&&ro!=="owner")return j({error:"not allowed"},403);await e.DB.batch([e.DB.prepare("DELETE FROM space_comments WHERE entry_id=?").bind(en.id),e.DB.prepare("DELETE FROM space_entries WHERE id=?").bind(en.id)]);return j({ok:true})}
-   if(r.method==="PATCH"){if(en.author_user_id!==me.id)return j({error:"author only"},403);const b=await body(r);const data=JSON.stringify(b.data||JSON.parse(en.data_json||"{}"));if(data.length>60000)return j({error:"entry too large"},400);await e.DB.prepare("UPDATE space_entries SET title=?,data_json=?,updated_at=? WHERE id=?").bind(String(b.title??en.title).slice(0,140),data,now,en.id).run();return j({ok:true})}}
-  if((mm=p.match(/^\/api\/spaces\/([\w-]+)\/entries\/([\w-]+)\/comments$/))&&r.method==="POST"){const sp=await getSp(mm[1]);if(!await role(sp))return j({error:"not found"},404);const b=await body(r);const t=String(b.text||"").trim().slice(0,2000);if(!t)return j({error:"text required"},400);const en=await e.DB.prepare("SELECT id FROM space_entries WHERE id=? AND space_id=?").bind(mm[2],sp.id).first();if(!en)return j({error:"not found"},404);const id=crypto.randomUUID();await e.DB.prepare("INSERT INTO space_comments(id,space_id,entry_id,author_user_id,author_name,text,created_at) VALUES(?,?,?,?,?,?,?)").bind(id,sp.id,en.id,me.id,nm,t,now).run();return j({id})}
-  if((mm=p.match(/^\/api\/spaces\/([\w-]+)\/comments\/([\w-]+)$/))&&r.method==="DELETE"){const sp=await getSp(mm[1]),ro=await role(sp);const c=await e.DB.prepare("SELECT * FROM space_comments WHERE id=? AND space_id=?").bind(mm[2],mm[1]).first();if(!c||!ro)return j({error:"not found"},404);if(c.author_user_id!==me.id&&ro!=="owner")return j({error:"not allowed"},403);await e.DB.prepare("DELETE FROM space_comments WHERE id=?").bind(c.id).run();return j({ok:true})}
-  return j({error:"not found"},404)}
- if(r.method==="GET"&&p==="/api/feedback"){if(!isAdmin)return j({error:"admins only"},403);const q=await e.DB.prepare("SELECT created_at,page,kind,message,contact FROM feedback ORDER BY created_at DESC LIMIT 300").all();return j({items:q.results||[]})}
- if(r.method==="GET"&&p==="/api/me")return j({user:me,admin:isAdmin});
- if(r.method==="GET"&&p==="/api/admin/stats"){if(!isAdmin)return j({error:"not allowed"},403);const q=async(sql,...a)=>{try{return (await e.DB.prepare(sql).bind(...a).all()).results||[]}catch(err){return []}};const one=async(sql,...a)=>(await q(sql,...a))[0]||{};const ist="'+330 minutes'";
-  const accounts=await one("SELECT COUNT(*) AS n, SUM(created_at>datetime('now','-7 days')) AS d7, SUM(created_at>datetime('now','-30 days')) AS d30 FROM users WHERE id!='test-user-e2e'");
-  const signups=await q("SELECT date(created_at,"+ist+") AS day, COUNT(*) AS n FROM users WHERE id!='test-user-e2e' AND created_at>datetime('now','-30 days') GROUP BY day ORDER BY day");
-  const signins=await q("SELECT date(created_at,"+ist+") AS day, COUNT(*) AS n FROM auth_sessions WHERE user_id!='test-user-e2e' AND id!='stats-test' AND created_at>datetime('now','-30 days') GROUP BY day ORDER BY day");
-  const views=await q("SELECT day, SUM(views) AS views, SUM(new_devices) AS devices FROM page_views WHERE day>=date('now',"+ist+",'-29 days') GROUP BY day ORDER BY day");
-  const pages=await q("SELECT path, SUM(views) AS views FROM page_views WHERE day>=date('now',"+ist+",'-29 days') GROUP BY path ORDER BY views DESC LIMIT 15");
-  const records=await q("SELECT type, COUNT(*) AS n FROM origin_records WHERE deleted=0 GROUP BY type ORDER BY n DESC");
-  const roasts=await one("SELECT COUNT(*) AS n FROM roast_runs");
-  const users=await q("SELECT u.email, u.created_at, (SELECT COUNT(*) FROM origin_records o WHERE o.owner_user_id=u.id AND o.deleted=0) AS records, (SELECT COUNT(*) FROM roast_runs x WHERE x.owner_user_id=u.id) AS roasts, (SELECT MAX(created_at) FROM auth_sessions s WHERE s.user_id=u.id) AS last_signin FROM users u WHERE u.id!='test-user-e2e' ORDER BY u.created_at DESC LIMIT 100");
-  return j({accounts,signups,signins,views,pages,records,roasts:roasts.n||0,users})}
- if(r.method==="POST"&&p==="/api/logout"){const h=await digest(bearer(r));await e.DB.prepare("DELETE FROM auth_sessions WHERE token_hash=?").bind(h).run();return j({ok:true})}
- if(r.method==="GET"&&p==="/api/processes"){const q=await e.DB.prepare("SELECT id,name,process_type,scope,created_at,updated_at FROM process_templates WHERE owner_user_id=? ORDER BY updated_at DESC LIMIT 500").bind(me.id).all();return j({items:q.results})}
- if(r.method==="POST"&&p==="/api/processes"){const b=await body(r),id=crypto.randomUUID(),name=String(b.name||"").trim();if(!name)return j({error:"name required"},400);await e.DB.prepare("INSERT INTO process_templates(id,owner_user_id,name,process_type,description,scope) VALUES(?,?,?,?,?,'private')").bind(id,me.id,name,b.process_type||null,b.description||null).run();return j({id,privacy:"private"},201)}
- if(r.method==="POST"&&p==="/api/share"){const b=await body(r),type=String(b.object_type||""),id=String(b.object_id||"");const allowed={process:"process_templates",roast:"roast_runs",brew:"brew_recipes"};if(!allowed[type])return j({error:"unsupported object"},400);const own=await e.DB.prepare("SELECT id FROM "+allowed[type]+" WHERE id=? AND owner_user_id=?").bind(id,me.id).first();if(!own)return j({error:"not found"},404);const st=token();await e.DB.prepare("INSERT INTO shares(id,owner_user_id,object_type,object_id,share_key,permission) VALUES(?,?,?,?,?,'view')").bind(crypto.randomUUID(),me.id,type,id,st).run();return j({share_key:st,permission:"view"},201)}
- if(r.method==="POST"&&p==="/api/roasts"){const b=await body(r),id=String(b.id||"roast-"+Date.now());const num=v=>{const n=parseFloat(v);return Number.isFinite(n)?n:null};const cnt=await e.DB.prepare("SELECT COUNT(*) as cnt FROM roast_runs WHERE owner_user_id=?").bind(me.id).first();if(cnt.cnt>=1000)return j({error:"Roast limit reached. Export and delete old roasts to make room.",quota_exceeded:true,limit:1000,current:cnt.cnt},429);const own=await e.DB.prepare("SELECT owner_user_id FROM roast_runs WHERE id=?").bind(id).first();if(own&&own.owner_user_id!==me.id)return j({error:"roast id already used"},409);const eventJson=JSON.stringify(Array.isArray(b.events)?b.events:[]),readingJson=JSON.stringify(b.readings&&typeof b.readings==="object"?b.readings:{exhaust:[],bean:[]});const details=JSON.stringify({estate:b.estate||"",coffeeCode:b.coffeeCode||"",bean:b.bean||b.notes||"",notes:b.notes||"",roasteryName:b.roasteryName||"",machineName:b.machineName||"",greenLotId:typeof b.greenLotId==="string"?b.greenLotId.slice(0,80):"",unit:b.unit||"C",elapsed:num(b.elapsed),finishedAt:b.finishedAt||null});try{await e.DB.prepare("INSERT INTO roast_runs(id,owner_user_id,roast_date,roast_number,green_weight,roasted_weight,moisture,charge_temperature,target_color,final_color,notes,events_json,readings_json,ended_at,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET roast_date=excluded.roast_date,roast_number=excluded.roast_number,green_weight=excluded.green_weight,roasted_weight=excluded.roasted_weight,moisture=excluded.moisture,charge_temperature=excluded.charge_temperature,target_color=excluded.target_color,final_color=excluded.final_color,notes=excluded.notes,events_json=excluded.events_json,readings_json=excluded.readings_json,ended_at=excluded.ended_at").bind(id,me.id,b.roastDate||new Date().toISOString().slice(0,10),String(b.roastNo||""),num(b.greenWeight),num(b.roastedWeight),num(b.moisture),num(b.chargeTemp),b.targetColor||"",b.finalColor||"",details,eventJson,readingJson,b.finishedAt||null).run()}catch(err){return j({error:"save failed: "+String(err&&err.message||err)},500)}return j({id,saved:true},201)}
- if(r.method==="GET"&&p==="/api/prefs"){const row=await e.DB.prepare("SELECT prefs_json FROM user_prefs WHERE user_id=?").bind(me.id).first();let v={};try{v=row?JSON.parse(row.prefs_json):{}}catch{}return j(v)}
- if(r.method==="POST"&&p==="/api/prefs"){const b=await body(r);const modes=["off","selected","all"];const sync={};for(const k of ["origin","roasts","cup"])if(b.sync&&modes.includes(b.sync[k]))sync[k]=b.sync[k];await e.DB.prepare("INSERT INTO user_prefs(user_id,prefs_json,updated_at) VALUES(?,?,CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET prefs_json=excluded.prefs_json,updated_at=CURRENT_TIMESTAMP").bind(me.id,JSON.stringify({sync})).run();return j({ok:true,sync})}
- if(r.method==="DELETE"&&p.match(/^\/api\/origin\/[^\/]+$/)){const id=decodeURIComponent(p.split("/").pop());await e.DB.prepare("DELETE FROM origin_records WHERE id=? AND owner_user_id=?").bind(id,me.id).run();return j({ok:true,removed:id})}
- if(r.method==="DELETE"&&p.match(/^\/api\/roasts\/[^\/]+$/)){const id=decodeURIComponent(p.split("/").pop());await e.DB.prepare("DELETE FROM roast_runs WHERE id=? AND owner_user_id=?").bind(id,me.id).run();return j({ok:true,removed:id})}
- if(r.method==="GET"&&p==="/api/origin"){const since=String(u.searchParams.get("since")||"").slice(0,40);const now=new Date().toISOString();const q=since?await e.DB.prepare("SELECT data_json FROM origin_records WHERE owner_user_id=? AND synced_at>? ORDER BY synced_at LIMIT 5000").bind(me.id,since).all():await e.DB.prepare("SELECT data_json FROM origin_records WHERE owner_user_id=? ORDER BY updated_at LIMIT 5000").bind(me.id).all();return j({now,items:(q.results||[]).map(x=>{try{return JSON.parse(x.data_json)}catch{return null}}).filter(Boolean)})}
- if(r.method==="POST"&&p==="/api/origin"){const b=await body(r),recs=Array.isArray(b.records)?b.records.slice(0,500):[];const types=["estate","plot","harvest","process","green","brew","cupping","tasting"];const cnt=await e.DB.prepare("SELECT COUNT(*) AS n FROM origin_records WHERE owner_user_id=?").bind(me.id).first();let room=5000-cnt.n;const stmts=[];let skipped=0;const stamp=new Date().toISOString();const ids=recs.filter(x=>x&&typeof x.id==="string"&&x.id.length<=80).map(x=>x.id);const have=new Map();for(let i=0;i<ids.length;i+=90){const part=ids.slice(i,i+90);const q=await e.DB.prepare("SELECT id,owner_user_id,updated_at FROM origin_records WHERE id IN ("+part.map(()=>"?").join(",")+")").bind(...part).all();(q.results||[]).forEach(x=>have.set(x.id,x))}for(const x of recs){if(!x||typeof x.id!=="string"||x.id.length>80||!types.includes(x.type)||!x.updatedAt){skipped++;continue}const data=JSON.stringify(x);if(data.length>65536){skipped++;continue}const own=have.get(x.id);if(own&&own.owner_user_id!==me.id){skipped++;continue}if(own&&String(own.updated_at)>=String(x.updatedAt))continue;if(!own){if(room<=0){skipped++;continue}room--}stmts.push(e.DB.prepare("INSERT INTO origin_records(id,owner_user_id,type,data_json,updated_at,deleted,synced_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET type=excluded.type,data_json=excluded.data_json,updated_at=excluded.updated_at,deleted=excluded.deleted,synced_at=excluded.synced_at").bind(x.id,me.id,x.type,data,String(x.updatedAt),x.deleted?1:0,stamp))}if(stmts.length)await e.DB.batch(stmts);return j({saved:stmts.length,skipped})}
- if(r.method==="GET"&&p==="/api/roasts"){const q=await e.DB.prepare("SELECT id,roast_date,roast_number,green_weight,roasted_weight,moisture,charge_temperature,target_color,final_color,notes,events_json,readings_json,ended_at,created_at FROM roast_runs WHERE owner_user_id=? ORDER BY roast_date DESC,created_at DESC LIMIT 500").bind(me.id).all();return j({items:q.results||[]})}
- if(r.method==="GET"&&p.match(/^\/api\/roasts\/[^\/]+$/)){const id=p.split("/").pop(),row=await e.DB.prepare("SELECT * FROM roast_runs WHERE id=? AND owner_user_id=?").bind(id,me.id).first();if(!row)return j({error:"not found"},404);return j({...row,events:JSON.parse(row.events_json||"[]"),readings:JSON.parse(row.readings_json||'{"exhaust":[],"bean":[]}')})}
- return j({error:"not found"},404)
-},
-async scheduled(ev,e,ctx){ctx.waitUntil(traceAnchor(e))}}
+import { tracePublic, traceApi, traceAnchor } from './trace-api.js';
+const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
+const j = (v, s = 200) => new Response(JSON.stringify(v), { status: s, headers: JSON_HEADERS });
+function bearer(r) {
+  const h = r.headers.get('authorization') || '';
+  return h.startsWith('Bearer ') ? h.slice(7) : '';
+}
+async function digest(s) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+async function user(r, e) {
+  const t = bearer(r);
+  if (!t) return null;
+  const h = await digest(t);
+  return await e.DB.prepare(
+    "SELECT u.id,u.email,u.display_name FROM auth_sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>datetime('now')"
+  )
+    .bind(h)
+    .first();
+}
+function clientIp(r, e) {
+  const via = r.headers.get('x-kk-proxy');
+  if (e.PROXY_SECRET && via && via === e.PROXY_SECRET) {
+    const c = r.headers.get('x-kk-client-ip');
+    if (c) return c;
+  }
+  return r.headers.get('cf-connecting-ip') || '';
+}
+async function canReceiveMail(domain) {
+  try {
+    const res = await fetch(
+      'https://cloudflare-dns.com/dns-query?name=' + encodeURIComponent(domain) + '&type=MX',
+      { headers: { accept: 'application/dns-json' } }
+    );
+    if (!res.ok) return true;
+    const d = await res.json();
+    if (d.Status === 3) return false;
+    const mx = (d.Answer || []).filter(a => a.type === 15);
+    if (!mx.length) return false;
+    if (mx.length === 1 && /^0\s+\.?$/.test(String(mx[0].data).trim())) return false;
+    return true;
+  } catch {
+    return true;
+  }
+}
+async function body(r) {
+  try {
+    return await r.json();
+  } catch {
+    return {};
+  }
+}
+function token() {
+  const a = new Uint8Array(32);
+  crypto.getRandomValues(a);
+  return [...a].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+function emailConfigured(e) {
+  return Boolean(e.RESEND_API_KEY || (e.AUTH_EMAIL_ENDPOINT && e.AUTH_EMAIL_SECRET));
+}
+async function sendEmail(e, to, subject, text) {
+  try {
+    if (e.RESEND_API_KEY) {
+      const resp = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { authorization: 'Bearer ' + e.RESEND_API_KEY, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          from: e.AUTH_EMAIL_FROM || 'KoffyKraft <onboarding@resend.dev>',
+          to: [to],
+          subject,
+          text,
+        }),
+      });
+      if (!resp.ok) console.error('resend send failed', resp.status, await resp.text());
+      return { ok: resp.ok };
+    }
+    const form = new URLSearchParams({
+      to,
+      from: e.AUTH_EMAIL_FROM || 'KoffyKraft <mailgun@sandboxb97fe0c72adc4feea556292b5ff5f544.mailgun.org>',
+      subject,
+      text,
+    });
+    const resp = await fetch(e.AUTH_EMAIL_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        authorization: 'Basic ' + btoa('api:' + e.AUTH_EMAIL_SECRET),
+      },
+      body: form.toString(),
+    });
+    if (!resp.ok) console.error('mailgun send failed', resp.status, await resp.text());
+    return { ok: resp.ok };
+  } catch (err) {
+    console.error('email send error', err);
+    return { ok: false };
+  }
+}
+export default {
+  async fetch(r, e, ctx) {
+    const u = new URL(r.url),
+      p = u.pathname;
+    if (p === '/' || p === '/index.html') {
+      const a = new URL(r.url);
+      a.pathname = '/home.html';
+      return e.ASSETS.fetch(new Request(a, r));
+    }
+    if (!p.startsWith('/api/')) return e.ASSETS.fetch(r);
+    if (r.method === 'GET' && p === '/api/status') {
+      let database = false;
+      try {
+        await e.DB.prepare('SELECT 1 AS ok').first();
+        database = true;
+      } catch {}
+      return j({
+        ok: true,
+        email_login: emailConfigured(e),
+        email_provider: e.RESEND_API_KEY ? 'resend' : e.AUTH_EMAIL_SECRET ? 'mailgun' : 'none',
+        database,
+      });
+    }
+    if (r.method === 'POST' && p === '/api/auth/request') {
+      const b = await body(r),
+        email = String(b.email || '')
+          .trim()
+          .toLowerCase();
+      if (!/^\S+@\S+\.\S+$/.test(email)) return j({ error: 'valid email required' }, 400);
+      if (!emailConfigured(e)) return j({ error: 'email delivery not configured' }, 503);
+      if (!(await canReceiveMail(email.split('@').pop())))
+        return j({ error: 'That email address cannot receive mail. Check the spelling.' }, 400);
+      const ip = clientIp(r, e),
+        reqId = crypto.randomUUID();
+      try {
+        const lim = await e.DB.prepare(
+          "SELECT (SELECT COUNT(*) FROM auth_requests WHERE email=? AND created_at>datetime('now','-1 hour')) AS byEmail,(SELECT COUNT(*) FROM auth_requests WHERE ip=? AND ip<>'' AND created_at>datetime('now','-1 hour')) AS byIp"
+        )
+          .bind(email, ip)
+          .first();
+        if (lim.byEmail >= 5 || lim.byIp >= 20)
+          return j({ error: 'Too many sign-in requests. Wait an hour and try again.' }, 429);
+        await e.DB.batch([
+          e.DB.prepare('INSERT INTO auth_requests(id,email,ip) VALUES(?,?,?)').bind(reqId, email, ip),
+          e.DB.prepare("DELETE FROM auth_requests WHERE created_at<datetime('now','-1 day')"),
+        ]);
+      } catch (err) {
+        console.error('rate limit check failed', err);
+      }
+      const id = crypto.randomUUID(),
+        code = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000)),
+        ch = await digest(code);
+      let row = await e.DB.prepare('SELECT id FROM users WHERE email=? LIMIT 1').bind(email).first();
+      if (!row) row = { id };
+      await e.DB.prepare("DELETE FROM auth_codes WHERE email=? OR expires_at<=datetime('now')")
+        .bind(email)
+        .run();
+      await e.DB.prepare(
+        "INSERT INTO auth_codes(id,email,user_id,code_hash,expires_at) VALUES(?,?,?,?,datetime('now','+10 minutes'))"
+      )
+        .bind(crypto.randomUUID(), email, row.id, ch)
+        .run();
+      const subject = 'KoffyKraft sign-in code: ' + code,
+        text =
+          'Your KoffyKraft sign-in code is ' +
+          code +
+          '. It expires in 10 minutes.\n\nIf you did not ask for this, you can ignore this email.';
+      const sent = await sendEmail(e, email, subject, text);
+      if (!sent.ok) {
+        try {
+          await e.DB.prepare('DELETE FROM auth_requests WHERE id=?').bind(reqId).run();
+        } catch {}
+        return j({ error: 'email delivery failed' }, 502);
+      }
+      return j({ ok: true });
+    }
+    if (r.method === 'POST' && p === '/api/auth/verify') {
+      const b = await body(r),
+        email = String(b.email || '')
+          .trim()
+          .toLowerCase(),
+        ch = await digest(String(b.code || '').trim());
+      const a = await e.DB.prepare(
+        "SELECT * FROM auth_codes WHERE email=? AND expires_at>datetime('now') ORDER BY created_at DESC LIMIT 1"
+      )
+        .bind(email)
+        .first();
+      if (!a) return j({ error: 'invalid or expired code' }, 401);
+      if ((a.attempts || 0) >= 5) {
+        await e.DB.prepare('DELETE FROM auth_codes WHERE email=?').bind(email).run();
+        return j({ error: 'Too many wrong codes. Ask for a new code.' }, 429);
+      }
+      if (a.code_hash !== ch) {
+        await e.DB.prepare('UPDATE auth_codes SET attempts=attempts+1 WHERE id=?').bind(a.id).run();
+        return j({ error: 'invalid or expired code' }, 401);
+      }
+      let u = await e.DB.prepare('SELECT id FROM users WHERE email=? LIMIT 1').bind(email).first();
+      if (!u) {
+        u = { id: a.user_id || crypto.randomUUID() };
+        await e.DB.prepare('INSERT INTO users(id,email,created_at) VALUES(?,?,CURRENT_TIMESTAMP)')
+          .bind(u.id, email)
+          .run();
+      }
+      const t = token(),
+        th = await digest(t);
+      await e.DB.batch([
+        e.DB.prepare('DELETE FROM auth_codes WHERE email=?').bind(email),
+        e.DB.prepare(
+          "INSERT INTO auth_sessions(id,user_id,token_hash,expires_at) VALUES(?,?,?,datetime('now','+30 days'))"
+        ).bind(crypto.randomUUID(), u.id, th),
+      ]);
+      return j({ token: t, user_id: u.id });
+    }
+    if (r.method === 'POST' && p === '/api/pv') {
+      const b = await body(r);
+      let path = String(b.p || '')
+        .toLowerCase()
+        .replace(/\.html$/, '');
+      if (path === '' || path === '/' || path === '/index') path = '/roasts';
+      if (!/^\/[a-z0-9-]{1,40}$/.test(path)) return new Response(null, { status: 204 });
+      try {
+        await e.DB.prepare(
+          "INSERT INTO page_views(day,path,views,new_devices) VALUES(date('now','+330 minutes'),?,1,?) ON CONFLICT(day,path) DO UPDATE SET views=views+1,new_devices=new_devices+excluded.new_devices"
+        )
+          .bind(path, b.n ? 1 : 0)
+          .run();
+      } catch {}
+      return new Response(null, { status: 204 });
+    }
+    if (r.method === 'POST' && p === '/api/feedback') {
+      const b = await body(r);
+      const msg = String(b.message || '')
+        .trim()
+        .slice(0, 4000);
+      if (msg.length < 3) return j({ error: 'message required' }, 400);
+      const ip = await digest('fb:' + (r.headers.get('cf-connecting-ip') || ''));
+      const n = await e.DB.prepare('SELECT COUNT(*) AS n FROM feedback WHERE ip_hash=? AND created_at>?')
+        .bind(ip, new Date(Date.now() - 36e5).toISOString())
+        .first();
+      if (n && n.n >= 6) return j({ error: 'Thank you. Please try again in an hour.' }, 429);
+      let uid = null,
+        uem = '';
+      try {
+        const m = await user(r, e);
+        uid = m ? m.id : null;
+        uem = m ? m.email : '';
+      } catch {}
+      await e.DB.prepare(
+        'INSERT INTO feedback(id,created_at,page,kind,message,contact,user_id,ip_hash) VALUES(?,?,?,?,?,?,?,?)'
+      )
+        .bind(
+          crypto.randomUUID(),
+          new Date().toISOString(),
+          String(b.page || '').slice(0, 80),
+          String(b.kind || '').slice(0, 30),
+          msg,
+          String(b.contact || '').slice(0, 200),
+          uid,
+          ip
+        )
+        .run();
+      const kind = String(b.kind || 'Feedback').slice(0, 30),
+        page = String(b.page || '').slice(0, 80),
+        contact = String(b.contact || '').slice(0, 200);
+      const mail = sendEmail(
+        e,
+        e.FEEDBACK_TO || 'info@koffykraft.coffee',
+        'KoffyKraft feedback: ' + kind + (page ? ' (' + page + ')' : ''),
+        msg +
+          '\n\n---\nKind: ' +
+          kind +
+          '\nPage: ' +
+          (page || '-') +
+          '\nContact: ' +
+          (contact || 'not given') +
+          '\nSigned in: ' +
+          (uem || 'no') +
+          '\nTime: ' +
+          new Date().toISOString() +
+          '\n\nAll feedback: https://roast.koffykraft.coffee/account.html'
+      ).catch(() => {});
+      if (ctx && ctx.waitUntil) ctx.waitUntil(mail);
+      else await mail;
+      return j({ ok: true });
+    }
+    {
+      const H = { j, body, sendEmail };
+      const x = await tracePublic(r, e, p, H);
+      if (x) return x;
+    }
+    if (r.method === 'GET' && p.startsWith('/api/public/profile/')) {
+      const tok = p.split('/').pop();
+      if (!/^[a-f0-9]{32}$/.test(tok)) return j({ error: 'not found' }, 404);
+      const pr = await e.DB.prepare('SELECT data_json,updated_at FROM profiles WHERE token=?')
+        .bind(tok)
+        .first();
+      if (!pr) return j({ error: 'not found' }, 404);
+      return j({ data: JSON.parse(pr.data_json || '{}'), updated_at: pr.updated_at });
+    }
+    if (r.method === 'GET' && p.startsWith('/api/public/space/')) {
+      const tok = p.split('/').pop();
+      if (!/^[a-f0-9]{32}$/.test(tok)) return j({ error: 'not found' }, 404);
+      const sp = await e.DB.prepare('SELECT * FROM spaces WHERE public_token=?').bind(tok).first();
+      if (!sp) return j({ error: 'not found' }, 404);
+      const [ent, com] = await Promise.all([
+        e.DB.prepare(
+          'SELECT id,author_name,kind,title,data_json,created_at FROM space_entries WHERE space_id=? ORDER BY created_at DESC LIMIT 500'
+        )
+          .bind(sp.id)
+          .all(),
+        e.DB.prepare(
+          'SELECT id,entry_id,author_name,text,created_at FROM space_comments WHERE space_id=? ORDER BY created_at LIMIT 3000'
+        )
+          .bind(sp.id)
+          .all(),
+      ]);
+      return j({
+        space: { name: sp.name, about: sp.about, coffee: sp.coffee },
+        role: 'public',
+        entries: (ent.results || []).map(x => ({
+          ...x,
+          data: JSON.parse(x.data_json || '{}'),
+          data_json: undefined,
+        })),
+        comments: ent.results ? com.results || [] : [],
+      });
+    }
+    const me = await user(r, e);
+    if (!me) return j({ error: 'authentication required' }, 401);
+    const isAdmin = String(e.ADMIN_EMAILS || '')
+      .toLowerCase()
+      .split(',')
+      .map(x => x.trim())
+      .filter(Boolean)
+      .includes(String(me.email || '').toLowerCase());
+    {
+      const x = await traceApi(r, e, p, me, { j, body, sendEmail }, isAdmin, ctx);
+      if (x) return x;
+    }
+    // ---- send-out profile ----
+    if (p === '/api/profile') {
+      const now = new Date().toISOString();
+      if (r.method === 'GET') {
+        const pr = await e.DB.prepare('SELECT token,data_json,updated_at FROM profiles WHERE user_id=?')
+          .bind(me.id)
+          .first();
+        return j(
+          pr
+            ? {
+                published: true,
+                token: pr.token,
+                updated_at: pr.updated_at,
+                data: JSON.parse(pr.data_json || '{}'),
+              }
+            : { published: false }
+        );
+      }
+      if (r.method === 'PUT') {
+        const b = await body(r);
+        const d = b && b.data;
+        if (!d || typeof d !== 'object') return j({ error: 'data required' }, 400);
+        if (d.logo && !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(d.logo))
+          return j({ error: 'logo must be a PNG, JPEG or WebP image' }, 400);
+        const txt = JSON.stringify(d);
+        if (txt.length > 400000)
+          return j({ error: 'profile too large; use a smaller logo or fewer items' }, 400);
+        const ex = await e.DB.prepare('SELECT token FROM profiles WHERE user_id=?').bind(me.id).first();
+        const tok = ex ? ex.token : crypto.randomUUID().replace(/-/g, '');
+        if (ex)
+          await e.DB.prepare('UPDATE profiles SET data_json=?,updated_at=? WHERE user_id=?')
+            .bind(txt, now, me.id)
+            .run();
+        else
+          await e.DB.prepare(
+            'INSERT INTO profiles(user_id,token,data_json,created_at,updated_at) VALUES(?,?,?,?,?)'
+          )
+            .bind(me.id, tok, txt, now, now)
+            .run();
+        return j({ ok: true, token: tok, updated_at: now });
+      }
+      if (r.method === 'DELETE') {
+        await e.DB.prepare('DELETE FROM profiles WHERE user_id=?').bind(me.id).run();
+        return j({ ok: true });
+      }
+    }
+    // ---- shared spaces ----
+    if (p.startsWith('/api/spaces')) {
+      const now = new Date().toISOString(),
+        em = String(me.email || '').toLowerCase(),
+        nm = me.display_name || em.split('@')[0] || 'Member';
+      const getSp = async id => await e.DB.prepare('SELECT * FROM spaces WHERE id=?').bind(id).first();
+      const role = async sp => {
+        if (!sp) return null;
+        if (sp.owner_user_id === me.id) return 'owner';
+        const m = await e.DB.prepare('SELECT 1 AS x FROM space_members WHERE space_id=? AND email=?')
+          .bind(sp.id, em)
+          .first();
+        return m ? 'member' : null;
+      };
+      const KINDS = ['brew', 'roast', 'cupping', 'process', 'green', 'note'];
+      let mm;
+      if (r.method === 'GET' && p === '/api/spaces') {
+        const q = await e.DB.prepare(
+          'SELECT s.id,s.name,s.coffee,s.about,s.owner_user_id,s.public_token IS NOT NULL AS public,s.updated_at,(SELECT COUNT(*) FROM space_entries x WHERE x.space_id=s.id) AS entries,(SELECT COUNT(*) FROM space_members y WHERE y.space_id=s.id) AS members FROM spaces s WHERE s.owner_user_id=? OR s.id IN (SELECT space_id FROM space_members WHERE email=?) ORDER BY s.updated_at DESC LIMIT 200'
+        )
+          .bind(me.id, em)
+          .all();
+        return j({
+          items: (q.results || []).map(x => ({
+            ...x,
+            mine: x.owner_user_id === me.id,
+            owner_user_id: undefined,
+          })),
+        });
+      }
+      if (r.method === 'POST' && p === '/api/spaces') {
+        const b = await body(r);
+        const name = String(b.name || '')
+          .trim()
+          .slice(0, 80);
+        if (!name) return j({ error: 'name required' }, 400);
+        const c = await e.DB.prepare('SELECT COUNT(*) AS n FROM spaces WHERE owner_user_id=?')
+          .bind(me.id)
+          .first();
+        if (c.n >= 50) return j({ error: 'limit of 50 spaces' }, 400);
+        const id = crypto.randomUUID();
+        await e.DB.prepare(
+          'INSERT INTO spaces(id,owner_user_id,name,about,coffee,created_at,updated_at) VALUES(?,?,?,?,?,?,?)'
+        )
+          .bind(
+            id,
+            me.id,
+            name,
+            String(b.about || '').slice(0, 1000),
+            String(b.coffee || '').slice(0, 120),
+            now,
+            now
+          )
+          .run();
+        return j({ id });
+      }
+      if ((mm = p.match(/^\/api\/spaces\/([\w-]+)$/))) {
+        const sp = await getSp(mm[1]),
+          ro = await role(sp);
+        if (!ro) return j({ error: 'not found' }, 404);
+        if (r.method === 'GET') {
+          const [mem, ent, com] = await Promise.all([
+            e.DB.prepare('SELECT email,added_at FROM space_members WHERE space_id=? ORDER BY added_at')
+              .bind(sp.id)
+              .all(),
+            e.DB.prepare(
+              'SELECT id,author_user_id,author_name,kind,title,data_json,created_at,updated_at FROM space_entries WHERE space_id=? ORDER BY created_at DESC LIMIT 500'
+            )
+              .bind(sp.id)
+              .all(),
+            e.DB.prepare(
+              'SELECT id,entry_id,author_user_id,author_name,text,created_at FROM space_comments WHERE space_id=? ORDER BY created_at LIMIT 3000'
+            )
+              .bind(sp.id)
+              .all(),
+          ]);
+          const own = await e.DB.prepare('SELECT display_name,email FROM users WHERE id=?')
+            .bind(sp.owner_user_id)
+            .first();
+          return j({
+            space: {
+              id: sp.id,
+              name: sp.name,
+              about: sp.about,
+              coffee: sp.coffee,
+              public_token: ro === 'owner' ? sp.public_token : sp.public_token ? true : null,
+              owner: own ? own.display_name || String(own.email || '').split('@')[0] : '',
+            },
+            role: ro,
+            me: me.id,
+            members: ro === 'owner' ? mem.results || [] : (mem.results || []).length,
+            entries: (ent.results || []).map(x => ({
+              ...x,
+              data: JSON.parse(x.data_json || '{}'),
+              data_json: undefined,
+              mine: x.author_user_id === me.id,
+              author_user_id: undefined,
+            })),
+            comments: (com.results || []).map(x => ({
+              ...x,
+              mine: x.author_user_id === me.id,
+              author_user_id: undefined,
+            })),
+          });
+        }
+        if (r.method === 'PATCH') {
+          if (ro !== 'owner') return j({ error: 'owner only' }, 403);
+          const b = await body(r);
+          let tok = sp.public_token;
+          if (b.public === true && !tok) tok = crypto.randomUUID().replace(/-/g, '');
+          if (b.public === false) tok = null;
+          await e.DB.prepare(
+            'UPDATE spaces SET name=?,about=?,coffee=?,public_token=?,updated_at=? WHERE id=?'
+          )
+            .bind(
+              String(b.name ?? sp.name).slice(0, 80),
+              String(b.about ?? sp.about ?? '').slice(0, 1000),
+              String(b.coffee ?? sp.coffee ?? '').slice(0, 120),
+              tok,
+              now,
+              sp.id
+            )
+            .run();
+          return j({ ok: true, public_token: tok });
+        }
+        if (r.method === 'DELETE') {
+          if (ro !== 'owner') return j({ error: 'owner only' }, 403);
+          await e.DB.batch([
+            e.DB.prepare('DELETE FROM space_comments WHERE space_id=?').bind(sp.id),
+            e.DB.prepare('DELETE FROM space_entries WHERE space_id=?').bind(sp.id),
+            e.DB.prepare('DELETE FROM space_members WHERE space_id=?').bind(sp.id),
+            e.DB.prepare('DELETE FROM spaces WHERE id=?').bind(sp.id),
+          ]);
+          return j({ ok: true });
+        }
+      }
+      if ((mm = p.match(/^\/api\/spaces\/([\w-]+)\/members$/)) && r.method === 'POST') {
+        const sp = await getSp(mm[1]);
+        if (!sp || sp.owner_user_id !== me.id) return j({ error: 'owner only' }, 403);
+        const b = await body(r);
+        const x = String(b.email || '')
+          .trim()
+          .toLowerCase();
+        if (!/^\S+@\S+\.\S+$/.test(x)) return j({ error: 'valid email required' }, 400);
+        const c = await e.DB.prepare('SELECT COUNT(*) AS n FROM space_members WHERE space_id=?')
+          .bind(sp.id)
+          .first();
+        if (c.n >= 100) return j({ error: 'limit of 100 members' }, 400);
+        await e.DB.prepare('INSERT OR IGNORE INTO space_members(space_id,email,added_at) VALUES(?,?,?)')
+          .bind(sp.id, x, now)
+          .run();
+        return j({ ok: true });
+      }
+      if ((mm = p.match(/^\/api\/spaces\/([\w-]+)\/members\/(.+)$/)) && r.method === 'DELETE') {
+        const sp = await getSp(mm[1]);
+        const x = decodeURIComponent(mm[2]).toLowerCase();
+        if (!sp || (sp.owner_user_id !== me.id && x !== em)) return j({ error: 'not allowed' }, 403);
+        await e.DB.prepare('DELETE FROM space_members WHERE space_id=? AND email=?').bind(sp.id, x).run();
+        return j({ ok: true });
+      }
+      if ((mm = p.match(/^\/api\/spaces\/([\w-]+)\/entries$/)) && r.method === 'POST') {
+        const sp = await getSp(mm[1]);
+        if (!(await role(sp))) return j({ error: 'not found' }, 404);
+        const b = await body(r);
+        const kind = String(b.kind || '');
+        if (!KINDS.includes(kind)) return j({ error: 'unknown kind' }, 400);
+        const data = JSON.stringify(b.data || {});
+        if (data.length > 60000) return j({ error: 'entry too large' }, 400);
+        const c = await e.DB.prepare('SELECT COUNT(*) AS n FROM space_entries WHERE space_id=?')
+          .bind(sp.id)
+          .first();
+        if (c.n >= 2000) return j({ error: 'space is full' }, 400);
+        const id = crypto.randomUUID();
+        await e.DB.batch([
+          e.DB.prepare(
+            'INSERT INTO space_entries(id,space_id,author_user_id,author_name,kind,title,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)'
+          ).bind(id, sp.id, me.id, nm, kind, String(b.title || '').slice(0, 140), data, now, now),
+          e.DB.prepare('UPDATE spaces SET updated_at=? WHERE id=?').bind(now, sp.id),
+        ]);
+        return j({ id });
+      }
+      if ((mm = p.match(/^\/api\/spaces\/([\w-]+)\/entries\/([\w-]+)$/))) {
+        const sp = await getSp(mm[1]),
+          ro = await role(sp);
+        if (!ro) return j({ error: 'not found' }, 404);
+        const en = await e.DB.prepare('SELECT * FROM space_entries WHERE id=? AND space_id=?')
+          .bind(mm[2], sp.id)
+          .first();
+        if (!en) return j({ error: 'not found' }, 404);
+        if (r.method === 'DELETE') {
+          if (en.author_user_id !== me.id && ro !== 'owner') return j({ error: 'not allowed' }, 403);
+          await e.DB.batch([
+            e.DB.prepare('DELETE FROM space_comments WHERE entry_id=?').bind(en.id),
+            e.DB.prepare('DELETE FROM space_entries WHERE id=?').bind(en.id),
+          ]);
+          return j({ ok: true });
+        }
+        if (r.method === 'PATCH') {
+          if (en.author_user_id !== me.id) return j({ error: 'author only' }, 403);
+          const b = await body(r);
+          const data = JSON.stringify(b.data || JSON.parse(en.data_json || '{}'));
+          if (data.length > 60000) return j({ error: 'entry too large' }, 400);
+          await e.DB.prepare('UPDATE space_entries SET title=?,data_json=?,updated_at=? WHERE id=?')
+            .bind(String(b.title ?? en.title).slice(0, 140), data, now, en.id)
+            .run();
+          return j({ ok: true });
+        }
+      }
+      if ((mm = p.match(/^\/api\/spaces\/([\w-]+)\/entries\/([\w-]+)\/comments$/)) && r.method === 'POST') {
+        const sp = await getSp(mm[1]);
+        if (!(await role(sp))) return j({ error: 'not found' }, 404);
+        const b = await body(r);
+        const t = String(b.text || '')
+          .trim()
+          .slice(0, 2000);
+        if (!t) return j({ error: 'text required' }, 400);
+        const en = await e.DB.prepare('SELECT id FROM space_entries WHERE id=? AND space_id=?')
+          .bind(mm[2], sp.id)
+          .first();
+        if (!en) return j({ error: 'not found' }, 404);
+        const id = crypto.randomUUID();
+        await e.DB.prepare(
+          'INSERT INTO space_comments(id,space_id,entry_id,author_user_id,author_name,text,created_at) VALUES(?,?,?,?,?,?,?)'
+        )
+          .bind(id, sp.id, en.id, me.id, nm, t, now)
+          .run();
+        return j({ id });
+      }
+      if ((mm = p.match(/^\/api\/spaces\/([\w-]+)\/comments\/([\w-]+)$/)) && r.method === 'DELETE') {
+        const sp = await getSp(mm[1]),
+          ro = await role(sp);
+        const c = await e.DB.prepare('SELECT * FROM space_comments WHERE id=? AND space_id=?')
+          .bind(mm[2], mm[1])
+          .first();
+        if (!c || !ro) return j({ error: 'not found' }, 404);
+        if (c.author_user_id !== me.id && ro !== 'owner') return j({ error: 'not allowed' }, 403);
+        await e.DB.prepare('DELETE FROM space_comments WHERE id=?').bind(c.id).run();
+        return j({ ok: true });
+      }
+      return j({ error: 'not found' }, 404);
+    }
+    if (r.method === 'GET' && p === '/api/feedback') {
+      if (!isAdmin) return j({ error: 'admins only' }, 403);
+      const q = await e.DB.prepare(
+        'SELECT created_at,page,kind,message,contact FROM feedback ORDER BY created_at DESC LIMIT 300'
+      ).all();
+      return j({ items: q.results || [] });
+    }
+    if (r.method === 'GET' && p === '/api/me') return j({ user: me, admin: isAdmin });
+    if (r.method === 'GET' && p === '/api/admin/stats') {
+      if (!isAdmin) return j({ error: 'not allowed' }, 403);
+      const q = async (sql, ...a) => {
+        try {
+          return (
+            (
+              await e.DB.prepare(sql)
+                .bind(...a)
+                .all()
+            ).results || []
+          );
+        } catch (err) {
+          return [];
+        }
+      };
+      const one = async (sql, ...a) => (await q(sql, ...a))[0] || {};
+      const ist = "'+330 minutes'";
+      const accounts = await one(
+        "SELECT COUNT(*) AS n, SUM(created_at>datetime('now','-7 days')) AS d7, SUM(created_at>datetime('now','-30 days')) AS d30 FROM users WHERE id!='test-user-e2e'"
+      );
+      const signups = await q(
+        'SELECT date(created_at,' +
+          ist +
+          ") AS day, COUNT(*) AS n FROM users WHERE id!='test-user-e2e' AND created_at>datetime('now','-30 days') GROUP BY day ORDER BY day"
+      );
+      const signins = await q(
+        'SELECT date(created_at,' +
+          ist +
+          ") AS day, COUNT(*) AS n FROM auth_sessions WHERE user_id!='test-user-e2e' AND id!='stats-test' AND created_at>datetime('now','-30 days') GROUP BY day ORDER BY day"
+      );
+      const views = await q(
+        "SELECT day, SUM(views) AS views, SUM(new_devices) AS devices FROM page_views WHERE day>=date('now'," +
+          ist +
+          ",'-29 days') GROUP BY day ORDER BY day"
+      );
+      const pages = await q(
+        "SELECT path, SUM(views) AS views FROM page_views WHERE day>=date('now'," +
+          ist +
+          ",'-29 days') GROUP BY path ORDER BY views DESC LIMIT 15"
+      );
+      const records = await q(
+        'SELECT type, COUNT(*) AS n FROM origin_records WHERE deleted=0 GROUP BY type ORDER BY n DESC'
+      );
+      const roasts = await one('SELECT COUNT(*) AS n FROM roast_runs');
+      const users = await q(
+        "SELECT u.email, u.created_at, (SELECT COUNT(*) FROM origin_records o WHERE o.owner_user_id=u.id AND o.deleted=0) AS records, (SELECT COUNT(*) FROM roast_runs x WHERE x.owner_user_id=u.id) AS roasts, (SELECT MAX(created_at) FROM auth_sessions s WHERE s.user_id=u.id) AS last_signin FROM users u WHERE u.id!='test-user-e2e' ORDER BY u.created_at DESC LIMIT 100"
+      );
+      return j({ accounts, signups, signins, views, pages, records, roasts: roasts.n || 0, users });
+    }
+    if (r.method === 'POST' && p === '/api/logout') {
+      const h = await digest(bearer(r));
+      await e.DB.prepare('DELETE FROM auth_sessions WHERE token_hash=?').bind(h).run();
+      return j({ ok: true });
+    }
+    if (r.method === 'GET' && p === '/api/processes') {
+      const q = await e.DB.prepare(
+        'SELECT id,name,process_type,scope,created_at,updated_at FROM process_templates WHERE owner_user_id=? ORDER BY updated_at DESC LIMIT 500'
+      )
+        .bind(me.id)
+        .all();
+      return j({ items: q.results });
+    }
+    if (r.method === 'POST' && p === '/api/processes') {
+      const b = await body(r),
+        id = crypto.randomUUID(),
+        name = String(b.name || '').trim();
+      if (!name) return j({ error: 'name required' }, 400);
+      await e.DB.prepare(
+        "INSERT INTO process_templates(id,owner_user_id,name,process_type,description,scope) VALUES(?,?,?,?,?,'private')"
+      )
+        .bind(id, me.id, name, b.process_type || null, b.description || null)
+        .run();
+      return j({ id, privacy: 'private' }, 201);
+    }
+    if (r.method === 'POST' && p === '/api/share') {
+      const b = await body(r),
+        type = String(b.object_type || ''),
+        id = String(b.object_id || '');
+      const allowed = { process: 'process_templates', roast: 'roast_runs', brew: 'brew_recipes' };
+      if (!allowed[type]) return j({ error: 'unsupported object' }, 400);
+      const own = await e.DB.prepare('SELECT id FROM ' + allowed[type] + ' WHERE id=? AND owner_user_id=?')
+        .bind(id, me.id)
+        .first();
+      if (!own) return j({ error: 'not found' }, 404);
+      const st = token();
+      await e.DB.prepare(
+        "INSERT INTO shares(id,owner_user_id,object_type,object_id,share_key,permission) VALUES(?,?,?,?,?,'view')"
+      )
+        .bind(crypto.randomUUID(), me.id, type, id, st)
+        .run();
+      return j({ share_key: st, permission: 'view' }, 201);
+    }
+    if (r.method === 'POST' && p === '/api/roasts') {
+      const b = await body(r),
+        id = String(b.id || 'roast-' + Date.now());
+      const num = v => {
+        const n = parseFloat(v);
+        return Number.isFinite(n) ? n : null;
+      };
+      const cnt = await e.DB.prepare('SELECT COUNT(*) as cnt FROM roast_runs WHERE owner_user_id=?')
+        .bind(me.id)
+        .first();
+      if (cnt.cnt >= 1000)
+        return j(
+          {
+            error: 'Roast limit reached. Export and delete old roasts to make room.',
+            quota_exceeded: true,
+            limit: 1000,
+            current: cnt.cnt,
+          },
+          429
+        );
+      const own = await e.DB.prepare('SELECT owner_user_id FROM roast_runs WHERE id=?').bind(id).first();
+      if (own && own.owner_user_id !== me.id) return j({ error: 'roast id already used' }, 409);
+      const eventJson = JSON.stringify(Array.isArray(b.events) ? b.events : []),
+        readingJson = JSON.stringify(
+          b.readings && typeof b.readings === 'object' ? b.readings : { exhaust: [], bean: [] }
+        );
+      const details = JSON.stringify({
+        estate: b.estate || '',
+        coffeeCode: b.coffeeCode || '',
+        bean: b.bean || b.notes || '',
+        notes: b.notes || '',
+        roasteryName: b.roasteryName || '',
+        machineName: b.machineName || '',
+        greenLotId: typeof b.greenLotId === 'string' ? b.greenLotId.slice(0, 80) : '',
+        unit: b.unit || 'C',
+        elapsed: num(b.elapsed),
+        finishedAt: b.finishedAt || null,
+      });
+      try {
+        await e.DB.prepare(
+          'INSERT INTO roast_runs(id,owner_user_id,roast_date,roast_number,green_weight,roasted_weight,moisture,charge_temperature,target_color,final_color,notes,events_json,readings_json,ended_at,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET roast_date=excluded.roast_date,roast_number=excluded.roast_number,green_weight=excluded.green_weight,roasted_weight=excluded.roasted_weight,moisture=excluded.moisture,charge_temperature=excluded.charge_temperature,target_color=excluded.target_color,final_color=excluded.final_color,notes=excluded.notes,events_json=excluded.events_json,readings_json=excluded.readings_json,ended_at=excluded.ended_at'
+        )
+          .bind(
+            id,
+            me.id,
+            b.roastDate || new Date().toISOString().slice(0, 10),
+            String(b.roastNo || ''),
+            num(b.greenWeight),
+            num(b.roastedWeight),
+            num(b.moisture),
+            num(b.chargeTemp),
+            b.targetColor || '',
+            b.finalColor || '',
+            details,
+            eventJson,
+            readingJson,
+            b.finishedAt || null
+          )
+          .run();
+      } catch (err) {
+        return j({ error: 'save failed: ' + String((err && err.message) || err) }, 500);
+      }
+      return j({ id, saved: true }, 201);
+    }
+    if (r.method === 'GET' && p === '/api/prefs') {
+      const row = await e.DB.prepare('SELECT prefs_json FROM user_prefs WHERE user_id=?').bind(me.id).first();
+      let v = {};
+      try {
+        v = row ? JSON.parse(row.prefs_json) : {};
+      } catch {}
+      return j(v);
+    }
+    if (r.method === 'POST' && p === '/api/prefs') {
+      const b = await body(r);
+      const modes = ['off', 'selected', 'all'];
+      const sync = {};
+      for (const k of ['origin', 'roasts', 'cup'])
+        if (b.sync && modes.includes(b.sync[k])) sync[k] = b.sync[k];
+      await e.DB.prepare(
+        'INSERT INTO user_prefs(user_id,prefs_json,updated_at) VALUES(?,?,CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET prefs_json=excluded.prefs_json,updated_at=CURRENT_TIMESTAMP'
+      )
+        .bind(me.id, JSON.stringify({ sync }))
+        .run();
+      return j({ ok: true, sync });
+    }
+    if (r.method === 'DELETE' && p.match(/^\/api\/origin\/[^\/]+$/)) {
+      const id = decodeURIComponent(p.split('/').pop());
+      await e.DB.prepare('DELETE FROM origin_records WHERE id=? AND owner_user_id=?').bind(id, me.id).run();
+      return j({ ok: true, removed: id });
+    }
+    if (r.method === 'DELETE' && p.match(/^\/api\/roasts\/[^\/]+$/)) {
+      const id = decodeURIComponent(p.split('/').pop());
+      await e.DB.prepare('DELETE FROM roast_runs WHERE id=? AND owner_user_id=?').bind(id, me.id).run();
+      return j({ ok: true, removed: id });
+    }
+    if (r.method === 'GET' && p === '/api/origin') {
+      const since = String(u.searchParams.get('since') || '').slice(0, 40);
+      const now = new Date().toISOString();
+      const q = since
+        ? await e.DB.prepare(
+            'SELECT data_json FROM origin_records WHERE owner_user_id=? AND synced_at>? ORDER BY synced_at LIMIT 5000'
+          )
+            .bind(me.id, since)
+            .all()
+        : await e.DB.prepare(
+            'SELECT data_json FROM origin_records WHERE owner_user_id=? ORDER BY updated_at LIMIT 5000'
+          )
+            .bind(me.id)
+            .all();
+      return j({
+        now,
+        items: (q.results || [])
+          .map(x => {
+            try {
+              return JSON.parse(x.data_json);
+            } catch {
+              return null;
+            }
+          })
+          .filter(Boolean),
+      });
+    }
+    if (r.method === 'POST' && p === '/api/origin') {
+      const b = await body(r),
+        recs = Array.isArray(b.records) ? b.records.slice(0, 500) : [];
+      const types = ['estate', 'plot', 'harvest', 'process', 'green', 'brew', 'cupping', 'tasting'];
+      const cnt = await e.DB.prepare('SELECT COUNT(*) AS n FROM origin_records WHERE owner_user_id=?')
+        .bind(me.id)
+        .first();
+      let room = 5000 - cnt.n;
+      const stmts = [];
+      let skipped = 0;
+      const stamp = new Date().toISOString();
+      const ids = recs.filter(x => x && typeof x.id === 'string' && x.id.length <= 80).map(x => x.id);
+      const have = new Map();
+      for (let i = 0; i < ids.length; i += 90) {
+        const part = ids.slice(i, i + 90);
+        const q = await e.DB.prepare(
+          'SELECT id,owner_user_id,updated_at FROM origin_records WHERE id IN (' +
+            part.map(() => '?').join(',') +
+            ')'
+        )
+          .bind(...part)
+          .all();
+        (q.results || []).forEach(x => have.set(x.id, x));
+      }
+      for (const x of recs) {
+        if (!x || typeof x.id !== 'string' || x.id.length > 80 || !types.includes(x.type) || !x.updatedAt) {
+          skipped++;
+          continue;
+        }
+        const data = JSON.stringify(x);
+        if (data.length > 65536) {
+          skipped++;
+          continue;
+        }
+        const own = have.get(x.id);
+        if (own && own.owner_user_id !== me.id) {
+          skipped++;
+          continue;
+        }
+        if (own && String(own.updated_at) >= String(x.updatedAt)) continue;
+        if (!own) {
+          if (room <= 0) {
+            skipped++;
+            continue;
+          }
+          room--;
+        }
+        stmts.push(
+          e.DB.prepare(
+            'INSERT INTO origin_records(id,owner_user_id,type,data_json,updated_at,deleted,synced_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET type=excluded.type,data_json=excluded.data_json,updated_at=excluded.updated_at,deleted=excluded.deleted,synced_at=excluded.synced_at'
+          ).bind(x.id, me.id, x.type, data, String(x.updatedAt), x.deleted ? 1 : 0, stamp)
+        );
+      }
+      if (stmts.length) await e.DB.batch(stmts);
+      return j({ saved: stmts.length, skipped });
+    }
+    if (r.method === 'GET' && p === '/api/roasts') {
+      const q = await e.DB.prepare(
+        'SELECT id,roast_date,roast_number,green_weight,roasted_weight,moisture,charge_temperature,target_color,final_color,notes,events_json,readings_json,ended_at,created_at FROM roast_runs WHERE owner_user_id=? ORDER BY roast_date DESC,created_at DESC LIMIT 500'
+      )
+        .bind(me.id)
+        .all();
+      return j({ items: q.results || [] });
+    }
+    if (r.method === 'GET' && p.match(/^\/api\/roasts\/[^\/]+$/)) {
+      const id = p.split('/').pop(),
+        row = await e.DB.prepare('SELECT * FROM roast_runs WHERE id=? AND owner_user_id=?')
+          .bind(id, me.id)
+          .first();
+      if (!row) return j({ error: 'not found' }, 404);
+      return j({
+        ...row,
+        events: JSON.parse(row.events_json || '[]'),
+        readings: JSON.parse(row.readings_json || '{"exhaust":[],"bean":[]}'),
+      });
+    }
+    return j({ error: 'not found' }, 404);
+  },
+  async scheduled(ev, e, ctx) {
+    ctx.waitUntil(traceAnchor(e));
+  },
+};

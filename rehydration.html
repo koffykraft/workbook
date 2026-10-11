@@ -6,96 +6,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coffee Rehydration Calculator</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f6f8;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
-        .calculator-card {
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 450px;
-            padding: 24px;
-            box-sizing: border-box;
-        }
-        h2 {
-            margin-top: 0;
-            color: #1e293b;
-            font-size: 1.5rem;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 12px;
-            text-align: center;
-        }
-        .input-group {
-            margin-bottom: 16px;
-        }
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: #475569;
-            font-size: 0.9rem;
-        }
-        .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        input {
-            width: 100%;
-            padding: 10px 40px 10px 12px;
-            font-size: 1rem;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        input:focus {
-            border-color: #3b82f6;
-        }
-        .unit {
-            position: absolute;
-            right: 12px;
-            color: #94a3b8;
-            font-size: 0.9rem;
-            pointer-events: none;
-        }
-        .results-section {
-            margin-top: 24px;
-            background-color: #f8fafc;
-            border-radius: 6px;
-            padding: 16px;
-            border: 1px solid #e2e8f0;
-        }
-        .result-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-        }
-        .result-row:not(:last-child) {
-            border-bottom: 1px dashed #e2e8f0;
-        }
-        .result-label {
-            font-weight: 500;
-            color: #334155;
-        }
-        .result-value {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: #0f172a;
-        }
-            body.kk-rehyd{display:block;min-height:0;background:#f7f5f0}
-        body.kk-rehyd .calculator-card{max-width:none;box-shadow:none;border:1px solid #ddd8d0;border-radius:16px}
-        body.kk-rehyd h2{text-align:left;border:0;padding:0;font-size:28px;letter-spacing:-.02em}
-    </style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f4f6f8;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+}
+.calculator-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 450px;
+  padding: 24px;
+  box-sizing: border-box;
+}
+h2 {
+  margin-top: 0;
+  color: #1e293b;
+  font-size: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 12px;
+  text-align: center;
+}
+.input-group {
+  margin-bottom: 16px;
+}
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.9rem;
+}
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+input {
+  width: 100%;
+  padding: 10px 40px 10px 12px;
+  font-size: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+input:focus {
+  border-color: #3b82f6;
+}
+.unit {
+  position: absolute;
+  right: 12px;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+.results-section {
+  margin-top: 24px;
+  background-color: #f8fafc;
+  border-radius: 6px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+}
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+.result-row:not(:last-child) {
+  border-bottom: 1px dashed #e2e8f0;
+}
+.result-label {
+  font-weight: 500;
+  color: #334155;
+}
+.result-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+body.kk-rehyd {
+  display: block;
+  min-height: 0;
+  background: #f7f5f0;
+}
+body.kk-rehyd .calculator-card {
+  max-width: none;
+  box-shadow: none;
+  border: 1px solid #ddd8d0;
+  border-radius: 16px;
+}
+body.kk-rehyd h2 {
+  text-align: left;
+  border: 0;
+  padding: 0;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+</style>
 <link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script><script src="i18n.js" defer></script></head>
 <body class="kk-rehyd">
 <main style="max-width:680px;margin:0 auto;padding:16px 16px 60px"><header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="profile.html" aria-label="Me: profile and activity">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
@@ -140,42 +155,42 @@
 </div>
 
 <script>
-    const startingMoistureInput = document.getElementById('startingMoisture');
-    const targetMoistureInput = document.getElementById('targetMoisture');
-    const desiredBatchSizeInput = document.getElementById('desiredBatchSize');
-    
-    const greenCoffeeResult = document.getElementById('greenCoffeeResult');
-    const waterResult = document.getElementById('waterResult');
+const startingMoistureInput = document.getElementById('startingMoisture');
+const targetMoistureInput = document.getElementById('targetMoisture');
+const desiredBatchSizeInput = document.getElementById('desiredBatchSize');
 
-    function calculateRehydration() {
-        // Convert percentage inputs to decimals
-        const mcs = parseFloat(startingMoistureInput.value) / 100;
-        const mcf = parseFloat(targetMoistureInput.value) / 100;
-        const y = parseFloat(desiredBatchSizeInput.value);
+const greenCoffeeResult = document.getElementById('greenCoffeeResult');
+const waterResult = document.getElementById('waterResult');
 
-        // Validation checking
-        if (isNaN(mcs) || isNaN(mcf) || isNaN(y) || mcs >= 1 || mcf >= 1 || y <= 0) {
-            greenCoffeeResult.textContent = "—";
-            waterResult.textContent = "—";
-            return;
-        }
+function calculateRehydration() {
+  // Convert percentage inputs to decimals
+  const mcs = parseFloat(startingMoistureInput.value) / 100;
+  const mcf = parseFloat(targetMoistureInput.value) / 100;
+  const y = parseFloat(desiredBatchSizeInput.value);
 
-        // Formula: x = (y * (1 - mcf)) / (1 - mcs)
-        const x = (y * (1 - mcf)) / (1 - mcs);
-        const waterToAdd = y - x;
+  // Validation checking
+  if (isNaN(mcs) || isNaN(mcf) || isNaN(y) || mcs >= 1 || mcf >= 1 || y <= 0) {
+    greenCoffeeResult.textContent = '—';
+    waterResult.textContent = '—';
+    return;
+  }
 
-        // Display results matching the rounding format from image.png
-        greenCoffeeResult.textContent = x.toFixed(2);
-        waterResult.textContent = waterToAdd.toFixed(3);
-    }
+  // Formula: x = (y * (1 - mcf)) / (1 - mcs)
+  const x = (y * (1 - mcf)) / (1 - mcs);
+  const waterToAdd = y - x;
 
-    // Attach real-time input listeners
-    startingMoistureInput.addEventListener('input', calculateRehydration);
-    targetMoistureInput.addEventListener('input', calculateRehydration);
-    desiredBatchSizeInput.addEventListener('input', calculateRehydration);
+  // Display results matching the rounding format from image.png
+  greenCoffeeResult.textContent = x.toFixed(2);
+  waterResult.textContent = waterToAdd.toFixed(3);
+}
 
-    // Run on initial load
-    calculateRehydration();
+// Attach real-time input listeners
+startingMoistureInput.addEventListener('input', calculateRehydration);
+targetMoistureInput.addEventListener('input', calculateRehydration);
+desiredBatchSizeInput.addEventListener('input', calculateRehydration);
+
+// Run on initial load
+calculateRehydration();
 </script>
 
 </main>

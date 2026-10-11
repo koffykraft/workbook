@@ -5,6 +5,7 @@
 // a helper file fails here instead of on a phone.
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 
 const RULES = {
   'no-undef': 'error', 'no-dupe-keys': 'error', 'no-dupe-args': 'error', 'no-unreachable': 'error',
@@ -71,4 +72,6 @@ export async function run(root, t) {
       .filter(n => !['if', 'event', 'this', 'try', 'void'].includes(n));
     t.check(`${f} buttons call functions that exist`, () => { const miss = calls.filter(n => !known.has(n)); if (miss.length) throw new Error('missing: ' + miss.join(', ')) });
   }
+  // code stays formatted (node scripts/format.mjs fixes it)
+  t.check('code is formatted', () => { const r = spawnSync(process.execPath, [path.join(root, 'scripts/format.mjs'), '--check'], { encoding: 'utf8' }); if (r.status) throw new Error((r.stdout || r.stderr).trim() + ': run node scripts/format.mjs') });
 }

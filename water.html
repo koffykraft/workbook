@@ -8,22 +8,133 @@
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>KoffyKraft Water</title>
 <style>
-:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b;--soft:#faf7f2;--ok:#3f6b5a;--bad:#b4432f}
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;color:var(--ink);background:var(--bg)}
-.app{max-width:680px;margin:auto;padding:24px 16px 60px}
-h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 4px}.sub{color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5}
-h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:20px 0 8px}
-.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:8px 0}
-.f{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
-label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted);font-weight:600;min-width:0}
-input,select{font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);width:100%;min-width:0}
-.full{grid-column:1/-1}
-.pre{display:flex;gap:6px;flex-wrap:wrap}.pre button{font:inherit;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;cursor:pointer}
-.out{font-size:15px;line-height:1.6}.out b{font-variant-numeric:tabular-nums}
-.big{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
-.chk{display:grid;gap:6px;font-size:14px}.chk div{display:flex;justify-content:space-between;gap:8px}
-.ok{color:var(--ok);font-weight:600}.bad{color:var(--bad);font-weight:600}
-.note{font-size:13px;color:var(--muted);line-height:1.5}
+:root {
+  --bg: #f7f5f0;
+  --ink: #171512;
+  --muted: #77716a;
+  --line: #ddd8d0;
+  --coffee: #8d583b;
+  --soft: #faf7f2;
+  --ok: #3f6b5a;
+  --bad: #b4432f;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial;
+  color: var(--ink);
+  background: var(--bg);
+}
+.app {
+  max-width: 680px;
+  margin: auto;
+  padding: 24px 16px 60px;
+}
+h1 {
+  font-size: 32px;
+  letter-spacing: -0.04em;
+  margin: 6px 0 4px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+h2 {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--coffee);
+  margin: 20px 0 8px;
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 8px 0;
+}
+.f {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  min-width: 0;
+}
+input,
+select {
+  font: inherit;
+  font-size: 16px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #fff;
+  color: var(--ink);
+  width: 100%;
+  min-width: 0;
+}
+.full {
+  grid-column: 1/-1;
+}
+.pre {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.pre button {
+  font: inherit;
+  font-size: 13px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+.out {
+  font-size: 15px;
+  line-height: 1.6;
+}
+.out b {
+  font-variant-numeric: tabular-nums;
+}
+.big {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.chk {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+.chk div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ok {
+  color: var(--ok);
+  font-weight: 600;
+}
+.bad {
+  color: var(--bad);
+  font-weight: 600;
+}
+.note {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
 </style>
 <link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script><script src="i18n.js" defer></script></head>
 <body><main class="app">
@@ -86,63 +197,299 @@ input,select{font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(
 <div style="margin-top:22px;font-size:11.5px;color:#9a948c;line-height:1.5">Text © 2026 T M Thomas, KoffyKraft™. Free to reuse with credit under <a href="license.html" style="color:#9a948c">CC BY-SA 4.0</a>.</div>
 </main>
 <script>
-const $=s=>document.getElementById(s),n=v=>{const x=parseFloat(v);return Number.isFinite(x)?x:0};
-const PRE=[['Melbourne',24,12],['WOC Budapest',51,40],['SCA',68,40],['Rao',76,50],['Barista Hustle',81,40],['Hendon',100,31]];
-const K='kk_water_v1';let S={gh:68,kh:40,vol:4,base:'ro',bgh:'',bkh:''};try{Object.assign(S,JSON.parse(localStorage.getItem(K))||{})}catch(e){}
-$('pre').innerHTML=PRE.map((p,i)=>'<button data-i="'+i+'">'+p[0]+' '+p[1]+'/'+p[2]+'</button>').join('');
-$('pre').onclick=e=>{const p=PRE[e.target.dataset.i];if(!p)return;S.gh=p[1];S.kh=p[2];fill();calc()};
-const F=['gh','kh','vol','base','bgh','bkh'];
-function fill(){F.forEach(k=>$(k).value=S[k])}
-F.forEach(k=>$(k).addEventListener('input',()=>{S[k]=$(k).value;calc()}));
-const r=v=>Math.round(v*10)/10;
-function calc(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}
- const own=S.base==='own';$('bgh').disabled=$('bkh').disabled=!own;
- const V=n(S.vol)*1000,G=n(S.gh),A=n(S.kh),g0=own?n(S.bgh):0,a0=own?n(S.bkh):0,C=1000;
- // a = buffer ml, b = hardness ml; base water fills the rest.
- // b(C-g0) - a*g0 = V(G-g0) ;  a(C-a0) - b*a0 = V(A-a0)
- const d=(C-g0)*(C-a0)-g0*a0,b=(V*(G-g0)*(C-a0)+g0*V*(A-a0))/d,a=(V*(A-a0)*(C-g0)+a0*V*(G-g0))/d;
- let h;if(!V)h='Enter a batch size.';
- else if(a<0||b<0)h='<span class="bad">Your water is already '+(b<0?'harder':'more buffered')+' than the target.</span> Mix it with distilled or RO water first, or pick a higher target.'+(()=>{const f=Math.min(g0>G?G/g0:1,a0>A?A/a0:1);return f<1?'<div class="note" style="margin-top:6px">To get under the target: use at most <b>'+Math.round(f*100)+'%</b> your water and the rest RO, enter that blend as your water, then add concentrates.</div>':''})();
- else{const w=V-a-b;h='<div class="big">'+r(b)+' ml hardness · '+r(a)+' ml buffer</div>Top up with <b>'+r(w/1000)+' L</b> '+(own?'of your water':'distilled or RO')+' to make '+r(V/1000)+' L.<div class="note" style="margin-top:6px">Without concentrates: add <b>'+(b*2.45/1000).toFixed(2)+' g</b> Epsom salt and <b>'+(a*1.68/1000).toFixed(2)+' g</b> baking soda straight into the batch (needs a 0.01 g scale).</div>'}
- $('out').innerHTML=h;
- const row=(l,v,lo,hi,id)=>'<div><span>'+l+' '+v+'</span><span class="'+(v>=lo&&v<=hi?'ok">In range':'bad">Out of range')+'</span></div>';
- $('chk').innerHTML=row('Hardness',G,17,85)+row('Alkalinity',A,10,100)+'<div><span>GH to KH ratio</span><span>'+(A?r(G/A):'–')+' : 1</span></div>'}
-fill();calc();
-const MK='kk_water_mix_v1';let M={mh:95,mc:28,mt:92,mv:1000,mha:'',ml:'',mu:'g'};try{Object.assign(M,JSON.parse(localStorage.getItem(MK))||{})}catch(e){}
-const MF=['mh','mc','mt','mv','mha','ml','mu'];MF.forEach(k=>{$(k).value=M[k];$(k).addEventListener('input',()=>{M[k]=$(k).value;mix()})});
-const rho=T=>1-(T+288.9414)/(508929.2*(T+68.12963))*Math.pow(T-3.9863,2);
-function split(Th,Tc,Tt,W){const f=(Tt-Tc)/(Th-Tc);return [W*f,W*(1-f),f]}
-function mix(){try{localStorage.setItem(MK,JSON.stringify(M))}catch(e){}
- const Th=n(M.mh),Tc=n(M.mc),loss=n(M.ml),Tt=n(M.mt)+loss,byG=M.mu==='g',V=n(M.mv),avail=M.mha===''?null:n(M.mha);
- let h;const u=byG?'g':'ml';
- if(!(Th>Tc))h='<span class="bad">Hot water must be hotter than cold water.</span>';
- else if(Tt>Th)h='<span class="bad">Target'+(loss?' plus vessel loss':'')+' ('+r(Tt)+' °C) is above the hot water.</span> Heat the water more.';
- else if(Tt<Tc)h='<span class="bad">Target is below the cold water.</span> Use colder water.';
- else if(!V)h='Enter the final amount.';
- else{
-  // heat balance on mass; final mass W from target volume at mix temperature
-  const W=byG?V:V*rho(Tt),[mH,mC]=split(Th,Tc,Tt,W);
-  let hot=byG?mH:mH/rho(Th),cold=byG?mC:mC/rho(Tc),warn='';
-  if(avail!=null&&avail<hot){const k=avail/hot;warn='<div class="bad" style="margin-top:6px">Only '+r(avail)+' '+u+' hot available. Max batch at this target: '+Math.floor((byG?W:V)*k)+' '+u+' (use all the hot and '+r(cold*k)+' '+u+' cold).</div>'}
-  h='<div class="big">'+Math.round(hot)+' '+u+' hot · '+Math.round(cold)+' '+u+' cold</div>Hot at '+r(Th)+' °C, cold at '+r(Tc)+' °C, gives '+r(n(M.mt))+' °C'+(loss?' after a '+r(loss)+' °C vessel drop':'')+'. Hot share '+Math.round(mH/W*100)+'%.'+warn+'<div class="note" style="margin-top:6px">Pour cold first, then hot, stir, and read before use. Each 1 °C error in the hot reading moves the mix by about '+r(mH/W)+' °C.</div>'}
- $('mout').innerHTML=h;
- // quick chart: hot share for targets at the current hot and cold temps
- if(Th>Tc){const T=[];for(let t=Math.ceil(Tc/5)*5;t<=Th;t+=(t>=80?2:5))if(t>Tc)T.push(t);const W=V||1000;
-  $('mchart').innerHTML='<div class="note" style="margin-bottom:6px">Quick chart for '+r(Th)+' °C hot and '+r(Tc)+' °C cold, per '+W+' '+u+'</div><table style="width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums"><tr style="color:var(--muted);font-size:12px"><td>Target</td><td style="text-align:right">Hot</td><td style="text-align:right">Cold</td><td style="width:40%"></td></tr>'+T.map(t=>{const tt=t+loss;if(tt>Th)return '';const Wm=byG?W:W*rho(tt),[a,b,f]=split(Th,Tc,tt,Wm);const ho=byG?a:a/rho(Th),co=byG?b:b/rho(Tc);return '<tr style="border-top:1px solid #efe8de'+(t===n(M.mt)?';font-weight:700':'')+'"><td style="padding:5px 0">'+t+' °C</td><td style="text-align:right">'+Math.round(ho)+'</td><td style="text-align:right">'+Math.round(co)+'</td><td style="padding-left:10px"><div style="height:8px;border-radius:4px;background:#ece7df"><div style="height:8px;border-radius:4px;background:var(--coffee);width:'+Math.round(f*100)+'%"></div></div></td></tr>'}).join('')+'</table>'}
- else $('mchart').innerHTML=''}
+const $ = s => document.getElementById(s),
+  n = v => {
+    const x = parseFloat(v);
+    return Number.isFinite(x) ? x : 0;
+  };
+const PRE = [
+  ['Melbourne', 24, 12],
+  ['WOC Budapest', 51, 40],
+  ['SCA', 68, 40],
+  ['Rao', 76, 50],
+  ['Barista Hustle', 81, 40],
+  ['Hendon', 100, 31],
+];
+const K = 'kk_water_v1';
+let S = { gh: 68, kh: 40, vol: 4, base: 'ro', bgh: '', bkh: '' };
+try {
+  Object.assign(S, JSON.parse(localStorage.getItem(K)) || {});
+} catch (e) {}
+$('pre').innerHTML = PRE.map(
+  (p, i) => '<button data-i="' + i + '">' + p[0] + ' ' + p[1] + '/' + p[2] + '</button>'
+).join('');
+$('pre').onclick = e => {
+  const p = PRE[e.target.dataset.i];
+  if (!p) return;
+  S.gh = p[1];
+  S.kh = p[2];
+  fill();
+  calc();
+};
+const F = ['gh', 'kh', 'vol', 'base', 'bgh', 'bkh'];
+function fill() {
+  F.forEach(k => ($(k).value = S[k]));
+}
+F.forEach(k =>
+  $(k).addEventListener('input', () => {
+    S[k] = $(k).value;
+    calc();
+  })
+);
+const r = v => Math.round(v * 10) / 10;
+function calc() {
+  try {
+    localStorage.setItem(K, JSON.stringify(S));
+  } catch (e) {}
+  const own = S.base === 'own';
+  $('bgh').disabled = $('bkh').disabled = !own;
+  const V = n(S.vol) * 1000,
+    G = n(S.gh),
+    A = n(S.kh),
+    g0 = own ? n(S.bgh) : 0,
+    a0 = own ? n(S.bkh) : 0,
+    C = 1000;
+  // a = buffer ml, b = hardness ml; base water fills the rest.
+  // b(C-g0) - a*g0 = V(G-g0) ;  a(C-a0) - b*a0 = V(A-a0)
+  const d = (C - g0) * (C - a0) - g0 * a0,
+    b = (V * (G - g0) * (C - a0) + g0 * V * (A - a0)) / d,
+    a = (V * (A - a0) * (C - g0) + a0 * V * (G - g0)) / d;
+  let h;
+  if (!V) h = 'Enter a batch size.';
+  else if (a < 0 || b < 0)
+    h =
+      '<span class="bad">Your water is already ' +
+      (b < 0 ? 'harder' : 'more buffered') +
+      ' than the target.</span> Mix it with distilled or RO water first, or pick a higher target.' +
+      (() => {
+        const f = Math.min(g0 > G ? G / g0 : 1, a0 > A ? A / a0 : 1);
+        return f < 1
+          ? '<div class="note" style="margin-top:6px">To get under the target: use at most <b>' +
+              Math.round(f * 100) +
+              '%</b> your water and the rest RO, enter that blend as your water, then add concentrates.</div>'
+          : '';
+      })();
+  else {
+    const w = V - a - b;
+    h =
+      '<div class="big">' +
+      r(b) +
+      ' ml hardness · ' +
+      r(a) +
+      ' ml buffer</div>Top up with <b>' +
+      r(w / 1000) +
+      ' L</b> ' +
+      (own ? 'of your water' : 'distilled or RO') +
+      ' to make ' +
+      r(V / 1000) +
+      ' L.<div class="note" style="margin-top:6px">Without concentrates: add <b>' +
+      ((b * 2.45) / 1000).toFixed(2) +
+      ' g</b> Epsom salt and <b>' +
+      ((a * 1.68) / 1000).toFixed(2) +
+      ' g</b> baking soda straight into the batch (needs a 0.01 g scale).</div>';
+  }
+  $('out').innerHTML = h;
+  const row = (l, v, lo, hi, id) =>
+    '<div><span>' +
+    l +
+    ' ' +
+    v +
+    '</span><span class="' +
+    (v >= lo && v <= hi ? 'ok">In range' : 'bad">Out of range') +
+    '</span></div>';
+  $('chk').innerHTML =
+    row('Hardness', G, 17, 85) +
+    row('Alkalinity', A, 10, 100) +
+    '<div><span>GH to KH ratio</span><span>' +
+    (A ? r(G / A) : '–') +
+    ' : 1</span></div>';
+}
+fill();
+calc();
+const MK = 'kk_water_mix_v1';
+let M = { mh: 95, mc: 28, mt: 92, mv: 1000, mha: '', ml: '', mu: 'g' };
+try {
+  Object.assign(M, JSON.parse(localStorage.getItem(MK)) || {});
+} catch (e) {}
+const MF = ['mh', 'mc', 'mt', 'mv', 'mha', 'ml', 'mu'];
+MF.forEach(k => {
+  $(k).value = M[k];
+  $(k).addEventListener('input', () => {
+    M[k] = $(k).value;
+    mix();
+  });
+});
+const rho = T => 1 - ((T + 288.9414) / (508929.2 * (T + 68.12963))) * Math.pow(T - 3.9863, 2);
+function split(Th, Tc, Tt, W) {
+  const f = (Tt - Tc) / (Th - Tc);
+  return [W * f, W * (1 - f), f];
+}
+function mix() {
+  try {
+    localStorage.setItem(MK, JSON.stringify(M));
+  } catch (e) {}
+  const Th = n(M.mh),
+    Tc = n(M.mc),
+    loss = n(M.ml),
+    Tt = n(M.mt) + loss,
+    byG = M.mu === 'g',
+    V = n(M.mv),
+    avail = M.mha === '' ? null : n(M.mha);
+  let h;
+  const u = byG ? 'g' : 'ml';
+  if (!(Th > Tc)) h = '<span class="bad">Hot water must be hotter than cold water.</span>';
+  else if (Tt > Th)
+    h =
+      '<span class="bad">Target' +
+      (loss ? ' plus vessel loss' : '') +
+      ' (' +
+      r(Tt) +
+      ' °C) is above the hot water.</span> Heat the water more.';
+  else if (Tt < Tc) h = '<span class="bad">Target is below the cold water.</span> Use colder water.';
+  else if (!V) h = 'Enter the final amount.';
+  else {
+    // heat balance on mass; final mass W from target volume at mix temperature
+    const W = byG ? V : V * rho(Tt),
+      [mH, mC] = split(Th, Tc, Tt, W);
+    let hot = byG ? mH : mH / rho(Th),
+      cold = byG ? mC : mC / rho(Tc),
+      warn = '';
+    if (avail != null && avail < hot) {
+      const k = avail / hot;
+      warn =
+        '<div class="bad" style="margin-top:6px">Only ' +
+        r(avail) +
+        ' ' +
+        u +
+        ' hot available. Max batch at this target: ' +
+        Math.floor((byG ? W : V) * k) +
+        ' ' +
+        u +
+        ' (use all the hot and ' +
+        r(cold * k) +
+        ' ' +
+        u +
+        ' cold).</div>';
+    }
+    h =
+      '<div class="big">' +
+      Math.round(hot) +
+      ' ' +
+      u +
+      ' hot · ' +
+      Math.round(cold) +
+      ' ' +
+      u +
+      ' cold</div>Hot at ' +
+      r(Th) +
+      ' °C, cold at ' +
+      r(Tc) +
+      ' °C, gives ' +
+      r(n(M.mt)) +
+      ' °C' +
+      (loss ? ' after a ' + r(loss) + ' °C vessel drop' : '') +
+      '. Hot share ' +
+      Math.round((mH / W) * 100) +
+      '%.' +
+      warn +
+      '<div class="note" style="margin-top:6px">Pour cold first, then hot, stir, and read before use. Each 1 °C error in the hot reading moves the mix by about ' +
+      r(mH / W) +
+      ' °C.</div>';
+  }
+  $('mout').innerHTML = h;
+  // quick chart: hot share for targets at the current hot and cold temps
+  if (Th > Tc) {
+    const T = [];
+    for (let t = Math.ceil(Tc / 5) * 5; t <= Th; t += t >= 80 ? 2 : 5) if (t > Tc) T.push(t);
+    const W = V || 1000;
+    $('mchart').innerHTML =
+      '<div class="note" style="margin-bottom:6px">Quick chart for ' +
+      r(Th) +
+      ' °C hot and ' +
+      r(Tc) +
+      ' °C cold, per ' +
+      W +
+      ' ' +
+      u +
+      '</div><table style="width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums"><tr style="color:var(--muted);font-size:12px"><td>Target</td><td style="text-align:right">Hot</td><td style="text-align:right">Cold</td><td style="width:40%"></td></tr>' +
+      T.map(t => {
+        const tt = t + loss;
+        if (tt > Th) return '';
+        const Wm = byG ? W : W * rho(tt),
+          [a, b, f] = split(Th, Tc, tt, Wm);
+        const ho = byG ? a : a / rho(Th),
+          co = byG ? b : b / rho(Tc);
+        return (
+          '<tr style="border-top:1px solid #efe8de' +
+          (t === n(M.mt) ? ';font-weight:700' : '') +
+          '"><td style="padding:5px 0">' +
+          t +
+          ' °C</td><td style="text-align:right">' +
+          Math.round(ho) +
+          '</td><td style="text-align:right">' +
+          Math.round(co) +
+          '</td><td style="padding-left:10px"><div style="height:8px;border-radius:4px;background:#ece7df"><div style="height:8px;border-radius:4px;background:var(--coffee);width:' +
+          Math.round(f * 100) +
+          '%"></div></div></td></tr>'
+        );
+      }).join('') +
+      '</table>';
+  } else $('mchart').innerHTML = '';
+}
 mix();
-const WK='kk_water_label_v1';let L={wca:'',wmg:'',whc:'',wna:'',wnm:''};try{Object.assign(L,JSON.parse(localStorage.getItem(WK))||{})}catch(e){}
-const LF=['wca','wmg','whc','wna','wnm'];LF.forEach(k=>{$(k).value=L[k];$(k).addEventListener('input',()=>{L[k]=$(k).value;label()})});
-function label(){try{localStorage.setItem(WK,JSON.stringify(L))}catch(e){}
- if(L.wca===''&&L.wmg===''&&L.whc===''){$('wout').innerHTML='';return}
- const gh=n(L.wca)*2.497+n(L.wmg)*4.118,kh=n(L.whc)*0.8202,na=L.wna===''?null:n(L.wna);
- const v=[];if(gh<17)v.push('very soft, coffee may taste flat');else if(gh>85)v.push('hardness above the SCA range, scale risk in machines');
- if(kh<10)v.push('very little buffer, coffee may taste sharp');else if(kh>100)v.push('high buffer, coffee may taste dull or chalky');
- if(na!=null&&na>30)v.push('sodium is high');
- const ok=!v.length;
- $('wout').innerHTML='<div class="big">GH '+Math.round(gh)+' · KH '+Math.round(kh)+'</div>'+(ok?'<span class="ok">Inside the SCA ranges as it is.</span>':'<span class="bad">'+v.join('; ')+'.</span>')+'<div class="note" style="margin-top:6px">GH:KH ratio '+(kh?r(gh/kh):'–')+' : 1. The SCA target of 68 and 40 is about 1.7 : 1.</div><div style="margin-top:10px"><button type="button" id="wuse" style="font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;cursor:pointer">Use as my starting water</button></div>';
- $('wuse').onclick=()=>{S.base='own';S.bgh=Math.round(gh);S.bkh=Math.round(kh);fill();calc();$('base').scrollIntoView({behavior:'smooth',block:'center'})}}
+const WK = 'kk_water_label_v1';
+let L = { wca: '', wmg: '', whc: '', wna: '', wnm: '' };
+try {
+  Object.assign(L, JSON.parse(localStorage.getItem(WK)) || {});
+} catch (e) {}
+const LF = ['wca', 'wmg', 'whc', 'wna', 'wnm'];
+LF.forEach(k => {
+  $(k).value = L[k];
+  $(k).addEventListener('input', () => {
+    L[k] = $(k).value;
+    label();
+  });
+});
+function label() {
+  try {
+    localStorage.setItem(WK, JSON.stringify(L));
+  } catch (e) {}
+  if (L.wca === '' && L.wmg === '' && L.whc === '') {
+    $('wout').innerHTML = '';
+    return;
+  }
+  const gh = n(L.wca) * 2.497 + n(L.wmg) * 4.118,
+    kh = n(L.whc) * 0.8202,
+    na = L.wna === '' ? null : n(L.wna);
+  const v = [];
+  if (gh < 17) v.push('very soft, coffee may taste flat');
+  else if (gh > 85) v.push('hardness above the SCA range, scale risk in machines');
+  if (kh < 10) v.push('very little buffer, coffee may taste sharp');
+  else if (kh > 100) v.push('high buffer, coffee may taste dull or chalky');
+  if (na != null && na > 30) v.push('sodium is high');
+  const ok = !v.length;
+  $('wout').innerHTML =
+    '<div class="big">GH ' +
+    Math.round(gh) +
+    ' · KH ' +
+    Math.round(kh) +
+    '</div>' +
+    (ok
+      ? '<span class="ok">Inside the SCA ranges as it is.</span>'
+      : '<span class="bad">' + v.join('; ') + '.</span>') +
+    '<div class="note" style="margin-top:6px">GH:KH ratio ' +
+    (kh ? r(gh / kh) : '–') +
+    ' : 1. The SCA target of 68 and 40 is about 1.7 : 1.</div><div style="margin-top:10px"><button type="button" id="wuse" style="font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;cursor:pointer">Use as my starting water</button></div>';
+  $('wuse').onclick = () => {
+    S.base = 'own';
+    S.bgh = Math.round(gh);
+    S.bkh = Math.round(kh);
+    fill();
+    calc();
+    $('base').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+}
 label();
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 </script><script src="pv.js" defer></script>
 </body></html>

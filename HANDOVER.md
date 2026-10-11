@@ -27,9 +27,22 @@ Read this first in any new chat. It records how the app is built, the working ru
 Roast timer and graph, roastbooks, cup and brew pages, water, colour.js, varieties.js, brewkb.js content, howto.js content.
 
 ## Tests and release
-- `npm test` runs tests/run.mjs: static checks, API checks against a fake D1 (node:sqlite), and phone-size browser checks with Playwright (Chromium at /opt/pw-browsers/chromium). 229 checks at last count. Every new feature gets a check.
+- `npm test` runs tests/run.mjs: static checks, API checks against a fake D1 (node:sqlite), and phone-size browser checks with Playwright (Chromium at /opt/pw-browsers/chromium). Check count grows with each feature (348 on 11 Oct 2026). Every new feature gets a check.
 - `bash scripts/deploy.sh` runs the tests then `npx wrangler deploy`. It needs a Cloudflare API token (CLOUDFLARE_API_TOKEN). Pushing to GitHub alone does not update the Worker.
 - New migrations must be applied to D1 (`npx wrangler d1 migrations apply koffykraft --remote`).
+
+## Code rules (from 11 Oct 2026)
+- `node scripts/format.mjs` formats every .js file and the script and style blocks inside pages (Prettier, 110 columns). Page markup and text are never touched. The checks fail if code is not formatted.
+- `tests/lint.mjs` runs ESLint on every script and page. Each page is checked with only the globals its own `<script src>` files provide, so a missing include fails the checks. It also checks that every onclick and onchange calls a function that exists.
+- Shared helpers live in `kk-base.js` (esc, num, r1, r2). Load it before a page's own script or snap.js; never define these again in a page.
+- Every page is opened in a phone-size browser by the checks (42 pages).
+- Not served: tests, scripts, node_modules, trace-api.js (see .assetsignore).
+
+## File map
+- Pages: home (start), origin (farm records), roast-timer-v14 (live roast), roast-graph, roasts (Roastbook), cup (brews and cupping), methods (brew guide), water, crop, map, journey, contents (all features), share (spaces), profile (me and send-out profile), trace (lot passports), account, data, license, privacy, terms. Smaller tools: capture, ocr, process, process-run, rehydration, stats, roastbook, roastbooks, brew, index.
+- Shared scripts: kk-base (helpers), kk.css + tap.js (look, tap sizes, update notice), i18n.js + lang/ (languages), sync.js (sign-in and cloud), origin-db.js and koffykraft-db.js (local databases), prefs.js, cloud-ui.js, snap.js (record snapshots for sharing), sharecard.js (images and PDF), export.js, howto.js and brewkb.js (guide content), colour.js, varieties.js, contents.js, feedback.js, pv.js, trace-core.js, qrcode.js (third party).
+- Server: worker.js (routes), trace-api.js (passports), migrations/.
+- Not KoffyKraft: tagrobuild.html (a TAGRO ledger page) and post (an Instagram preview) sit in the repo and are publicly served; the owner should decide whether they belong here.
 
 ## Pending
 - CoffeeMind guide points deployed (cache v86, 11 Oct 2026). The Cloudflare token was pasted in chat: roll it after the new app is set up.

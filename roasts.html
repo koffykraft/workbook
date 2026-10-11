@@ -1,132 +1,2415 @@
 <!doctype html>
 <!-- KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE. -->
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fff"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-title" content="KoffyKraft"><meta name="apple-mobile-web-app-capable" content="yes"><title>KoffyKraft Roastbook</title><style>:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b}*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Arial;color:var(--ink);background:var(--bg)}.app{max-width:680px;margin:auto;padding:24px 16px 60px}header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}.headbrand{display:flex;flex-direction:column;gap:8px;flex:1}.wordmark{display:block;height:40px;object-fit:contain;object-position:left center}@media(min-width:480px){.wordmark{height:44px}}.brand{font-size:10px;letter-spacing:.14em;color:var(--coffee);font-weight:750;margin-top:2px}h1{font-size:32px;letter-spacing:-.04em;margin:6px 0 16px;line-height:1.2}@media(min-width:480px){h1{font-size:42px;margin:8px 0 20px}}.back{color:var(--ink);text-decoration:none;font-size:14px;padding:8px 0}#auth{margin:12px 0;padding:11px;background:#f0e8dc;border-radius:11px;text-align:center;font-size:13px;display:none}button{border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 14px;font-weight:600;cursor:pointer;font-size:13px}button:active{background:#faf8f4}.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}input{padding:12px;border:1px solid var(--line);border-radius:12px;width:100%;background:#fff;font:inherit;font-size:16px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin:8px 0;cursor:pointer;transition:background 0.15s;user-select:none}.card:active{background:#faf8f4}.card b{font-size:18px;display:block}.meta{font-size:12px;color:var(--muted);margin-top:6px}.empty{color:var(--muted);margin-top:24px;padding:20px;border:1px dashed var(--line);border-radius:16px;font-size:13px}.detail-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;z-index:100;padding:16px}.detail-overlay.open{display:flex;align-items:flex-end}.detail{background:#fff;color:var(--ink);border-radius:18px 18px 0 0;width:100%;max-height:88vh;overflow-y:auto;padding:18px 18px 28px;box-shadow:0 -6px 24px rgba(0,0,0,.18)}@media(min-width:480px){.detail-overlay.open{align-items:center}.detail{border-radius:20px;max-width:640px;max-height:86vh;margin:0 auto}}.dhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.detail b{display:block;font-size:22px;letter-spacing:-.02em}.detail .meta{color:var(--muted);font-size:13px;margin-top:4px}.close{border:1px solid var(--line);background:#fff;border-radius:50%;width:36px;height:36px;padding:0;font-size:14px;flex-shrink:0}.detail h3{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:20px 0 8px}.curve{width:100%;height:auto;display:block}.curve .gl{stroke:#eee7de;stroke-width:1}.curve .ax{fill:#8a837b;font-size:11px}.curve .evl{stroke:#c9bfb2;stroke-dasharray:3 3}.curve path{fill:none;stroke-width:2.2;stroke-linejoin:round}.curve .bt{stroke:#8d583b}.curve .et{stroke:#9aa4ad}.legend{font-size:12px;color:var(--muted);margin-top:6px}.legend .k{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin:0 5px 0 8px}.legend .k.bt{background:#8d583b;margin-left:0}.legend .k.et{background:#9aa4ad}table.ev{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}table.ev th{text-align:left;font-size:11px;color:var(--muted);font-weight:600;padding:6px 4px;border-bottom:1px solid var(--line)}table.ev td{padding:8px 4px;border-bottom:1px solid #f0ebe4}.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0;font-size:14px}.facts dt{color:var(--muted)}.facts dd{margin:0;font-variant-numeric:tabular-nums}.nodata{font-size:13px;color:var(--muted);padding:10px 0}.saved{margin-top:18px;font-size:12px;color:var(--muted)}.exports{display:flex;gap:8px;flex-wrap:wrap}.dactions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}.stat{background:#faf7f2;border:1px solid #efe8de;border-radius:12px;padding:10px 10px 9px}.stat .sv{font-size:18px;font-weight:650;letter-spacing:-.01em;font-variant-numeric:tabular-nums}.stat .sl{font-size:11px;color:var(--muted);margin-top:2px}.stat .sl em,.phlegend em{font-style:normal;color:#a39b91}.phasebar{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px}.ph.dry,.sw.dry{background:#d8bf6a}.ph.mai,.sw.mai{background:#b0784f}.ph.dev,.sw.dev{background:#4e3121}.phlegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin-top:8px}.phlegend .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}.phlegend .pt{display:inline;font-size:13px;font-weight:650;font-variant-numeric:tabular-nums}.curve .band.dry{fill:#d8bf6a;opacity:.10}.curve .band.mai{fill:#b0784f;opacity:.08}.curve .band.dev{fill:#4e3121;opacity:.08}.curve .zl{stroke:#c9bfb2;stroke-width:1}.curve .ror{stroke:#3f6b5a}.curve .btd{fill:#8d583b}.curve .etd{fill:#9aa4ad}.curve .rord{fill:#3f6b5a}.legend .k.ror{background:#3f6b5a;margin-left:0}.detail .hint{font-size:12px;color:var(--muted);margin-top:6px}.card.pickable{position:relative;padding-right:56px}.card.pickable::after{content:attr(data-letter);position:absolute;right:16px;top:50%;width:26px;height:26px;margin-top:-13px;border:2px solid var(--line);border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;box-sizing:border-box}.card.picked{border-color:var(--coffee);background:#fbf6f0}.card.picked::after{background:var(--coffee);border-color:var(--coffee)}#cmpBar{position:fixed;left:0;right:0;bottom:0;display:none;gap:12px;align-items:center;justify-content:space-between;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);z-index:50;font-size:13px;color:var(--muted)}.cmp-go{background:#171512;color:#fff;border-color:#171512;padding:12px 18px}.cmp-go:disabled{opacity:.35}body.comparing .app{padding-bottom:100px}#compareBtn{border-color:var(--coffee);color:var(--coffee)}.curve .c0{stroke:#8d583b}.curve .c1{stroke:#2e6f95}.curve .c2{stroke:#c47f1d}.curve .c0d{fill:#8d583b}.curve .c1d{fill:#2e6f95}.curve .c2d{fill:#c47f1d}.cdot{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;color:#fff;font-size:11px;font-weight:700;vertical-align:middle;flex-shrink:0}.cdot.c0{background:#8d583b}.cdot.c1{background:#2e6f95}.cdot.c2{background:#c47f1d}.cmpleg{display:grid;gap:8px;margin-top:14px;font-size:14px}.cmpleg>div{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.cmpleg .ct{display:inline;font-size:15px;letter-spacing:0}.cmpleg em{font-style:normal;color:var(--muted);font-size:12px}.phcmp{display:grid;gap:10px}.phrow{display:flex;align-items:center;gap:10px}.phtrack{flex:1}.phtot{font-size:13px;font-variant-numeric:tabular-nums;min-width:38px;text-align:right}.legend .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 8px;vertical-align:-1px}.legend .sw:first-child{margin-left:0}.cmpwrap{overflow-x:auto;margin:0 -4px}table.cmp{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}table.cmp th,table.cmp td{padding:7px 6px;border-bottom:1px solid #f0ebe4;text-align:left;vertical-align:top}table.cmp tbody th{color:var(--muted);font-weight:500;white-space:nowrap}table.cmp thead th{border-bottom:1px solid var(--line);font-size:11px;color:var(--muted)}table.cmp td{white-space:nowrap}table.cmp td.wrap{white-space:normal;min-width:90px}.card.picked[data-letter="B"]::after{background:#2e6f95;border-color:#2e6f95}.card.picked[data-letter="C"]::after{background:#c47f1d;border-color:#c47f1d}table.cmp td.dl{color:var(--coffee);font-weight:600;white-space:nowrap}.btn-link{display:inline-block;border:1px solid var(--line);border-radius:11px;padding:9px 13px;font-weight:600;font-size:13px;color:var(--coffee);text-decoration:none;background:#fff}.loc{display:inline-block;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:#f0ebe4;color:#77716a;margin-left:8px;vertical-align:middle}.loc.in{background:#e3eee8;color:#3f6b5a}.card b .loc,.card>.loc{margin-left:0;margin-top:6px}.cloudline{display:flex;align-items:center;justify-content:space-between;gap:10px}.cloudline .loc{margin-left:0;font-size:13px;padding:6px 10px}</style><style>header.kkh{display:block;margin:0 0 18px;padding:6px 0 0;border-bottom:1px solid #ddd8d0;gap:0}
-.kkh-top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
-.kkh-brand{font-size:19px;font-weight:300;letter-spacing:1px;color:#171512;text-decoration:none;white-space:nowrap}
-.kkh-acct{width:40px;height:40px;border:1px solid #ddd8d0;border-radius:50%;display:grid;place-items:center;text-decoration:none;font-size:18px;flex-shrink:0;background:#fff}
-nav.kkh-nav{display:flex;flex:none;justify-content:space-between;font-size:14px;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:6px -4px 0;padding:0 0 8px}
-.kkh-nav::-webkit-scrollbar{display:none}
-.kkh-nav a{flex:0 0 auto;padding:8px 7px;border-radius:999px;font-size:14px;color:#171512;text-decoration:none;white-space:nowrap}
-.kkh-nav a[aria-current=page]{background:#171512;color:#fff;font-weight:600}
-.kkh-sub{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 6px}
-.kkh-sub h1{margin:0}
-.kkh-sub a{font-size:14px;color:#8d583b;text-decoration:none;white-space:nowrap}
-@media(max-width:380px){.kkh-nav a{padding:8px 5px;font-size:13.5px}}
-.kkh-nav a{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}</style><script src="tap.js" defer></script><script src="i18n.js" defer></script></head><body><main class="app"><header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="profile.html" aria-label="Me: profile and activity">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html" aria-current="page">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header><h1>Roastbook</h1><div id="auth"><small id="authMsg"></small></div><div class="exports"><button id="exportCsv">Export CSV</button><button id="exportJson">Full backup (JSON)</button></div><section class="filters"><input id="estate" placeholder="Estate"><input id="coffee" placeholder="Bean / coffee"><input id="date" type="date"><input id="type" placeholder="Roast type"></section><section id="list"></section><div id="detailOverlay" class="detail-overlay"><div id="detail" class="detail"></div></div></main><script src="sync.js"></script><script src="prefs.js"></script><script src="origin-db.js"></script><script>
-const exportCsvBtn=document.getElementById('exportCsv'),estateInput=document.getElementById('estate'),coffeeInput=document.getElementById('coffee'),dateInput=document.getElementById('date'),typeInput=document.getElementById('type'),listEl=document.getElementById('list'),detailEl=document.getElementById('detail'),detailOverlay=document.getElementById('detailOverlay'),authDiv=document.getElementById('auth'),authMsg=document.getElementById('authMsg');
-let roastRows=[];
-function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
-function openDB(){return new Promise((ok,no)=>{const N="KoffyKraftTemporaryRoastbook",need=["roasts","plans"];const go=v=>{let r;try{r=v?indexedDB.open(N,v):indexedDB.open(N)}catch(e){no(e);return}r.onupgradeneeded=e=>{const db=e.target.result;need.forEach(s=>{if(!db.objectStoreNames.contains(s))db.createObjectStore(s,{keyPath:"id"})})};r.onsuccess=()=>{const db=r.result;if(need.some(s=>!db.objectStoreNames.contains(s))){const nv=db.version+1;db.close();go(nv)}else{db.onversionchange=()=>db.close();ok(db)}};r.onerror=()=>no(r.error);r.onblocked=()=>no(new Error("Close other KoffyKraft tabs and try again"))};go()})}
-async function loadLocal(){try{const db=await openDB();const local=await new Promise((ok,no)=>{const tx=db.transaction('roasts','readonly'),q=tx.objectStore('roasts').getAll();q.onsuccess=()=>ok(q.result||[]);q.onerror=()=>no(q.error)});db.close();return local}catch(e){return[]}}
-let cloudLoaded=false;async function loadCloud(){cloudLoaded=false;if(!SYNC.isAuthenticated())return[];const result=await SYNC.loadRoasts();if(result.error||!result.items)return[];cloudLoaded=true;const pj=(v,d)=>{if(v==null||v==='')return d;if(typeof v!=='string')return v;try{return JSON.parse(v)}catch{return d}};return result.items.map(r=>{let n=pj(r.notes,null);if(!n||typeof n!=='object')n={bean:r.notes||'',coffeeCode:r.notes||''};return {id:r.id,roastDate:r.roast_date,roastNo:r.roast_number,estate:n.estate||'',coffeeCode:n.coffeeCode||'',bean:n.bean||'',notes:n.notes||'',roasteryName:n.roasteryName||'',machineName:n.machineName||'',greenLotId:n.greenLotId||'',unit:n.unit||'C',elapsed:n.elapsed,targetColor:r.target_color,finalColor:r.final_color,greenWeight:r.green_weight,roastedWeight:r.roasted_weight,moisture:r.moisture,chargeTemp:r.charge_temperature,finishedAt:n.finishedAt||r.ended_at||(r.created_at?String(r.created_at).replace(' ','T')+'Z':''),events:pj(r.events_json,[]),readings:pj(r.readings_json,{exhaust:[],bean:[]}),cloud:true}})}
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fff"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-title" content="KoffyKraft"><meta name="apple-mobile-web-app-capable" content="yes"><title>KoffyKraft Roastbook</title><style>
+:root {
+  --bg: #f7f5f0;
+  --ink: #171512;
+  --muted: #77716a;
+  --line: #ddd8d0;
+  --coffee: #8d583b;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Arial;
+  color: var(--ink);
+  background: var(--bg);
+}
+.app {
+  max-width: 680px;
+  margin: auto;
+  padding: 24px 16px 60px;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.headbrand {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+.wordmark {
+  display: block;
+  height: 40px;
+  object-fit: contain;
+  object-position: left center;
+}
+@media (min-width: 480px) {
+  .wordmark {
+    height: 44px;
+  }
+}
+.brand {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--coffee);
+  font-weight: 750;
+  margin-top: 2px;
+}
+h1 {
+  font-size: 32px;
+  letter-spacing: -0.04em;
+  margin: 6px 0 16px;
+  line-height: 1.2;
+}
+@media (min-width: 480px) {
+  h1 {
+    font-size: 42px;
+    margin: 8px 0 20px;
+  }
+}
+.back {
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 8px 0;
+}
+#auth {
+  margin: 12px 0;
+  padding: 11px;
+  background: #f0e8dc;
+  border-radius: 11px;
+  text-align: center;
+  font-size: 13px;
+  display: none;
+}
+button {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 11px;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13px;
+}
+button:active {
+  background: #faf8f4;
+}
+.filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 14px 0;
+}
+input {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  width: 100%;
+  background: #fff;
+  font: inherit;
+  font-size: 16px;
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  margin: 8px 0;
+  cursor: pointer;
+  transition: background 0.15s;
+  user-select: none;
+}
+.card:active {
+  background: #faf8f4;
+}
+.card b {
+  font-size: 18px;
+  display: block;
+}
+.meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.empty {
+  color: var(--muted);
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  font-size: 13px;
+}
+.detail-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  z-index: 100;
+  padding: 16px;
+}
+.detail-overlay.open {
+  display: flex;
+  align-items: flex-end;
+}
+.detail {
+  background: #fff;
+  color: var(--ink);
+  border-radius: 18px 18px 0 0;
+  width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 18px 18px 28px;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.18);
+}
+@media (min-width: 480px) {
+  .detail-overlay.open {
+    align-items: center;
+  }
+  .detail {
+    border-radius: 20px;
+    max-width: 640px;
+    max-height: 86vh;
+    margin: 0 auto;
+  }
+}
+.dhead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+.detail b {
+  display: block;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+.detail .meta {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+.close {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.detail h3 {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--coffee);
+  margin: 20px 0 8px;
+}
+.curve {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.curve .gl {
+  stroke: #eee7de;
+  stroke-width: 1;
+}
+.curve .ax {
+  fill: #8a837b;
+  font-size: 11px;
+}
+.curve .evl {
+  stroke: #c9bfb2;
+  stroke-dasharray: 3 3;
+}
+.curve path {
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+}
+.curve .bt {
+  stroke: #8d583b;
+}
+.curve .et {
+  stroke: #9aa4ad;
+}
+.legend {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.legend .k {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  vertical-align: middle;
+  margin: 0 5px 0 8px;
+}
+.legend .k.bt {
+  background: #8d583b;
+  margin-left: 0;
+}
+.legend .k.et {
+  background: #9aa4ad;
+}
+table.ev {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+table.ev th {
+  text-align: left;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--line);
+}
+table.ev td {
+  padding: 8px 4px;
+  border-bottom: 1px solid #f0ebe4;
+}
+.facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  margin: 0;
+  font-size: 14px;
+}
+.facts dt {
+  color: var(--muted);
+}
+.facts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.nodata {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 10px 0;
+}
+.saved {
+  margin-top: 18px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.exports {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.dactions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+}
+.stat {
+  background: #faf7f2;
+  border: 1px solid #efe8de;
+  border-radius: 12px;
+  padding: 10px 10px 9px;
+}
+.stat .sv {
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.stat .sl {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.stat .sl em,
+.phlegend em {
+  font-style: normal;
+  color: #a39b91;
+}
+.phasebar {
+  display: flex;
+  height: 14px;
+  border-radius: 7px;
+  overflow: hidden;
+  gap: 2px;
+}
+.ph.dry,
+.sw.dry {
+  background: #d8bf6a;
+}
+.ph.mai,
+.sw.mai {
+  background: #b0784f;
+}
+.ph.dev,
+.sw.dev {
+  background: #4e3121;
+}
+.phlegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 13px;
+  margin-top: 8px;
+}
+.phlegend .sw {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+.phlegend .pt {
+  display: inline;
+  font-size: 13px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.curve .band.dry {
+  fill: #d8bf6a;
+  opacity: 0.1;
+}
+.curve .band.mai {
+  fill: #b0784f;
+  opacity: 0.08;
+}
+.curve .band.dev {
+  fill: #4e3121;
+  opacity: 0.08;
+}
+.curve .zl {
+  stroke: #c9bfb2;
+  stroke-width: 1;
+}
+.curve .ror {
+  stroke: #3f6b5a;
+}
+.curve .btd {
+  fill: #8d583b;
+}
+.curve .etd {
+  fill: #9aa4ad;
+}
+.curve .rord {
+  fill: #3f6b5a;
+}
+.legend .k.ror {
+  background: #3f6b5a;
+  margin-left: 0;
+}
+.detail .hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.card.pickable {
+  position: relative;
+  padding-right: 56px;
+}
+.card.pickable::after {
+  content: attr(data-letter);
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin-top: -13px;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  box-sizing: border-box;
+}
+.card.picked {
+  border-color: var(--coffee);
+  background: #fbf6f0;
+}
+.card.picked::after {
+  background: var(--coffee);
+  border-color: var(--coffee);
+}
+#cmpBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid var(--line);
+  z-index: 50;
+  font-size: 13px;
+  color: var(--muted);
+}
+.cmp-go {
+  background: #171512;
+  color: #fff;
+  border-color: #171512;
+  padding: 12px 18px;
+}
+.cmp-go:disabled {
+  opacity: 0.35;
+}
+body.comparing .app {
+  padding-bottom: 100px;
+}
+#compareBtn {
+  border-color: var(--coffee);
+  color: var(--coffee);
+}
+.curve .c0 {
+  stroke: #8d583b;
+}
+.curve .c1 {
+  stroke: #2e6f95;
+}
+.curve .c2 {
+  stroke: #c47f1d;
+}
+.curve .c0d {
+  fill: #8d583b;
+}
+.curve .c1d {
+  fill: #2e6f95;
+}
+.curve .c2d {
+  fill: #c47f1d;
+}
+.cdot {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.cdot.c0 {
+  background: #8d583b;
+}
+.cdot.c1 {
+  background: #2e6f95;
+}
+.cdot.c2 {
+  background: #c47f1d;
+}
+.cmpleg {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 14px;
+}
+.cmpleg > div {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.cmpleg .ct {
+  display: inline;
+  font-size: 15px;
+  letter-spacing: 0;
+}
+.cmpleg em {
+  font-style: normal;
+  color: var(--muted);
+  font-size: 12px;
+}
+.phcmp {
+  display: grid;
+  gap: 10px;
+}
+.phrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.phtrack {
+  flex: 1;
+}
+.phtot {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  min-width: 38px;
+  text-align: right;
+}
+.legend .sw {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin: 0 4px 0 8px;
+  vertical-align: -1px;
+}
+.legend .sw:first-child {
+  margin-left: 0;
+}
+.cmpwrap {
+  overflow-x: auto;
+  margin: 0 -4px;
+}
+table.cmp {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+table.cmp th,
+table.cmp td {
+  padding: 7px 6px;
+  border-bottom: 1px solid #f0ebe4;
+  text-align: left;
+  vertical-align: top;
+}
+table.cmp tbody th {
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+table.cmp thead th {
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--muted);
+}
+table.cmp td {
+  white-space: nowrap;
+}
+table.cmp td.wrap {
+  white-space: normal;
+  min-width: 90px;
+}
+.card.picked[data-letter='B']::after {
+  background: #2e6f95;
+  border-color: #2e6f95;
+}
+.card.picked[data-letter='C']::after {
+  background: #c47f1d;
+  border-color: #c47f1d;
+}
+table.cmp td.dl {
+  color: var(--coffee);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.btn-link {
+  display: inline-block;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 9px 13px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--coffee);
+  text-decoration: none;
+  background: #fff;
+}
+.loc {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f0ebe4;
+  color: #77716a;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.loc.in {
+  background: #e3eee8;
+  color: #3f6b5a;
+}
+.card b .loc,
+.card > .loc {
+  margin-left: 0;
+  margin-top: 6px;
+}
+.cloudline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.cloudline .loc {
+  margin-left: 0;
+  font-size: 13px;
+  padding: 6px 10px;
+}
+</style><style>
+header.kkh {
+  display: block;
+  margin: 0 0 18px;
+  padding: 6px 0 0;
+  border-bottom: 1px solid #ddd8d0;
+  gap: 0;
+}
+.kkh-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+}
+.kkh-brand {
+  font-size: 19px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: #171512;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.kkh-acct {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ddd8d0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  font-size: 18px;
+  flex-shrink: 0;
+  background: #fff;
+}
+nav.kkh-nav {
+  display: flex;
+  flex: none;
+  justify-content: space-between;
+  font-size: 14px;
+  gap: 2px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin: 6px -4px 0;
+  padding: 0 0 8px;
+}
+.kkh-nav::-webkit-scrollbar {
+  display: none;
+}
+.kkh-nav a {
+  flex: 0 0 auto;
+  padding: 8px 7px;
+  border-radius: 999px;
+  font-size: 14px;
+  color: #171512;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.kkh-nav a[aria-current='page'] {
+  background: #171512;
+  color: #fff;
+  font-weight: 600;
+}
+.kkh-sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 6px;
+}
+.kkh-sub h1 {
+  margin: 0;
+}
+.kkh-sub a {
+  font-size: 14px;
+  color: #8d583b;
+  text-decoration: none;
+  white-space: nowrap;
+}
+@media (max-width: 380px) {
+  .kkh-nav a {
+    padding: 8px 5px;
+    font-size: 13.5px;
+  }
+}
+.kkh-nav a {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+}
+</style><script src="tap.js" defer></script><script src="i18n.js" defer></script><script src="kk-base.js"></script>
+</head><body><main class="app"><header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="profile.html" aria-label="Me: profile and activity">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html" aria-current="page">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header><h1>Roastbook</h1><div id="auth"><small id="authMsg"></small></div><div class="exports"><button id="exportCsv">Export CSV</button><button id="exportJson">Full backup (JSON)</button></div><section class="filters"><input id="estate" placeholder="Estate"><input id="coffee" placeholder="Bean / coffee"><input id="date" type="date"><input id="type" placeholder="Roast type"></section><section id="list"></section><div id="detailOverlay" class="detail-overlay"><div id="detail" class="detail"></div></div></main><script src="sync.js"></script><script src="prefs.js"></script><script src="origin-db.js"></script><script>
+const exportCsvBtn = document.getElementById('exportCsv'),
+  estateInput = document.getElementById('estate'),
+  coffeeInput = document.getElementById('coffee'),
+  dateInput = document.getElementById('date'),
+  typeInput = document.getElementById('type'),
+  listEl = document.getElementById('list'),
+  detailEl = document.getElementById('detail'),
+  detailOverlay = document.getElementById('detailOverlay'),
+  authDiv = document.getElementById('auth'),
+  authMsg = document.getElementById('authMsg');
+let roastRows = [];
+function openDB() {
+  return new Promise((ok, no) => {
+    const N = 'KoffyKraftTemporaryRoastbook',
+      need = ['roasts', 'plans'];
+    const go = v => {
+      let r;
+      try {
+        r = v ? indexedDB.open(N, v) : indexedDB.open(N);
+      } catch (e) {
+        no(e);
+        return;
+      }
+      r.onupgradeneeded = e => {
+        const db = e.target.result;
+        need.forEach(s => {
+          if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'id' });
+        });
+      };
+      r.onsuccess = () => {
+        const db = r.result;
+        if (need.some(s => !db.objectStoreNames.contains(s))) {
+          const nv = db.version + 1;
+          db.close();
+          go(nv);
+        } else {
+          db.onversionchange = () => db.close();
+          ok(db);
+        }
+      };
+      r.onerror = () => no(r.error);
+      r.onblocked = () => no(new Error('Close other KoffyKraft tabs and try again'));
+    };
+    go();
+  });
+}
+async function loadLocal() {
+  try {
+    const db = await openDB();
+    const local = await new Promise((ok, no) => {
+      const tx = db.transaction('roasts', 'readonly'),
+        q = tx.objectStore('roasts').getAll();
+      q.onsuccess = () => ok(q.result || []);
+      q.onerror = () => no(q.error);
+    });
+    db.close();
+    return local;
+  } catch (e) {
+    return [];
+  }
+}
+let cloudLoaded = false;
+async function loadCloud() {
+  cloudLoaded = false;
+  if (!SYNC.isAuthenticated()) return [];
+  const result = await SYNC.loadRoasts();
+  if (result.error || !result.items) return [];
+  cloudLoaded = true;
+  const pj = (v, d) => {
+    if (v == null || v === '') return d;
+    if (typeof v !== 'string') return v;
+    try {
+      return JSON.parse(v);
+    } catch {
+      return d;
+    }
+  };
+  return result.items.map(r => {
+    let n = pj(r.notes, null);
+    if (!n || typeof n !== 'object') n = { bean: r.notes || '', coffeeCode: r.notes || '' };
+    return {
+      id: r.id,
+      roastDate: r.roast_date,
+      roastNo: r.roast_number,
+      estate: n.estate || '',
+      coffeeCode: n.coffeeCode || '',
+      bean: n.bean || '',
+      notes: n.notes || '',
+      roasteryName: n.roasteryName || '',
+      machineName: n.machineName || '',
+      greenLotId: n.greenLotId || '',
+      unit: n.unit || 'C',
+      elapsed: n.elapsed,
+      targetColor: r.target_color,
+      finalColor: r.final_color,
+      greenWeight: r.green_weight,
+      roastedWeight: r.roasted_weight,
+      moisture: r.moisture,
+      chargeTemp: r.charge_temperature,
+      finishedAt:
+        n.finishedAt || r.ended_at || (r.created_at ? String(r.created_at).replace(' ', 'T') + 'Z' : ''),
+      events: pj(r.events_json, []),
+      readings: pj(r.readings_json, { exhaust: [], bean: [] }),
+      cloud: true,
+    };
+  });
+}
 // Show this phone's roasts at once, then merge the cloud copy when it arrives.
-async function load(){cloudLoaded=false;await build([]);if(!SYNC.isAuthenticated()||!navigator.onLine)return;let cloud=[];try{cloud=await loadCloud()}catch(e){return}if(cloudLoaded)await build(cloud)}
-async function build(cloud){const local=await loadLocal();const merged=new Map();local.forEach(r=>merged.set(r.id,r));cloud.forEach(r=>{const l=merged.get(r.id);merged.set(r.id,l?{...l,...r,accountId:l.accountId,cloud:true}:r)});local.forEach(r=>{if(r.cloud&&!cloud.some(c=>c.id===r.id)&&signedIn()&&navigator.onLine&&cloudLoaded)merged.set(r.id,{...r,cloud:false})});roastRows=Array.from(merged.values()).map(normRoast);await loadCupData();roastRows.sort((a,b)=>String(b.finishedAt||b.roastDate||'').localeCompare(String(a.finishedAt||a.roastDate||'')));if(SYNC.isAuthenticated()){const email=SYNC.getUserEmail();authDiv.style.display='block';authMsg.textContent=`Synced as ${email} · ${roastRows.length} roasts`}draw();{const m=location.hash.match(/^#r\/(.+)$/);if(m&&roastRows.some(x=>String(x.id)===decodeURIComponent(m[1]))&&!detailOverlay.classList.contains('open')){showDetail(decodeURIComponent(m[1]));history.replaceState(null,'',location.pathname)}}}
-function mmss(t){t=Math.round(Number(t)||0);return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
-function num(v){const n=parseFloat(v);return Number.isFinite(n)?n:null}
-function normRoast(r){const ev=Array.isArray(r.events)?r.events:Object.values(r.events||{});const rd=r.readings||{};const ex=Array.isArray(rd.exhaust)?rd.exhaust:[],bt=Array.isArray(rd.bean)?rd.bean:[];const maxT=Math.max(0,...[...ev,...ex,...bt].map(p=>num(p&&p.time)||0),num(r.elapsed)||0);const f=r.timeBase!=='s'&&maxT>7200?1/1000:1;const cv=p=>({...p,time:(num(p.time)||0)*f});const srt=a=>a.map(cv).sort((x,y)=>x.time-y.time);return{...r,events:srt(ev),readings:{exhaust:srt(ex),bean:srt(bt)},elapsed:num(r.elapsed)!=null?num(r.elapsed)*f:null,timeBase:'s'}}
-function evFind(ev,re){return(ev||[]).find(e=>re.test(String(e.name||'')))}
-function rorSeries(pts){const a=(pts||[]).filter(p=>num(p.temp)!=null);if(a.length<3)return[];let lo=0;for(let i=1;i<a.length;i++)if(num(a[i].temp)<=num(a[lo].temp))lo=i;const out=[];for(let i=lo+1;i<a.length;i++){let k=i-1;while(k>lo&&a[i].time-a[k].time<30)k--;const dt=a[i].time-a[k].time;if(dt>=10)out.push({time:a[i].time,v:(num(a[i].temp)-num(a[k].temp))/dt*60})}return out}
-function analyze(r){const ev=r.events||[],rd=r.readings||{};const drop=evFind(ev,/drop/i),fc=evFind(ev,/first|1st|\bfc\b/i),sc=evFind(ev,/second|2nd|\bsc\b/i),tp=evFind(ev,/turn/i),dry=evFind(ev,/yellow|dry/i)||evFind(ev,/maillard/i);const useBean=(rd.bean||[]).length>=3;const key=useBean?'bean':'exhaust',label=useBean?'Bean':'Exhaust';const pts=rd[key]||[];const last=Math.max(0,...(rd.bean||[]).concat(rd.exhaust||[]).map(p=>p.time),...ev.map(e=>e.time));const total=drop?drop.time:(num(r.elapsed)||last||null);const ror=rorSeries(pts);const rorAt=t=>{if(t==null)return null;let b=null;for(const p of ror)if(p.time<=t+0.5)b=p;return b?b.v:null};const tAt=e=>e&&num(e[key])!=null?num(e[key]):null;let phases=[];if(total){if(dry&&fc&&fc.time>dry.time)phases=[{k:'dry',name:'Drying',from:0,to:dry.time},{k:'mai',name:'Maillard',from:dry.time,to:fc.time},{k:'dev',name:'Development',from:fc.time,to:total}];else if(fc)phases=[{k:'mai',name:'Before first crack',from:0,to:fc.time},{k:'dev',name:'Development',from:fc.time,to:total}];else if(dry)phases=[{k:'dry',name:'Drying',from:0,to:dry.time},{k:'mai',name:'After drying',from:dry.time,to:total}];phases=phases.filter(p=>p.to>p.from)}const gw=num(r.greenWeight),rw=num(r.roastedWeight);const dev=fc&&total&&total>fc.time?total-fc.time:null;return{drop,fc,sc,tp,dry,key,label,ror,rorAt,tAt,total,phases,dev,dtr:dev&&total?dev/total*100:null,loss:gw&&rw?(gw-rw)/gw*100:null}}
-function chartSvg(o){const W=600,H=o.h||220,L=40,R=10,T=10,B=24;const all=o.series.flatMap(s=>s.pts);if(!all.length)return '';let lo=Math.min(...all.map(p=>p.v)),hi=Math.max(...all.map(p=>p.v));if(o.zero){lo=Math.min(lo,0);hi=Math.max(hi,0)}const span=Math.max(hi-lo,o.minSpan||20);const step=[2,5,10,20,25,50,100].find(s=>span/s<=6)||100;lo=Math.floor(lo/step)*step;hi=Math.ceil(hi/step)*step;if(hi===lo)hi=lo+step;const tmax=o.tmax;const x=t=>L+(W-L-R)*t/tmax,y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));let g='';(o.bands||[]).forEach(b=>{g+='<rect x="'+x(b.from).toFixed(1)+'" y="'+T+'" width="'+(x(b.to)-x(b.from)).toFixed(1)+'" height="'+(H-T-B)+'" class="band '+b.k+'"/>'});for(let v=lo;v<=hi+1e-9;v+=step){g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v).toFixed(1)+'" y2="'+y(v).toFixed(1)+'" class="'+(o.zero&&v===0?'zl':'gl')+'"/><text x="'+(L-6)+'" y="'+(y(v)+4).toFixed(1)+'" class="ax" text-anchor="end">'+v+'</text>'}const tstep=tmax>900?120:60;for(let t=0;t<=tmax;t+=tstep)g+='<text x="'+x(t).toFixed(1)+'" y="'+(H-6)+'" class="ax" text-anchor="middle">'+Math.round(t/60)+'</text>';(o.ev||[]).forEach(e=>{g+='<line x1="'+x(e.time).toFixed(1)+'" x2="'+x(e.time).toFixed(1)+'" y1="'+T+'" y2="'+(H-B)+'" class="evl"/>'});o.series.forEach(s=>{if(!s.pts.length)return;g+='<path d="M'+s.pts.map(p=>x(p.time).toFixed(1)+','+y(p.v).toFixed(1)).join('L')+'" class="'+s.cls+'"/>';if(s.dots)s.pts.forEach(p=>{g+='<circle cx="'+x(p.time).toFixed(1)+'" cy="'+y(p.v).toFixed(1)+'" r="2.2" class="'+s.cls+'d"/>'})});return '<svg viewBox="0 0 '+W+' '+H+'" class="curve" role="img" aria-label="'+esc(o.aria||'chart')+'">'+g+'</svg>'}
-function fmtT(v,u){return v==null?'':Math.round(v)+u}
-function statBox(label,val,sub){return '<div class="stat"><div class="sv">'+esc(val||'–')+'</div><div class="sl">'+esc(label)+(sub?' <em>'+esc(sub)+'</em>':'')+'</div></div>'}
-function showDetail(id){const r=roastRows.find(x=>String(x.id)===String(id));if(!r)return;const u='°'+(r.unit||'C');const A=analyze(r);const title=r.estate||r.coffeeCode||r.bean||'(Untitled roast)';const events=r.events||[];const rd=r.readings||{};const tpTemp=A.tp?A.tAt(A.tp):null;
- const stats=[statBox('Total time',A.total?mmss(A.total):''),statBox('Development',A.dev!=null?mmss(A.dev):''),statBox('DTR',A.dtr!=null?A.dtr.toFixed(1)+'%':''),statBox('Weight loss',A.loss!=null?A.loss.toFixed(1)+'%':''),statBox('First crack',A.fc?mmss(A.fc.time):'',A.fc&&A.tAt(A.fc)!=null?fmtT(A.tAt(A.fc),u):''),statBox('Drop',A.drop?fmtT(A.tAt(A.drop),u):'',A.drop?mmss(A.drop.time):''),statBox('RoR at crack',A.fc&&A.rorAt(A.fc.time)!=null?A.rorAt(A.fc.time).toFixed(1)+u+'/min':''),statBox('Turning point',A.tp?mmss(A.tp.time):'',tpTemp!=null?fmtT(tpTemp,u):''),statBox('Charge',num(r.chargeTemp)!=null?fmtT(num(r.chargeTemp),u):'')].join('');
- const phaseHtml=A.phases.length?'<div class="phasebar">'+A.phases.map(p=>'<div class="ph '+p.k+'" style="flex:'+(p.to-p.from)+'"></div>').join('')+'</div><div class="phlegend">'+A.phases.map(p=>'<div><span class="sw '+p.k+'"></span>'+esc(p.name)+' <b class="pt">'+mmss(p.to-p.from)+'</b> <em>'+((p.to-p.from)/A.total*100).toFixed(0)+'%</em></div>').join('')+'</div>':'<div class="nodata">Mark Yellow, First Crack and Drop in the Timer to see phases.</div>';
- const bt=(rd.bean||[]).filter(p=>num(p.temp)!=null).map(p=>({time:p.time,v:num(p.temp)})),et=(rd.exhaust||[]).filter(p=>num(p.temp)!=null).map(p=>({time:p.time,v:num(p.temp)}));const tmax=Math.max(60,A.total||0,...bt.concat(et).map(p=>p.time),...events.map(e=>e.time));
- const curve=bt.length||et.length?chartSvg({series:[{pts:et,cls:'et',dots:true},{pts:bt,cls:'bt',dots:true}],ev:events,tmax,bands:A.phases,aria:'Temperature curve'})+'<div class="legend">'+(bt.length?'<span class="k bt"></span>Bean '+bt.length:'')+(et.length?' <span class="k et"></span>Exhaust '+et.length:'')+' readings · minutes</div>':'<div class="nodata">No temperature readings recorded.</div>';
- const rorPts=A.ror.map(p=>({time:p.time,v:p.v}));const rorHtml=rorPts.length>=2?chartSvg({series:[{pts:rorPts,cls:'ror',dots:true}],ev:events,tmax,h:150,zero:true,minSpan:10,bands:A.phases,aria:'Rate of rise'})+'<div class="legend"><span class="k ror"></span>'+A.label+' rate of rise, '+u+' per minute, from turning point</div>':'<div class="nodata">Need at least 3 readings after the turning point.</div>';
- const evRows=events.length?'<table class="ev"><thead><tr><th>Event</th><th>Time</th><th>Bean</th><th>Exhaust</th><th>RoR</th></tr></thead><tbody>'+events.map(e=>{const rr=A.rorAt(e.time);return '<tr><td>'+esc(e.name)+'</td><td>'+mmss(e.time)+'</td><td>'+(num(e.bean)!=null?esc(e.bean)+u:'–')+'</td><td>'+(num(e.exhaust)!=null?esc(e.exhaust)+u:'–')+'</td><td>'+(rr!=null&&e.time>(A.tp?A.tp.time:0)?rr.toFixed(1):'–')+'</td></tr>'}).join('')+'</tbody></table>':'<div class="nodata">No events marked.</div>';
- const gw=num(r.greenWeight),rw=num(r.roastedWeight);const facts=[['Estate',r.estate],['Coffee',r.coffeeCode],['Notes',r.notes||(r.bean!==r.coffeeCode?r.bean:'')],['Roast no',r.roastNo],['Date',r.roastDate],['Roastery',r.roasteryName],['Machine',r.machineName],['Green weight',gw!=null?gw+' g':''],['Roasted weight',rw!=null?rw+' g':''],['Moisture',num(r.moisture)!=null?r.moisture+'%':''],['Charge temp',num(r.chargeTemp)!=null?r.chargeTemp+u:''],['Target colour',r.targetColor],['Final colour',r.finalColor]].filter(f=>f[1]!=null&&String(f[1]).trim()!=='');
- detailEl.innerHTML='<div class="dhead"><div><b>'+esc(title)+'</b><div class="meta">'+esc([r.roastNo?'Roast #'+r.roastNo:'',r.roastDate||'',r.machineName||''].filter(Boolean).join(' · '))+'</div></div><button class="close" aria-label="Close">✕</button></div><div class="stats">'+stats+'</div><h3>Phases</h3>'+phaseHtml+'<h3>Curve</h3>'+curve+'<h3>Rate of rise</h3>'+rorHtml+'<h3>Events</h3>'+evRows+''+(r.greenLotId?'<h3>Source</h3><div id="srcBox" class="nodata">Green lot linked. Loading…</div>':'')+'<h3>Cup</h3>'+cupHtml(r)+'<h3>Details</h3><dl class="facts">'+facts.map(f=>'<dt>'+esc(f[0])+'</dt><dd>'+esc(f[1])+'</dd>').join('')+'</dl><h3>Cloud</h3><div id="cloudBox">'+roastCloudHtml(r)+'</div><div class="dactions"><button class="dl-cmp">Compare with other roasts</button><button class="dl-share">Share to a space</button><button class="dl-csv">Download this roast (CSV)</button><button class="dl-alog">Artisan (.alog)</button><button class="dl-json">Artisan JSON / Cropster (.json)</button></div><div class="hint">.alog: Artisan, File, Open. .json: Artisan, File, Import, or Cropster, Curve Designer, upload file.'+(artisanProfile(r).exAsBean?' Exhaust-only roast: the exhaust curve is also sent as the bean curve so Artisan and Cropster can work out phases and DTR.':'')+'</div><div class="saved">Saved '+esc(new Date(r.finishedAt||r.roastDate).toLocaleString())+(r.cloud?' · cloud':' · this device')+'</div>';detailEl.querySelector('.close').onclick=closeDetail;bindRoastCloud(r);{const box=document.createElement('div');box.style.cssText='margin:22px 0 8px;padding-top:14px;border-top:1px solid #e7dfd5';box.innerHTML='<button type="button" class="del-roast" style="width:100%;min-height:46px;border-radius:12px;border:1px solid #e3b8ad;background:#fff;color:#b4432f;font:inherit;font-weight:600">Delete this roast</button>';detailEl.querySelector('.sheet,.detail-inner')?.appendChild(box)||detailEl.appendChild(box);box.querySelector('.del-roast').onclick=()=>deleteRoast(r)}if(r.greenLotId)showSource(r.greenLotId);detailEl.querySelector('.dl-csv').onclick=()=>exportRoastCsv(r);detailEl.querySelector('.dl-share').onclick=()=>{try{sessionStorage.setItem('kk_share_rec',JSON.stringify(r))}catch(e){}location.href='share.html#add/roast/'+encodeURIComponent(r.id)};detailEl.querySelector('.dl-cmp').onclick=()=>{closeDetail();setCompareMode(true,r.id);window.scrollTo({top:listEl.offsetTop-80,behavior:'smooth'})};detailEl.querySelector('.dl-alog').onclick=()=>exportAlog(r);detailEl.querySelector('.dl-json').onclick=()=>exportArtisanJson(r);detailEl.scrollTop=0;detailOverlay.classList.add('open');if(window.colourSection)colourSection(r,roastRows)}
-async function showSource(id){const box=document.getElementById('srcBox');if(!box||typeof ORIGIN==='undefined')return;let g=null;try{g=await ORIGIN.get(id)}catch(e){}if(!g){box.textContent='Linked green lot is not on this device. Sign in to sync it, or open Origin.';return}let p=null,hs=[],plots=[];try{if(g.processId)p=await ORIGIN.get(g.processId);if(p)hs=(await Promise.all((p.harvestIds||[]).map(x=>ORIGIN.get(x)))).filter(Boolean);const pids=[...new Set(hs.flatMap(h=>h.plotIds||[]))];plots=(await Promise.all(pids.map(x=>ORIGIN.get(x)))).filter(Boolean)}catch(e){}const line=[['Green lot',[g.code,g.name,g.moisture?g.moisture+'% moisture':'',g.grade].filter(Boolean).join(' · ')],['Process',p?[p.code,p.pathway].filter(Boolean).join(' · '):''],['Harvest',hs.map(h=>[h.code,h.date].filter(Boolean).join(' · ')).join(', ')],['Plot',plots.map(x=>[[x.block,x.name].filter(Boolean).join(' / '),x.variety,x.altitude?x.altitude+' '+(x.altUnit||'ft'):'',x.plantYear?(new Date().getFullYear()-x.plantYear)+' yr plants':'',x.shade?x.shade+' shade':''].filter(Boolean).join(' · ')).join('; ')],['Estate',g.estate]].filter(x=>x[1]);box.className='';box.innerHTML='<dl class="facts">'+line.map(x=>'<dt>'+esc(x[0])+'</dt><dd>'+esc(x[1])+'</dd>').join('')+'</dl><div class="hint"><a href="origin.html#edit/green/'+encodeURIComponent(g.id)+'" style="color:var(--coffee)">Open in Origin</a></div>'}
-let CUPDATA={};
-async function loadCupData(){CUPDATA={};if(typeof ORIGIN==='undefined')return;let brews=[],cups=[];try{const A=await ORIGIN.allTypes(['brew','cupping']);brews=A.brew;cups=A.cupping}catch(e){return}const get=id=>CUPDATA[id]||(CUPDATA[id]={brews:[],samples:[]});brews.forEach(b=>{if(b.roastId)get(b.roastId).brews.push(b)});cups.forEach(c=>(c.samples||[]).forEach(sm=>{if(sm.roastId)get(sm.roastId).samples.push({...sm,at:c.at,sessionId:c.id,protocol:c.protocol})}))}
-function cupStats(id){const d=CUPDATA[id];if(!d)return null;const sc=d.samples.map(s=>num(s.total)).filter(x=>x!=null);const rt=d.brews.map(b=>num(b.rating)).filter(x=>x!=null);const desc=[...new Set([...d.samples,...d.brews].map(x=>String(x.descriptors||'').trim()).filter(Boolean))];return{brews:d.brews.length,cuppings:d.samples.length,score:sc.length?sc.reduce((a,b)=>a+b,0)/sc.length:null,rating:rt.length?rt.reduce((a,b)=>a+b,0)/rt.length:null,desc}}
-function cupHtml(r){const d=CUPDATA[r.id]||{brews:[],samples:[]};const st=cupStats(r.id);const id=encodeURIComponent(r.id);const add='<div class="dactions" style="margin-top:8px"><a class="btn-link" href="cup.html?roast='+id+'#edit/brew/new">+ Brew</a><a class="btn-link" href="cup.html?roast='+id+'#edit/cupping/new">+ Cupping</a></div>';if(!st||(!d.brews.length&&!d.samples.length))return '<div class="nodata">No brews or cupping logged for this roast yet.</div>'+add;const items=[...d.samples.map(s=>({at:s.at,t:'Cupping'+(s.protocol==='BH'?' (BH 10)':'')+(num(s.total)!=null?' · '+(Math.round(num(s.total)*100)/100):'')+(s.dq?' · under 7.5':'')+(s.restDays!=null?' · day '+Math.round(s.restDays*10)/10:''),d:s.descriptors,href:'cup.html#edit/cupping/'+encodeURIComponent(s.sessionId)})),...d.brews.map(b=>({at:b.brewedAt,t:(b.method||'Brew')+(num(b.rating)!=null?' · '+b.rating+'/10':'')+(b.restDays!=null?' · day '+Math.round(b.restDays*10)/10:''),d:b.descriptors,href:'cup.html#edit/brew/'+encodeURIComponent(b.id)}))].sort((a,b)=>String(b.at).localeCompare(String(a.at)));return '<div class="stats" style="margin-top:0">'+statBox('Cup score',st.score!=null?(Math.round(st.score*100)/100).toString():'',st.cuppings?st.cuppings+' sample'+(st.cuppings>1?'s':''):'')+statBox('Brew rating',st.rating!=null?(Math.round(st.rating*10)/10)+'/10':'',st.brews?st.brews+' brew'+(st.brews>1?'s':''):'')+'</div><table class="ev" style="margin-top:8px"><tbody>'+items.map(x=>'<tr><td><a href="'+x.href+'" style="color:var(--ink)">'+esc(x.t)+'</a><div style="font-size:12px;color:var(--muted)">'+esc([fmtShort(x.at),x.d].filter(Boolean).join(' · '))+'</div></td></tr>').join('')+'</tbody></table>'+add}
-function fmtShort(d){if(!d)return '';const x=new Date(d);return isNaN(x)?d:x.toLocaleDateString('en-IN',{day:'numeric',month:'short'})}
-function signedIn(){return typeof SYNC!=='undefined'&&SYNC.isAuthenticated()}
-function roastCloudHtml(r){if(!signedIn())return '<div class="cloudline"><span class="loc">On this phone</span></div><div class="hint">Sign in on the Account page to keep roasts in the cloud.</div>';
- if(r.cloud)return '<div class="cloudline"><span class="loc in">In cloud</span><button class="btn-link" id="cloudOff" type="button">Remove from cloud</button></div><div class="hint">Removing keeps this roast on this phone.</div>';
- if(r.accountId&&r.accountId===SYNC.getUserId()){if(typeof PREFS!=='undefined'&&PREFS.get('roasts')==='off')return '<div class="cloudline"><span class="loc">On this phone</span></div><div class="hint">Cloud sync for roasts is off. Change it on the Account page.</div>';return '<div class="cloudline"><span class="loc">On this phone</span><button class="btn-link" id="cloudOn" type="button">Save to cloud</button></div>'}
- return '<div class="cloudline"><span class="loc">On this phone</span></div><div class="hint">Finished before signing in, so it stays on this phone.</div>'}
-async function localGet(id){try{const db=await openDB();const v=await new Promise(ok=>{const q=db.transaction('roasts','readonly').objectStore('roasts').get(id);q.onsuccess=()=>ok(q.result||null);q.onerror=()=>ok(null)});db.close();return v}catch(e){return null}}
-async function localPut(rec){const db=await openDB();await new Promise((ok,no)=>{const t=db.transaction('roasts','readwrite');t.objectStore('roasts').put(rec);t.oncomplete=ok;t.onerror=()=>no(t.error)});db.close()}
-function bindRoastCloud(r){const on=document.getElementById('cloudOn'),off=document.getElementById('cloudOff');
- if(on)on.onclick=async()=>{on.disabled=true;on.textContent='Saving…';try{const raw=await localGet(r.id);if(!raw)throw new Error('not on this phone');const resp=await fetch('/api/roasts',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+SYNC.getToken()},body:JSON.stringify(raw)});if(!resp.ok)throw new Error('cloud '+resp.status);await localPut({...raw,cloud:true});await load();showDetail(r.id)}catch(e){on.disabled=false;on.textContent='Save to cloud';alert('Could not save to cloud: '+(e.message||e))}};
- if(off)off.onclick=async()=>{if(!confirm('Remove this roast from the cloud? It stays on this phone.'))return;off.disabled=true;off.textContent='Removing…';try{let raw=await localGet(r.id);if(!raw){const {cloud,...rest}=r;raw={...rest,timeBase:'s'}}await localPut({...raw,cloud:false,accountId:raw.accountId||SYNC.getUserId()});const resp=await fetch('/api/roasts/'+encodeURIComponent(r.id),{method:'DELETE',headers:{authorization:'Bearer '+SYNC.getToken()}});if(!resp.ok)throw new Error('cloud '+resp.status);await load();showDetail(r.id)}catch(e){off.disabled=false;off.textContent='Remove from cloud';alert('Could not remove from cloud: '+(e.message||e))}}}
-function toast(t){let el=document.getElementById('kkToast');if(!el){el=document.createElement('div');el.id='kkToast';el.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#171512;color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;z-index:99;opacity:0;transition:opacity .2s;pointer-events:none';document.body.appendChild(el)}el.textContent=t;el.style.opacity=1;clearTimeout(el._h);el._h=setTimeout(()=>el.style.opacity=0,2200)}
-async function localDel(id){const db=await openDB();await new Promise((ok,no)=>{const t=db.transaction('roasts','readwrite');t.objectStore('roasts').delete(id);t.oncomplete=ok;t.onerror=()=>no(t.error)});db.close()}
-async function deleteRoast(r){const name=(r.estate||r.coffeeCode||'Untitled roast')+(r.roastNo?' #'+r.roastNo:'');const inCloud=!!r.cloud;
- if(!confirm('Delete '+name+'?\n\nThis removes it from this phone'+(inCloud?' and from the cloud':'')+'. It cannot be undone. Export it first if you may need it.'))return;
- try{if(inCloud){if(!signedIn()){alert('This roast is in the cloud. Sign in first to delete it there.');return}const resp=await fetch('/api/roasts/'+encodeURIComponent(r.id),{method:'DELETE',headers:{authorization:'Bearer '+SYNC.getToken()}});if(!resp.ok&&resp.status!==404)throw new Error('cloud '+resp.status)}
-  await localDel(r.id);closeDetail();await load();toast(name+' deleted')}catch(e){alert('Could not delete: '+(e.message||e))}}
-function closeDetail(){detailOverlay.classList.remove('open')}
-let compareMode=false;const picked=[];const CMP_LETTERS=['A','B','C'];
-function attachCardHandlers(){listEl.querySelectorAll('.card').forEach(card=>{const id=card.getAttribute('data-id');card.classList.toggle('pickable',compareMode);card.classList.toggle('picked',picked.includes(id));const pi=picked.indexOf(id);card.setAttribute('data-letter',pi>=0?CMP_LETTERS[pi]:'');card.onclick=e=>{e.preventDefault();if(compareMode)togglePick(id);else showDetail(id)}})}
-function togglePick(id){const i=picked.indexOf(id);if(i>=0)picked.splice(i,1);else{if(picked.length>=3){cmpMsg('Up to 3 roasts at a time');return}picked.push(id)}attachCardHandlers();updateCmpBar()}
-function setCompareMode(on,preId){compareMode=on;picked.length=0;if(on&&preId!=null)picked.push(String(preId));document.body.classList.toggle('comparing',on);cmpBtn.textContent=on?'Cancel compare':'Compare roasts';attachCardHandlers();updateCmpBar()}
-function updateCmpBar(){cmpBar.style.display=compareMode?'flex':'none';cmpBar.querySelector('.cmp-info').textContent=picked.length?picked.length+' selected · tap to add or remove':'Tap 2 or 3 roasts';const go=cmpBar.querySelector('.cmp-go');go.disabled=picked.length<2;go.textContent=picked.length>=2?'Compare '+picked.length:'Compare'}
-function cmpMsg(t){cmpBar.querySelector('.cmp-info').textContent=t;clearTimeout(cmpMsg.t);cmpMsg.t=setTimeout(updateCmpBar,1600)}
-function nReadings(r,k){return((r.readings||{})[k]||[]).filter(p=>num(p.temp)!=null).length}
-function fmtDelta(v,kind,u){if(v==null||!Number.isFinite(v))return '';if(Math.abs(v)<(kind==='time'?0.5:0.05))return 'same';const s=v>0?'+':v<0?'−':'±';const a=Math.abs(v);if(kind==='time')return s+mmss(a);if(kind==='temp')return s+(Math.round(a*10)/10)+u;if(kind==='pct')return s+a.toFixed(1)+' pts';if(kind==='ror')return s+a.toFixed(1);if(kind==='score')return s+a.toFixed(2);if(kind==='g')return s+Math.round(a)+' g';return ''}
-function showCompare(){const rs=picked.map(id=>roastRows.find(x=>String(x.id)===id)).filter(Boolean);if(rs.length<2)return;const As=rs.map(analyze);const u='°'+(rs[0].unit||'C');
- const allBean=rs.every(r=>nReadings(r,'bean')>=3),allEx=rs.every(r=>nReadings(r,'exhaust')>=3);const keyOf=r=>allBean?'bean':allEx?'exhaust':(nReadings(r,'bean')>=3?'bean':'exhaust');const probeNote=allBean?'Bean probe':allEx?'Exhaust probe':'Mixed probes: each roast uses its own main probe';
- const ser=rs.map((r,i)=>({pts:((r.readings||{})[keyOf(r)]||[]).filter(p=>num(p.temp)!=null).map(p=>({time:p.time,v:num(p.temp)})),cls:'c'+i,dots:true}));
- const tmax=Math.max(60,...As.map(a=>a.total||0),...ser.flatMap(s=>s.pts.map(p=>p.time)));
- const rorSer=rs.map((r,i)=>({pts:rorSeries((r.readings||{})[keyOf(r)]||[]).map(p=>({time:p.time,v:p.v})),cls:'c'+i,dots:true}));
- const title=r=>r.estate||r.coffeeCode||r.bean||'Untitled';
- const legend='<div class="cmpleg">'+rs.map((r,i)=>'<div><span class="cdot c'+i+'">'+CMP_LETTERS[i]+'</span><b class="ct">'+esc(title(r))+'</b> <em>'+esc([r.roastNo?'#'+r.roastNo:'',r.roastDate||'',r.coffeeCode&&r.coffeeCode!==title(r)?r.coffeeCode:''].filter(Boolean).join(' · '))+'</em></div>').join('')+'</div>';
- const maxT=Math.max(...As.map(a=>a.total||0),1);
- const phases='<div class="phcmp">'+As.map((A,i)=>'<div class="phrow"><span class="cdot c'+i+'">'+CMP_LETTERS[i]+'</span><div class="phtrack"><div class="phasebar" style="width:'+((A.total||0)/maxT*100).toFixed(1)+'%">'+(A.phases||[]).map(p=>'<div class="ph '+p.k+'" style="flex:'+(p.to-p.from)+'"></div>').join('')+'</div></div><span class="phtot">'+(A.total?mmss(A.total):'–')+'</span></div>').join('')+'</div><div class="legend"><span class="sw dry"></span>Drying <span class="sw mai"></span>Maillard <span class="sw dev"></span>Development · bars to scale</div>';
- const ph=(A,k)=>{const p=(A.phases||[]).find(x=>x.k===k&&A.phases.length===3);return p?p.to-p.from:null};const pct=(A,k)=>{const v=ph(A,k);return v!=null&&A.total?v/A.total*100:null};
- const rows=[['Date',r=>({t:r.roastDate})],['Roast no',r=>({t:r.roastNo})],['Machine',r=>({t:r.machineName})],['Green weight',r=>{const v=num(r.greenWeight);return{t:v!=null?v+' g':'',v,k:'g'}}],['Roasted weight',r=>{const v=num(r.roastedWeight);return{t:v!=null?v+' g':'',v,k:'g'}}],['Moisture',r=>{const v=num(r.moisture);return{t:v!=null?v+'%':'',v,k:'pct'}}],['Charge',r=>{const v=num(r.chargeTemp);return{t:v!=null?Math.round(v)+u:'',v,k:'temp'}}],
-  ['Turning point',(r,A)=>({t:A.tp?mmss(A.tp.time):'',v:A.tp?A.tp.time:null,k:'time'})],['TP temp',(r,A)=>{const v=A.tp?A.tAt(A.tp):null;return{t:v!=null?Math.round(v)+u:'',v,k:'temp'}}],['Dry end',(r,A)=>({t:A.dry?mmss(A.dry.time):'',v:A.dry?A.dry.time:null,k:'time'})],['First crack',(r,A)=>({t:A.fc?mmss(A.fc.time):'',v:A.fc?A.fc.time:null,k:'time'})],['FC temp',(r,A)=>{const v=A.fc?A.tAt(A.fc):null;return{t:v!=null?Math.round(v)+u:'',v,k:'temp'}}],['Drop',(r,A)=>({t:A.total?mmss(A.total):'',v:A.total,k:'time'})],['Drop temp',(r,A)=>{const v=A.drop?A.tAt(A.drop):null;return{t:v!=null?Math.round(v)+u:'',v,k:'temp'}}],
-  ['Drying',(r,A)=>{const v=ph(A,'dry');return{t:v!=null?mmss(v)+' · '+pct(A,'dry').toFixed(0)+'%':'',v,k:'time'}}],['Maillard',(r,A)=>{const v=ph(A,'mai');return{t:v!=null?mmss(v)+' · '+pct(A,'mai').toFixed(0)+'%':'',v,k:'time'}}],['Development',(r,A)=>({t:A.dev!=null?mmss(A.dev):'',v:A.dev,k:'time'})],['DTR',(r,A)=>({t:A.dtr!=null?A.dtr.toFixed(1)+'%':'',v:A.dtr,k:'pct'})],['RoR at crack',(r,A)=>{const v=A.fc?A.rorAt(A.fc.time):null;return{t:v!=null?v.toFixed(1)+u+'/min':'',v,k:'ror'}}],['Weight loss',(r,A)=>({t:A.loss!=null?A.loss.toFixed(1)+'%':'',v:A.loss,k:'pct'})],
-  ['Cup score',r=>{const st=cupStats(r.id);const v=st&&st.score;return{t:v!=null?(Math.round(v*100)/100)+'':'',v,k:'score'}}],['Brew rating',r=>{const st=cupStats(r.id);const v=st&&st.rating;return{t:v!=null?(Math.round(v*10)/10)+'/10':'',v,k:'ror'}}],['Cup notes',r=>{const st=cupStats(r.id);return{t:st?st.desc.join('; '):''}}],['Target colour',r=>({t:r.targetColor})],['Final colour',r=>({t:r.finalColor})],['Notes',r=>({t:r.notes||(r.bean!==r.coffeeCode?r.bean:'')})]];
- const two=rs.length===2;const body=rows.map(([name,fn])=>{const cells=rs.map((r,i)=>fn(r,As[i]));if(cells.every(c=>c.t==null||String(c.t).trim()===''))return '';const d=two&&cells[0].k&&cells[0].v!=null&&cells[1].v!=null?fmtDelta(cells[1].v-cells[0].v,cells[0].k,u):'';return '<tr><th>'+esc(name)+'</th>'+cells.map(c=>'<td'+(name==='Notes'||name==='Cup notes'?' class="wrap"':'')+'>'+esc(c.t||'–')+'</td>').join('')+(two?'<td class="dl">'+esc(d)+'</td>':'')+'</tr>'}).join('');
- const table='<div class="cmpwrap"><table class="cmp"><thead><tr><th></th>'+rs.map((r,i)=>'<th><span class="cdot c'+i+'">'+CMP_LETTERS[i]+'</span></th>').join('')+(two?'<th>B − A</th>':'')+'</tr></thead><tbody>'+body+'</tbody></table></div>';
- detailEl.innerHTML='<div class="dhead"><div><b>Compare '+rs.length+' roasts</b><div class="meta">'+esc(probeNote)+' · aligned at charge</div></div><button class="close" aria-label="Close">✕</button></div>'+legend+'<h3>Curve</h3>'+chartSvg({series:ser,ev:[],tmax,aria:'Temperature curves compared'})+'<div class="legend">Minutes from charge</div><h3>Rate of rise</h3>'+(rorSer.some(s=>s.pts.length>=2)?chartSvg({series:rorSer,ev:[],tmax,h:160,zero:true,minSpan:10,aria:'Rate of rise compared'})+'<div class="legend">'+u+' per minute, from turning point</div>':'<div class="nodata">Not enough readings after the turning point.</div>')+'<h3>Phases</h3>'+phases+'<h3>Side by side</h3>'+table;
- detailEl.querySelector('.close').onclick=closeDetail;detailEl.scrollTop=0;detailOverlay.classList.add('open')}
-const cmpBtn=document.createElement('button');cmpBtn.id='compareBtn';cmpBtn.textContent='Compare roasts';cmpBtn.onclick=()=>setCompareMode(!compareMode);document.querySelector('.exports').appendChild(cmpBtn);
-const cmpBar=document.createElement('div');cmpBar.id='cmpBar';cmpBar.innerHTML='<span class="cmp-info"></span><button class="cmp-go" disabled>Compare</button>';document.body.appendChild(cmpBar);cmpBar.querySelector('.cmp-go').onclick=showCompare;
-function draw(){const e=estateInput.value.toLowerCase(),c=coffeeInput.value.toLowerCase(),d=dateInput.value,t=typeInput.value.toLowerCase();const a=roastRows.filter(r=>(!e||String(r.estate||'').toLowerCase().includes(e))&&(!c||String(r.coffeeCode||r.bean||'').toLowerCase().includes(c))&&(!d||String(r.roastDate||'').startsWith(d))&&(!t||String(r.roastType||r.targetColor||'').toLowerCase().includes(t)));if(!a.length){listEl.innerHTML='<div class="empty">No matching saved roasts.</div>';return}listEl.innerHTML=a.map(r=>{const title=r.estate||r.coffeeCode||r.bean||'(Untitled roast)';const dt=new Date(r.finishedAt||r.roastDate);const dateStr=dt.toLocaleDateString('en-IN',{day:'2-digit',month:'2-digit',year:'numeric'})+', '+dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});const meta=[r.roastNo?'#'+r.roastNo:'',r.targetColor||'',r.moisture?r.moisture+'%':'',r.greenWeight?r.greenWeight+'g':''].filter(Boolean).join(' · ');return '<article class="card" data-id="'+esc(r.id)+'"><b>'+esc(title)+'</b><span class="loc'+(r.cloud?' in':'')+'">'+(r.cloud?'In cloud':'This phone')+'</span><div class="meta">'+esc(meta)+'<br><small>'+esc(dateStr)+'</small></div></article>'}).join('');attachCardHandlers()}
-function csvOf(rows){return rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n')}
-function download(name,text,type){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([type==='text/csv'?'\ufeff'+text:text],{type:type+';charset=utf-8'}));a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
-function evList(r){return(Array.isArray(r.events)?r.events:Object.values(r.events||{})).slice().sort((a,b)=>(num(a.time)||0)-(num(b.time)||0))}
-function evAt(r,re){const e=evList(r).find(x=>re.test(String(x.name||'')));return e?mmss(e.time):''}
-function summary(r){const gw=num(r.greenWeight),rw=num(r.roastedWeight),ev=evList(r),rd=r.readings||{};const dur=num(r.elapsed)||(ev.length?num(ev[ev.length-1].time):null);return{gw,rw,loss:gw&&rw?((gw-rw)/gw*100).toFixed(1):'',dur:dur?mmss(dur):'',bt:(rd.bean||[]).length,et:(rd.exhaust||[]).length,ev}}
-function slug(s){return String(s||'roast').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'roast'}
-exportCsvBtn.onclick=()=>{const head=['Roast ID','Date','Roast no','Estate','Coffee code','Notes','Roastery','Machine','Green weight g','Roasted weight g','Weight loss %','Moisture %','Charge temp','Unit','Target colour','Final colour','Duration','Turning point','Yellowing','First crack','Second crack','Drop','Events','Bean readings','Exhaust readings','Saved','Where'];const rows=roastRows.map(r=>{const s=summary(r);return[r.id,r.roastDate,r.roastNo,r.estate,r.coffeeCode,r.notes||r.bean,r.roasteryName,r.machineName,s.gw??'',s.rw??'',s.loss,r.moisture,r.chargeTemp,r.unit||'C',r.targetColor,r.finalColor,s.dur,evAt(r,/turn/i),evAt(r,/yellow|dry/i),evAt(r,/first|1st|\bfc\b/i),evAt(r,/second|2nd|\bsc\b/i),evAt(r,/drop|end/i),s.ev.length,s.bt,s.et,r.finishedAt,r.cloud?'cloud':'this device']});download('koffykraft-roastbook-'+new Date().toISOString().slice(0,10)+'.csv',csvOf([head,...rows]),'text/csv')};
-document.getElementById('exportJson').onclick=()=>{const data={app:'KoffyKraft Roastbook',format:1,exportedAt:new Date().toISOString(),roasts:roastRows.map(r=>{const{cloud,...rest}=r;return rest})};download('koffykraft-roastbook-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(data,null,2),'application/json')};
-function exportRoastCsv(r){const u=r.unit||'C',rd=r.readings||{},ev=evList(r);const times=new Map();const put=(t,k,v)=>{t=Math.round(num(t)||0);if(!times.has(t))times.set(t,{t});const o=times.get(t);o[k]=o[k]!=null&&k==='ev'?o[k]+' / '+v:v};(rd.bean||[]).forEach(p=>put(p.time,'bt',p.temp));(rd.exhaust||[]).forEach(p=>put(p.time,'et',p.temp));ev.forEach(e=>put(e.time,'ev',e.name));const rows=[['Time','Seconds','Bean °'+u,'Exhaust °'+u,'Event'],...[...times.values()].sort((a,b)=>a.t-b.t).map(x=>[mmss(x.t),x.t,x.bt??'',x.et??'',x.ev??''])];const meta=[['Estate',r.estate],['Coffee',r.coffeeCode],['Notes',r.notes||r.bean],['Date',r.roastDate],['Roast no',r.roastNo],['Machine',r.machineName],['Green weight g',r.greenWeight],['Roasted weight g',r.roastedWeight],['Moisture %',r.moisture],['Charge temp',r.chargeTemp],['Target colour',r.targetColor],['Final colour',r.finalColor],[]];download(slug((r.estate||r.coffeeCode||'roast')+'-'+(r.roastDate||'')+'-'+(r.roastNo||''))+'.csv',csvOf([...meta,...rows]),'text/csv')}
-function pyLit(v){if(v===null||v===undefined)return 'None';if(v===true)return 'True';if(v===false)return 'False';if(typeof v==='number')return Number.isFinite(v)?String(v):'-1';if(typeof v==='string')return "'"+v.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n').replace(/\t/g,'\\t')+"'";if(Array.isArray(v))return '['+v.map(pyLit).join(', ')+']';if(v.__float!==undefined){const n=v.__float;return Number.isInteger(n)?n.toFixed(1):String(n)}return '{'+Object.keys(v).filter(k=>v[k]!==undefined).map(k=>pyLit(k)+': '+pyLit(v[k])).join(', ')+'}'}
-function F(n){const x=Number(n);return Number.isFinite(x)?{__float:Math.round(x*100)/100}:undefined}
-function artisanProfile(r){const rd=r.readings||{},ev=r.events||[];const okT=p=>num(p.temp)!=null;const beanN=(rd.bean||[]).filter(okT).length,etN=(rd.exhaust||[]).filter(okT).length;const exAsBean=beanN<3&&etN>=3;
- const rows=new Map();const key=t=>Math.round((num(t)||0)*10)/10;const row=t=>{t=key(t);if(!rows.has(t))rows.set(t,{t,et:-1,bt:-1});return rows.get(t)};row(0);
- (rd.exhaust||[]).forEach(p=>{if(okT(p))row(p.time).et=num(p.temp)});(rd.bean||[]).forEach(p=>{if(okT(p))row(p.time).bt=num(p.temp)});
- ev.forEach(e=>{const x=row(e.time);if(x.et===-1&&num(e.exhaust)!=null)x.et=num(e.exhaust);if(x.bt===-1&&num(e.bean)!=null)x.bt=num(e.bean)});
- const list=[...rows.values()].sort((a,b)=>a.t-b.t);if(exAsBean)list.forEach(x=>{if(x.bt===-1)x.bt=x.et});const idx=t=>list.findIndex(x=>x.t===key(t));
- const ti=[0,0,0,0,0,0,0,0];const slot=[[/yellow|dry/i,1],[/first|1st|\bfc\b/i,2],[/second|2nd|\bsc\b/i,4],[/drop/i,6]];const se=[],seStr=[];
- ev.forEach(e=>{const name=String(e.name||'');if(/turn/i.test(name))return;const s=slot.find(([re])=>re.test(name));if(s&&!ti[s[1]]){ti[s[1]]=idx(e.time);return}se.push(idx(e.time));seStr.push(name)});ti[0]=idx(0);
- const fin=r.finishedAt?new Date(r.finishedAt):null;const start=fin&&r.elapsed?new Date(fin.getTime()-r.elapsed*1000):fin;const d=start&&!isNaN(start)?start:null;const pad=n=>String(n).padStart(2,'0');const iso=r.roastDate||(d?d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()):'');
- const notes=[r.notes||(r.bean!==r.coffeeCode?r.bean:''),r.targetColor?'Target colour: '+r.targetColor:'',r.finalColor?'Final colour: '+r.finalColor:'',r.estate?'Estate: '+r.estate:'',exAsBean?'Exhaust-only roast: the exhaust readings are also written as the bean (BT) curve so phases and DTR can be calculated.':'','Exported from KoffyKraft Roastbook'].filter(Boolean).join('\n');
- const gw=num(r.greenWeight)||0,rw=num(r.roastedWeight)||0;const A=analyze(r);
- const at=(i,k)=>i>0||(i===0&&k)?(list[i]&&list[i][k]!==-1?F(list[i][k]):undefined):undefined;
- const c={CHARGE_time:F(0),CHARGE_ET:at(ti[0],'et'),CHARGE_BT:at(ti[0],'bt')};
- if(A.tp){const i=idx(A.tp.time);if(i>=0){c.TP_idx=i;c.TP_time=F(A.tp.time);c.TP_ET=at(i,'et');c.TP_BT=at(i,'bt')}}
- [['DRY',1],['FCs',2],['SCs',4],['DROP',6]].forEach(([n,k])=>{const i=ti[k];if(i>0){c[n+'_time']=F(list[i].t);c[n+'_ET']=at(i,'et');c[n+'_BT']=at(i,'bt')}});
- if(A.total)c.totaltime=F(A.total);const ph=Object.fromEntries((A.phases||[]).map(p=>[p.k,p.to-p.from]));if(A.phases&&A.phases.length===3){c.dryphasetime=F(ph.dry);c.midphasetime=F(ph.mai);c.finishphasetime=F(ph.dev)}
- if(A.fc&&A.rorAt(A.fc.time)!=null)c.fcs_ror=F(A.rorAt(A.fc.time));if(A.loss!=null)c.weight_loss=F(A.loss);if(gw)c.weightin=F(gw);if(rw)c.weightout=F(rw);if(num(r.moisture)!=null)c.moisture_greens=F(num(r.moisture));
- const p={recording_version:'KoffyKraft Roastbook',mode:(r.unit||'C')==='F'?'F':'C',title:[r.estate,r.coffeeCode].filter(Boolean).join(' ')||'KoffyKraft roast',beans:[r.estate,r.coffeeCode,r.notes||''].filter(Boolean).join(', '),weight:[F(gw),F(rw),'g'],roastertype:r.machineName||'',organization:r.roasteryName||'',roastingnotes:notes,cuppingnotes:'',roastisodate:iso,roasttime:d?pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()):'00:00:00',roastepoch:d?Math.floor(d.getTime()/1000):0,roastbatchnr:parseInt(r.roastNo,10)||0,timeindex:ti,timex:list.map(x=>F(x.t)),temp1:list.map(x=>F(x.et)),temp2:list.map(x=>F(x.bt)),specialevents:se,specialeventstype:se.map(()=>4),specialeventsvalue:se.map(()=>F(0)),specialeventsStrings:seStr,etypes:['Air','Drum','Damper','Burner','--'],moisture_greens:num(r.moisture)!=null?F(num(r.moisture)):undefined,computed:c};
- return{p,exAsBean}}
-function toAlog(r){return pyLit(artisanProfile(r).p)}
-function toArtisanJson(r){return JSON.stringify(artisanProfile(r).p,(k,v)=>v&&typeof v==='object'&&v.__float!==undefined?v.__float:v)+'\n'}
-function roastFileName(r){return slug((r.estate||r.coffeeCode||'roast')+'-'+(r.roastDate||'')+'-'+(r.roastNo||''))}
-function exportAlog(r){download(roastFileName(r)+'.alog',toAlog(r),'text/plain')}
-function exportArtisanJson(r){download(roastFileName(r)+'.json',toArtisanJson(r),'application/json')}
-(function(){let down=false;detailOverlay.addEventListener('pointerdown',e=>{down=e.target===detailOverlay});detailOverlay.addEventListener('click',e=>{if(down&&e.target===detailOverlay)closeDetail();down=false})})();
-[estateInput,coffeeInput,dateInput,typeInput].forEach(x=>x.addEventListener('input',draw));console.log('[KoffyKraft] Starting app...');load().then(()=>typeof PREFS!=='undefined'?PREFS.pull():null).then(()=>{if(typeof ORIGIN!=='undefined')ORIGIN.sync().then(c=>{if(c)loadCupData()}).catch(()=>{})});if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+async function load() {
+  cloudLoaded = false;
+  await build([]);
+  if (!SYNC.isAuthenticated() || !navigator.onLine) return;
+  let cloud = [];
+  try {
+    cloud = await loadCloud();
+  } catch (e) {
+    return;
+  }
+  if (cloudLoaded) await build(cloud);
+}
+async function build(cloud) {
+  const local = await loadLocal();
+  const merged = new Map();
+  local.forEach(r => merged.set(r.id, r));
+  cloud.forEach(r => {
+    const l = merged.get(r.id);
+    merged.set(r.id, l ? { ...l, ...r, accountId: l.accountId, cloud: true } : r);
+  });
+  local.forEach(r => {
+    if (r.cloud && !cloud.some(c => c.id === r.id) && signedIn() && navigator.onLine && cloudLoaded)
+      merged.set(r.id, { ...r, cloud: false });
+  });
+  roastRows = Array.from(merged.values()).map(normRoast);
+  await loadCupData();
+  roastRows.sort((a, b) =>
+    String(b.finishedAt || b.roastDate || '').localeCompare(String(a.finishedAt || a.roastDate || ''))
+  );
+  if (SYNC.isAuthenticated()) {
+    const email = SYNC.getUserEmail();
+    authDiv.style.display = 'block';
+    authMsg.textContent = `Synced as ${email} · ${roastRows.length} roasts`;
+  }
+  draw();
+  {
+    const m = location.hash.match(/^#r\/(.+)$/);
+    if (
+      m &&
+      roastRows.some(x => String(x.id) === decodeURIComponent(m[1])) &&
+      !detailOverlay.classList.contains('open')
+    ) {
+      showDetail(decodeURIComponent(m[1]));
+      history.replaceState(null, '', location.pathname);
+    }
+  }
+}
+function mmss(t) {
+  t = Math.round(Number(t) || 0);
+  return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+}
+function normRoast(r) {
+  const ev = Array.isArray(r.events) ? r.events : Object.values(r.events || {});
+  const rd = r.readings || {};
+  const ex = Array.isArray(rd.exhaust) ? rd.exhaust : [],
+    bt = Array.isArray(rd.bean) ? rd.bean : [];
+  const maxT = Math.max(0, ...[...ev, ...ex, ...bt].map(p => num(p && p.time) || 0), num(r.elapsed) || 0);
+  const f = r.timeBase !== 's' && maxT > 7200 ? 1 / 1000 : 1;
+  const cv = p => ({ ...p, time: (num(p.time) || 0) * f });
+  const srt = a => a.map(cv).sort((x, y) => x.time - y.time);
+  return {
+    ...r,
+    events: srt(ev),
+    readings: { exhaust: srt(ex), bean: srt(bt) },
+    elapsed: num(r.elapsed) != null ? num(r.elapsed) * f : null,
+    timeBase: 's',
+  };
+}
+function evFind(ev, re) {
+  return (ev || []).find(e => re.test(String(e.name || '')));
+}
+function rorSeries(pts) {
+  const a = (pts || []).filter(p => num(p.temp) != null);
+  if (a.length < 3) return [];
+  let lo = 0;
+  for (let i = 1; i < a.length; i++) if (num(a[i].temp) <= num(a[lo].temp)) lo = i;
+  const out = [];
+  for (let i = lo + 1; i < a.length; i++) {
+    let k = i - 1;
+    while (k > lo && a[i].time - a[k].time < 30) k--;
+    const dt = a[i].time - a[k].time;
+    if (dt >= 10) out.push({ time: a[i].time, v: ((num(a[i].temp) - num(a[k].temp)) / dt) * 60 });
+  }
+  return out;
+}
+function analyze(r) {
+  const ev = r.events || [],
+    rd = r.readings || {};
+  const drop = evFind(ev, /drop/i),
+    fc = evFind(ev, /first|1st|\bfc\b/i),
+    sc = evFind(ev, /second|2nd|\bsc\b/i),
+    tp = evFind(ev, /turn/i),
+    dry = evFind(ev, /yellow|dry/i) || evFind(ev, /maillard/i);
+  const useBean = (rd.bean || []).length >= 3;
+  const key = useBean ? 'bean' : 'exhaust',
+    label = useBean ? 'Bean' : 'Exhaust';
+  const pts = rd[key] || [];
+  const last = Math.max(
+    0,
+    ...(rd.bean || []).concat(rd.exhaust || []).map(p => p.time),
+    ...ev.map(e => e.time)
+  );
+  const total = drop ? drop.time : num(r.elapsed) || last || null;
+  const ror = rorSeries(pts);
+  const rorAt = t => {
+    if (t == null) return null;
+    let b = null;
+    for (const p of ror) if (p.time <= t + 0.5) b = p;
+    return b ? b.v : null;
+  };
+  const tAt = e => (e && num(e[key]) != null ? num(e[key]) : null);
+  let phases = [];
+  if (total) {
+    if (dry && fc && fc.time > dry.time)
+      phases = [
+        { k: 'dry', name: 'Drying', from: 0, to: dry.time },
+        { k: 'mai', name: 'Maillard', from: dry.time, to: fc.time },
+        { k: 'dev', name: 'Development', from: fc.time, to: total },
+      ];
+    else if (fc)
+      phases = [
+        { k: 'mai', name: 'Before first crack', from: 0, to: fc.time },
+        { k: 'dev', name: 'Development', from: fc.time, to: total },
+      ];
+    else if (dry)
+      phases = [
+        { k: 'dry', name: 'Drying', from: 0, to: dry.time },
+        { k: 'mai', name: 'After drying', from: dry.time, to: total },
+      ];
+    phases = phases.filter(p => p.to > p.from);
+  }
+  const gw = num(r.greenWeight),
+    rw = num(r.roastedWeight);
+  const dev = fc && total && total > fc.time ? total - fc.time : null;
+  return {
+    drop,
+    fc,
+    sc,
+    tp,
+    dry,
+    key,
+    label,
+    ror,
+    rorAt,
+    tAt,
+    total,
+    phases,
+    dev,
+    dtr: dev && total ? (dev / total) * 100 : null,
+    loss: gw && rw ? ((gw - rw) / gw) * 100 : null,
+  };
+}
+function chartSvg(o) {
+  const W = 600,
+    H = o.h || 220,
+    L = 40,
+    R = 10,
+    T = 10,
+    B = 24;
+  const all = o.series.flatMap(s => s.pts);
+  if (!all.length) return '';
+  let lo = Math.min(...all.map(p => p.v)),
+    hi = Math.max(...all.map(p => p.v));
+  if (o.zero) {
+    lo = Math.min(lo, 0);
+    hi = Math.max(hi, 0);
+  }
+  const span = Math.max(hi - lo, o.minSpan || 20);
+  const step = [2, 5, 10, 20, 25, 50, 100].find(s => span / s <= 6) || 100;
+  lo = Math.floor(lo / step) * step;
+  hi = Math.ceil(hi / step) * step;
+  if (hi === lo) hi = lo + step;
+  const tmax = o.tmax;
+  const x = t => L + ((W - L - R) * t) / tmax,
+    y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+  let g = '';
+  (o.bands || []).forEach(b => {
+    g +=
+      '<rect x="' +
+      x(b.from).toFixed(1) +
+      '" y="' +
+      T +
+      '" width="' +
+      (x(b.to) - x(b.from)).toFixed(1) +
+      '" height="' +
+      (H - T - B) +
+      '" class="band ' +
+      b.k +
+      '"/>';
+  });
+  for (let v = lo; v <= hi + 1e-9; v += step) {
+    g +=
+      '<line x1="' +
+      L +
+      '" x2="' +
+      (W - R) +
+      '" y1="' +
+      y(v).toFixed(1) +
+      '" y2="' +
+      y(v).toFixed(1) +
+      '" class="' +
+      (o.zero && v === 0 ? 'zl' : 'gl') +
+      '"/><text x="' +
+      (L - 6) +
+      '" y="' +
+      (y(v) + 4).toFixed(1) +
+      '" class="ax" text-anchor="end">' +
+      v +
+      '</text>';
+  }
+  const tstep = tmax > 900 ? 120 : 60;
+  for (let t = 0; t <= tmax; t += tstep)
+    g +=
+      '<text x="' +
+      x(t).toFixed(1) +
+      '" y="' +
+      (H - 6) +
+      '" class="ax" text-anchor="middle">' +
+      Math.round(t / 60) +
+      '</text>';
+  (o.ev || []).forEach(e => {
+    g +=
+      '<line x1="' +
+      x(e.time).toFixed(1) +
+      '" x2="' +
+      x(e.time).toFixed(1) +
+      '" y1="' +
+      T +
+      '" y2="' +
+      (H - B) +
+      '" class="evl"/>';
+  });
+  o.series.forEach(s => {
+    if (!s.pts.length) return;
+    g +=
+      '<path d="M' +
+      s.pts.map(p => x(p.time).toFixed(1) + ',' + y(p.v).toFixed(1)).join('L') +
+      '" class="' +
+      s.cls +
+      '"/>';
+    if (s.dots)
+      s.pts.forEach(p => {
+        g +=
+          '<circle cx="' +
+          x(p.time).toFixed(1) +
+          '" cy="' +
+          y(p.v).toFixed(1) +
+          '" r="2.2" class="' +
+          s.cls +
+          'd"/>';
+      });
+  });
+  return (
+    '<svg viewBox="0 0 ' +
+    W +
+    ' ' +
+    H +
+    '" class="curve" role="img" aria-label="' +
+    esc(o.aria || 'chart') +
+    '">' +
+    g +
+    '</svg>'
+  );
+}
+function fmtT(v, u) {
+  return v == null ? '' : Math.round(v) + u;
+}
+function statBox(label, val, sub) {
+  return (
+    '<div class="stat"><div class="sv">' +
+    esc(val || '–') +
+    '</div><div class="sl">' +
+    esc(label) +
+    (sub ? ' <em>' + esc(sub) + '</em>' : '') +
+    '</div></div>'
+  );
+}
+function showDetail(id) {
+  const r = roastRows.find(x => String(x.id) === String(id));
+  if (!r) return;
+  const u = '°' + (r.unit || 'C');
+  const A = analyze(r);
+  const title = r.estate || r.coffeeCode || r.bean || '(Untitled roast)';
+  const events = r.events || [];
+  const rd = r.readings || {};
+  const tpTemp = A.tp ? A.tAt(A.tp) : null;
+  const stats = [
+    statBox('Total time', A.total ? mmss(A.total) : ''),
+    statBox('Development', A.dev != null ? mmss(A.dev) : ''),
+    statBox('DTR', A.dtr != null ? A.dtr.toFixed(1) + '%' : ''),
+    statBox('Weight loss', A.loss != null ? A.loss.toFixed(1) + '%' : ''),
+    statBox(
+      'First crack',
+      A.fc ? mmss(A.fc.time) : '',
+      A.fc && A.tAt(A.fc) != null ? fmtT(A.tAt(A.fc), u) : ''
+    ),
+    statBox('Drop', A.drop ? fmtT(A.tAt(A.drop), u) : '', A.drop ? mmss(A.drop.time) : ''),
+    statBox(
+      'RoR at crack',
+      A.fc && A.rorAt(A.fc.time) != null ? A.rorAt(A.fc.time).toFixed(1) + u + '/min' : ''
+    ),
+    statBox('Turning point', A.tp ? mmss(A.tp.time) : '', tpTemp != null ? fmtT(tpTemp, u) : ''),
+    statBox('Charge', num(r.chargeTemp) != null ? fmtT(num(r.chargeTemp), u) : ''),
+  ].join('');
+  const phaseHtml = A.phases.length
+    ? '<div class="phasebar">' +
+      A.phases.map(p => '<div class="ph ' + p.k + '" style="flex:' + (p.to - p.from) + '"></div>').join('') +
+      '</div><div class="phlegend">' +
+      A.phases
+        .map(
+          p =>
+            '<div><span class="sw ' +
+            p.k +
+            '"></span>' +
+            esc(p.name) +
+            ' <b class="pt">' +
+            mmss(p.to - p.from) +
+            '</b> <em>' +
+            (((p.to - p.from) / A.total) * 100).toFixed(0) +
+            '%</em></div>'
+        )
+        .join('') +
+      '</div>'
+    : '<div class="nodata">Mark Yellow, First Crack and Drop in the Timer to see phases.</div>';
+  const bt = (rd.bean || []).filter(p => num(p.temp) != null).map(p => ({ time: p.time, v: num(p.temp) })),
+    et = (rd.exhaust || []).filter(p => num(p.temp) != null).map(p => ({ time: p.time, v: num(p.temp) }));
+  const tmax = Math.max(60, A.total || 0, ...bt.concat(et).map(p => p.time), ...events.map(e => e.time));
+  const curve =
+    bt.length || et.length
+      ? chartSvg({
+          series: [
+            { pts: et, cls: 'et', dots: true },
+            { pts: bt, cls: 'bt', dots: true },
+          ],
+          ev: events,
+          tmax,
+          bands: A.phases,
+          aria: 'Temperature curve',
+        }) +
+        '<div class="legend">' +
+        (bt.length ? '<span class="k bt"></span>Bean ' + bt.length : '') +
+        (et.length ? ' <span class="k et"></span>Exhaust ' + et.length : '') +
+        ' readings · minutes</div>'
+      : '<div class="nodata">No temperature readings recorded.</div>';
+  const rorPts = A.ror.map(p => ({ time: p.time, v: p.v }));
+  const rorHtml =
+    rorPts.length >= 2
+      ? chartSvg({
+          series: [{ pts: rorPts, cls: 'ror', dots: true }],
+          ev: events,
+          tmax,
+          h: 150,
+          zero: true,
+          minSpan: 10,
+          bands: A.phases,
+          aria: 'Rate of rise',
+        }) +
+        '<div class="legend"><span class="k ror"></span>' +
+        A.label +
+        ' rate of rise, ' +
+        u +
+        ' per minute, from turning point</div>'
+      : '<div class="nodata">Need at least 3 readings after the turning point.</div>';
+  const evRows = events.length
+    ? '<table class="ev"><thead><tr><th>Event</th><th>Time</th><th>Bean</th><th>Exhaust</th><th>RoR</th></tr></thead><tbody>' +
+      events
+        .map(e => {
+          const rr = A.rorAt(e.time);
+          return (
+            '<tr><td>' +
+            esc(e.name) +
+            '</td><td>' +
+            mmss(e.time) +
+            '</td><td>' +
+            (num(e.bean) != null ? esc(e.bean) + u : '–') +
+            '</td><td>' +
+            (num(e.exhaust) != null ? esc(e.exhaust) + u : '–') +
+            '</td><td>' +
+            (rr != null && e.time > (A.tp ? A.tp.time : 0) ? rr.toFixed(1) : '–') +
+            '</td></tr>'
+          );
+        })
+        .join('') +
+      '</tbody></table>'
+    : '<div class="nodata">No events marked.</div>';
+  const gw = num(r.greenWeight),
+    rw = num(r.roastedWeight);
+  const facts = [
+    ['Estate', r.estate],
+    ['Coffee', r.coffeeCode],
+    ['Notes', r.notes || (r.bean !== r.coffeeCode ? r.bean : '')],
+    ['Roast no', r.roastNo],
+    ['Date', r.roastDate],
+    ['Roastery', r.roasteryName],
+    ['Machine', r.machineName],
+    ['Green weight', gw != null ? gw + ' g' : ''],
+    ['Roasted weight', rw != null ? rw + ' g' : ''],
+    ['Moisture', num(r.moisture) != null ? r.moisture + '%' : ''],
+    ['Charge temp', num(r.chargeTemp) != null ? r.chargeTemp + u : ''],
+    ['Target colour', r.targetColor],
+    ['Final colour', r.finalColor],
+  ].filter(f => f[1] != null && String(f[1]).trim() !== '');
+  detailEl.innerHTML =
+    '<div class="dhead"><div><b>' +
+    esc(title) +
+    '</b><div class="meta">' +
+    esc(
+      [r.roastNo ? 'Roast #' + r.roastNo : '', r.roastDate || '', r.machineName || '']
+        .filter(Boolean)
+        .join(' · ')
+    ) +
+    '</div></div><button class="close" aria-label="Close">✕</button></div><div class="stats">' +
+    stats +
+    '</div><h3>Phases</h3>' +
+    phaseHtml +
+    '<h3>Curve</h3>' +
+    curve +
+    '<h3>Rate of rise</h3>' +
+    rorHtml +
+    '<h3>Events</h3>' +
+    evRows +
+    '' +
+    (r.greenLotId ? '<h3>Source</h3><div id="srcBox" class="nodata">Green lot linked. Loading…</div>' : '') +
+    '<h3>Cup</h3>' +
+    cupHtml(r) +
+    '<h3>Details</h3><dl class="facts">' +
+    facts.map(f => '<dt>' + esc(f[0]) + '</dt><dd>' + esc(f[1]) + '</dd>').join('') +
+    '</dl><h3>Cloud</h3><div id="cloudBox">' +
+    roastCloudHtml(r) +
+    '</div><div class="dactions"><button class="dl-cmp">Compare with other roasts</button><button class="dl-share">Share to a space</button><button class="dl-csv">Download this roast (CSV)</button><button class="dl-alog">Artisan (.alog)</button><button class="dl-json">Artisan JSON / Cropster (.json)</button></div><div class="hint">.alog: Artisan, File, Open. .json: Artisan, File, Import, or Cropster, Curve Designer, upload file.' +
+    (artisanProfile(r).exAsBean
+      ? ' Exhaust-only roast: the exhaust curve is also sent as the bean curve so Artisan and Cropster can work out phases and DTR.'
+      : '') +
+    '</div><div class="saved">Saved ' +
+    esc(new Date(r.finishedAt || r.roastDate).toLocaleString()) +
+    (r.cloud ? ' · cloud' : ' · this device') +
+    '</div>';
+  detailEl.querySelector('.close').onclick = closeDetail;
+  bindRoastCloud(r);
+  {
+    const box = document.createElement('div');
+    box.style.cssText = 'margin:22px 0 8px;padding-top:14px;border-top:1px solid #e7dfd5';
+    box.innerHTML =
+      '<button type="button" class="del-roast" style="width:100%;min-height:46px;border-radius:12px;border:1px solid #e3b8ad;background:#fff;color:#b4432f;font:inherit;font-weight:600">Delete this roast</button>';
+    detailEl.querySelector('.sheet,.detail-inner')?.appendChild(box) || detailEl.appendChild(box);
+    box.querySelector('.del-roast').onclick = () => deleteRoast(r);
+  }
+  if (r.greenLotId) showSource(r.greenLotId);
+  detailEl.querySelector('.dl-csv').onclick = () => exportRoastCsv(r);
+  detailEl.querySelector('.dl-share').onclick = () => {
+    try {
+      sessionStorage.setItem('kk_share_rec', JSON.stringify(r));
+    } catch (e) {}
+    location.href = 'share.html#add/roast/' + encodeURIComponent(r.id);
+  };
+  detailEl.querySelector('.dl-cmp').onclick = () => {
+    closeDetail();
+    setCompareMode(true, r.id);
+    window.scrollTo({ top: listEl.offsetTop - 80, behavior: 'smooth' });
+  };
+  detailEl.querySelector('.dl-alog').onclick = () => exportAlog(r);
+  detailEl.querySelector('.dl-json').onclick = () => exportArtisanJson(r);
+  detailEl.scrollTop = 0;
+  detailOverlay.classList.add('open');
+  if (window.colourSection) colourSection(r, roastRows);
+}
+async function showSource(id) {
+  const box = document.getElementById('srcBox');
+  if (!box || typeof ORIGIN === 'undefined') return;
+  let g = null;
+  try {
+    g = await ORIGIN.get(id);
+  } catch (e) {}
+  if (!g) {
+    box.textContent = 'Linked green lot is not on this device. Sign in to sync it, or open Origin.';
+    return;
+  }
+  let p = null,
+    hs = [],
+    plots = [];
+  try {
+    if (g.processId) p = await ORIGIN.get(g.processId);
+    if (p) hs = (await Promise.all((p.harvestIds || []).map(x => ORIGIN.get(x)))).filter(Boolean);
+    const pids = [...new Set(hs.flatMap(h => h.plotIds || []))];
+    plots = (await Promise.all(pids.map(x => ORIGIN.get(x)))).filter(Boolean);
+  } catch (e) {}
+  const line = [
+    [
+      'Green lot',
+      [g.code, g.name, g.moisture ? g.moisture + '% moisture' : '', g.grade].filter(Boolean).join(' · '),
+    ],
+    ['Process', p ? [p.code, p.pathway].filter(Boolean).join(' · ') : ''],
+    ['Harvest', hs.map(h => [h.code, h.date].filter(Boolean).join(' · ')).join(', ')],
+    [
+      'Plot',
+      plots
+        .map(x =>
+          [
+            [x.block, x.name].filter(Boolean).join(' / '),
+            x.variety,
+            x.altitude ? x.altitude + ' ' + (x.altUnit || 'ft') : '',
+            x.plantYear ? new Date().getFullYear() - x.plantYear + ' yr plants' : '',
+            x.shade ? x.shade + ' shade' : '',
+          ]
+            .filter(Boolean)
+            .join(' · ')
+        )
+        .join('; '),
+    ],
+    ['Estate', g.estate],
+  ].filter(x => x[1]);
+  box.className = '';
+  box.innerHTML =
+    '<dl class="facts">' +
+    line.map(x => '<dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd>').join('') +
+    '</dl><div class="hint"><a href="origin.html#edit/green/' +
+    encodeURIComponent(g.id) +
+    '" style="color:var(--coffee)">Open in Origin</a></div>';
+}
+let CUPDATA = {};
+async function loadCupData() {
+  CUPDATA = {};
+  if (typeof ORIGIN === 'undefined') return;
+  let brews = [],
+    cups = [];
+  try {
+    const A = await ORIGIN.allTypes(['brew', 'cupping']);
+    brews = A.brew;
+    cups = A.cupping;
+  } catch (e) {
+    return;
+  }
+  const get = id => CUPDATA[id] || (CUPDATA[id] = { brews: [], samples: [] });
+  brews.forEach(b => {
+    if (b.roastId) get(b.roastId).brews.push(b);
+  });
+  cups.forEach(c =>
+    (c.samples || []).forEach(sm => {
+      if (sm.roastId)
+        get(sm.roastId).samples.push({ ...sm, at: c.at, sessionId: c.id, protocol: c.protocol });
+    })
+  );
+}
+function cupStats(id) {
+  const d = CUPDATA[id];
+  if (!d) return null;
+  const sc = d.samples.map(s => num(s.total)).filter(x => x != null);
+  const rt = d.brews.map(b => num(b.rating)).filter(x => x != null);
+  const desc = [
+    ...new Set([...d.samples, ...d.brews].map(x => String(x.descriptors || '').trim()).filter(Boolean)),
+  ];
+  return {
+    brews: d.brews.length,
+    cuppings: d.samples.length,
+    score: sc.length ? sc.reduce((a, b) => a + b, 0) / sc.length : null,
+    rating: rt.length ? rt.reduce((a, b) => a + b, 0) / rt.length : null,
+    desc,
+  };
+}
+function cupHtml(r) {
+  const d = CUPDATA[r.id] || { brews: [], samples: [] };
+  const st = cupStats(r.id);
+  const id = encodeURIComponent(r.id);
+  const add =
+    '<div class="dactions" style="margin-top:8px"><a class="btn-link" href="cup.html?roast=' +
+    id +
+    '#edit/brew/new">+ Brew</a><a class="btn-link" href="cup.html?roast=' +
+    id +
+    '#edit/cupping/new">+ Cupping</a></div>';
+  if (!st || (!d.brews.length && !d.samples.length))
+    return '<div class="nodata">No brews or cupping logged for this roast yet.</div>' + add;
+  const items = [
+    ...d.samples.map(s => ({
+      at: s.at,
+      t:
+        'Cupping' +
+        (s.protocol === 'BH' ? ' (BH 10)' : '') +
+        (num(s.total) != null ? ' · ' + Math.round(num(s.total) * 100) / 100 : '') +
+        (s.dq ? ' · under 7.5' : '') +
+        (s.restDays != null ? ' · day ' + Math.round(s.restDays * 10) / 10 : ''),
+      d: s.descriptors,
+      href: 'cup.html#edit/cupping/' + encodeURIComponent(s.sessionId),
+    })),
+    ...d.brews.map(b => ({
+      at: b.brewedAt,
+      t:
+        (b.method || 'Brew') +
+        (num(b.rating) != null ? ' · ' + b.rating + '/10' : '') +
+        (b.restDays != null ? ' · day ' + Math.round(b.restDays * 10) / 10 : ''),
+      d: b.descriptors,
+      href: 'cup.html#edit/brew/' + encodeURIComponent(b.id),
+    })),
+  ].sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  return (
+    '<div class="stats" style="margin-top:0">' +
+    statBox(
+      'Cup score',
+      st.score != null ? (Math.round(st.score * 100) / 100).toString() : '',
+      st.cuppings ? st.cuppings + ' sample' + (st.cuppings > 1 ? 's' : '') : ''
+    ) +
+    statBox(
+      'Brew rating',
+      st.rating != null ? Math.round(st.rating * 10) / 10 + '/10' : '',
+      st.brews ? st.brews + ' brew' + (st.brews > 1 ? 's' : '') : ''
+    ) +
+    '</div><table class="ev" style="margin-top:8px"><tbody>' +
+    items
+      .map(
+        x =>
+          '<tr><td><a href="' +
+          x.href +
+          '" style="color:var(--ink)">' +
+          esc(x.t) +
+          '</a><div style="font-size:12px;color:var(--muted)">' +
+          esc([fmtShort(x.at), x.d].filter(Boolean).join(' · ')) +
+          '</div></td></tr>'
+      )
+      .join('') +
+    '</tbody></table>' +
+    add
+  );
+}
+function fmtShort(d) {
+  if (!d) return '';
+  const x = new Date(d);
+  return isNaN(x) ? d : x.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+function signedIn() {
+  return typeof SYNC !== 'undefined' && SYNC.isAuthenticated();
+}
+function roastCloudHtml(r) {
+  if (!signedIn())
+    return '<div class="cloudline"><span class="loc">On this phone</span></div><div class="hint">Sign in on the Account page to keep roasts in the cloud.</div>';
+  if (r.cloud)
+    return '<div class="cloudline"><span class="loc in">In cloud</span><button class="btn-link" id="cloudOff" type="button">Remove from cloud</button></div><div class="hint">Removing keeps this roast on this phone.</div>';
+  if (r.accountId && r.accountId === SYNC.getUserId()) {
+    if (typeof PREFS !== 'undefined' && PREFS.get('roasts') === 'off')
+      return '<div class="cloudline"><span class="loc">On this phone</span></div><div class="hint">Cloud sync for roasts is off. Change it on the Account page.</div>';
+    return '<div class="cloudline"><span class="loc">On this phone</span><button class="btn-link" id="cloudOn" type="button">Save to cloud</button></div>';
+  }
+  return '<div class="cloudline"><span class="loc">On this phone</span></div><div class="hint">Finished before signing in, so it stays on this phone.</div>';
+}
+async function localGet(id) {
+  try {
+    const db = await openDB();
+    const v = await new Promise(ok => {
+      const q = db.transaction('roasts', 'readonly').objectStore('roasts').get(id);
+      q.onsuccess = () => ok(q.result || null);
+      q.onerror = () => ok(null);
+    });
+    db.close();
+    return v;
+  } catch (e) {
+    return null;
+  }
+}
+async function localPut(rec) {
+  const db = await openDB();
+  await new Promise((ok, no) => {
+    const t = db.transaction('roasts', 'readwrite');
+    t.objectStore('roasts').put(rec);
+    t.oncomplete = ok;
+    t.onerror = () => no(t.error);
+  });
+  db.close();
+}
+function bindRoastCloud(r) {
+  const on = document.getElementById('cloudOn'),
+    off = document.getElementById('cloudOff');
+  if (on)
+    on.onclick = async () => {
+      on.disabled = true;
+      on.textContent = 'Saving…';
+      try {
+        const raw = await localGet(r.id);
+        if (!raw) throw new Error('not on this phone');
+        const resp = await fetch('/api/roasts', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', authorization: 'Bearer ' + SYNC.getToken() },
+          body: JSON.stringify(raw),
+        });
+        if (!resp.ok) throw new Error('cloud ' + resp.status);
+        await localPut({ ...raw, cloud: true });
+        await load();
+        showDetail(r.id);
+      } catch (e) {
+        on.disabled = false;
+        on.textContent = 'Save to cloud';
+        alert('Could not save to cloud: ' + (e.message || e));
+      }
+    };
+  if (off)
+    off.onclick = async () => {
+      if (!confirm('Remove this roast from the cloud? It stays on this phone.')) return;
+      off.disabled = true;
+      off.textContent = 'Removing…';
+      try {
+        let raw = await localGet(r.id);
+        if (!raw) {
+          const { cloud, ...rest } = r;
+          raw = { ...rest, timeBase: 's' };
+        }
+        await localPut({ ...raw, cloud: false, accountId: raw.accountId || SYNC.getUserId() });
+        const resp = await fetch('/api/roasts/' + encodeURIComponent(r.id), {
+          method: 'DELETE',
+          headers: { authorization: 'Bearer ' + SYNC.getToken() },
+        });
+        if (!resp.ok) throw new Error('cloud ' + resp.status);
+        await load();
+        showDetail(r.id);
+      } catch (e) {
+        off.disabled = false;
+        off.textContent = 'Remove from cloud';
+        alert('Could not remove from cloud: ' + (e.message || e));
+      }
+    };
+}
+function toast(t) {
+  let el = document.getElementById('kkToast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'kkToast';
+    el.style.cssText =
+      'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#171512;color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;z-index:99;opacity:0;transition:opacity .2s;pointer-events:none';
+    document.body.appendChild(el);
+  }
+  el.textContent = t;
+  el.style.opacity = 1;
+  clearTimeout(el._h);
+  el._h = setTimeout(() => (el.style.opacity = 0), 2200);
+}
+async function localDel(id) {
+  const db = await openDB();
+  await new Promise((ok, no) => {
+    const t = db.transaction('roasts', 'readwrite');
+    t.objectStore('roasts').delete(id);
+    t.oncomplete = ok;
+    t.onerror = () => no(t.error);
+  });
+  db.close();
+}
+async function deleteRoast(r) {
+  const name = (r.estate || r.coffeeCode || 'Untitled roast') + (r.roastNo ? ' #' + r.roastNo : '');
+  const inCloud = !!r.cloud;
+  if (
+    !confirm(
+      'Delete ' +
+        name +
+        '?\n\nThis removes it from this phone' +
+        (inCloud ? ' and from the cloud' : '') +
+        '. It cannot be undone. Export it first if you may need it.'
+    )
+  )
+    return;
+  try {
+    if (inCloud) {
+      if (!signedIn()) {
+        alert('This roast is in the cloud. Sign in first to delete it there.');
+        return;
+      }
+      const resp = await fetch('/api/roasts/' + encodeURIComponent(r.id), {
+        method: 'DELETE',
+        headers: { authorization: 'Bearer ' + SYNC.getToken() },
+      });
+      if (!resp.ok && resp.status !== 404) throw new Error('cloud ' + resp.status);
+    }
+    await localDel(r.id);
+    closeDetail();
+    await load();
+    toast(name + ' deleted');
+  } catch (e) {
+    alert('Could not delete: ' + (e.message || e));
+  }
+}
+function closeDetail() {
+  detailOverlay.classList.remove('open');
+}
+let compareMode = false;
+const picked = [];
+const CMP_LETTERS = ['A', 'B', 'C'];
+function attachCardHandlers() {
+  listEl.querySelectorAll('.card').forEach(card => {
+    const id = card.getAttribute('data-id');
+    card.classList.toggle('pickable', compareMode);
+    card.classList.toggle('picked', picked.includes(id));
+    const pi = picked.indexOf(id);
+    card.setAttribute('data-letter', pi >= 0 ? CMP_LETTERS[pi] : '');
+    card.onclick = e => {
+      e.preventDefault();
+      if (compareMode) togglePick(id);
+      else showDetail(id);
+    };
+  });
+}
+function togglePick(id) {
+  const i = picked.indexOf(id);
+  if (i >= 0) picked.splice(i, 1);
+  else {
+    if (picked.length >= 3) {
+      cmpMsg('Up to 3 roasts at a time');
+      return;
+    }
+    picked.push(id);
+  }
+  attachCardHandlers();
+  updateCmpBar();
+}
+function setCompareMode(on, preId) {
+  compareMode = on;
+  picked.length = 0;
+  if (on && preId != null) picked.push(String(preId));
+  document.body.classList.toggle('comparing', on);
+  cmpBtn.textContent = on ? 'Cancel compare' : 'Compare roasts';
+  attachCardHandlers();
+  updateCmpBar();
+}
+function updateCmpBar() {
+  cmpBar.style.display = compareMode ? 'flex' : 'none';
+  cmpBar.querySelector('.cmp-info').textContent = picked.length
+    ? picked.length + ' selected · tap to add or remove'
+    : 'Tap 2 or 3 roasts';
+  const go = cmpBar.querySelector('.cmp-go');
+  go.disabled = picked.length < 2;
+  go.textContent = picked.length >= 2 ? 'Compare ' + picked.length : 'Compare';
+}
+function cmpMsg(t) {
+  cmpBar.querySelector('.cmp-info').textContent = t;
+  clearTimeout(cmpMsg.t);
+  cmpMsg.t = setTimeout(updateCmpBar, 1600);
+}
+function nReadings(r, k) {
+  return ((r.readings || {})[k] || []).filter(p => num(p.temp) != null).length;
+}
+function fmtDelta(v, kind, u) {
+  if (v == null || !Number.isFinite(v)) return '';
+  if (Math.abs(v) < (kind === 'time' ? 0.5 : 0.05)) return 'same';
+  const s = v > 0 ? '+' : v < 0 ? '−' : '±';
+  const a = Math.abs(v);
+  if (kind === 'time') return s + mmss(a);
+  if (kind === 'temp') return s + Math.round(a * 10) / 10 + u;
+  if (kind === 'pct') return s + a.toFixed(1) + ' pts';
+  if (kind === 'ror') return s + a.toFixed(1);
+  if (kind === 'score') return s + a.toFixed(2);
+  if (kind === 'g') return s + Math.round(a) + ' g';
+  return '';
+}
+function showCompare() {
+  const rs = picked.map(id => roastRows.find(x => String(x.id) === id)).filter(Boolean);
+  if (rs.length < 2) return;
+  const As = rs.map(analyze);
+  const u = '°' + (rs[0].unit || 'C');
+  const allBean = rs.every(r => nReadings(r, 'bean') >= 3),
+    allEx = rs.every(r => nReadings(r, 'exhaust') >= 3);
+  const keyOf = r => (allBean ? 'bean' : allEx ? 'exhaust' : nReadings(r, 'bean') >= 3 ? 'bean' : 'exhaust');
+  const probeNote = allBean
+    ? 'Bean probe'
+    : allEx
+      ? 'Exhaust probe'
+      : 'Mixed probes: each roast uses its own main probe';
+  const ser = rs.map((r, i) => ({
+    pts: ((r.readings || {})[keyOf(r)] || [])
+      .filter(p => num(p.temp) != null)
+      .map(p => ({ time: p.time, v: num(p.temp) })),
+    cls: 'c' + i,
+    dots: true,
+  }));
+  const tmax = Math.max(60, ...As.map(a => a.total || 0), ...ser.flatMap(s => s.pts.map(p => p.time)));
+  const rorSer = rs.map((r, i) => ({
+    pts: rorSeries((r.readings || {})[keyOf(r)] || []).map(p => ({ time: p.time, v: p.v })),
+    cls: 'c' + i,
+    dots: true,
+  }));
+  const title = r => r.estate || r.coffeeCode || r.bean || 'Untitled';
+  const legend =
+    '<div class="cmpleg">' +
+    rs
+      .map(
+        (r, i) =>
+          '<div><span class="cdot c' +
+          i +
+          '">' +
+          CMP_LETTERS[i] +
+          '</span><b class="ct">' +
+          esc(title(r)) +
+          '</b> <em>' +
+          esc(
+            [
+              r.roastNo ? '#' + r.roastNo : '',
+              r.roastDate || '',
+              r.coffeeCode && r.coffeeCode !== title(r) ? r.coffeeCode : '',
+            ]
+              .filter(Boolean)
+              .join(' · ')
+          ) +
+          '</em></div>'
+      )
+      .join('') +
+    '</div>';
+  const maxT = Math.max(...As.map(a => a.total || 0), 1);
+  const phases =
+    '<div class="phcmp">' +
+    As.map(
+      (A, i) =>
+        '<div class="phrow"><span class="cdot c' +
+        i +
+        '">' +
+        CMP_LETTERS[i] +
+        '</span><div class="phtrack"><div class="phasebar" style="width:' +
+        (((A.total || 0) / maxT) * 100).toFixed(1) +
+        '%">' +
+        (A.phases || [])
+          .map(p => '<div class="ph ' + p.k + '" style="flex:' + (p.to - p.from) + '"></div>')
+          .join('') +
+        '</div></div><span class="phtot">' +
+        (A.total ? mmss(A.total) : '–') +
+        '</span></div>'
+    ).join('') +
+    '</div><div class="legend"><span class="sw dry"></span>Drying <span class="sw mai"></span>Maillard <span class="sw dev"></span>Development · bars to scale</div>';
+  const ph = (A, k) => {
+    const p = (A.phases || []).find(x => x.k === k && A.phases.length === 3);
+    return p ? p.to - p.from : null;
+  };
+  const pct = (A, k) => {
+    const v = ph(A, k);
+    return v != null && A.total ? (v / A.total) * 100 : null;
+  };
+  const rows = [
+    ['Date', r => ({ t: r.roastDate })],
+    ['Roast no', r => ({ t: r.roastNo })],
+    ['Machine', r => ({ t: r.machineName })],
+    [
+      'Green weight',
+      r => {
+        const v = num(r.greenWeight);
+        return { t: v != null ? v + ' g' : '', v, k: 'g' };
+      },
+    ],
+    [
+      'Roasted weight',
+      r => {
+        const v = num(r.roastedWeight);
+        return { t: v != null ? v + ' g' : '', v, k: 'g' };
+      },
+    ],
+    [
+      'Moisture',
+      r => {
+        const v = num(r.moisture);
+        return { t: v != null ? v + '%' : '', v, k: 'pct' };
+      },
+    ],
+    [
+      'Charge',
+      r => {
+        const v = num(r.chargeTemp);
+        return { t: v != null ? Math.round(v) + u : '', v, k: 'temp' };
+      },
+    ],
+    ['Turning point', (r, A) => ({ t: A.tp ? mmss(A.tp.time) : '', v: A.tp ? A.tp.time : null, k: 'time' })],
+    [
+      'TP temp',
+      (r, A) => {
+        const v = A.tp ? A.tAt(A.tp) : null;
+        return { t: v != null ? Math.round(v) + u : '', v, k: 'temp' };
+      },
+    ],
+    ['Dry end', (r, A) => ({ t: A.dry ? mmss(A.dry.time) : '', v: A.dry ? A.dry.time : null, k: 'time' })],
+    ['First crack', (r, A) => ({ t: A.fc ? mmss(A.fc.time) : '', v: A.fc ? A.fc.time : null, k: 'time' })],
+    [
+      'FC temp',
+      (r, A) => {
+        const v = A.fc ? A.tAt(A.fc) : null;
+        return { t: v != null ? Math.round(v) + u : '', v, k: 'temp' };
+      },
+    ],
+    ['Drop', (r, A) => ({ t: A.total ? mmss(A.total) : '', v: A.total, k: 'time' })],
+    [
+      'Drop temp',
+      (r, A) => {
+        const v = A.drop ? A.tAt(A.drop) : null;
+        return { t: v != null ? Math.round(v) + u : '', v, k: 'temp' };
+      },
+    ],
+    [
+      'Drying',
+      (r, A) => {
+        const v = ph(A, 'dry');
+        return { t: v != null ? mmss(v) + ' · ' + pct(A, 'dry').toFixed(0) + '%' : '', v, k: 'time' };
+      },
+    ],
+    [
+      'Maillard',
+      (r, A) => {
+        const v = ph(A, 'mai');
+        return { t: v != null ? mmss(v) + ' · ' + pct(A, 'mai').toFixed(0) + '%' : '', v, k: 'time' };
+      },
+    ],
+    ['Development', (r, A) => ({ t: A.dev != null ? mmss(A.dev) : '', v: A.dev, k: 'time' })],
+    ['DTR', (r, A) => ({ t: A.dtr != null ? A.dtr.toFixed(1) + '%' : '', v: A.dtr, k: 'pct' })],
+    [
+      'RoR at crack',
+      (r, A) => {
+        const v = A.fc ? A.rorAt(A.fc.time) : null;
+        return { t: v != null ? v.toFixed(1) + u + '/min' : '', v, k: 'ror' };
+      },
+    ],
+    ['Weight loss', (r, A) => ({ t: A.loss != null ? A.loss.toFixed(1) + '%' : '', v: A.loss, k: 'pct' })],
+    [
+      'Cup score',
+      r => {
+        const st = cupStats(r.id);
+        const v = st && st.score;
+        return { t: v != null ? Math.round(v * 100) / 100 + '' : '', v, k: 'score' };
+      },
+    ],
+    [
+      'Brew rating',
+      r => {
+        const st = cupStats(r.id);
+        const v = st && st.rating;
+        return { t: v != null ? Math.round(v * 10) / 10 + '/10' : '', v, k: 'ror' };
+      },
+    ],
+    [
+      'Cup notes',
+      r => {
+        const st = cupStats(r.id);
+        return { t: st ? st.desc.join('; ') : '' };
+      },
+    ],
+    ['Target colour', r => ({ t: r.targetColor })],
+    ['Final colour', r => ({ t: r.finalColor })],
+    ['Notes', r => ({ t: r.notes || (r.bean !== r.coffeeCode ? r.bean : '') })],
+  ];
+  const two = rs.length === 2;
+  const body = rows
+    .map(([name, fn]) => {
+      const cells = rs.map((r, i) => fn(r, As[i]));
+      if (cells.every(c => c.t == null || String(c.t).trim() === '')) return '';
+      const d =
+        two && cells[0].k && cells[0].v != null && cells[1].v != null
+          ? fmtDelta(cells[1].v - cells[0].v, cells[0].k, u)
+          : '';
+      return (
+        '<tr><th>' +
+        esc(name) +
+        '</th>' +
+        cells
+          .map(
+            c =>
+              '<td' +
+              (name === 'Notes' || name === 'Cup notes' ? ' class="wrap"' : '') +
+              '>' +
+              esc(c.t || '–') +
+              '</td>'
+          )
+          .join('') +
+        (two ? '<td class="dl">' + esc(d) + '</td>' : '') +
+        '</tr>'
+      );
+    })
+    .join('');
+  const table =
+    '<div class="cmpwrap"><table class="cmp"><thead><tr><th></th>' +
+    rs.map((r, i) => '<th><span class="cdot c' + i + '">' + CMP_LETTERS[i] + '</span></th>').join('') +
+    (two ? '<th>B − A</th>' : '') +
+    '</tr></thead><tbody>' +
+    body +
+    '</tbody></table></div>';
+  detailEl.innerHTML =
+    '<div class="dhead"><div><b>Compare ' +
+    rs.length +
+    ' roasts</b><div class="meta">' +
+    esc(probeNote) +
+    ' · aligned at charge</div></div><button class="close" aria-label="Close">✕</button></div>' +
+    legend +
+    '<h3>Curve</h3>' +
+    chartSvg({ series: ser, ev: [], tmax, aria: 'Temperature curves compared' }) +
+    '<div class="legend">Minutes from charge</div><h3>Rate of rise</h3>' +
+    (rorSer.some(s => s.pts.length >= 2)
+      ? chartSvg({
+          series: rorSer,
+          ev: [],
+          tmax,
+          h: 160,
+          zero: true,
+          minSpan: 10,
+          aria: 'Rate of rise compared',
+        }) +
+        '<div class="legend">' +
+        u +
+        ' per minute, from turning point</div>'
+      : '<div class="nodata">Not enough readings after the turning point.</div>') +
+    '<h3>Phases</h3>' +
+    phases +
+    '<h3>Side by side</h3>' +
+    table;
+  detailEl.querySelector('.close').onclick = closeDetail;
+  detailEl.scrollTop = 0;
+  detailOverlay.classList.add('open');
+}
+const cmpBtn = document.createElement('button');
+cmpBtn.id = 'compareBtn';
+cmpBtn.textContent = 'Compare roasts';
+cmpBtn.onclick = () => setCompareMode(!compareMode);
+document.querySelector('.exports').appendChild(cmpBtn);
+const cmpBar = document.createElement('div');
+cmpBar.id = 'cmpBar';
+cmpBar.innerHTML = '<span class="cmp-info"></span><button class="cmp-go" disabled>Compare</button>';
+document.body.appendChild(cmpBar);
+cmpBar.querySelector('.cmp-go').onclick = showCompare;
+function draw() {
+  const e = estateInput.value.toLowerCase(),
+    c = coffeeInput.value.toLowerCase(),
+    d = dateInput.value,
+    t = typeInput.value.toLowerCase();
+  const a = roastRows.filter(
+    r =>
+      (!e ||
+        String(r.estate || '')
+          .toLowerCase()
+          .includes(e)) &&
+      (!c ||
+        String(r.coffeeCode || r.bean || '')
+          .toLowerCase()
+          .includes(c)) &&
+      (!d || String(r.roastDate || '').startsWith(d)) &&
+      (!t ||
+        String(r.roastType || r.targetColor || '')
+          .toLowerCase()
+          .includes(t))
+  );
+  if (!a.length) {
+    listEl.innerHTML = '<div class="empty">No matching saved roasts.</div>';
+    return;
+  }
+  listEl.innerHTML = a
+    .map(r => {
+      const title = r.estate || r.coffeeCode || r.bean || '(Untitled roast)';
+      const dt = new Date(r.finishedAt || r.roastDate);
+      const dateStr =
+        dt.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+        ', ' +
+        dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+      const meta = [
+        r.roastNo ? '#' + r.roastNo : '',
+        r.targetColor || '',
+        r.moisture ? r.moisture + '%' : '',
+        r.greenWeight ? r.greenWeight + 'g' : '',
+      ]
+        .filter(Boolean)
+        .join(' · ');
+      return (
+        '<article class="card" data-id="' +
+        esc(r.id) +
+        '"><b>' +
+        esc(title) +
+        '</b><span class="loc' +
+        (r.cloud ? ' in' : '') +
+        '">' +
+        (r.cloud ? 'In cloud' : 'This phone') +
+        '</span><div class="meta">' +
+        esc(meta) +
+        '<br><small>' +
+        esc(dateStr) +
+        '</small></div></article>'
+      );
+    })
+    .join('');
+  attachCardHandlers();
+}
+function csvOf(rows) {
+  return rows.map(row => row.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\n');
+}
+function download(name, text, type) {
+  const a = document.createElement('a'),
+    url = URL.createObjectURL(
+      new Blob([type === 'text/csv' ? '\ufeff' + text : text], { type: type + ';charset=utf-8' })
+    );
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+function evList(r) {
+  return (Array.isArray(r.events) ? r.events : Object.values(r.events || {}))
+    .slice()
+    .sort((a, b) => (num(a.time) || 0) - (num(b.time) || 0));
+}
+function evAt(r, re) {
+  const e = evList(r).find(x => re.test(String(x.name || '')));
+  return e ? mmss(e.time) : '';
+}
+function summary(r) {
+  const gw = num(r.greenWeight),
+    rw = num(r.roastedWeight),
+    ev = evList(r),
+    rd = r.readings || {};
+  const dur = num(r.elapsed) || (ev.length ? num(ev[ev.length - 1].time) : null);
+  return {
+    gw,
+    rw,
+    loss: gw && rw ? (((gw - rw) / gw) * 100).toFixed(1) : '',
+    dur: dur ? mmss(dur) : '',
+    bt: (rd.bean || []).length,
+    et: (rd.exhaust || []).length,
+    ev,
+  };
+}
+function slug(s) {
+  return (
+    String(s || 'roast')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 40) || 'roast'
+  );
+}
+exportCsvBtn.onclick = () => {
+  const head = [
+    'Roast ID',
+    'Date',
+    'Roast no',
+    'Estate',
+    'Coffee code',
+    'Notes',
+    'Roastery',
+    'Machine',
+    'Green weight g',
+    'Roasted weight g',
+    'Weight loss %',
+    'Moisture %',
+    'Charge temp',
+    'Unit',
+    'Target colour',
+    'Final colour',
+    'Duration',
+    'Turning point',
+    'Yellowing',
+    'First crack',
+    'Second crack',
+    'Drop',
+    'Events',
+    'Bean readings',
+    'Exhaust readings',
+    'Saved',
+    'Where',
+  ];
+  const rows = roastRows.map(r => {
+    const s = summary(r);
+    return [
+      r.id,
+      r.roastDate,
+      r.roastNo,
+      r.estate,
+      r.coffeeCode,
+      r.notes || r.bean,
+      r.roasteryName,
+      r.machineName,
+      s.gw ?? '',
+      s.rw ?? '',
+      s.loss,
+      r.moisture,
+      r.chargeTemp,
+      r.unit || 'C',
+      r.targetColor,
+      r.finalColor,
+      s.dur,
+      evAt(r, /turn/i),
+      evAt(r, /yellow|dry/i),
+      evAt(r, /first|1st|\bfc\b/i),
+      evAt(r, /second|2nd|\bsc\b/i),
+      evAt(r, /drop|end/i),
+      s.ev.length,
+      s.bt,
+      s.et,
+      r.finishedAt,
+      r.cloud ? 'cloud' : 'this device',
+    ];
+  });
+  download(
+    'koffykraft-roastbook-' + new Date().toISOString().slice(0, 10) + '.csv',
+    csvOf([head, ...rows]),
+    'text/csv'
+  );
+};
+document.getElementById('exportJson').onclick = () => {
+  const data = {
+    app: 'KoffyKraft Roastbook',
+    format: 1,
+    exportedAt: new Date().toISOString(),
+    roasts: roastRows.map(r => {
+      const { cloud, ...rest } = r;
+      return rest;
+    }),
+  };
+  download(
+    'koffykraft-roastbook-backup-' + new Date().toISOString().slice(0, 10) + '.json',
+    JSON.stringify(data, null, 2),
+    'application/json'
+  );
+};
+function exportRoastCsv(r) {
+  const u = r.unit || 'C',
+    rd = r.readings || {},
+    ev = evList(r);
+  const times = new Map();
+  const put = (t, k, v) => {
+    t = Math.round(num(t) || 0);
+    if (!times.has(t)) times.set(t, { t });
+    const o = times.get(t);
+    o[k] = o[k] != null && k === 'ev' ? o[k] + ' / ' + v : v;
+  };
+  (rd.bean || []).forEach(p => put(p.time, 'bt', p.temp));
+  (rd.exhaust || []).forEach(p => put(p.time, 'et', p.temp));
+  ev.forEach(e => put(e.time, 'ev', e.name));
+  const rows = [
+    ['Time', 'Seconds', 'Bean °' + u, 'Exhaust °' + u, 'Event'],
+    ...[...times.values()]
+      .sort((a, b) => a.t - b.t)
+      .map(x => [mmss(x.t), x.t, x.bt ?? '', x.et ?? '', x.ev ?? '']),
+  ];
+  const meta = [
+    ['Estate', r.estate],
+    ['Coffee', r.coffeeCode],
+    ['Notes', r.notes || r.bean],
+    ['Date', r.roastDate],
+    ['Roast no', r.roastNo],
+    ['Machine', r.machineName],
+    ['Green weight g', r.greenWeight],
+    ['Roasted weight g', r.roastedWeight],
+    ['Moisture %', r.moisture],
+    ['Charge temp', r.chargeTemp],
+    ['Target colour', r.targetColor],
+    ['Final colour', r.finalColor],
+    [],
+  ];
+  download(
+    slug((r.estate || r.coffeeCode || 'roast') + '-' + (r.roastDate || '') + '-' + (r.roastNo || '')) +
+      '.csv',
+    csvOf([...meta, ...rows]),
+    'text/csv'
+  );
+}
+function pyLit(v) {
+  if (v === null || v === undefined) return 'None';
+  if (v === true) return 'True';
+  if (v === false) return 'False';
+  if (typeof v === 'number') return Number.isFinite(v) ? String(v) : '-1';
+  if (typeof v === 'string')
+    return (
+      "'" +
+      v
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/\r/g, '\\r')
+        .replace(/\n/g, '\\n')
+        .replace(/\t/g, '\\t') +
+      "'"
+    );
+  if (Array.isArray(v)) return '[' + v.map(pyLit).join(', ') + ']';
+  if (v.__float !== undefined) {
+    const n = v.__float;
+    return Number.isInteger(n) ? n.toFixed(1) : String(n);
+  }
+  return (
+    '{' +
+    Object.keys(v)
+      .filter(k => v[k] !== undefined)
+      .map(k => pyLit(k) + ': ' + pyLit(v[k]))
+      .join(', ') +
+    '}'
+  );
+}
+function F(n) {
+  const x = Number(n);
+  return Number.isFinite(x) ? { __float: Math.round(x * 100) / 100 } : undefined;
+}
+function artisanProfile(r) {
+  const rd = r.readings || {},
+    ev = r.events || [];
+  const okT = p => num(p.temp) != null;
+  const beanN = (rd.bean || []).filter(okT).length,
+    etN = (rd.exhaust || []).filter(okT).length;
+  const exAsBean = beanN < 3 && etN >= 3;
+  const rows = new Map();
+  const key = t => Math.round((num(t) || 0) * 10) / 10;
+  const row = t => {
+    t = key(t);
+    if (!rows.has(t)) rows.set(t, { t, et: -1, bt: -1 });
+    return rows.get(t);
+  };
+  row(0);
+  (rd.exhaust || []).forEach(p => {
+    if (okT(p)) row(p.time).et = num(p.temp);
+  });
+  (rd.bean || []).forEach(p => {
+    if (okT(p)) row(p.time).bt = num(p.temp);
+  });
+  ev.forEach(e => {
+    const x = row(e.time);
+    if (x.et === -1 && num(e.exhaust) != null) x.et = num(e.exhaust);
+    if (x.bt === -1 && num(e.bean) != null) x.bt = num(e.bean);
+  });
+  const list = [...rows.values()].sort((a, b) => a.t - b.t);
+  if (exAsBean)
+    list.forEach(x => {
+      if (x.bt === -1) x.bt = x.et;
+    });
+  const idx = t => list.findIndex(x => x.t === key(t));
+  const ti = [0, 0, 0, 0, 0, 0, 0, 0];
+  const slot = [
+    [/yellow|dry/i, 1],
+    [/first|1st|\bfc\b/i, 2],
+    [/second|2nd|\bsc\b/i, 4],
+    [/drop/i, 6],
+  ];
+  const se = [],
+    seStr = [];
+  ev.forEach(e => {
+    const name = String(e.name || '');
+    if (/turn/i.test(name)) return;
+    const s = slot.find(([re]) => re.test(name));
+    if (s && !ti[s[1]]) {
+      ti[s[1]] = idx(e.time);
+      return;
+    }
+    se.push(idx(e.time));
+    seStr.push(name);
+  });
+  ti[0] = idx(0);
+  const fin = r.finishedAt ? new Date(r.finishedAt) : null;
+  const start = fin && r.elapsed ? new Date(fin.getTime() - r.elapsed * 1000) : fin;
+  const d = start && !isNaN(start) ? start : null;
+  const pad = n => String(n).padStart(2, '0');
+  const iso =
+    r.roastDate || (d ? d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) : '');
+  const notes = [
+    r.notes || (r.bean !== r.coffeeCode ? r.bean : ''),
+    r.targetColor ? 'Target colour: ' + r.targetColor : '',
+    r.finalColor ? 'Final colour: ' + r.finalColor : '',
+    r.estate ? 'Estate: ' + r.estate : '',
+    exAsBean
+      ? 'Exhaust-only roast: the exhaust readings are also written as the bean (BT) curve so phases and DTR can be calculated.'
+      : '',
+    'Exported from KoffyKraft Roastbook',
+  ]
+    .filter(Boolean)
+    .join('\n');
+  const gw = num(r.greenWeight) || 0,
+    rw = num(r.roastedWeight) || 0;
+  const A = analyze(r);
+  const at = (i, k) =>
+    i > 0 || (i === 0 && k) ? (list[i] && list[i][k] !== -1 ? F(list[i][k]) : undefined) : undefined;
+  const c = { CHARGE_time: F(0), CHARGE_ET: at(ti[0], 'et'), CHARGE_BT: at(ti[0], 'bt') };
+  if (A.tp) {
+    const i = idx(A.tp.time);
+    if (i >= 0) {
+      c.TP_idx = i;
+      c.TP_time = F(A.tp.time);
+      c.TP_ET = at(i, 'et');
+      c.TP_BT = at(i, 'bt');
+    }
+  }
+  [
+    ['DRY', 1],
+    ['FCs', 2],
+    ['SCs', 4],
+    ['DROP', 6],
+  ].forEach(([n, k]) => {
+    const i = ti[k];
+    if (i > 0) {
+      c[n + '_time'] = F(list[i].t);
+      c[n + '_ET'] = at(i, 'et');
+      c[n + '_BT'] = at(i, 'bt');
+    }
+  });
+  if (A.total) c.totaltime = F(A.total);
+  const ph = Object.fromEntries((A.phases || []).map(p => [p.k, p.to - p.from]));
+  if (A.phases && A.phases.length === 3) {
+    c.dryphasetime = F(ph.dry);
+    c.midphasetime = F(ph.mai);
+    c.finishphasetime = F(ph.dev);
+  }
+  if (A.fc && A.rorAt(A.fc.time) != null) c.fcs_ror = F(A.rorAt(A.fc.time));
+  if (A.loss != null) c.weight_loss = F(A.loss);
+  if (gw) c.weightin = F(gw);
+  if (rw) c.weightout = F(rw);
+  if (num(r.moisture) != null) c.moisture_greens = F(num(r.moisture));
+  const p = {
+    recording_version: 'KoffyKraft Roastbook',
+    mode: (r.unit || 'C') === 'F' ? 'F' : 'C',
+    title: [r.estate, r.coffeeCode].filter(Boolean).join(' ') || 'KoffyKraft roast',
+    beans: [r.estate, r.coffeeCode, r.notes || ''].filter(Boolean).join(', '),
+    weight: [F(gw), F(rw), 'g'],
+    roastertype: r.machineName || '',
+    organization: r.roasteryName || '',
+    roastingnotes: notes,
+    cuppingnotes: '',
+    roastisodate: iso,
+    roasttime: d ? pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()) : '00:00:00',
+    roastepoch: d ? Math.floor(d.getTime() / 1000) : 0,
+    roastbatchnr: parseInt(r.roastNo, 10) || 0,
+    timeindex: ti,
+    timex: list.map(x => F(x.t)),
+    temp1: list.map(x => F(x.et)),
+    temp2: list.map(x => F(x.bt)),
+    specialevents: se,
+    specialeventstype: se.map(() => 4),
+    specialeventsvalue: se.map(() => F(0)),
+    specialeventsStrings: seStr,
+    etypes: ['Air', 'Drum', 'Damper', 'Burner', '--'],
+    moisture_greens: num(r.moisture) != null ? F(num(r.moisture)) : undefined,
+    computed: c,
+  };
+  return { p, exAsBean };
+}
+function toAlog(r) {
+  return pyLit(artisanProfile(r).p);
+}
+function toArtisanJson(r) {
+  return (
+    JSON.stringify(artisanProfile(r).p, (k, v) =>
+      v && typeof v === 'object' && v.__float !== undefined ? v.__float : v
+    ) + '\n'
+  );
+}
+function roastFileName(r) {
+  return slug((r.estate || r.coffeeCode || 'roast') + '-' + (r.roastDate || '') + '-' + (r.roastNo || ''));
+}
+function exportAlog(r) {
+  download(roastFileName(r) + '.alog', toAlog(r), 'text/plain');
+}
+function exportArtisanJson(r) {
+  download(roastFileName(r) + '.json', toArtisanJson(r), 'application/json');
+}
+(function () {
+  let down = false;
+  detailOverlay.addEventListener('pointerdown', e => {
+    down = e.target === detailOverlay;
+  });
+  detailOverlay.addEventListener('click', e => {
+    if (down && e.target === detailOverlay) closeDetail();
+    down = false;
+  });
+})();
+[estateInput, coffeeInput, dateInput, typeInput].forEach(x => x.addEventListener('input', draw));
+console.log('[KoffyKraft] Starting app...');
+load()
+  .then(() => (typeof PREFS !== 'undefined' ? PREFS.pull() : null))
+  .then(() => {
+    if (typeof ORIGIN !== 'undefined')
+      ORIGIN.sync()
+        .then(c => {
+          if (c) loadCupData();
+        })
+        .catch(() => {});
+  });
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 </script><script src="pv.js" defer></script>
 <script src="colour.js"></script></body></html>

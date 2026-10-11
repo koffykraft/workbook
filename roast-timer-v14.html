@@ -7,97 +7,692 @@
 <meta name="theme-color" content="#171512">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-title" content="KoffyKraft"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><title>KoffyKraft Open Roast Timer v13 - Revised</title>
 <style>
-:root{
- --bg:#f7f5f0;--card:#fff;--ink:#171512;--muted:#77716a;--line:#ddd8d0;
- --dark:#171512;--accent:#8d583b;--exhaust:#b85f32;--bean:#287a91;
- --turn:#537184;--yellow:#d8ad2f;--maillard:#aa6938;--fc:#a64031;
- --sc:#692724;--drop:#202020;--danger:#9b342d
+:root {
+  --bg: #f7f5f0;
+  --card: #fff;
+  --ink: #171512;
+  --muted: #77716a;
+  --line: #ddd8d0;
+  --dark: #171512;
+  --accent: #8d583b;
+  --exhaust: #b85f32;
+  --bean: #287a91;
+  --turn: #537184;
+  --yellow: #d8ad2f;
+  --maillard: #aa6938;
+  --fc: #a64031;
+  --sc: #692724;
+  --drop: #202020;
+  --danger: #9b342d;
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
-button,input,textarea,select{font:inherit}
-button{touch-action:manipulation}
-.app{max-width:800px;margin:auto;padding:env(safe-area-inset-top) 12px calc(96px + env(safe-area-inset-bottom))}
-header{padding:16px 4px 10px}
-.kicker{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700}
-h1{font-size:32px;letter-spacing:-.04em;line-height:1.05;margin:6px 0 4px}
-.sub{margin:0;color:var(--muted);line-height:1.35}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}
-.card h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 12px;color:var(--accent)}
-.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.grid>*{min-width:0}.full{grid-column:1/-1}
-.field{display:flex;flex-direction:column;gap:5px}
-label{font-size:.73rem;color:var(--muted);font-weight:700}
-input,textarea,select{width:100%;min-width:0;max-width:100%;border:1px solid var(--line);background:white;border-radius:11px;padding:11px 12px;min-height:44px;color:var(--ink)}input[type=date]{min-width:0;-webkit-appearance:none;appearance:none}
-textarea{min-height:70px;resize:vertical}
-.chips{display:flex;gap:7px;overflow:auto;padding:8px 0 1px;scrollbar-width:none}
-.chip{flex:0 0 auto;border:1px solid var(--line);background:#eee7dd;border-radius:999px;padding:8px 11px;font-size:.8rem}
-.key{background:#211c17;color:white;border-radius:12px;padding:11px 12px;font-weight:700;letter-spacing:.04em;word-break:break-word}
-.timer-card{background:var(--dark);color:white;border-color:var(--dark);position:sticky;top:6px;z-index:10}
-.timer{font-variant-numeric:tabular-nums;font-size:clamp(3rem,15vw,6rem);font-weight:700;letter-spacing:-.05em;text-align:center;line-height:1}
-.timer-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
-.btn{border:0;border-radius:12px;min-height:48px;padding:10px 13px;font-weight:700}
-.btn.primary{background:white;color:#181512}.btn.secondary{background:#38322d;color:white}
-.btn.ghost{background:#ece4da;color:var(--ink)}.btn.danger{background:var(--danger);color:white}
-.probe-choice{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.probe-choice button{border:1px solid var(--line);background:white;border-radius:11px;min-height:48px;font-weight:700}
-.probe-choice button.active{background:var(--dark);color:white;border-color:var(--dark)}
-.probe-tabs{display:flex;gap:8px;margin-bottom:10px}
-.probe-tab{flex:1;border:1px solid var(--line);background:#eee7dd;border-radius:11px;padding:10px;font-weight:700}
-.probe-tab.active.exhaust{background:var(--exhaust);color:white;border-color:var(--exhaust)}
-.probe-tab.active.bean{background:var(--bean);color:white;border-color:var(--bean)}
-.temp-now{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-bottom:12px}
-.temp-now input{font-size:1.45rem;font-weight:700;text-align:center}
-.event-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.event{color:white;border:0;border-radius:13px;min-height:70px;padding:8px 5px;font-weight:700;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px}
-.event small{font-size:.64rem;font-weight:400;opacity:.92}.turn{background:var(--turn)}.yellow{background:var(--yellow);color:#302500}.maillard{background:var(--maillard)}.fc{background:var(--fc)}.sc{background:var(--sc)}.drop{background:var(--drop)}
-.tile-config{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:8px;align-items:end}
-.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
-.tile{border:1px solid var(--line);background:white;border-radius:12px;min-height:72px;padding:6px 3px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;user-select:none}
-.tile .temp-label{font-size:1.05rem}.tile .tile-time{font-size:.61rem;font-weight:400;min-height:.75rem}.tile .tile-gap{font-size:.67rem;color:var(--accent);min-height:.8rem}
-.tile.done.exhaust{background:var(--exhaust);color:white;border-color:var(--exhaust)}.tile.done.bean{background:var(--bean);color:white;border-color:var(--bean)}
-.tile.done .tile-gap{color:#fff0d8}.holding{outline:3px solid var(--danger);transform:scale(.96)}
-.chart-box{background:#171512;border-radius:13px;padding:8px;overflow:hidden}
-canvas{display:block;width:100%;height:auto;min-height:300px}
-.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.75rem;color:var(--muted);margin:8px 2px 0}
-.legend b{display:inline-block;width:18px;border-top:3px solid;margin-right:5px;vertical-align:middle}.legend .e b{border-color:var(--exhaust)}.legend .b b{border-color:var(--bean)}.legend .r b{border-color:#74b7cf;border-top-style:dashed}
-.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.metric{background:white;border:1px solid var(--line);border-radius:11px;padding:9px}.metric b{display:block;font-size:1.05rem}.metric span{font-size:.65rem;color:var(--muted)}
-.log{display:flex;flex-direction:column;gap:7px}.log-item{display:grid;grid-template-columns:68px 1fr auto;gap:8px;padding:9px;border:1px solid var(--line);border-radius:10px;background:white}.log-time{font-weight:700;font-variant-numeric:tabular-nums}.pill{font-size:.64rem;padding:4px 7px;border-radius:99px;background:#ece5db}
-.toast{position:fixed;left:50%;bottom:94px;transform:translate(-50%,20px);background:#1f1b17;color:white;padding:10px 14px;border-radius:999px;font-size:.82rem;opacity:0;pointer-events:none;transition:.22s;z-index:40}.toast.show{opacity:1;transform:translate(-50%,0)}
-.bottom{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(800px,100%);padding:9px 12px calc(9px + env(safe-area-inset-bottom));background:rgba(244,240,232,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);gap:8px;z-index:20}
-.help{font-size:.76rem;color:var(--muted);line-height:1.4;margin-top:8px}
-@media(max-width:560px){.bottom{grid-template-columns:repeat(5,minmax(0,1fr))!important}.bottom .btn{font-size:.72rem;padding:7px 3px}.event-grid{grid-template-columns:repeat(2,1fr)}.tiles{grid-template-columns:repeat(4,1fr)}.summary{grid-template-columns:1fr 1fr}.tile-config{grid-template-columns:1fr 1fr}.tile-config .make{grid-column:1/-1}.probe-choice{grid-template-columns:1fr 1fr 1fr}}
-@media print{.bottom,.timer-card,.toast,.no-print{display:none!important}.app{max-width:none;padding:0}.card{box-shadow:none;break-inside:avoid}.chart-box{background:white;border:1px solid #999}@page{size:A4 portrait;margin:10mm}}
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+button {
+  touch-action: manipulation;
+}
+.app {
+  max-width: 800px;
+  margin: auto;
+  padding: env(safe-area-inset-top) 12px calc(96px + env(safe-area-inset-bottom));
+}
+header {
+  padding: 16px 4px 10px;
+}
+.kicker {
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+}
+h1 {
+  font-size: 32px;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin: 6px 0 4px;
+}
+.sub {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  margin: 12px 0;
+}
+.card h2 {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+  color: var(--accent);
+}
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.grid > * {
+  min-width: 0;
+}
+.full {
+  grid-column: 1/-1;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+label {
+  font-size: 0.73rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+input,
+textarea,
+select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 11px;
+  padding: 11px 12px;
+  min-height: 44px;
+  color: var(--ink);
+}
+input[type='date'] {
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+.chips {
+  display: flex;
+  gap: 7px;
+  overflow: auto;
+  padding: 8px 0 1px;
+  scrollbar-width: none;
+}
+.chip {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  background: #eee7dd;
+  border-radius: 999px;
+  padding: 8px 11px;
+  font-size: 0.8rem;
+}
+.key {
+  background: #211c17;
+  color: white;
+  border-radius: 12px;
+  padding: 11px 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  word-break: break-word;
+}
+.timer-card {
+  background: var(--dark);
+  color: white;
+  border-color: var(--dark);
+  position: sticky;
+  top: 6px;
+  z-index: 10;
+}
+.timer {
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(3rem, 15vw, 6rem);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  text-align: center;
+  line-height: 1;
+}
+.timer-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 13px;
+}
+.btn {
+  border: 0;
+  border-radius: 12px;
+  min-height: 48px;
+  padding: 10px 13px;
+  font-weight: 700;
+}
+.btn.primary {
+  background: white;
+  color: #181512;
+}
+.btn.secondary {
+  background: #38322d;
+  color: white;
+}
+.btn.ghost {
+  background: #ece4da;
+  color: var(--ink);
+}
+.btn.danger {
+  background: var(--danger);
+  color: white;
+}
+.probe-choice {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.probe-choice button {
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 11px;
+  min-height: 48px;
+  font-weight: 700;
+}
+.probe-choice button.active {
+  background: var(--dark);
+  color: white;
+  border-color: var(--dark);
+}
+.probe-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.probe-tab {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: #eee7dd;
+  border-radius: 11px;
+  padding: 10px;
+  font-weight: 700;
+}
+.probe-tab.active.exhaust {
+  background: var(--exhaust);
+  color: white;
+  border-color: var(--exhaust);
+}
+.probe-tab.active.bean {
+  background: var(--bean);
+  color: white;
+  border-color: var(--bean);
+}
+.temp-now {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+.temp-now input {
+  font-size: 1.45rem;
+  font-weight: 700;
+  text-align: center;
+}
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+.event {
+  color: white;
+  border: 0;
+  border-radius: 13px;
+  min-height: 70px;
+  padding: 8px 5px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+}
+.event small {
+  font-size: 0.64rem;
+  font-weight: 400;
+  opacity: 0.92;
+}
+.turn {
+  background: var(--turn);
+}
+.yellow {
+  background: var(--yellow);
+  color: #302500;
+}
+.maillard {
+  background: var(--maillard);
+}
+.fc {
+  background: var(--fc);
+}
+.sc {
+  background: var(--sc);
+}
+.drop {
+  background: var(--drop);
+}
+.tile-config {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+.tile {
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 12px;
+  min-height: 72px;
+  padding: 6px 3px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  user-select: none;
+}
+.tile .temp-label {
+  font-size: 1.05rem;
+}
+.tile .tile-time {
+  font-size: 0.61rem;
+  font-weight: 400;
+  min-height: 0.75rem;
+}
+.tile .tile-gap {
+  font-size: 0.67rem;
+  color: var(--accent);
+  min-height: 0.8rem;
+}
+.tile.done.exhaust {
+  background: var(--exhaust);
+  color: white;
+  border-color: var(--exhaust);
+}
+.tile.done.bean {
+  background: var(--bean);
+  color: white;
+  border-color: var(--bean);
+}
+.tile.done .tile-gap {
+  color: #fff0d8;
+}
+.holding {
+  outline: 3px solid var(--danger);
+  transform: scale(0.96);
+}
+.chart-box {
+  background: #171512;
+  border-radius: 13px;
+  padding: 8px;
+  overflow: hidden;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 300px;
+}
+.legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 8px 2px 0;
+}
+.legend b {
+  display: inline-block;
+  width: 18px;
+  border-top: 3px solid;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.legend .e b {
+  border-color: var(--exhaust);
+}
+.legend .b b {
+  border-color: var(--bean);
+}
+.legend .r b {
+  border-color: #74b7cf;
+  border-top-style: dashed;
+}
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+.metric {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 9px;
+}
+.metric b {
+  display: block;
+  font-size: 1.05rem;
+}
+.metric span {
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+.log {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.log-item {
+  display: grid;
+  grid-template-columns: 68px 1fr auto;
+  gap: 8px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: white;
+}
+.log-time {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.pill {
+  font-size: 0.64rem;
+  padding: 4px 7px;
+  border-radius: 99px;
+  background: #ece5db;
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 94px;
+  transform: translate(-50%, 20px);
+  background: #1f1b17;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.22s;
+  z-index: 40;
+}
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.bottom {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(800px, 100%);
+  padding: 9px 12px calc(9px + env(safe-area-inset-bottom));
+  background: rgba(244, 240, 232, 0.96);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  z-index: 20;
+}
+.help {
+  font-size: 0.76rem;
+  color: var(--muted);
+  line-height: 1.4;
+  margin-top: 8px;
+}
+@media (max-width: 560px) {
+  .bottom {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+  .bottom .btn {
+    font-size: 0.72rem;
+    padding: 7px 3px;
+  }
+  .event-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .tiles {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .summary {
+    grid-template-columns: 1fr 1fr;
+  }
+  .tile-config {
+    grid-template-columns: 1fr 1fr;
+  }
+  .tile-config .make {
+    grid-column: 1/-1;
+  }
+  .probe-choice {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+@media print {
+  .bottom,
+  .timer-card,
+  .toast,
+  .no-print {
+    display: none !important;
+  }
+  .app {
+    max-width: none;
+    padding: 0;
+  }
+  .card {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+  .chart-box {
+    background: white;
+    border: 1px solid #999;
+  }
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+}
 
-.tile.phase-Turning{background:var(--turn)!important;color:white!important;border-color:var(--turn)!important}
-.tile.phase-Yellow{background:var(--yellow)!important;color:#302500!important;border-color:var(--yellow)!important}
-.tile.phase-Maillard{background:var(--maillard)!important;color:white!important;border-color:var(--maillard)!important}
-.tile.phase-First-Crack{background:var(--fc)!important;color:white!important;border-color:var(--fc)!important}
-.tile.phase-Second-Crack{background:var(--sc)!important;color:white!important;border-color:var(--sc)!important}
-.tile.phase-Drop{background:var(--drop)!important;color:white!important;border-color:var(--drop)!important}
-.tile[class*="phase-"] .tile-gap{color:inherit}
-.option-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
-.option-toggle{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:white;border-radius:11px;padding:10px 12px;font-weight:700}
-.option-toggle input{width:20px;min-height:20px;max-width:20px;margin:0}
-.unit-choice{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.unit-choice button{border:1px solid var(--line);background:white;border-radius:11px;min-height:46px;font-weight:700}
-.unit-choice button.active{background:var(--dark);color:white;border-color:var(--dark)}
+.tile.phase-Turning {
+  background: var(--turn) !important;
+  color: white !important;
+  border-color: var(--turn) !important;
+}
+.tile.phase-Yellow {
+  background: var(--yellow) !important;
+  color: #302500 !important;
+  border-color: var(--yellow) !important;
+}
+.tile.phase-Maillard {
+  background: var(--maillard) !important;
+  color: white !important;
+  border-color: var(--maillard) !important;
+}
+.tile.phase-First-Crack {
+  background: var(--fc) !important;
+  color: white !important;
+  border-color: var(--fc) !important;
+}
+.tile.phase-Second-Crack {
+  background: var(--sc) !important;
+  color: white !important;
+  border-color: var(--sc) !important;
+}
+.tile.phase-Drop {
+  background: var(--drop) !important;
+  color: white !important;
+  border-color: var(--drop) !important;
+}
+.tile[class*='phase-'] .tile-gap {
+  color: inherit;
+}
+.option-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+.option-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 11px;
+  padding: 10px 12px;
+  font-weight: 700;
+}
+.option-toggle input {
+  width: 20px;
+  min-height: 20px;
+  max-width: 20px;
+  margin: 0;
+}
+.unit-choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.unit-choice button {
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 11px;
+  min-height: 46px;
+  font-weight: 700;
+}
+.unit-choice button.active {
+  background: var(--dark);
+  color: white;
+  border-color: var(--dark);
+}
 
-.compact-head{padding:10px 4px 2px}.compact-head h1{font-size:1.65rem;line-height:1.05;margin:.12em 0}
+.compact-head {
+  padding: 10px 4px 2px;
+}
+.compact-head h1 {
+  font-size: 1.65rem;
+  line-height: 1.05;
+  margin: 0.12em 0;
+}
 </style>
-<style>header.kkh{display:block;margin:0 0 18px;padding:6px 0 0;border-bottom:1px solid #ddd8d0;gap:0}
-.kkh-top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
-.kkh-brand{font-size:19px;font-weight:300;letter-spacing:1px;color:#171512;text-decoration:none;white-space:nowrap}
-.kkh-acct{width:40px;height:40px;border:1px solid #ddd8d0;border-radius:50%;display:grid;place-items:center;text-decoration:none;font-size:18px;flex-shrink:0;background:#fff}
-nav.kkh-nav{display:flex;flex:none;justify-content:space-between;font-size:14px;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:6px -4px 0;padding:0 0 8px}
-.kkh-nav::-webkit-scrollbar{display:none}
-.kkh-nav a{flex:0 0 auto;padding:8px 7px;border-radius:999px;font-size:14px;color:#171512;text-decoration:none;white-space:nowrap}
-.kkh-nav a[aria-current=page]{background:#171512;color:#fff;font-weight:600}
-.kkh-sub{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 6px}
-.kkh-sub h1{margin:0}
-.kkh-sub a{font-size:14px;color:#8d583b;text-decoration:none;white-space:nowrap}
-@media(max-width:380px){.kkh-nav a{padding:8px 5px;font-size:13.5px}}
-.kkh-nav a{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}</style><script src="tap.js" defer></script><script src="i18n.js" defer></script></head>
+<style>
+header.kkh {
+  display: block;
+  margin: 0 0 18px;
+  padding: 6px 0 0;
+  border-bottom: 1px solid #ddd8d0;
+  gap: 0;
+}
+.kkh-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+}
+.kkh-brand {
+  font-size: 19px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: #171512;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.kkh-acct {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ddd8d0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  font-size: 18px;
+  flex-shrink: 0;
+  background: #fff;
+}
+nav.kkh-nav {
+  display: flex;
+  flex: none;
+  justify-content: space-between;
+  font-size: 14px;
+  gap: 2px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin: 6px -4px 0;
+  padding: 0 0 8px;
+}
+.kkh-nav::-webkit-scrollbar {
+  display: none;
+}
+.kkh-nav a {
+  flex: 0 0 auto;
+  padding: 8px 7px;
+  border-radius: 999px;
+  font-size: 14px;
+  color: #171512;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.kkh-nav a[aria-current='page'] {
+  background: #171512;
+  color: #fff;
+  font-weight: 600;
+}
+.kkh-sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 6px;
+}
+.kkh-sub h1 {
+  margin: 0;
+}
+.kkh-sub a {
+  font-size: 14px;
+  color: #8d583b;
+  text-decoration: none;
+  white-space: nowrap;
+}
+@media (max-width: 380px) {
+  .kkh-nav a {
+    padding: 8px 5px;
+    font-size: 13.5px;
+  }
+}
+.kkh-nav a {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+}
+</style><script src="tap.js" defer></script><script src="i18n.js" defer></script></head>
 <body>
 <div class="app">
 <header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="profile.html" aria-label="Me: profile and activity">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html" aria-current="page">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
@@ -140,7 +735,57 @@ nav.kkh-nav{display:flex;flex:none;justify-content:space-between;font-size:14px;
 
 </section>
 
-<style>[hidden]{display:none!important}.dtr-row{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:10px;font-size:.9rem}.dtr-t{display:flex;align-items:center;gap:6px;color:#efe8de;font-weight:600}.dtr-t input{width:76px;font:inherit;font-size:16px;padding:6px 8px;border:1px solid #ddd;border-radius:8px;text-align:center}.dtr-box{color:#171512;margin-top:10px;padding:10px 12px;border-radius:12px;background:#f4efe7;text-align:center;font-size:.95rem;line-height:1.4}.dtr-box b{font-size:1.25rem;font-variant-numeric:tabular-nums}.dtr-box.soon{background:#f6d58e}.dtr-box.now{background:#b4432f;color:#fff}</style>
+<style>
+[hidden] {
+  display: none !important;
+}
+.dtr-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+.dtr-t {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #efe8de;
+  font-weight: 600;
+}
+.dtr-t input {
+  width: 76px;
+  font: inherit;
+  font-size: 16px;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+}
+.dtr-box {
+  color: #171512;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f4efe7;
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.dtr-box b {
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+.dtr-box.soon {
+  background: #f6d58e;
+}
+.dtr-box.now {
+  background: #b4432f;
+  color: #fff;
+}
+</style>
 <section class="card timer-card">
  <div class="timer" id="timer">00:00.0</div>
  <div class="timer-actions"><button class="btn primary" id="startPause">Start</button><button class="btn secondary" id="reset">Reset</button></div>
@@ -226,261 +871,1114 @@ nav.kkh-nav{display:flex;flex:none;justify-content:space-between;font-size:14px;
 
 <script src="sync.js"></script><script src="prefs.js"></script><script src="origin-db.js"></script>
 <script>
-const $=id=>document.getElementById(id);
-const phaseNames=["Turning","Yellow","Maillard","First Crack","Second Crack","Drop"];
-let state={
- running:false,startStamp:0,elapsed:0,mode:"exhaust",activeProbe:"exhaust",unit:"C",smoothCurve:true,showRor:true,
- events:[],readings:{exhaust:[],bean:[]},tile:{start:170,end:210,step:1,decimals:0}
+const $ = id => document.getElementById(id);
+const phaseNames = ['Turning', 'Yellow', 'Maillard', 'First Crack', 'Second Crack', 'Drop'];
+let state = {
+  running: false,
+  startStamp: 0,
+  elapsed: 0,
+  mode: 'exhaust',
+  activeProbe: 'exhaust',
+  unit: 'C',
+  smoothCurve: true,
+  showRor: true,
+  events: [],
+  readings: { exhaust: [], bean: [] },
+  tile: { start: 170, end: 210, step: 1, decimals: 0 },
 };
-let ticker=null,lastDeleted=null;
-$("roastDate").value=new Date().toISOString().slice(0,10);
+let ticker = null,
+  lastDeleted = null;
+$('roastDate').value = new Date().toISOString().slice(0, 10);
 
-function elapsedMs(){return state.running?state.elapsed+(performance.now()-state.startStamp):state.elapsed}
-function fmt(ms){const m=Math.floor(ms/60000),s=Math.floor(ms%60000/1000),d=Math.floor(ms%1000/100);return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")+"."+d}
-function gapFmt(ms){if(ms==null)return"FIRST";const s=ms/1000;return s<60?"+"+s.toFixed(1)+"s":"+"+Math.floor(s/60)+":"+String((s%60).toFixed(1)).padStart(4,"0")}
-function toast(x){const t=$("toast");t.textContent=x;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),1600)}
-function vibrate(ms=20){try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}}
-function currentProbe(){return state.mode==="both"?state.activeProbe:state.mode}
-function labelProbe(p){return p==="exhaust"?"ET":"BT"}
-function saveState(){localStorage.setItem("kk_roast_v10",JSON.stringify(state));saveFields()}
-function loadState(){try{const x=JSON.parse(localStorage.getItem("kk_roast_v10")||"null");if(x)state={...state,...x,readings:{exhaust:x.readings?.exhaust||[],bean:x.readings?.bean||[]}}}catch(e){}}
-function fields(){return["greenLotId","roasteryName","machineName","estate","coffeeCode","roastNo","roastDate","moisture","greenWeight","chargeTemp","targetColor","roastedWeight","finalColor","notes"]}
-function saveFields(){const d={};fields().forEach(k=>d[k]=$(k).value);localStorage.setItem("kk_fields_v10",JSON.stringify(d))}
-function loadFields(){try{const d=JSON.parse(localStorage.getItem("kk_fields_v10")||"{}");fields().forEach(k=>{if(d[k]!=null)$(k).value=d[k]})}catch(e){}}
-function updateKey(){
- const code=$("coffeeCode").value.trim()||"—";
- const r=String($("roastNo").value||1).padStart(3,"0");
- const raw=$("roastDate").value||"";
- const parts=raw.split("-");
- const date=parts.length===3 ? `${parts[2]}${parts[1]}${parts[0].slice(-2)}` : "";
- $("roastKey").textContent=`KEY: ${code} / R${r} / ${date||"—"}`;
+function elapsedMs() {
+  return state.running ? state.elapsed + (performance.now() - state.startStamp) : state.elapsed;
 }
-fields().forEach(k=>$(k).addEventListener("input",()=>{updateKey();saveFields();updateSummary()}));
+function fmt(ms) {
+  const m = Math.floor(ms / 60000),
+    s = Math.floor((ms % 60000) / 1000),
+    d = Math.floor((ms % 1000) / 100);
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') + '.' + d;
+}
+function gapFmt(ms) {
+  if (ms == null) return 'FIRST';
+  const s = ms / 1000;
+  return s < 60
+    ? '+' + s.toFixed(1) + 's'
+    : '+' + Math.floor(s / 60) + ':' + String((s % 60).toFixed(1)).padStart(4, '0');
+}
+function toast(x) {
+  const t = $('toast');
+  t.textContent = x;
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove('show'), 1600);
+}
+function vibrate(ms = 20) {
+  try {
+    navigator.vibrate && navigator.vibrate(ms);
+  } catch (e) {}
+}
+function currentProbe() {
+  return state.mode === 'both' ? state.activeProbe : state.mode;
+}
+function labelProbe(p) {
+  return p === 'exhaust' ? 'ET' : 'BT';
+}
+function saveState() {
+  localStorage.setItem('kk_roast_v10', JSON.stringify(state));
+  saveFields();
+}
+function loadState() {
+  try {
+    const x = JSON.parse(localStorage.getItem('kk_roast_v10') || 'null');
+    if (x)
+      state = {
+        ...state,
+        ...x,
+        readings: { exhaust: x.readings?.exhaust || [], bean: x.readings?.bean || [] },
+      };
+  } catch (e) {}
+}
+function fields() {
+  return [
+    'greenLotId',
+    'roasteryName',
+    'machineName',
+    'estate',
+    'coffeeCode',
+    'roastNo',
+    'roastDate',
+    'moisture',
+    'greenWeight',
+    'chargeTemp',
+    'targetColor',
+    'roastedWeight',
+    'finalColor',
+    'notes',
+  ];
+}
+function saveFields() {
+  const d = {};
+  fields().forEach(k => (d[k] = $(k).value));
+  localStorage.setItem('kk_fields_v10', JSON.stringify(d));
+}
+function loadFields() {
+  try {
+    const d = JSON.parse(localStorage.getItem('kk_fields_v10') || '{}');
+    fields().forEach(k => {
+      if (d[k] != null) $(k).value = d[k];
+    });
+  } catch (e) {}
+}
+function updateKey() {
+  const code = $('coffeeCode').value.trim() || '—';
+  const r = String($('roastNo').value || 1).padStart(3, '0');
+  const raw = $('roastDate').value || '';
+  const parts = raw.split('-');
+  const date = parts.length === 3 ? `${parts[2]}${parts[1]}${parts[0].slice(-2)}` : '';
+  $('roastKey').textContent = `KEY: ${code} / R${r} / ${date || '—'}`;
+}
+fields().forEach(k =>
+  $(k).addEventListener('input', () => {
+    updateKey();
+    saveFields();
+    updateSummary();
+  })
+);
 
-
-function unitSymbol(){return state.unit==="F"?"°F":"°C"}
-function cToF(v){return v*9/5+32}
-function fToC(v){return (v-32)*5/9}
-function convertNumber(v,from,to){
- if(v===null||v===undefined||v==="")return v;
- const n=Number(v);if(!Number.isFinite(n)||from===to)return v;
- return Number((to==="F"?cToF(n):fToC(n)).toFixed(1));
+function unitSymbol() {
+  return state.unit === 'F' ? '°F' : '°C';
 }
-function setUnit(next){
- const prev=state.unit||"C";
- if(next===prev){updateUnitUI();return}
- ["chargeTemp","currentTemp"].forEach(id=>{const el=$(id);if(el&&el.value!=="")el.value=convertNumber(el.value,prev,next)});
- state.tile.start=convertNumber(state.tile.start,prev,next);
- state.tile.end=convertNumber(state.tile.end,prev,next);
- state.tile.step=Number(((next==="F"?state.tile.step*9/5:state.tile.step*5/9)).toFixed(1));
- ["exhaust","bean"].forEach(p=>state.readings[p].forEach(x=>x.temp=convertNumber(x.temp,prev,next)));
- state.events.forEach(e=>{if(e.exhaust!=null)e.exhaust=convertNumber(e.exhaust,prev,next);if(e.bean!=null)e.bean=convertNumber(e.bean,prev,next)});
- state.unit=next;
- updateUnitUI();renderAll();saveState();toast(`Temperature changed to ${next==="F"?"Fahrenheit":"Celsius"}`);
+function cToF(v) {
+  return (v * 9) / 5 + 32;
 }
-function updateUnitUI(){
- document.querySelectorAll(".unitMark").forEach(x=>x.textContent=unitSymbol());
- $("unitC").classList.toggle("active",state.unit!=="F");
- $("unitF").classList.toggle("active",state.unit==="F");
- $("plusOne").textContent=`+1${unitSymbol()}`;
- $("currentTempLabel").textContent=`Current ${currentProbe()==="exhaust"?"ET":"BT"} ${unitSymbol()}`;
+function fToC(v) {
+  return ((v - 32) * 5) / 9;
 }
-$("unitC").onclick=()=>setUnit("C");
-$("unitF").onclick=()=>setUnit("F");
-
-function startPause(){
- if(!state.running){state.running=true;state.startStamp=performance.now();$("startPause").textContent="Pause";ticker=setInterval(renderTimer,100)}
- else{state.elapsed=elapsedMs();state.running=false;clearInterval(ticker);$("startPause").textContent="Resume"}
- saveState()
+function convertNumber(v, from, to) {
+  if (v === null || v === undefined || v === '') return v;
+  const n = Number(v);
+  if (!Number.isFinite(n) || from === to) return v;
+  return Number((to === 'F' ? cToF(n) : fToC(n)).toFixed(1));
 }
-let DTR={on:false,target:20};try{Object.assign(DTR,JSON.parse(localStorage.getItem("kk_dtr_v1"))||{})}catch(e){}
-let dtrBuzzed=null;
-const mmss=ms=>{const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
-function renderDtr(){const box=$("dtrBox");if(!box)return;$("dtrOn").checked=DTR.on;$("dtrTargetWrap").hidden=!DTR.on;if(document.activeElement!==$("dtrTarget"))$("dtrTarget").value=DTR.target;
- if(!DTR.on){box.hidden=true;return}box.hidden=false;const fc=state.events.find(e=>e.name==="First Crack"),drop=state.events.find(e=>e.name==="Drop"),t=Number(DTR.target);
- if(!(t>0&&t<100)){box.className="dtr-box";box.innerHTML="Enter a target DTR between 5 and 40%.";return}
- if(!fc){box.className="dtr-box";box.innerHTML="Tap <b style=\"font-size:inherit\">First Crack</b> and the drop time for "+t+"% shows here.<div style=\"font-size:.78rem;opacity:.75;margin-top:4px\">Shorter development leans fruity, sweet and acidic; longer leans roasted, nutty and bitter (Alstrup et al., Beverages 2020).</div>";return}
- const dropAt=fc.time/(1-t/100),now=drop?drop.time:elapsedMs(),left=dropAt-now,dtrNow=now>fc.time?(now-fc.time)/now*100:0;
- const dtNote="<div style=\"font-size:.78rem;opacity:.75;margin-top:4px\">Shorter development leans fruity, sweet and acidic; longer leans roasted, nutty and bitter (Alstrup et al., Beverages 2020).</div>";
- if(drop){box.className="dtr-box";box.innerHTML="Dropped at "+mmss(drop.time)+" · DTR <b>"+dtrNow.toFixed(1)+"%</b> (target "+t+"%, guide said "+mmss(dropAt)+")"+dtNote;return}
- box.className="dtr-box"+(left<=0?" now":left<=15000?" soon":"");
- box.innerHTML=left>0?"Drop at <b>"+mmss(dropAt)+"</b> · in "+mmss(left)+"<br>DTR now "+dtrNow.toFixed(1)+"% of "+t+"% · development "+mmss(now-fc.time)+" of "+mmss(dropAt-fc.time):"<b>Drop now</b> for "+t+"% · DTR now "+dtrNow.toFixed(1)+"%";
- if(left<=0&&dtrBuzzed!==fc.time){dtrBuzzed=fc.time;try{navigator.vibrate&&navigator.vibrate([300,120,300])}catch(e){}}}
-function renderTimer(){$("timer").textContent=fmt(elapsedMs());renderDtr()}
-function resetRoast(){if(!confirm("Reset this roast and clear entries?"))return;if(state.savedId){const n=Number(state.savedNo)||Number($("roastNo").value)||1;$("roastNo").value=n+1;state.savedId=null;state.savedNo=null;["roastedWeight","finalColor"].forEach(k=>{const el=$(k);if(el)el.value=""});saveFields()}state.running=false;clearInterval(ticker);state.elapsed=0;state.events=[];state.readings={exhaust:[],bean:[]};$("startPause").textContent="Start";renderAll();saveState()}
-$("dtrOn").onchange=()=>{DTR.on=$("dtrOn").checked;try{localStorage.setItem("kk_dtr_v1",JSON.stringify(DTR))}catch(e){}renderDtr()};$("dtrTarget").oninput=()=>{const v=parseFloat($("dtrTarget").value);if(v>0&&v<100){DTR.target=v;try{localStorage.setItem("kk_dtr_v1",JSON.stringify(DTR))}catch(e){}}renderDtr()};
-$("startPause").onclick=startPause;$("reset").onclick=resetRoast;
-
-function setMode(mode){
- state.mode=mode;if(mode!=="both")state.activeProbe=mode;
- document.querySelectorAll(".probe-choice button").forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));
- $("probeTabs").style.display=mode==="both"?"flex":"none";
- updateProbeUI();renderTiles();drawCurve();saveState()
-}
-document.querySelectorAll(".probe-choice button").forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
-document.querySelectorAll(".probe-tab").forEach(b=>b.onclick=()=>{state.activeProbe=b.dataset.probe;updateProbeUI();renderTiles();saveState()});
-function updateProbeUI(){
- const p=currentProbe();
- $("probeStatus").textContent=state.mode==="both"?`ACTIVE ENTRY: ${p==="exhaust"?"ET":"BT"} · MODE: ET + BT`:`ACTIVE PROBE: ${p==="exhaust"?"ET ONLY":"BT ONLY"}`;
- document.querySelectorAll(".probe-tab").forEach(b=>b.classList.toggle("active",b.dataset.probe===state.activeProbe));
- $("currentTempLabel").textContent=`Current ${p==="exhaust"?"ET":"BT"} ${unitSymbol()}`;
- $("currentTemp").placeholder=p==="exhaust"?"175":"160";
-}
-$("plusOne").onclick=()=>{$("currentTemp").value=(Number($("currentTemp").value)||0)+1};
-
-function bindPress(el,tap,longpress){
- let h=null,long=false;
- const start=()=>{long=false;el.classList.add("holding");h=setTimeout(()=>{long=true;el.classList.remove("holding");longpress()},700)};
- const end=()=>{clearTimeout(h);el.classList.remove("holding");if(!long)tap()};
- const cancel=()=>{clearTimeout(h);el.classList.remove("holding")};
- el.addEventListener("pointerdown",start);el.addEventListener("pointerup",end);el.addEventListener("pointercancel",cancel);el.addEventListener("pointerleave",cancel);el.addEventListener("contextmenu",e=>e.preventDefault())
-}
-
-function recordReading(temp,probe=currentProbe()){
- if(!state.running)startPause();
- temp=Number(temp);if(!Number.isFinite(temp))return;
- const time=elapsedMs(),arr=state.readings[probe];let i=-1;for(let k=arr.length-1;k>=0;k--){if(!arr[k].bottom&&Number(arr[k].temp)===temp){i=k;break}}
- const item={temp,time};
- const returned=i>=0&&(arr.some(x=>x.time>arr[i].time&&Number(x.temp)<temp)||state.events.some(e=>e.name==="Turning"&&e.time>arr[i].time));
- if(i>=0&&!returned){arr[i]=item;toast(`${labelProbe(probe)} ${temp}°C updated`)}else{arr.push(item);toast(`${labelProbe(probe)} ${temp}°C recorded`)}
- arr.sort((a,b)=>a.time-b.time);$("currentTemp").value=temp;renderAll();saveState()
-}
-function removeReading(temp,probe=currentProbe()){
- const arr=state.readings[probe];let i=-1;for(let k=arr.length-1;k>=0;k--){if(Number(arr[k].temp)===Number(temp)&&(i<0||arr[k].time>arr[i].time))i=k}if(i<0)return;
- lastDeleted={kind:"reading",probe,item:arr[i]};arr.splice(i,1);vibrate(45);toast(`${labelProbe(probe)} ${temp}°C removed`);renderAll();saveState()
-}
-function recordEvent(name){
- if(!state.running)startPause();
- const time=elapsedMs(),ex=lastReading("exhaust"),bt=lastReading("bean"),i=state.events.findIndex(e=>e.name===name);
- const item={name,time,exhaust:ex?.temp??null,bean:bt?.temp??null};
- if(name==="Turning")setBottom(time,item);
- if(i>=0)state.events[i]=item;else state.events.push(item);
- state.events.sort((a,b)=>a.time-b.time);toast(`${name} recorded`);renderAll();saveState()
-}
-function removeEvent(name){
- const i=state.events.findIndex(e=>e.name===name);if(i<0)return;
- lastDeleted={kind:"event",item:state.events[i]};state.events.splice(i,1);if(name==="Turning")clearBottom();vibrate(45);toast(`${name} removed`);renderAll();saveState()
-}
-function clearBottom(){["exhaust","bean"].forEach(p=>{state.readings[p]=state.readings[p].filter(x=>!x.bottom)})}
-function setBottom(time,item){clearBottom();["exhaust","bean"].forEach(p=>{const before=state.readings[p].filter(x=>x.time<=time);if(!before.length)return;const lo=Math.min(...before.map(x=>Number(x.temp)));const last=[...before].sort((x,y)=>x.time-y.time).pop();item[p]=lo;if(time-last.time>2000)state.readings[p].push({temp:lo,time,bottom:true})})}
-function lastReading(p){const a=[...state.readings[p]].sort((x,y)=>x.time-y.time);return a[a.length-1]}
-document.querySelectorAll(".event").forEach(b=>bindPress(b,()=>recordEvent(b.dataset.event),()=>removeEvent(b.dataset.event)));
-
-$("generate").onclick=()=>{
- const s=Number($("tileStart").value),e=Number($("tileEnd").value),st=Number($("tileStep").value),d=Number($("tileDecimals").value);
- if(!Number.isFinite(s)||!Number.isFinite(e)||!Number.isFinite(st)||st<=0||e<s){toast("Check tile range");return}
- if((e-s)/st>150){toast("Please use 150 tiles or fewer");return}
- state.tile={start:s,end:e,step:st,decimals:d};renderTiles();saveState()
-};
-function renderTiles(){
- $("tileStart").value=state.tile.start;$("tileEnd").value=state.tile.end;$("tileStep").value=state.tile.step;$("tileDecimals").value=state.tile.decimals;
- const p=currentProbe(),arr=state.readings[p],box=$("tiles");box.innerHTML="";
- const n=Math.floor((state.tile.end-state.tile.start)/state.tile.step+0.000001);
- for(let i=0;i<=n;i++){
-  const temp=Number((state.tile.start+i*state.tile.step).toFixed(state.tile.decimals));
-  const ordered=[...arr].sort((a,b)=>a.time-b.time),all=ordered.filter(z=>Number(z.temp)===temp),x=all.length?all[all.length-1]:null;
-  const ix=x?ordered.indexOf(x):-1,gap=x&&ix>0?x.time-ordered[ix-1].time:null;
-  const b=document.createElement("button");const phaseForReading=(()=>{
-   if(!x)return "";
-   const prior=[...state.events].filter(e=>e.time<=x.time).sort((a,b)=>a.time-b.time);
-   return prior.length?prior[prior.length-1].name:"";
-  })();
-  const phaseClass=phaseForReading?` phase-${phaseForReading.replace(/\s+/g,"-")}`:"";
-  b.className=`tile${x?" done "+p:""}${phaseClass}`;
-  b.innerHTML=`<span class="temp-label">${temp.toFixed(state.tile.decimals)}${unitSymbol()}</span><span class="tile-time">${x?fmt(x.time):""}</span><span class="tile-gap">${x?gapFmt(gap):""}</span>`;
-  bindPress(b,()=>recordReading(temp,p),()=>{if(x)removeReading(temp,p)});box.appendChild(b)
- }
-}
-
-function renderEvents(){
- document.querySelectorAll(".event").forEach(b=>{
-  const e=state.events.find(x=>x.name===b.dataset.event),s=b.querySelector("small");
-  s.textContent=e?`${fmt(e.time)} · ET ${e.exhaust??"--"}${e.exhaust!=null?unitSymbol():""} · BT ${e.bean??"--"}${e.bean!=null?unitSymbol():""}`:"Tap to record"
- })
-}
-function updateSummary(){
- const drop=state.events.find(e=>e.name==="Drop"),fc=state.events.find(e=>e.name==="First Crack");
- const total=drop?.time??elapsedMs();$("totalTime").textContent=drop?fmt(total):"--";
- if(drop&&fc){const dev=drop.time-fc.time;$("devTime").textContent=fmt(dev);$("devRatio").textContent=(dev/drop.time*100).toFixed(1)+"%"}else{$("devTime").textContent="--";$("devRatio").textContent="--"}
- const g=Number($("greenWeight").value),r=Number($("roastedWeight").value);$("loss").textContent=g>0&&r>0?((g-r)/g*100).toFixed(1)+"%":"--"
-}
-function renderLog(){
- const rows=[
-  ...state.readings.exhaust.map(x=>({time:x.time,name:"ET",temp:x.temp,probe:"ET"})),
-  ...state.readings.bean.map(x=>({time:x.time,name:"BT",temp:x.temp,probe:"BT"})),
-  ...state.events.map(x=>({time:x.time,name:x.name,temp:`ET ${x.exhaust??"--"} / BT ${x.bean??"--"}`,probe:"EVENT"}))
- ].sort((a,b)=>b.time-a.time);
- $("log").innerHTML=rows.length?rows.map(x=>`<div class="log-item"><span class="log-time">${fmt(x.time)}</span><span>${x.name}</span><span class="pill">${x.temp}${typeof x.temp==="number"?unitSymbol():""}</span></div>`).join(""):`<div style="color:var(--muted)">No entries recorded.</div>`
-}
-
-function smoothPath(ctx,pts){
- if(!pts.length)return;if(pts.length===1){ctx.moveTo(...pts[0]);return}
- ctx.moveTo(...pts[0]);
- for(let i=0;i<pts.length-1;i++){
-  const p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;
-  ctx.bezierCurveTo(p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6,p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6,p2[0],p2[1])
- }
-}
-function drawCurve(){
- const c=$("curveCanvas"),ctx=c.getContext("2d"),W=c.width,H=c.height,pad={l:48,r:46,t:25,b:35};
- ctx.clearRect(0,0,W,H);ctx.fillStyle="#171512";ctx.fillRect(0,0,W,H);
- const all=[...state.readings.exhaust,...state.readings.bean],temps=all.map(x=>x.temp);
- const minT=Math.floor((temps.length?Math.min(...temps):150)/10)*10-10,maxT=Math.ceil((temps.length?Math.max(...temps):220)/10)*10+10,maxSec=Math.max(720,elapsedMs()/1000+30);
- const x=s=>pad.l+s/maxSec*(W-pad.l-pad.r),y=t=>pad.t+(maxT-t)/(maxT-minT)*(H-pad.t-pad.b);
- ctx.font="11px Arial";ctx.strokeStyle="#3b342f";ctx.fillStyle="#b8aaa0";ctx.lineWidth=1;
- for(let t=Math.ceil(minT/10)*10;t<=maxT;t+=10){ctx.beginPath();ctx.moveTo(pad.l,y(t));ctx.lineTo(W-pad.r,y(t));ctx.stroke();ctx.fillText(t+unitSymbol(),7,y(t)+4)}
- for(let s=0;s<=maxSec;s+=60){ctx.beginPath();ctx.moveTo(x(s),pad.t);ctx.lineTo(x(s),H-pad.b);ctx.stroke();ctx.fillText(String(s/60).padStart(2,"0")+":00",x(s)-15,H-10)}
- const drawSeries=(arr,color)=>{
-  const a=[...arr].sort((m,n)=>m.time-n.time);if(!a.length)return;
-  ctx.strokeStyle=color;ctx.lineWidth=3;ctx.beginPath();const pts=a.map(p=>[x(p.time/1000),y(p.temp)]);if(state.smoothCurve)smoothPath(ctx,pts);else{ctx.moveTo(...pts[0]);pts.slice(1).forEach(pt=>ctx.lineTo(...pt))}ctx.stroke();
-  a.forEach(p=>{ctx.fillStyle=color;ctx.beginPath();ctx.arc(x(p.time/1000),y(p.temp),3,0,Math.PI*2);ctx.fill()});
-  if(state.showRor&&a.length>1){
-   const rr=[];for(let i=1;i<a.length;i++){const dt=(a[i].time-a[i-1].time)/60000;if(dt>0)rr.push({time:a[i].time/1000,ror:(a[i].temp-a[i-1].temp)/dt})}
-   const yr=v=>pad.t+(30-Math.max(0,Math.min(30,v)))/30*(H-pad.t-pad.b);
-   ctx.strokeStyle="#74b7cf";ctx.globalAlpha=.55;ctx.lineWidth=1.5;ctx.setLineDash([6,5]);ctx.beginPath();smoothPath(ctx,rr.map(p=>[x(p.time),yr(p.ror)]));ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1
+function setUnit(next) {
+  const prev = state.unit || 'C';
+  if (next === prev) {
+    updateUnitUI();
+    return;
   }
- };
- if(state.mode==="exhaust"||state.mode==="both")drawSeries(state.readings.exhaust,"#e2783f");
- if(state.mode==="bean"||state.mode==="both")drawSeries(state.readings.bean,"#43a4bf");
- state.events.forEach(e=>{const X=x(e.time/1000);ctx.strokeStyle="rgba(255,255,255,.55)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(X,pad.t);ctx.lineTo(X,H-pad.b);ctx.stroke();ctx.save();ctx.translate(X+4,pad.t+15);ctx.rotate(-Math.PI/2);ctx.fillStyle="#fff";ctx.font="bold 9px Arial";ctx.fillText(e.name,0,0);ctx.restore()})
+  ['chargeTemp', 'currentTemp'].forEach(id => {
+    const el = $(id);
+    if (el && el.value !== '') el.value = convertNumber(el.value, prev, next);
+  });
+  state.tile.start = convertNumber(state.tile.start, prev, next);
+  state.tile.end = convertNumber(state.tile.end, prev, next);
+  state.tile.step = Number((next === 'F' ? (state.tile.step * 9) / 5 : (state.tile.step * 5) / 9).toFixed(1));
+  ['exhaust', 'bean'].forEach(p =>
+    state.readings[p].forEach(x => (x.temp = convertNumber(x.temp, prev, next)))
+  );
+  state.events.forEach(e => {
+    if (e.exhaust != null) e.exhaust = convertNumber(e.exhaust, prev, next);
+    if (e.bean != null) e.bean = convertNumber(e.bean, prev, next);
+  });
+  state.unit = next;
+  updateUnitUI();
+  renderAll();
+  saveState();
+  toast(`Temperature changed to ${next === 'F' ? 'Fahrenheit' : 'Celsius'}`);
 }
-function renderAll(){renderTimer();updateProbeUI();updateUnitUI();$("smoothCurve").checked=state.smoothCurve!==false;$("showRor").checked=state.showRor!==false;renderTiles();renderEvents();renderLog();updateSummary();drawCurve();updateKey()}
-window.addEventListener("resize",drawCurve);
+function updateUnitUI() {
+  document.querySelectorAll('.unitMark').forEach(x => (x.textContent = unitSymbol()));
+  $('unitC').classList.toggle('active', state.unit !== 'F');
+  $('unitF').classList.toggle('active', state.unit === 'F');
+  $('plusOne').textContent = `+1${unitSymbol()}`;
+  $('currentTempLabel').textContent = `Current ${currentProbe() === 'exhaust' ? 'ET' : 'BT'} ${unitSymbol()}`;
+}
+$('unitC').onclick = () => setUnit('C');
+$('unitF').onclick = () => setUnit('F');
 
+function startPause() {
+  if (!state.running) {
+    state.running = true;
+    state.startStamp = performance.now();
+    $('startPause').textContent = 'Pause';
+    ticker = setInterval(renderTimer, 100);
+  } else {
+    state.elapsed = elapsedMs();
+    state.running = false;
+    clearInterval(ticker);
+    $('startPause').textContent = 'Resume';
+  }
+  saveState();
+}
+let DTR = { on: false, target: 20 };
+try {
+  Object.assign(DTR, JSON.parse(localStorage.getItem('kk_dtr_v1')) || {});
+} catch (e) {}
+let dtrBuzzed = null;
+const mmss = ms => {
+  const s = Math.max(0, Math.round(ms / 1000));
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+};
+function renderDtr() {
+  const box = $('dtrBox');
+  if (!box) return;
+  $('dtrOn').checked = DTR.on;
+  $('dtrTargetWrap').hidden = !DTR.on;
+  if (document.activeElement !== $('dtrTarget')) $('dtrTarget').value = DTR.target;
+  if (!DTR.on) {
+    box.hidden = true;
+    return;
+  }
+  box.hidden = false;
+  const fc = state.events.find(e => e.name === 'First Crack'),
+    drop = state.events.find(e => e.name === 'Drop'),
+    t = Number(DTR.target);
+  if (!(t > 0 && t < 100)) {
+    box.className = 'dtr-box';
+    box.innerHTML = 'Enter a target DTR between 5 and 40%.';
+    return;
+  }
+  if (!fc) {
+    box.className = 'dtr-box';
+    box.innerHTML =
+      'Tap <b style="font-size:inherit">First Crack</b> and the drop time for ' +
+      t +
+      '% shows here.<div style="font-size:.78rem;opacity:.75;margin-top:4px">Shorter development leans fruity, sweet and acidic; longer leans roasted, nutty and bitter (Alstrup et al., Beverages 2020).</div>';
+    return;
+  }
+  const dropAt = fc.time / (1 - t / 100),
+    now = drop ? drop.time : elapsedMs(),
+    left = dropAt - now,
+    dtrNow = now > fc.time ? ((now - fc.time) / now) * 100 : 0;
+  const dtNote =
+    '<div style="font-size:.78rem;opacity:.75;margin-top:4px">Shorter development leans fruity, sweet and acidic; longer leans roasted, nutty and bitter (Alstrup et al., Beverages 2020).</div>';
+  if (drop) {
+    box.className = 'dtr-box';
+    box.innerHTML =
+      'Dropped at ' +
+      mmss(drop.time) +
+      ' · DTR <b>' +
+      dtrNow.toFixed(1) +
+      '%</b> (target ' +
+      t +
+      '%, guide said ' +
+      mmss(dropAt) +
+      ')' +
+      dtNote;
+    return;
+  }
+  box.className = 'dtr-box' + (left <= 0 ? ' now' : left <= 15000 ? ' soon' : '');
+  box.innerHTML =
+    left > 0
+      ? 'Drop at <b>' +
+        mmss(dropAt) +
+        '</b> · in ' +
+        mmss(left) +
+        '<br>DTR now ' +
+        dtrNow.toFixed(1) +
+        '% of ' +
+        t +
+        '% · development ' +
+        mmss(now - fc.time) +
+        ' of ' +
+        mmss(dropAt - fc.time)
+      : '<b>Drop now</b> for ' + t + '% · DTR now ' + dtrNow.toFixed(1) + '%';
+  if (left <= 0 && dtrBuzzed !== fc.time) {
+    dtrBuzzed = fc.time;
+    try {
+      navigator.vibrate && navigator.vibrate([300, 120, 300]);
+    } catch (e) {}
+  }
+}
+function renderTimer() {
+  $('timer').textContent = fmt(elapsedMs());
+  renderDtr();
+}
+function resetRoast() {
+  if (!confirm('Reset this roast and clear entries?')) return;
+  if (state.savedId) {
+    const n = Number(state.savedNo) || Number($('roastNo').value) || 1;
+    $('roastNo').value = n + 1;
+    state.savedId = null;
+    state.savedNo = null;
+    ['roastedWeight', 'finalColor'].forEach(k => {
+      const el = $(k);
+      if (el) el.value = '';
+    });
+    saveFields();
+  }
+  state.running = false;
+  clearInterval(ticker);
+  state.elapsed = 0;
+  state.events = [];
+  state.readings = { exhaust: [], bean: [] };
+  $('startPause').textContent = 'Start';
+  renderAll();
+  saveState();
+}
+$('dtrOn').onchange = () => {
+  DTR.on = $('dtrOn').checked;
+  try {
+    localStorage.setItem('kk_dtr_v1', JSON.stringify(DTR));
+  } catch (e) {}
+  renderDtr();
+};
+$('dtrTarget').oninput = () => {
+  const v = parseFloat($('dtrTarget').value);
+  if (v > 0 && v < 100) {
+    DTR.target = v;
+    try {
+      localStorage.setItem('kk_dtr_v1', JSON.stringify(DTR));
+    } catch (e) {}
+  }
+  renderDtr();
+};
+$('startPause').onclick = startPause;
+$('reset').onclick = resetRoast;
 
-$("smoothCurve").onchange=()=>{state.smoothCurve=$("smoothCurve").checked;drawCurve();saveState()};
-$("showRor").onchange=()=>{state.showRor=$("showRor").checked;drawCurve();saveState()};
-
-$("save").onclick=()=>{saveState();toast("Saved in this browser on this device")};
-$("exportJson").onclick=()=>{
- saveState();const payload={identity:Object.fromEntries(fields().map(k=>[k,$(k).value])),...state};
- const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));a.download=($("coffeeCode").value||"KoffyKraft")+"_roast.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)
+function setMode(mode) {
+  state.mode = mode;
+  if (mode !== 'both') state.activeProbe = mode;
+  document
+    .querySelectorAll('.probe-choice button')
+    .forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  $('probeTabs').style.display = mode === 'both' ? 'flex' : 'none';
+  updateProbeUI();
+  renderTiles();
+  drawCurve();
+  saveState();
+}
+document.querySelectorAll('.probe-choice button').forEach(b => (b.onclick = () => setMode(b.dataset.mode)));
+document.querySelectorAll('.probe-tab').forEach(
+  b =>
+    (b.onclick = () => {
+      state.activeProbe = b.dataset.probe;
+      updateProbeUI();
+      renderTiles();
+      saveState();
+    })
+);
+function updateProbeUI() {
+  const p = currentProbe();
+  $('probeStatus').textContent =
+    state.mode === 'both'
+      ? `ACTIVE ENTRY: ${p === 'exhaust' ? 'ET' : 'BT'} · MODE: ET + BT`
+      : `ACTIVE PROBE: ${p === 'exhaust' ? 'ET ONLY' : 'BT ONLY'}`;
+  document
+    .querySelectorAll('.probe-tab')
+    .forEach(b => b.classList.toggle('active', b.dataset.probe === state.activeProbe));
+  $('currentTempLabel').textContent = `Current ${p === 'exhaust' ? 'ET' : 'BT'} ${unitSymbol()}`;
+  $('currentTemp').placeholder = p === 'exhaust' ? '175' : '160';
+}
+$('plusOne').onclick = () => {
+  $('currentTemp').value = (Number($('currentTemp').value) || 0) + 1;
 };
 
-function xml(s){return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
-function crc32(bytes){let c=0xffffffff;for(const b of bytes){c^=b;for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xedb88320:0)}return(c^0xffffffff)>>>0}
-function zipStore(files){const enc=new TextEncoder(),parts=[],central=[];let off=0;const u16=n=>new Uint8Array([n&255,n>>>8&255]),u32=n=>new Uint8Array([n&255,n>>>8&255,n>>>16&255,n>>>24&255]);for(const [name,str] of files){const n=enc.encode(name),d=enc.encode(str),crc=crc32(d);const h=[u32(0x04034b50),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(d.length),u32(d.length),u16(n.length),u16(0),n,d];parts.push(...h);central.push(...[u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(d.length),u32(d.length),u16(n.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off),n]);off+=h.reduce((a,x)=>a+x.length,0)}const cs=central.reduce((a,x)=>a+x.length,0),co=off;parts.push(...central,u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(cs),u32(co),u16(0));return new Blob(parts,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})}
-function sheet(rows){const cells=rows.map((r,ri)=>'<row r="'+(ri+1)+'">'+r.map((v,ci)=>{const ref=String.fromCharCode(65+ci)+(ri+1);return typeof v==="number"?'<c r="'+ref+'"><v>'+v+'</v></c>':'<c r="'+ref+'" t="inlineStr"><is><t>'+xml(v)+'</t></is></c>'}).join("")+'</row>').join("");return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'+cells+'</sheetData></worksheet>'}
-$("exportCsv").onclick=()=>{saveState();const id=Object.fromEntries(fields().map(k=>[k,$(k).value]));const summary=[["KoffyKraft Roast Record"],["Field","Value"],...Object.entries(id),["Total roast",state.events.find(e=>e.name==="Drop")?fmt(state.events.find(e=>e.name==="Drop").time):""],["Exported",new Date().toISOString()]];const events=[["Event","Time","ET","BT"],...state.events.slice().sort((a,b)=>a.time-b.time).map(e=>[e.name,fmt(e.time),e.exhaust??"",e.bean??""])];const readings=[["Probe","Time","Temperature","Unit"],...state.readings.exhaust.map(x=>["ET",fmt(x.time),x.temp,state.unit]),...state.readings.bean.map(x=>["BT",fmt(x.time),x.temp,state.unit])].sort((a,b)=>a[1]>b[1]?1:-1);const files=[["[Content_Types].xml",'<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'],["_rels/.rels",'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],["xl/workbook.xml",'<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Roast Summary" sheetId="1" r:id="rId1"/><sheet name="Events" sheetId="2" r:id="rId2"/><sheet name="Readings" sheetId="3" r:id="rId3"/></sheets></workbook>'],["xl/_rels/workbook.xml.rels",'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/></Relationships>'],["xl/worksheets/sheet1.xml",sheet(summary)],["xl/worksheets/sheet2.xml",sheet(events)],["xl/worksheets/sheet3.xml",sheet(readings)]];const a=document.createElement("a");a.href=URL.createObjectURL(zipStore(files));a.download=($("coffeeCode").value||"KoffyKraft")+"_Roast.xlsx";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
-$("printBtn").onclick=()=>{drawCurve();setTimeout(()=>window.print(),150)};
-function openRoastDB(){return new Promise((ok,no)=>{const N="KoffyKraftTemporaryRoastbook",need=["roasts","plans"];const go=v=>{let r;try{r=v?indexedDB.open(N,v):indexedDB.open(N)}catch(e){no(e);return}r.onupgradeneeded=e=>{const db=e.target.result;need.forEach(s=>{if(!db.objectStoreNames.contains(s))db.createObjectStore(s,{keyPath:"id"})})};r.onsuccess=()=>{const db=r.result;if(need.some(s=>!db.objectStoreNames.contains(s))){const nv=db.version+1;db.close();go(nv)}else{db.onversionchange=()=>db.close();ok(db)}};r.onerror=()=>no(r.error);r.onblocked=()=>no(new Error("Close other KoffyKraft tabs and try again"))};go()})}
-async function persistFinishedRoast(){const fieldVals={};fields().forEach(k=>fieldVals[k]=$(k).value);const again=!!state.savedId;if(again&&state.savedNo)fieldVals.roastNo=state.savedNo;const rec={id:state.savedId||"roast-"+Date.now(),...fieldVals,bean:fieldVals.notes||"",finishedAt:new Date().toISOString(),events:JSON.parse(JSON.stringify(state.events||[])),readings:JSON.parse(JSON.stringify(state.readings||{exhaust:[],bean:[]})),unit:state.unit||"C",elapsed:state.elapsed||0};if(SYNC.isAuthenticated())rec.accountId=SYNC.getUserId();const db=await openRoastDB();await new Promise((ok,no)=>{const tx=db.transaction("roasts","readwrite");tx.objectStore("roasts").put(rec);tx.oncomplete=ok;tx.onerror=()=>no(tx.error)});db.close();if(SYNC.isAuthenticated()&&typeof PREFS!=="undefined"&&PREFS.get("roasts")==="all"){try{const resp=await fetch("/api/roasts",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer "+SYNC.getToken()},body:JSON.stringify(rec)});if(!resp.ok){rec.cloudError=resp.status;console.error("Cloud save failed:",resp.status,await resp.text())}else{rec.cloudSaved=true;rec.cloud=true;try{const db2=await openRoastDB();await new Promise(ok=>{const t=db2.transaction("roasts","readwrite");t.objectStore("roasts").put(rec);t.oncomplete=ok;t.onerror=ok});db2.close()}catch(e){}}}catch(e){rec.cloudError="offline";console.error("Could not save to cloud:",e)}}return rec}
-$("finish").onclick=async()=>{
- if(state.running)startPause();
- const again=!!state.savedId;if(!again)state.savedNo=$("roastNo").value;
- let saved;try{saved=await persistFinishedRoast()}catch(e){console.error("Local save failed:",e);toast("Could not save: "+(e&&e.message||e));return}
- if(!again){state.savedId=saved&&saved.id;$("roastNo").value=state.savedNo;}updateKey();saveState();if(again){toast("Roast #"+state.savedNo+" updated");}
- toast(saved&&saved.cloudSaved?"Roast saved on this device and in the cloud":saved&&saved.cloudError?"Saved on this device. Cloud sync failed.":SYNC.isAuthenticated()?"Saved on this device. Save it to the cloud from the Roastbook.":"Roast saved on this device");
- const goBtn=document.createElement('a');goBtn.href='roasts.html';goBtn.textContent='Open Roastbook';goBtn.className='btn primary';goBtn.style.cssText='position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:9999;text-decoration:none;display:inline-block;padding:14px 24px;font-size:16px';document.body.appendChild(goBtn)
+function bindPress(el, tap, longpress) {
+  let h = null,
+    long = false;
+  const start = () => {
+    long = false;
+    el.classList.add('holding');
+    h = setTimeout(() => {
+      long = true;
+      el.classList.remove('holding');
+      longpress();
+    }, 700);
+  };
+  const end = () => {
+    clearTimeout(h);
+    el.classList.remove('holding');
+    if (!long) tap();
+  };
+  const cancel = () => {
+    clearTimeout(h);
+    el.classList.remove('holding');
+  };
+  el.addEventListener('pointerdown', start);
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', cancel);
+  el.addEventListener('pointerleave', cancel);
+  el.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+function recordReading(temp, probe = currentProbe()) {
+  if (!state.running) startPause();
+  temp = Number(temp);
+  if (!Number.isFinite(temp)) return;
+  const time = elapsedMs(),
+    arr = state.readings[probe];
+  let i = -1;
+  for (let k = arr.length - 1; k >= 0; k--) {
+    if (!arr[k].bottom && Number(arr[k].temp) === temp) {
+      i = k;
+      break;
+    }
+  }
+  const item = { temp, time };
+  const returned =
+    i >= 0 &&
+    (arr.some(x => x.time > arr[i].time && Number(x.temp) < temp) ||
+      state.events.some(e => e.name === 'Turning' && e.time > arr[i].time));
+  if (i >= 0 && !returned) {
+    arr[i] = item;
+    toast(`${labelProbe(probe)} ${temp}°C updated`);
+  } else {
+    arr.push(item);
+    toast(`${labelProbe(probe)} ${temp}°C recorded`);
+  }
+  arr.sort((a, b) => a.time - b.time);
+  $('currentTemp').value = temp;
+  renderAll();
+  saveState();
+}
+function removeReading(temp, probe = currentProbe()) {
+  const arr = state.readings[probe];
+  let i = -1;
+  for (let k = arr.length - 1; k >= 0; k--) {
+    if (Number(arr[k].temp) === Number(temp) && (i < 0 || arr[k].time > arr[i].time)) i = k;
+  }
+  if (i < 0) return;
+  lastDeleted = { kind: 'reading', probe, item: arr[i] };
+  arr.splice(i, 1);
+  vibrate(45);
+  toast(`${labelProbe(probe)} ${temp}°C removed`);
+  renderAll();
+  saveState();
+}
+function recordEvent(name) {
+  if (!state.running) startPause();
+  const time = elapsedMs(),
+    ex = lastReading('exhaust'),
+    bt = lastReading('bean'),
+    i = state.events.findIndex(e => e.name === name);
+  const item = { name, time, exhaust: ex?.temp ?? null, bean: bt?.temp ?? null };
+  if (name === 'Turning') setBottom(time, item);
+  if (i >= 0) state.events[i] = item;
+  else state.events.push(item);
+  state.events.sort((a, b) => a.time - b.time);
+  toast(`${name} recorded`);
+  renderAll();
+  saveState();
+}
+function removeEvent(name) {
+  const i = state.events.findIndex(e => e.name === name);
+  if (i < 0) return;
+  lastDeleted = { kind: 'event', item: state.events[i] };
+  state.events.splice(i, 1);
+  if (name === 'Turning') clearBottom();
+  vibrate(45);
+  toast(`${name} removed`);
+  renderAll();
+  saveState();
+}
+function clearBottom() {
+  ['exhaust', 'bean'].forEach(p => {
+    state.readings[p] = state.readings[p].filter(x => !x.bottom);
+  });
+}
+function setBottom(time, item) {
+  clearBottom();
+  ['exhaust', 'bean'].forEach(p => {
+    const before = state.readings[p].filter(x => x.time <= time);
+    if (!before.length) return;
+    const lo = Math.min(...before.map(x => Number(x.temp)));
+    const last = [...before].sort((x, y) => x.time - y.time).pop();
+    item[p] = lo;
+    if (time - last.time > 2000) state.readings[p].push({ temp: lo, time, bottom: true });
+  });
+}
+function lastReading(p) {
+  const a = [...state.readings[p]].sort((x, y) => x.time - y.time);
+  return a[a.length - 1];
+}
+document.querySelectorAll('.event').forEach(b =>
+  bindPress(
+    b,
+    () => recordEvent(b.dataset.event),
+    () => removeEvent(b.dataset.event)
+  )
+);
+
+$('generate').onclick = () => {
+  const s = Number($('tileStart').value),
+    e = Number($('tileEnd').value),
+    st = Number($('tileStep').value),
+    d = Number($('tileDecimals').value);
+  if (!Number.isFinite(s) || !Number.isFinite(e) || !Number.isFinite(st) || st <= 0 || e < s) {
+    toast('Check tile range');
+    return;
+  }
+  if ((e - s) / st > 150) {
+    toast('Please use 150 tiles or fewer');
+    return;
+  }
+  state.tile = { start: s, end: e, step: st, decimals: d };
+  renderTiles();
+  saveState();
+};
+function renderTiles() {
+  $('tileStart').value = state.tile.start;
+  $('tileEnd').value = state.tile.end;
+  $('tileStep').value = state.tile.step;
+  $('tileDecimals').value = state.tile.decimals;
+  const p = currentProbe(),
+    arr = state.readings[p],
+    box = $('tiles');
+  box.innerHTML = '';
+  const n = Math.floor((state.tile.end - state.tile.start) / state.tile.step + 0.000001);
+  for (let i = 0; i <= n; i++) {
+    const temp = Number((state.tile.start + i * state.tile.step).toFixed(state.tile.decimals));
+    const ordered = [...arr].sort((a, b) => a.time - b.time),
+      all = ordered.filter(z => Number(z.temp) === temp),
+      x = all.length ? all[all.length - 1] : null;
+    const ix = x ? ordered.indexOf(x) : -1,
+      gap = x && ix > 0 ? x.time - ordered[ix - 1].time : null;
+    const b = document.createElement('button');
+    const phaseForReading = (() => {
+      if (!x) return '';
+      const prior = [...state.events].filter(e => e.time <= x.time).sort((a, b) => a.time - b.time);
+      return prior.length ? prior[prior.length - 1].name : '';
+    })();
+    const phaseClass = phaseForReading ? ` phase-${phaseForReading.replace(/\s+/g, '-')}` : '';
+    b.className = `tile${x ? ' done ' + p : ''}${phaseClass}`;
+    b.innerHTML = `<span class="temp-label">${temp.toFixed(state.tile.decimals)}${unitSymbol()}</span><span class="tile-time">${x ? fmt(x.time) : ''}</span><span class="tile-gap">${x ? gapFmt(gap) : ''}</span>`;
+    bindPress(
+      b,
+      () => recordReading(temp, p),
+      () => {
+        if (x) removeReading(temp, p);
+      }
+    );
+    box.appendChild(b);
+  }
+}
+
+function renderEvents() {
+  document.querySelectorAll('.event').forEach(b => {
+    const e = state.events.find(x => x.name === b.dataset.event),
+      s = b.querySelector('small');
+    s.textContent = e
+      ? `${fmt(e.time)} · ET ${e.exhaust ?? '--'}${e.exhaust != null ? unitSymbol() : ''} · BT ${e.bean ?? '--'}${e.bean != null ? unitSymbol() : ''}`
+      : 'Tap to record';
+  });
+}
+function updateSummary() {
+  const drop = state.events.find(e => e.name === 'Drop'),
+    fc = state.events.find(e => e.name === 'First Crack');
+  const total = drop?.time ?? elapsedMs();
+  $('totalTime').textContent = drop ? fmt(total) : '--';
+  if (drop && fc) {
+    const dev = drop.time - fc.time;
+    $('devTime').textContent = fmt(dev);
+    $('devRatio').textContent = ((dev / drop.time) * 100).toFixed(1) + '%';
+  } else {
+    $('devTime').textContent = '--';
+    $('devRatio').textContent = '--';
+  }
+  const g = Number($('greenWeight').value),
+    r = Number($('roastedWeight').value);
+  $('loss').textContent = g > 0 && r > 0 ? (((g - r) / g) * 100).toFixed(1) + '%' : '--';
+}
+function renderLog() {
+  const rows = [
+    ...state.readings.exhaust.map(x => ({ time: x.time, name: 'ET', temp: x.temp, probe: 'ET' })),
+    ...state.readings.bean.map(x => ({ time: x.time, name: 'BT', temp: x.temp, probe: 'BT' })),
+    ...state.events.map(x => ({
+      time: x.time,
+      name: x.name,
+      temp: `ET ${x.exhaust ?? '--'} / BT ${x.bean ?? '--'}`,
+      probe: 'EVENT',
+    })),
+  ].sort((a, b) => b.time - a.time);
+  $('log').innerHTML = rows.length
+    ? rows
+        .map(
+          x =>
+            `<div class="log-item"><span class="log-time">${fmt(x.time)}</span><span>${x.name}</span><span class="pill">${x.temp}${typeof x.temp === 'number' ? unitSymbol() : ''}</span></div>`
+        )
+        .join('')
+    : `<div style="color:var(--muted)">No entries recorded.</div>`;
+}
+
+function smoothPath(ctx, pts) {
+  if (!pts.length) return;
+  if (pts.length === 1) {
+    ctx.moveTo(...pts[0]);
+    return;
+  }
+  ctx.moveTo(...pts[0]);
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i],
+      p1 = pts[i],
+      p2 = pts[i + 1],
+      p3 = pts[i + 2] || p2;
+    ctx.bezierCurveTo(
+      p1[0] + (p2[0] - p0[0]) / 6,
+      p1[1] + (p2[1] - p0[1]) / 6,
+      p2[0] - (p3[0] - p1[0]) / 6,
+      p2[1] - (p3[1] - p1[1]) / 6,
+      p2[0],
+      p2[1]
+    );
+  }
+}
+function drawCurve() {
+  const c = $('curveCanvas'),
+    ctx = c.getContext('2d'),
+    W = c.width,
+    H = c.height,
+    pad = { l: 48, r: 46, t: 25, b: 35 };
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#171512';
+  ctx.fillRect(0, 0, W, H);
+  const all = [...state.readings.exhaust, ...state.readings.bean],
+    temps = all.map(x => x.temp);
+  const minT = Math.floor((temps.length ? Math.min(...temps) : 150) / 10) * 10 - 10,
+    maxT = Math.ceil((temps.length ? Math.max(...temps) : 220) / 10) * 10 + 10,
+    maxSec = Math.max(720, elapsedMs() / 1000 + 30);
+  const x = s => pad.l + (s / maxSec) * (W - pad.l - pad.r),
+    y = t => pad.t + ((maxT - t) / (maxT - minT)) * (H - pad.t - pad.b);
+  ctx.font = '11px Arial';
+  ctx.strokeStyle = '#3b342f';
+  ctx.fillStyle = '#b8aaa0';
+  ctx.lineWidth = 1;
+  for (let t = Math.ceil(minT / 10) * 10; t <= maxT; t += 10) {
+    ctx.beginPath();
+    ctx.moveTo(pad.l, y(t));
+    ctx.lineTo(W - pad.r, y(t));
+    ctx.stroke();
+    ctx.fillText(t + unitSymbol(), 7, y(t) + 4);
+  }
+  for (let s = 0; s <= maxSec; s += 60) {
+    ctx.beginPath();
+    ctx.moveTo(x(s), pad.t);
+    ctx.lineTo(x(s), H - pad.b);
+    ctx.stroke();
+    ctx.fillText(String(s / 60).padStart(2, '0') + ':00', x(s) - 15, H - 10);
+  }
+  const drawSeries = (arr, color) => {
+    const a = [...arr].sort((m, n) => m.time - n.time);
+    if (!a.length) return;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    const pts = a.map(p => [x(p.time / 1000), y(p.temp)]);
+    if (state.smoothCurve) smoothPath(ctx, pts);
+    else {
+      ctx.moveTo(...pts[0]);
+      pts.slice(1).forEach(pt => ctx.lineTo(...pt));
+    }
+    ctx.stroke();
+    a.forEach(p => {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x(p.time / 1000), y(p.temp), 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    if (state.showRor && a.length > 1) {
+      const rr = [];
+      for (let i = 1; i < a.length; i++) {
+        const dt = (a[i].time - a[i - 1].time) / 60000;
+        if (dt > 0) rr.push({ time: a[i].time / 1000, ror: (a[i].temp - a[i - 1].temp) / dt });
+      }
+      const yr = v => pad.t + ((30 - Math.max(0, Math.min(30, v))) / 30) * (H - pad.t - pad.b);
+      ctx.strokeStyle = '#74b7cf';
+      ctx.globalAlpha = 0.55;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 5]);
+      ctx.beginPath();
+      smoothPath(
+        ctx,
+        rr.map(p => [x(p.time), yr(p.ror)])
+      );
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+  };
+  if (state.mode === 'exhaust' || state.mode === 'both') drawSeries(state.readings.exhaust, '#e2783f');
+  if (state.mode === 'bean' || state.mode === 'both') drawSeries(state.readings.bean, '#43a4bf');
+  state.events.forEach(e => {
+    const X = x(e.time / 1000);
+    ctx.strokeStyle = 'rgba(255,255,255,.55)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(X, pad.t);
+    ctx.lineTo(X, H - pad.b);
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(X + 4, pad.t + 15);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 9px Arial';
+    ctx.fillText(e.name, 0, 0);
+    ctx.restore();
+  });
+}
+function renderAll() {
+  renderTimer();
+  updateProbeUI();
+  updateUnitUI();
+  $('smoothCurve').checked = state.smoothCurve !== false;
+  $('showRor').checked = state.showRor !== false;
+  renderTiles();
+  renderEvents();
+  renderLog();
+  updateSummary();
+  drawCurve();
+  updateKey();
+}
+window.addEventListener('resize', drawCurve);
+
+$('smoothCurve').onchange = () => {
+  state.smoothCurve = $('smoothCurve').checked;
+  drawCurve();
+  saveState();
+};
+$('showRor').onchange = () => {
+  state.showRor = $('showRor').checked;
+  drawCurve();
+  saveState();
 };
 
+$('save').onclick = () => {
+  saveState();
+  toast('Saved in this browser on this device');
+};
+$('exportJson').onclick = () => {
+  saveState();
+  const payload = { identity: Object.fromEntries(fields().map(k => [k, $(k).value])), ...state };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+  a.download = ($('coffeeCode').value || 'KoffyKraft') + '_roast.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
 
-async function loadGreenLots(){const sel=$("greenLotId");if(!sel||typeof ORIGIN==="undefined")return;let lots=[];try{lots=await ORIGIN.all("green")}catch(e){}const saved=(()=>{try{return JSON.parse(localStorage.getItem("kk_fields_v10")||"{}").greenLotId||""}catch(e){return ""}})();const cur=sel.value||saved;lots.sort((a,b)=>String(b.date||b.updatedAt).localeCompare(String(a.date||a.updatedAt)));sel.innerHTML='<option value="">None, type the details below</option>'+lots.map(g=>'<option value="'+g.id+'">'+[g.code,g.estate,g.variety,g.pathway].filter(Boolean).join(" · ").replace(/[<>&"]/g,"")+'</option>').join("");if(cur&&lots.some(g=>g.id===cur))sel.value=cur;showGreenLotInfo(lots.find(g=>g.id===sel.value))}
-function showGreenLotInfo(g){const el=$("greenLotInfo");if(!el)return;el.textContent=g?[g.name,g.moisture?g.moisture+"% moisture":"",g.grade?"grade "+g.grade:"",g.weightKg?g.weightKg+" kg lot":""].filter(Boolean).join(" · "):""}
-$("greenLotId").addEventListener("change",async()=>{const id=$("greenLotId").value;let g=null;if(id){try{g=await ORIGIN.get(id)}catch(e){}}if(g){$("estate").value=g.estate||g.name||"";$("coffeeCode").value=g.code||"";if(g.moisture)$("moisture").value=g.moisture;if(!$("notes").value.trim())$("notes").value=[g.variety,g.pathway].filter(Boolean).join(", ")}showGreenLotInfo(g);updateKey();saveFields();updateSummary()});
-if(typeof PREFS!=="undefined")PREFS.pull();loadGreenLots();if(typeof ORIGIN!=="undefined"){ORIGIN.onSync(st=>{if(st.status==="synced"&&st.changed)loadGreenLots()});ORIGIN.sync().catch(()=>{})}
-loadState();loadFields();if(!state.unit)state.unit="C";if(state.smoothCurve===undefined)state.smoothCurve=true;if(state.showRor===undefined)state.showRor=true;setMode(state.mode||"exhaust");renderAll();setInterval(()=>{renderTimer();drawCurve();updateSummary()},500);
+function xml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+function crc32(bytes) {
+  let c = 0xffffffff;
+  for (const b of bytes) {
+    c ^= b;
+    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (c & 1 ? 0xedb88320 : 0);
+  }
+  return (c ^ 0xffffffff) >>> 0;
+}
+function zipStore(files) {
+  const enc = new TextEncoder(),
+    parts = [],
+    central = [];
+  let off = 0;
+  const u16 = n => new Uint8Array([n & 255, (n >>> 8) & 255]),
+    u32 = n => new Uint8Array([n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255]);
+  for (const [name, str] of files) {
+    const n = enc.encode(name),
+      d = enc.encode(str),
+      crc = crc32(d);
+    const h = [
+      u32(0x04034b50),
+      u16(20),
+      u16(0),
+      u16(0),
+      u16(0),
+      u16(0),
+      u32(crc),
+      u32(d.length),
+      u32(d.length),
+      u16(n.length),
+      u16(0),
+      n,
+      d,
+    ];
+    parts.push(...h);
+    central.push(
+      ...[
+        u32(0x02014b50),
+        u16(20),
+        u16(20),
+        u16(0),
+        u16(0),
+        u16(0),
+        u16(0),
+        u32(crc),
+        u32(d.length),
+        u32(d.length),
+        u16(n.length),
+        u16(0),
+        u16(0),
+        u16(0),
+        u16(0),
+        u32(0),
+        u32(off),
+        n,
+      ]
+    );
+    off += h.reduce((a, x) => a + x.length, 0);
+  }
+  const cs = central.reduce((a, x) => a + x.length, 0),
+    co = off;
+  parts.push(
+    ...central,
+    u32(0x06054b50),
+    u16(0),
+    u16(0),
+    u16(files.length),
+    u16(files.length),
+    u32(cs),
+    u32(co),
+    u16(0)
+  );
+  return new Blob(parts, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+function sheet(rows) {
+  const cells = rows
+    .map(
+      (r, ri) =>
+        '<row r="' +
+        (ri + 1) +
+        '">' +
+        r
+          .map((v, ci) => {
+            const ref = String.fromCharCode(65 + ci) + (ri + 1);
+            return typeof v === 'number'
+              ? '<c r="' + ref + '"><v>' + v + '</v></c>'
+              : '<c r="' + ref + '" t="inlineStr"><is><t>' + xml(v) + '</t></is></c>';
+          })
+          .join('') +
+        '</row>'
+    )
+    .join('');
+  return (
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>' +
+    cells +
+    '</sheetData></worksheet>'
+  );
+}
+$('exportCsv').onclick = () => {
+  saveState();
+  const id = Object.fromEntries(fields().map(k => [k, $(k).value]));
+  const summary = [
+    ['KoffyKraft Roast Record'],
+    ['Field', 'Value'],
+    ...Object.entries(id),
+    [
+      'Total roast',
+      state.events.find(e => e.name === 'Drop') ? fmt(state.events.find(e => e.name === 'Drop').time) : '',
+    ],
+    ['Exported', new Date().toISOString()],
+  ];
+  const events = [
+    ['Event', 'Time', 'ET', 'BT'],
+    ...state.events
+      .slice()
+      .sort((a, b) => a.time - b.time)
+      .map(e => [e.name, fmt(e.time), e.exhaust ?? '', e.bean ?? '']),
+  ];
+  const readings = [
+    ['Probe', 'Time', 'Temperature', 'Unit'],
+    ...state.readings.exhaust.map(x => ['ET', fmt(x.time), x.temp, state.unit]),
+    ...state.readings.bean.map(x => ['BT', fmt(x.time), x.temp, state.unit]),
+  ].sort((a, b) => (a[1] > b[1] ? 1 : -1));
+  const files = [
+    [
+      '[Content_Types].xml',
+      '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>',
+    ],
+    [
+      '_rels/.rels',
+      '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+    ],
+    [
+      'xl/workbook.xml',
+      '<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Roast Summary" sheetId="1" r:id="rId1"/><sheet name="Events" sheetId="2" r:id="rId2"/><sheet name="Readings" sheetId="3" r:id="rId3"/></sheets></workbook>',
+    ],
+    [
+      'xl/_rels/workbook.xml.rels',
+      '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/></Relationships>',
+    ],
+    ['xl/worksheets/sheet1.xml', sheet(summary)],
+    ['xl/worksheets/sheet2.xml', sheet(events)],
+    ['xl/worksheets/sheet3.xml', sheet(readings)],
+  ];
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(zipStore(files));
+  a.download = ($('coffeeCode').value || 'KoffyKraft') + '_Roast.xlsx';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+$('printBtn').onclick = () => {
+  drawCurve();
+  setTimeout(() => window.print(), 150);
+};
+function openRoastDB() {
+  return new Promise((ok, no) => {
+    const N = 'KoffyKraftTemporaryRoastbook',
+      need = ['roasts', 'plans'];
+    const go = v => {
+      let r;
+      try {
+        r = v ? indexedDB.open(N, v) : indexedDB.open(N);
+      } catch (e) {
+        no(e);
+        return;
+      }
+      r.onupgradeneeded = e => {
+        const db = e.target.result;
+        need.forEach(s => {
+          if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'id' });
+        });
+      };
+      r.onsuccess = () => {
+        const db = r.result;
+        if (need.some(s => !db.objectStoreNames.contains(s))) {
+          const nv = db.version + 1;
+          db.close();
+          go(nv);
+        } else {
+          db.onversionchange = () => db.close();
+          ok(db);
+        }
+      };
+      r.onerror = () => no(r.error);
+      r.onblocked = () => no(new Error('Close other KoffyKraft tabs and try again'));
+    };
+    go();
+  });
+}
+async function persistFinishedRoast() {
+  const fieldVals = {};
+  fields().forEach(k => (fieldVals[k] = $(k).value));
+  const again = !!state.savedId;
+  if (again && state.savedNo) fieldVals.roastNo = state.savedNo;
+  const rec = {
+    id: state.savedId || 'roast-' + Date.now(),
+    ...fieldVals,
+    bean: fieldVals.notes || '',
+    finishedAt: new Date().toISOString(),
+    events: JSON.parse(JSON.stringify(state.events || [])),
+    readings: JSON.parse(JSON.stringify(state.readings || { exhaust: [], bean: [] })),
+    unit: state.unit || 'C',
+    elapsed: state.elapsed || 0,
+  };
+  if (SYNC.isAuthenticated()) rec.accountId = SYNC.getUserId();
+  const db = await openRoastDB();
+  await new Promise((ok, no) => {
+    const tx = db.transaction('roasts', 'readwrite');
+    tx.objectStore('roasts').put(rec);
+    tx.oncomplete = ok;
+    tx.onerror = () => no(tx.error);
+  });
+  db.close();
+  if (SYNC.isAuthenticated() && typeof PREFS !== 'undefined' && PREFS.get('roasts') === 'all') {
+    try {
+      const resp = await fetch('/api/roasts', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: 'Bearer ' + SYNC.getToken() },
+        body: JSON.stringify(rec),
+      });
+      if (!resp.ok) {
+        rec.cloudError = resp.status;
+        console.error('Cloud save failed:', resp.status, await resp.text());
+      } else {
+        rec.cloudSaved = true;
+        rec.cloud = true;
+        try {
+          const db2 = await openRoastDB();
+          await new Promise(ok => {
+            const t = db2.transaction('roasts', 'readwrite');
+            t.objectStore('roasts').put(rec);
+            t.oncomplete = ok;
+            t.onerror = ok;
+          });
+          db2.close();
+        } catch (e) {}
+      }
+    } catch (e) {
+      rec.cloudError = 'offline';
+      console.error('Could not save to cloud:', e);
+    }
+  }
+  return rec;
+}
+$('finish').onclick = async () => {
+  if (state.running) startPause();
+  const again = !!state.savedId;
+  if (!again) state.savedNo = $('roastNo').value;
+  let saved;
+  try {
+    saved = await persistFinishedRoast();
+  } catch (e) {
+    console.error('Local save failed:', e);
+    toast('Could not save: ' + ((e && e.message) || e));
+    return;
+  }
+  if (!again) {
+    state.savedId = saved && saved.id;
+    $('roastNo').value = state.savedNo;
+  }
+  updateKey();
+  saveState();
+  if (again) {
+    toast('Roast #' + state.savedNo + ' updated');
+  }
+  toast(
+    saved && saved.cloudSaved
+      ? 'Roast saved on this device and in the cloud'
+      : saved && saved.cloudError
+        ? 'Saved on this device. Cloud sync failed.'
+        : SYNC.isAuthenticated()
+          ? 'Saved on this device. Save it to the cloud from the Roastbook.'
+          : 'Roast saved on this device'
+  );
+  const goBtn = document.createElement('a');
+  goBtn.href = 'roasts.html';
+  goBtn.textContent = 'Open Roastbook';
+  goBtn.className = 'btn primary';
+  goBtn.style.cssText =
+    'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:9999;text-decoration:none;display:inline-block;padding:14px 24px;font-size:16px';
+  document.body.appendChild(goBtn);
+};
+
+async function loadGreenLots() {
+  const sel = $('greenLotId');
+  if (!sel || typeof ORIGIN === 'undefined') return;
+  let lots = [];
+  try {
+    lots = await ORIGIN.all('green');
+  } catch (e) {}
+  const saved = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('kk_fields_v10') || '{}').greenLotId || '';
+    } catch (e) {
+      return '';
+    }
+  })();
+  const cur = sel.value || saved;
+  lots.sort((a, b) => String(b.date || b.updatedAt).localeCompare(String(a.date || a.updatedAt)));
+  sel.innerHTML =
+    '<option value="">None, type the details below</option>' +
+    lots
+      .map(
+        g =>
+          '<option value="' +
+          g.id +
+          '">' +
+          [g.code, g.estate, g.variety, g.pathway]
+            .filter(Boolean)
+            .join(' · ')
+            .replace(/[<>&"]/g, '') +
+          '</option>'
+      )
+      .join('');
+  if (cur && lots.some(g => g.id === cur)) sel.value = cur;
+  showGreenLotInfo(lots.find(g => g.id === sel.value));
+}
+function showGreenLotInfo(g) {
+  const el = $('greenLotInfo');
+  if (!el) return;
+  el.textContent = g
+    ? [
+        g.name,
+        g.moisture ? g.moisture + '% moisture' : '',
+        g.grade ? 'grade ' + g.grade : '',
+        g.weightKg ? g.weightKg + ' kg lot' : '',
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : '';
+}
+$('greenLotId').addEventListener('change', async () => {
+  const id = $('greenLotId').value;
+  let g = null;
+  if (id) {
+    try {
+      g = await ORIGIN.get(id);
+    } catch (e) {}
+  }
+  if (g) {
+    $('estate').value = g.estate || g.name || '';
+    $('coffeeCode').value = g.code || '';
+    if (g.moisture) $('moisture').value = g.moisture;
+    if (!$('notes').value.trim()) $('notes').value = [g.variety, g.pathway].filter(Boolean).join(', ');
+  }
+  showGreenLotInfo(g);
+  updateKey();
+  saveFields();
+  updateSummary();
+});
+if (typeof PREFS !== 'undefined') PREFS.pull();
+loadGreenLots();
+if (typeof ORIGIN !== 'undefined') {
+  ORIGIN.onSync(st => {
+    if (st.status === 'synced' && st.changed) loadGreenLots();
+  });
+  ORIGIN.sync().catch(() => {});
+}
+loadState();
+loadFields();
+if (!state.unit) state.unit = 'C';
+if (state.smoothCurve === undefined) state.smoothCurve = true;
+if (state.showRor === undefined) state.showRor = true;
+setMode(state.mode || 'exhaust');
+renderAll();
+setInterval(() => {
+  renderTimer();
+  drawCurve();
+  updateSummary();
+}, 500);
 </script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}</script><script src="pv.js" defer></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+</script><script src="pv.js" defer></script>
 </body>
 </html>

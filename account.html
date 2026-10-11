@@ -6,21 +6,121 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>KoffyKraft Account</title>
 <style>
-*{box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;margin:0;color:#111}
-.app{max-width:600px;margin:auto;padding:26px 16px}
-header{display:flex;justify-content:space-between;align-items:center}
-h1{font-size:26px}
-.card{border:1px solid #ddd;border-radius:16px;padding:15px;margin:15px 0}
-input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0}
-.btn{border:1px solid #111;background:#111;color:#fff;padding:11px 13px;border-radius:10px;font-weight:700}
-.ghost{background:#fff;color:#111}
-.meta{font-size:12px;color:#777;margin:8px 0}
-.hide{display:none}
-a{color:#555}
-.srow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #eee}.srow:first-child{border-top:0}.srow .l{font-size:14px;line-height:1.35}.srow .l small{display:block;color:#777;font-size:12px}.seg{display:flex;background:#eee;border-radius:10px;padding:3px;gap:2px;flex-shrink:0}.seg button{border:0;background:transparent;border-radius:8px;padding:8px 9px;font:inherit;font-size:13px;font-weight:600;color:#555;cursor:pointer}.seg button.on{background:#fff;color:#111;box-shadow:0 1px 2px rgba(0,0,0,.1)}
-.backup-reminder{background:#fff3cd;border:1px solid #ffe699;border-radius:12px;padding:12px;margin:12px 0;font-size:13px;line-height:1.5}
-.backup-reminder strong{display:block;color:#111;margin-bottom:6px}
+* {
+  box-sizing: border-box;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial;
+  margin: 0;
+  color: #111;
+}
+.app {
+  max-width: 600px;
+  margin: auto;
+  padding: 26px 16px;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+h1 {
+  font-size: 26px;
+}
+.card {
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  padding: 15px;
+  margin: 15px 0;
+}
+input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  margin: 6px 0;
+}
+.btn {
+  border: 1px solid #111;
+  background: #111;
+  color: #fff;
+  padding: 11px 13px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+.ghost {
+  background: #fff;
+  color: #111;
+}
+.meta {
+  font-size: 12px;
+  color: #777;
+  margin: 8px 0;
+}
+.hide {
+  display: none;
+}
+a {
+  color: #555;
+}
+.srow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid #eee;
+}
+.srow:first-child {
+  border-top: 0;
+}
+.srow .l {
+  font-size: 14px;
+  line-height: 1.35;
+}
+.srow .l small {
+  display: block;
+  color: #777;
+  font-size: 12px;
+}
+.seg {
+  display: flex;
+  background: #eee;
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.seg button {
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px 9px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+}
+.seg button.on {
+  background: #fff;
+  color: #111;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.backup-reminder {
+  background: #fff3cd;
+  border: 1px solid #ffe699;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 12px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.backup-reminder strong {
+  display: block;
+  color: #111;
+  margin-bottom: 6px;
+}
 </style>
 <link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script><script src="i18n.js" defer></script></head>
 <body>
@@ -86,65 +186,171 @@ Keep your own copies of important roasts. Export to Dropbox, Google Drive, or yo
 </main>
 
 <p style="max-width:680px;margin:24px auto 40px;padding:0 16px;font-size:12px;color:#77716a;line-height:1.5">© 2026 T M Thomas · Open source under <a href="license.html" style="color:#8d583b">AGPL-3.0</a> · Commercial licence: info@koffykraft.com · <a href="terms.html" style="color:#8d583b">Terms</a></p>
-<script>(async()=>{try{if(typeof SYNC==='undefined'||!SYNC.isAuthenticated())return;const r=await fetch('/api/me',{headers:{authorization:'Bearer '+SYNC.getToken()}});const d=await r.json();if(!d.admin)return;const c=document.createElement('a');c.href='stats.html';c.className='card';c.style.cssText='display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:inherit;margin:12px 0';c.innerHTML='<span><b>Stats</b><br><span style="font-size:13px;color:#77716a">Visits, accounts and cloud records. Only you see this.</span></span><span style="color:#8d583b;font-size:22px">›</span>';const h=document.querySelector('main h1');h&&h.insertAdjacentElement('afterend',c)}catch(e){}})();</script>
 <script>
-const localCard=document.getElementById('local'),
-      signinCard=document.getElementById('signin'),
-      meCard=document.getElementById('me'),
-      whoEl=document.getElementById('who'),
-      roastCountEl=document.getElementById('roastCount'),
-      emailInput=document.getElementById('email'),
-      sendBtn=document.getElementById('send'),
-      verifyBox=document.getElementById('verify'),
-      codeInput=document.getElementById('code'),
-      goBtn=document.getElementById('go'),
-      logoutBtn=document.getElementById('logout'),
-      msgEl=document.getElementById('msg');
+(async () => {
+  try {
+    if (typeof SYNC === 'undefined' || !SYNC.isAuthenticated()) return;
+    const r = await fetch('/api/me', { headers: { authorization: 'Bearer ' + SYNC.getToken() } });
+    const d = await r.json();
+    if (!d.admin) return;
+    const c = document.createElement('a');
+    c.href = 'stats.html';
+    c.className = 'card';
+    c.style.cssText =
+      'display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:inherit;margin:12px 0';
+    c.innerHTML =
+      '<span><b>Stats</b><br><span style="font-size:13px;color:#77716a">Visits, accounts and cloud records. Only you see this.</span></span><span style="color:#8d583b;font-size:22px">›</span>';
+    const h = document.querySelector('main h1');
+    h && h.insertAdjacentElement('afterend', c);
+  } catch (e) {}
+})();
+</script>
+<script>
+const localCard = document.getElementById('local'),
+  signinCard = document.getElementById('signin'),
+  meCard = document.getElementById('me'),
+  whoEl = document.getElementById('who'),
+  roastCountEl = document.getElementById('roastCount'),
+  emailInput = document.getElementById('email'),
+  sendBtn = document.getElementById('send'),
+  verifyBox = document.getElementById('verify'),
+  codeInput = document.getElementById('code'),
+  goBtn = document.getElementById('go'),
+  logoutBtn = document.getElementById('logout'),
+  msgEl = document.getElementById('msg');
 
-async function check(){
-  if(!SYNC.isAuthenticated())return;
-  const me=await SYNC.getMe();
-  if(me.error)return;
-  const roasts=await SYNC.loadRoasts();
+async function check() {
+  if (!SYNC.isAuthenticated()) return;
+  const me = await SYNC.getMe();
+  if (me.error) return;
+  const roasts = await SYNC.loadRoasts();
   signinCard.classList.add('hide');
   localCard.classList.add('hide');
   meCard.classList.remove('hide');
-  whoEl.textContent=me.user.email;
-  roastCountEl.textContent=`${roasts.items?.length||0} roasts in cloud`;
+  whoEl.textContent = me.user.email;
+  roastCountEl.textContent = `${roasts.items?.length || 0} roasts in cloud`;
   await PREFS.pull();
-  let origin=[];try{const r=await fetch('/api/origin',{headers:{authorization:'Bearer '+SYNC.getToken()}});if(r.ok)origin=(await r.json()).items||[]}catch(e){}
-  const live=origin.filter(x=>!x.deleted);
-  COUNTS={origin:live.filter(x=>PREFS.sectionOf(x.type)==='origin').length,cup:live.filter(x=>PREFS.sectionOf(x.type)==='cup').length,roasts:roasts.items?.length||0};
+  let origin = [];
+  try {
+    const r = await fetch('/api/origin', { headers: { authorization: 'Bearer ' + SYNC.getToken() } });
+    if (r.ok) origin = (await r.json()).items || [];
+  } catch (e) {}
+  const live = origin.filter(x => !x.deleted);
+  COUNTS = {
+    origin: live.filter(x => PREFS.sectionOf(x.type) === 'origin').length,
+    cup: live.filter(x => PREFS.sectionOf(x.type) === 'cup').length,
+    roasts: roasts.items?.length || 0,
+  };
   document.getElementById('syncCard').classList.remove('hide');
   drawSync();
 }
-let COUNTS={};
-function drawSync(){const p=PREFS.read();const labels={off:'Off',selected:'Selected',all:'All'};document.getElementById('syncRows').innerHTML=Object.entries(PREFS.SECTIONS).map(([k,name])=>'<div class="srow"><div class="l">'+name+'<small>'+(COUNTS[k]||0)+' in cloud</small></div><div class="seg" role="group" aria-label="'+name+'">'+PREFS.MODES.map(m=>'<button type="button" data-sec="'+k+'" data-mode="'+m+'" class="'+(p[k]===m?'on':'')+'" aria-pressed="'+(p[k]===m)+'">'+labels[m]+'</button>').join('')+'</div></div>').join('');
- document.querySelectorAll('[data-sec]').forEach(b=>b.onclick=async()=>{const sec=b.dataset.sec,mode=b.dataset.mode;await PREFS.set(sec,mode);drawSync();const msg=document.getElementById('syncMsg');if(mode==='all'&&sec!=='roasts'){msg.textContent='Uploading…';const n=await ORIGIN.markAll(sec);msg.textContent=n?n+' records sent to the cloud.':'Everything here is already in the cloud.';const r=await fetch('/api/origin',{headers:{authorization:'Bearer '+SYNC.getToken()}}).catch(()=>null);if(r&&r.ok){const it=((await r.json()).items||[]).filter(x=>!x.deleted);COUNTS[sec]=it.filter(x=>PREFS.sectionOf(x.type)===sec).length;drawSync()}}else if(mode==='all'){msg.textContent='Roasts you finish from now on upload automatically. For earlier ones, use Save to cloud in the Roastbook.'}else if(mode==='off'){msg.textContent='Nothing new goes to the cloud from '+PREFS.SECTIONS[sec].split(' (')[0]+'. What is already there stays until you remove it.'}else{msg.textContent='Only records you choose with Save to cloud will upload.'}})}
+let COUNTS = {};
+function drawSync() {
+  const p = PREFS.read();
+  const labels = { off: 'Off', selected: 'Selected', all: 'All' };
+  document.getElementById('syncRows').innerHTML = Object.entries(PREFS.SECTIONS)
+    .map(
+      ([k, name]) =>
+        '<div class="srow"><div class="l">' +
+        name +
+        '<small>' +
+        (COUNTS[k] || 0) +
+        ' in cloud</small></div><div class="seg" role="group" aria-label="' +
+        name +
+        '">' +
+        PREFS.MODES.map(
+          m =>
+            '<button type="button" data-sec="' +
+            k +
+            '" data-mode="' +
+            m +
+            '" class="' +
+            (p[k] === m ? 'on' : '') +
+            '" aria-pressed="' +
+            (p[k] === m) +
+            '">' +
+            labels[m] +
+            '</button>'
+        ).join('') +
+        '</div></div>'
+    )
+    .join('');
+  document.querySelectorAll('[data-sec]').forEach(
+    b =>
+      (b.onclick = async () => {
+        const sec = b.dataset.sec,
+          mode = b.dataset.mode;
+        await PREFS.set(sec, mode);
+        drawSync();
+        const msg = document.getElementById('syncMsg');
+        if (mode === 'all' && sec !== 'roasts') {
+          msg.textContent = 'Uploading…';
+          const n = await ORIGIN.markAll(sec);
+          msg.textContent = n
+            ? n + ' records sent to the cloud.'
+            : 'Everything here is already in the cloud.';
+          const r = await fetch('/api/origin', {
+            headers: { authorization: 'Bearer ' + SYNC.getToken() },
+          }).catch(() => null);
+          if (r && r.ok) {
+            const it = ((await r.json()).items || []).filter(x => !x.deleted);
+            COUNTS[sec] = it.filter(x => PREFS.sectionOf(x.type) === sec).length;
+            drawSync();
+          }
+        } else if (mode === 'all') {
+          msg.textContent =
+            'Roasts you finish from now on upload automatically. For earlier ones, use Save to cloud in the Roastbook.';
+        } else if (mode === 'off') {
+          msg.textContent =
+            'Nothing new goes to the cloud from ' +
+            PREFS.SECTIONS[sec].split(' (')[0] +
+            '. What is already there stays until you remove it.';
+        } else {
+          msg.textContent = 'Only records you choose with Save to cloud will upload.';
+        }
+      })
+  );
+}
 
-sendBtn.onclick=async()=>{
-  if(sendBtn.disabled)return;
-  msgEl.textContent='Sending…';sendBtn.disabled=true;
-  let result;try{result=await SYNC.requestSignIn(emailInput.value)}finally{setTimeout(()=>{sendBtn.disabled=false},result&&result.ok?30000:1500)}
-  if(result.ok){
+sendBtn.onclick = async () => {
+  if (sendBtn.disabled) return;
+  msgEl.textContent = 'Sending…';
+  sendBtn.disabled = true;
+  let result;
+  try {
+    result = await SYNC.requestSignIn(emailInput.value);
+  } finally {
+    setTimeout(
+      () => {
+        sendBtn.disabled = false;
+      },
+      result && result.ok ? 30000 : 1500
+    );
+  }
+  if (result.ok) {
     verifyBox.classList.remove('hide');
-    msgEl.textContent='6-digit code sent to '+emailInput.value;
+    msgEl.textContent = '6-digit code sent to ' + emailInput.value;
     codeInput.focus();
-  }else{
-    msgEl.textContent=result.error||'Sign-in unavailable';
+  } else {
+    msgEl.textContent = result.error || 'Sign-in unavailable';
   }
 };
 
-goBtn.onclick=async()=>{if(goBtn.disabled)return;goBtn.disabled=true;setTimeout(()=>{goBtn.disabled=false},1200);
-  const result=await SYNC.verifyCode(emailInput.value,codeInput.value);
-  if(result.ok){
+goBtn.onclick = async () => {
+  if (goBtn.disabled) return;
+  goBtn.disabled = true;
+  setTimeout(() => {
+    goBtn.disabled = false;
+  }, 1200);
+  const result = await SYNC.verifyCode(emailInput.value, codeInput.value);
+  if (result.ok) {
     location.reload();
-  }else{
-    msgEl.textContent=result.error||'Could not sign in';
+  } else {
+    msgEl.textContent = result.error || 'Could not sign in';
   }
 };
 
-logoutBtn.onclick=async()=>{
+logoutBtn.onclick = async () => {
   await SYNC.logout();
   location.reload();
 };
@@ -154,13 +360,79 @@ check();
 <script src="feedback.js"></script>
 <script>
 // App version: the update notice lives here only.
-(function(){const msg=document.getElementById('appVerMsg'),btn=document.getElementById('appVerBtn');let ready=false;try{ready=localStorage.getItem('kk_update_ready')==='1'}catch(e){}
- const show=()=>{msg.innerHTML='<b style="color:#3f6b5a">A new version is ready.</b> Tap Refresh to load it.';btn.textContent='Refresh now';btn.style.background='#171512';btn.style.color='#fff';btn.style.borderColor='#171512';ready=true};
- if(ready)show();window.addEventListener('kk-update',show);
- btn.onclick=async()=>{if(ready){try{localStorage.removeItem('kk_update_ready')}catch(e){}location.reload();return}btn.disabled=true;btn.textContent='Checking…';try{const r=await navigator.serviceWorker.getRegistration();if(r)await r.update();await fetch('account.html',{cache:'no-store'})}catch(e){}setTimeout(()=>{btn.disabled=false;if(!ready){btn.textContent='Check for updates';msg.textContent='You have the latest version.'}},2500)}})();
+(function () {
+  const msg = document.getElementById('appVerMsg'),
+    btn = document.getElementById('appVerBtn');
+  let ready = false;
+  try {
+    ready = localStorage.getItem('kk_update_ready') === '1';
+  } catch (e) {}
+  const show = () => {
+    msg.innerHTML = '<b style="color:#3f6b5a">A new version is ready.</b> Tap Refresh to load it.';
+    btn.textContent = 'Refresh now';
+    btn.style.background = '#171512';
+    btn.style.color = '#fff';
+    btn.style.borderColor = '#171512';
+    ready = true;
+  };
+  if (ready) show();
+  window.addEventListener('kk-update', show);
+  btn.onclick = async () => {
+    if (ready) {
+      try {
+        localStorage.removeItem('kk_update_ready');
+      } catch (e) {}
+      location.reload();
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+    try {
+      const r = await navigator.serviceWorker.getRegistration();
+      if (r) await r.update();
+      await fetch('account.html', { cache: 'no-store' });
+    } catch (e) {}
+    setTimeout(() => {
+      btn.disabled = false;
+      if (!ready) {
+        btn.textContent = 'Check for updates';
+        msg.textContent = 'You have the latest version.';
+      }
+    }, 2500);
+  };
+})();
 // Feedback received: admins only. The server refuses this list to everyone else.
-(async()=>{try{if(typeof SYNC==='undefined'||!SYNC.isAuthenticated())return;const r=await fetch('/api/feedback',{headers:{authorization:'Bearer '+SYNC.getToken()}});if(!r.ok)return;const j=await r.json();const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- document.getElementById('adminFb').innerHTML='<div class="card"><b>Feedback received</b> <span class="meta">(only admins see this)</span>'+((j.items||[]).map(x=>'<div style="border-top:1px solid #f0ebe3;padding:8px 0;font-size:14px"><div class="meta">'+esc(String(x.created_at).slice(0,16).replace('T',' '))+' · '+esc(x.kind||'')+' · '+esc(x.page||'')+(x.contact?' · '+esc(x.contact):'')+'</div><div>'+esc(x.message)+'</div></div>').join('')||'<div class="meta">None yet.</div>')+'</div>'}catch(e){}})();
+(async () => {
+  try {
+    if (typeof SYNC === 'undefined' || !SYNC.isAuthenticated()) return;
+    const r = await fetch('/api/feedback', { headers: { authorization: 'Bearer ' + SYNC.getToken() } });
+    if (!r.ok) return;
+    const j = await r.json();
+    const esc = s =>
+      String(s ?? '').replace(
+        /[&<>"']/g,
+        c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+      );
+    document.getElementById('adminFb').innerHTML =
+      '<div class="card"><b>Feedback received</b> <span class="meta">(only admins see this)</span>' +
+      ((j.items || [])
+        .map(
+          x =>
+            '<div style="border-top:1px solid #f0ebe3;padding:8px 0;font-size:14px"><div class="meta">' +
+            esc(String(x.created_at).slice(0, 16).replace('T', ' ')) +
+            ' · ' +
+            esc(x.kind || '') +
+            ' · ' +
+            esc(x.page || '') +
+            (x.contact ? ' · ' + esc(x.contact) : '') +
+            '</div><div>' +
+            esc(x.message) +
+            '</div></div>'
+        )
+        .join('') || '<div class="meta">None yet.</div>') +
+      '</div>';
+  } catch (e) {}
+})();
 </script>
 <script src="pv.js" defer></script>
 </body>

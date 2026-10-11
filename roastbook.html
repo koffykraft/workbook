@@ -3,16 +3,171 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#171512"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-title" content="KoffyKraft"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><title>KoffyKraft Pre-roast</title>
 <style>
-:root{--bg:#f7f5f0;--card:#fff;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--accent:#8d583b}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
-button,input,select{font:inherit}.app{max-width:760px;margin:auto;padding:8px 12px 70px}
-header{padding:8px 0 12px;border-bottom:1px solid var(--line);margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px}header .brand{font-size:18px;font-weight:300;letter-spacing:1px;color:var(--ink)}nav{display:flex;gap:12px;font-size:12px;flex:1;justify-content:center}nav a{text-decoration:none;color:var(--ink)}.acct{width:40px;height:40px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;text-decoration:none;font-size:18px;flex-shrink:0}.kicker{font-size:.68rem;letter-spacing:.17em;color:var(--accent);font-weight:750}h1{font-size:2.5rem;letter-spacing:-.045em;line-height:1;margin:.18em 0}
-.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin:10px 0}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}.field{display:flex;flex-direction:column;gap:5px}
-label{font-size:.73rem;color:var(--muted);font-weight:700}input,select{width:100%;border:1px solid var(--line);background:white;border-radius:13px;padding:13px 12px;min-height:50px;color:var(--ink)}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.btn{border:0;border-radius:12px;min-height:50px;padding:10px 13px;font-weight:700;background:#211c17;color:white;text-decoration:none;display:flex;align-items:center;justify-content:center}.ghost{background:#ece4da;color:var(--ink)}
-.saved{font-size:.78rem;color:var(--accent);min-height:1em;margin-top:8px}footer{text-align:center;color:var(--muted);font-size:.7rem;padding:12px}
-@media(max-width:640px){nav{gap:10px;font-size:11px}}@media(max-width:520px){.grid{grid-template-columns:1fr 1fr}.full{grid-column:1/-1}nav{gap:8px;font-size:10px}}
+:root {
+  --bg: #f7f5f0;
+  --card: #fff;
+  --ink: #171512;
+  --muted: #77716a;
+  --line: #ddd8d0;
+  --accent: #8d583b;
+}
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+.app {
+  max-width: 760px;
+  margin: auto;
+  padding: 8px 12px 70px;
+}
+header {
+  padding: 8px 0 12px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+header .brand {
+  font-size: 18px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: var(--ink);
+}
+nav {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  flex: 1;
+  justify-content: center;
+}
+nav a {
+  text-decoration: none;
+  color: var(--ink);
+}
+.acct {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.kicker {
+  font-size: 0.68rem;
+  letter-spacing: 0.17em;
+  color: var(--accent);
+  font-weight: 750;
+}
+h1 {
+  font-size: 2.5rem;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  margin: 0.18em 0;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 18px;
+  margin: 10px 0;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.full {
+  grid-column: 1/-1;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+label {
+  font-size: 0.73rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+input,
+select {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 13px;
+  padding: 13px 12px;
+  min-height: 50px;
+  color: var(--ink);
+}
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+.btn {
+  border: 0;
+  border-radius: 12px;
+  min-height: 50px;
+  padding: 10px 13px;
+  font-weight: 700;
+  background: #211c17;
+  color: white;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ghost {
+  background: #ece4da;
+  color: var(--ink);
+}
+.saved {
+  font-size: 0.78rem;
+  color: var(--accent);
+  min-height: 1em;
+  margin-top: 8px;
+}
+footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.7rem;
+  padding: 12px;
+}
+@media (max-width: 640px) {
+  nav {
+    gap: 10px;
+    font-size: 11px;
+  }
+}
+@media (max-width: 520px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .full {
+    grid-column: 1/-1;
+  }
+  nav {
+    gap: 8px;
+    font-size: 10px;
+  }
+}
 </style><script src="koffykraft-db.js"></script><link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script><script src="i18n.js" defer></script></head><body><main class="app">
 <header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="profile.html" aria-label="Me: profile and activity">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
 <div class="kicker">ROASTBOOKS</div><h1>New Roast</h1>
@@ -34,20 +189,133 @@ label{font-size:.73rem;color:var(--muted);font-weight:700}input,select{width:100
 <div class="saved" id="saved"></div></section>
 <footer>© 2026 KoffyKraft</footer></main>
 <script>
-const $=id=>document.getElementById(id);
-const ids=['roasteryName','machineName','estate','bean','coffeeCode','roastNo','moisture','greenWeight','chargeTemp','targetColor','tileStart','tileEnd'];
-function data(){const d={};ids.forEach(id=>d[id]=$(id).value);d.id='plan-'+Date.now();d.savedAt=new Date().toISOString();return d}
-function fill(d){if(!d)return;ids.forEach(id=>{if(d[id]!=null)$(id).value=d[id]})}
-async function save(go){const d=data();localStorage.setItem('kk_preroast_plan',JSON.stringify(d));
- const fields={roasteryName:d.roasteryName,machineName:d.machineName,estate:d.estate,coffeeCode:d.coffeeCode,roastNo:d.roastNo,roastDate:new Date().toISOString().slice(0,10),moisture:d.moisture,greenWeight:d.greenWeight,chargeTemp:d.chargeTemp,targetColor:d.targetColor,roastedWeight:'',finalColor:'',notes:d.bean||''};
- localStorage.setItem('kk_fields_v10',JSON.stringify(fields));
- try{await KKDB.put('plans',d)}catch(e){$('saved').textContent='Could not save preset';if(!go)return}
- const old=JSON.parse(localStorage.getItem('kk_roast_v10')||'{}');old.tile={start:Number(d.tileStart)||170,end:Number(d.tileEnd)||210,step:old.tile?.step||1,decimals:old.tile?.decimals||0};localStorage.setItem('kk_roast_v10',JSON.stringify(old));
- $('saved').textContent='Saved';if(go)location.href='roast-timer-v14.html';
+const $ = id => document.getElementById(id);
+const ids = [
+  'roasteryName',
+  'machineName',
+  'estate',
+  'bean',
+  'coffeeCode',
+  'roastNo',
+  'moisture',
+  'greenWeight',
+  'chargeTemp',
+  'targetColor',
+  'tileStart',
+  'tileEnd',
+];
+function data() {
+  const d = {};
+  ids.forEach(id => (d[id] = $(id).value));
+  d.id = 'plan-' + Date.now();
+  d.savedAt = new Date().toISOString();
+  return d;
 }
-$('savePlan').onclick=()=>save(false);$('saveOpen').onclick=()=>save(true);
-$('quick').onclick=()=>{const keep={roasteryName:$('roasteryName').value,machineName:$('machineName').value,tileStart:$('tileStart').value||170,tileEnd:$('tileEnd').value||210};ids.forEach(id=>$(id).value='');$('roasteryName').value=keep.roasteryName;$('machineName').value=keep.machineName;$('roastNo').value=1;$('tileStart').value=keep.tileStart;$('tileEnd').value=keep.tileEnd;localStorage.removeItem('kk_preroast_plan');const fields={roasteryName:keep.roasteryName,machineName:keep.machineName,estate:'',coffeeCode:'',roastNo:1,roastDate:new Date().toISOString().slice(0,10),moisture:'',greenWeight:'',chargeTemp:'',targetColor:'',roastedWeight:'',finalColor:'',notes:''};localStorage.setItem('kk_fields_v10',JSON.stringify(fields));const old=JSON.parse(localStorage.getItem('kk_roast_v10')||'{}');old.events=[];old.readings={exhaust:[],bean:[]};old.running=false;old.elapsed=0;old.tile={start:Number(keep.tileStart)||170,end:Number(keep.tileEnd)||210,step:old.tile?.step||1,decimals:old.tile?.decimals||0};localStorage.setItem('kk_roast_v10',JSON.stringify(old));$('saved').textContent='Working roast reset · saved records untouched'};
-try{fill(JSON.parse(localStorage.getItem('kk_preroast_plan')||'null'))}catch(e){}
-ids.forEach(id=>$(id).addEventListener('input',()=>{const d={};ids.forEach(k=>d[k]=$(k).value);localStorage.setItem('kk_preroast_draft',JSON.stringify(d))}));try{const draft=JSON.parse(localStorage.getItem('kk_preroast_draft')||'null');if(draft)fill(draft)}catch(e){}
-</script><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}</script><script src="pv.js" defer></script>
+function fill(d) {
+  if (!d) return;
+  ids.forEach(id => {
+    if (d[id] != null) $(id).value = d[id];
+  });
+}
+async function save(go) {
+  const d = data();
+  localStorage.setItem('kk_preroast_plan', JSON.stringify(d));
+  const fields = {
+    roasteryName: d.roasteryName,
+    machineName: d.machineName,
+    estate: d.estate,
+    coffeeCode: d.coffeeCode,
+    roastNo: d.roastNo,
+    roastDate: new Date().toISOString().slice(0, 10),
+    moisture: d.moisture,
+    greenWeight: d.greenWeight,
+    chargeTemp: d.chargeTemp,
+    targetColor: d.targetColor,
+    roastedWeight: '',
+    finalColor: '',
+    notes: d.bean || '',
+  };
+  localStorage.setItem('kk_fields_v10', JSON.stringify(fields));
+  try {
+    await KKDB.put('plans', d);
+  } catch (e) {
+    $('saved').textContent = 'Could not save preset';
+    if (!go) return;
+  }
+  const old = JSON.parse(localStorage.getItem('kk_roast_v10') || '{}');
+  old.tile = {
+    start: Number(d.tileStart) || 170,
+    end: Number(d.tileEnd) || 210,
+    step: old.tile?.step || 1,
+    decimals: old.tile?.decimals || 0,
+  };
+  localStorage.setItem('kk_roast_v10', JSON.stringify(old));
+  $('saved').textContent = 'Saved';
+  if (go) location.href = 'roast-timer-v14.html';
+}
+$('savePlan').onclick = () => save(false);
+$('saveOpen').onclick = () => save(true);
+$('quick').onclick = () => {
+  const keep = {
+    roasteryName: $('roasteryName').value,
+    machineName: $('machineName').value,
+    tileStart: $('tileStart').value || 170,
+    tileEnd: $('tileEnd').value || 210,
+  };
+  ids.forEach(id => ($(id).value = ''));
+  $('roasteryName').value = keep.roasteryName;
+  $('machineName').value = keep.machineName;
+  $('roastNo').value = 1;
+  $('tileStart').value = keep.tileStart;
+  $('tileEnd').value = keep.tileEnd;
+  localStorage.removeItem('kk_preroast_plan');
+  const fields = {
+    roasteryName: keep.roasteryName,
+    machineName: keep.machineName,
+    estate: '',
+    coffeeCode: '',
+    roastNo: 1,
+    roastDate: new Date().toISOString().slice(0, 10),
+    moisture: '',
+    greenWeight: '',
+    chargeTemp: '',
+    targetColor: '',
+    roastedWeight: '',
+    finalColor: '',
+    notes: '',
+  };
+  localStorage.setItem('kk_fields_v10', JSON.stringify(fields));
+  const old = JSON.parse(localStorage.getItem('kk_roast_v10') || '{}');
+  old.events = [];
+  old.readings = { exhaust: [], bean: [] };
+  old.running = false;
+  old.elapsed = 0;
+  old.tile = {
+    start: Number(keep.tileStart) || 170,
+    end: Number(keep.tileEnd) || 210,
+    step: old.tile?.step || 1,
+    decimals: old.tile?.decimals || 0,
+  };
+  localStorage.setItem('kk_roast_v10', JSON.stringify(old));
+  $('saved').textContent = 'Working roast reset · saved records untouched';
+};
+try {
+  fill(JSON.parse(localStorage.getItem('kk_preroast_plan') || 'null'));
+} catch (e) {}
+ids.forEach(id =>
+  $(id).addEventListener('input', () => {
+    const d = {};
+    ids.forEach(k => (d[k] = $(k).value));
+    localStorage.setItem('kk_preroast_draft', JSON.stringify(d));
+  })
+);
+try {
+  const draft = JSON.parse(localStorage.getItem('kk_preroast_draft') || 'null');
+  if (draft) fill(draft);
+} catch (e) {}
+</script><script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+</script><script src="pv.js" defer></script>
 </body></html>

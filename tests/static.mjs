@@ -39,7 +39,7 @@ export async function run(root, t) {
 
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
   t.check('sw.js offline list names only real files', () => {
-    const core = JSON.parse(sw.match(/const CORE=(\[[^\]]*\])/)[1].replace(/'/g, '"'));
+    const core = JSON.parse(sw.match(/const CORE\s*=\s*(\[[^\]]*\])/)[1].replace(/'/g, '"').replace(/,\s*\]$/, ']'));
     const bad = core.map(x => x.replace(/^\.\//, '')).filter(x => !fs.existsSync(path.join(root, x)));
     if (bad.length) throw new Error('missing: ' + bad.join(', '));
   });

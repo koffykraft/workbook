@@ -3,13 +3,15 @@
 // Handles authentication, roast saving, and data sync between local and cloud
 
 (() => {
-  if (window.__kkFetchTimeout) return; window.__kkFetchTimeout = true;
+  if (window.__kkFetchTimeout) return;
+  window.__kkFetchTimeout = true;
   const f = window.fetch.bind(window);
   window.fetch = (u, o) => {
     o = o || {};
     const url = typeof u === 'string' ? u : (u && u.url) || '';
     if (o.signal || !/^\/api\/|\/api\//.test(url.replace(location.origin, ''))) return f(u, o);
-    const c = new AbortController(), t = setTimeout(() => c.abort(), 12000);
+    const c = new AbortController(),
+      t = setTimeout(() => c.abort(), 12000);
     return f(u, { ...o, signal: c.signal }).finally(() => clearTimeout(t));
   };
 })();
@@ -46,7 +48,7 @@ const SYNC = (() => {
       const resp = await fetch(`${API_BASE}/auth/request`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase() })
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
       });
       if (!resp.ok) {
         const err = await resp.json();
@@ -64,7 +66,7 @@ const SYNC = (() => {
       const resp = await fetch(`${API_BASE}/auth/verify`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), code: code.trim() })
+        body: JSON.stringify({ email: email.trim().toLowerCase(), code: code.trim() }),
       });
       if (!resp.ok) {
         const err = await resp.json();
@@ -88,7 +90,7 @@ const SYNC = (() => {
     if (!token) return { error: 'not authenticated' };
     try {
       const resp = await fetch(`${API_BASE}/me`, {
-        headers: { 'authorization': `Bearer ${token}` }
+        headers: { authorization: `Bearer ${token}` },
       });
       if (!resp.ok) {
         if (resp.status === 401) {
@@ -109,7 +111,7 @@ const SYNC = (() => {
     try {
       await fetch(`${API_BASE}/logout`, {
         method: 'POST',
-        headers: { 'authorization': `Bearer ${token}` }
+        headers: { authorization: `Bearer ${token}` },
       });
     } catch (e) {}
     clearAuth();
@@ -135,9 +137,9 @@ const SYNC = (() => {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
-          'authorization': `Bearer ${token}`
+          authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(roastData)
+        body: JSON.stringify(roastData),
       });
       if (!resp.ok) {
         if (resp.status === 401) {
@@ -161,7 +163,7 @@ const SYNC = (() => {
     }
     try {
       const resp = await fetch(`${API_BASE}/roasts`, {
-        headers: { 'authorization': `Bearer ${token}` }
+        headers: { authorization: `Bearer ${token}` },
       });
       if (!resp.ok) {
         if (resp.status === 401) {
@@ -184,7 +186,7 @@ const SYNC = (() => {
     }
     try {
       const resp = await fetch(`${API_BASE}/roasts/${encodeURIComponent(id)}`, {
-        headers: { 'authorization': `Bearer ${token}` }
+        headers: { authorization: `Bearer ${token}` },
       });
       if (!resp.ok) {
         if (resp.status === 401) {
@@ -220,6 +222,6 @@ const SYNC = (() => {
     isAuthenticated: () => !!token,
     getToken: () => token,
     getUserEmail: () => userEmail,
-    getUserId: () => userId
+    getUserId: () => userId,
   };
 })();

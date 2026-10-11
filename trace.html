@@ -8,38 +8,352 @@
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>KoffyKraft Lot passport</title>
 <style>
-:root{--bg:#f7f5f0;--ink:#171512;--muted:#77716a;--line:#ddd8d0;--coffee:#8d583b;--ok:#3f6b5a;--bad:#b4432f;--warn:#9a6a12}
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;color:var(--ink);background:var(--bg)}
-.app{max-width:720px;margin:auto;padding:24px 16px 60px}
-h1{font-size:30px;letter-spacing:-.04em;margin:6px 0 4px;line-height:1.1}.sub{color:var(--muted);font-size:13.5px;margin-bottom:12px;line-height:1.5}.sub a{color:var(--coffee)}
-h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--coffee);margin:22px 0 8px}
-.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px 15px;margin:8px 0}
-.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;cursor:pointer;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:6px;min-height:40px}
-.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}.btn.small{font-size:13px;padding:7px 11px;min-height:36px}.btn:disabled{opacity:.5}
-.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-input,select{font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);width:100%}
-label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600;margin:6px 0}
-label.ck{display:flex;gap:8px;align-items:flex-start;font-size:14px;margin:8px 0}label.ck input{width:auto;margin-top:3px}
-.mini{font-size:12.5px;color:var(--muted);line-height:1.45}.mini a{color:var(--coffee)}
-.kind{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;text-transform:uppercase;letter-spacing:.04em;margin-right:6px;background:#eee;color:#555}
-.k-estate,.k-plot{background:#eaf1df;color:#4f6b2a}.k-harvest{background:#f6ecd9;color:#8a5a12}.k-process{background:#e6eef6;color:#2e5677}.k-green{background:#e3efe8;color:#2f5d4a}.k-roast{background:#f3e3d6;color:#8d583b}.k-hand{background:#ece4f3;color:#5b3f7a}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:14px;margin-top:6px}.kv span{color:var(--muted)}
-.kv+.chip,.chip{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:999px;padding:1px 8px;margin:4px 4px 0 0;min-height:0!important;line-height:1.5}
-.sig{border-top:1px solid #f0ebe3;margin-top:9px;padding-top:7px;font-size:12px;color:var(--muted);line-height:1.5}
-.good{color:var(--ok);font-weight:700}.badc{color:var(--bad);font-weight:700}.wait{color:var(--warn);font-weight:700}
-.banner{border-radius:16px;padding:13px 15px;margin:10px 0;font-size:14.5px;line-height:1.5}.banner.ok{background:#e3efe8;color:#22493a}.banner.bad{background:#f8e1dc;color:#7a2b1d}.banner.wait{background:#f7ecd5;color:#6d4b0d}
-.pick{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 0;border-top:1px solid #f0ebe3;font-size:14px}
-.tag{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px}.tag.new{background:#e3efe8;color:#2f5d4a}.tag.chg{background:#f7ecd5;color:#6d4b0d}.tag.same{background:#eee;color:#777}
-.qr{width:180px;max-width:60%;display:block;margin:6px auto}.qr svg{width:100%;height:auto;display:block}
-.link{word-break:break-all;font-size:13px;color:var(--coffee)}
-svg.geo{width:120px;height:90px;display:block;margin-top:6px;background:#f4f1ea;border-radius:8px}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#171512;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:.2s;pointer-events:none;z-index:2000}.toast.on{opacity:1}
-.foot{margin-top:28px;text-align:center;font-size:12px;color:var(--muted)}.foot a{color:var(--coffee)}
-#labels{display:none}
-@media print{body{background:#fff}.app,.toast,.kkh{display:none!important}#labels{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;padding:6mm}
- .lab{border:1px dashed #bbb;border-radius:3mm;padding:3mm;text-align:center;break-inside:avoid;font-family:Arial}.lab svg{width:32mm;height:32mm}.lab b{display:block;font-size:10pt;margin-top:1mm}.lab small{display:block;font-size:7pt;color:#555;word-break:break-all}}
+:root {
+  --bg: #f7f5f0;
+  --ink: #171512;
+  --muted: #77716a;
+  --line: #ddd8d0;
+  --coffee: #8d583b;
+  --ok: #3f6b5a;
+  --bad: #b4432f;
+  --warn: #9a6a12;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial;
+  color: var(--ink);
+  background: var(--bg);
+}
+.app {
+  max-width: 720px;
+  margin: auto;
+  padding: 24px 16px 60px;
+}
+h1 {
+  font-size: 30px;
+  letter-spacing: -0.04em;
+  margin: 6px 0 4px;
+  line-height: 1.1;
+}
+.sub {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.sub a {
+  color: var(--coffee);
+}
+h2 {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--coffee);
+  margin: 22px 0 8px;
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 13px 15px;
+  margin: 8px 0;
+}
+.btn {
+  font: inherit;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 9px 14px;
+  cursor: pointer;
+  color: var(--ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+}
+.btn.primary {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.btn.small {
+  font-size: 13px;
+  padding: 7px 11px;
+  min-height: 36px;
+}
+.btn:disabled {
+  opacity: 0.5;
+}
+.row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+input,
+select {
+  font: inherit;
+  font-size: 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #fff;
+  color: var(--ink);
+  width: 100%;
+}
+label.f {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  margin: 6px 0;
+}
+label.ck {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 14px;
+  margin: 8px 0;
+}
+label.ck input {
+  width: auto;
+  margin-top: 3px;
+}
+.mini {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.mini a {
+  color: var(--coffee);
+}
+.kind {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 6px;
+  background: #eee;
+  color: #555;
+}
+.k-estate,
+.k-plot {
+  background: #eaf1df;
+  color: #4f6b2a;
+}
+.k-harvest {
+  background: #f6ecd9;
+  color: #8a5a12;
+}
+.k-process {
+  background: #e6eef6;
+  color: #2e5677;
+}
+.k-green {
+  background: #e3efe8;
+  color: #2f5d4a;
+}
+.k-roast {
+  background: #f3e3d6;
+  color: #8d583b;
+}
+.k-hand {
+  background: #ece4f3;
+  color: #5b3f7a;
+}
+.kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 12px;
+  font-size: 14px;
+  margin-top: 6px;
+}
+.kv span {
+  color: var(--muted);
+}
+.kv + .chip,
+.chip {
+  display: inline-block;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 8px;
+  margin: 4px 4px 0 0;
+  min-height: 0 !important;
+  line-height: 1.5;
+}
+.sig {
+  border-top: 1px solid #f0ebe3;
+  margin-top: 9px;
+  padding-top: 7px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.good {
+  color: var(--ok);
+  font-weight: 700;
+}
+.badc {
+  color: var(--bad);
+  font-weight: 700;
+}
+.wait {
+  color: var(--warn);
+  font-weight: 700;
+}
+.banner {
+  border-radius: 16px;
+  padding: 13px 15px;
+  margin: 10px 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+.banner.ok {
+  background: #e3efe8;
+  color: #22493a;
+}
+.banner.bad {
+  background: #f8e1dc;
+  color: #7a2b1d;
+}
+.banner.wait {
+  background: #f7ecd5;
+  color: #6d4b0d;
+}
+.pick {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 0;
+  border-top: 1px solid #f0ebe3;
+  font-size: 14px;
+}
+.tag {
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.tag.new {
+  background: #e3efe8;
+  color: #2f5d4a;
+}
+.tag.chg {
+  background: #f7ecd5;
+  color: #6d4b0d;
+}
+.tag.same {
+  background: #eee;
+  color: #777;
+}
+.qr {
+  width: 180px;
+  max-width: 60%;
+  display: block;
+  margin: 6px auto;
+}
+.qr svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.link {
+  word-break: break-all;
+  font-size: 13px;
+  color: var(--coffee);
+}
+svg.geo {
+  width: 120px;
+  height: 90px;
+  display: block;
+  margin-top: 6px;
+  background: #f4f1ea;
+  border-radius: 8px;
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: #171512;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  opacity: 0;
+  transition: 0.2s;
+  pointer-events: none;
+  z-index: 2000;
+}
+.toast.on {
+  opacity: 1;
+}
+.foot {
+  margin-top: 28px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+.foot a {
+  color: var(--coffee);
+}
+#labels {
+  display: none;
+}
+@media print {
+  body {
+    background: #fff;
+  }
+  .app,
+  .toast,
+  .kkh {
+    display: none !important;
+  }
+  #labels {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4mm;
+    padding: 6mm;
+  }
+  .lab {
+    border: 1px dashed #bbb;
+    border-radius: 3mm;
+    padding: 3mm;
+    text-align: center;
+    break-inside: avoid;
+    font-family: Arial;
+  }
+  .lab svg {
+    width: 32mm;
+    height: 32mm;
+  }
+  .lab b {
+    display: block;
+    font-size: 10pt;
+    margin-top: 1mm;
+  }
+  .lab small {
+    display: block;
+    font-size: 7pt;
+    color: #555;
+    word-break: break-all;
+  }
+}
 </style>
-<link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script><script src="i18n.js" defer></script></head>
+<link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script><script src="i18n.js" defer></script><script src="kk-base.js"></script>
+</head>
 <body><main class="app">
 <header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="profile.html" aria-label="Me: profile and activity">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
 <div id="view"></div>
@@ -48,136 +362,848 @@ svg.geo{width:120px;height:90px;display:block;margin-top:6px;background:#f4f1ea;
 <div class="toast" id="toast"></div>
 <script src="sync.js"></script><script src="origin-db.js"></script><script src="snap.js"></script><script src="trace-core.js"></script><script src="qrcode.js"></script>
 <script>
-const $=s=>document.querySelector(s),T=KKTRACE;
-function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),2400)}
-const signed=()=>typeof SYNC!=='undefined'&&SYNC.isAuthenticated();
-const myEmail=()=>(SYNC.getUserEmail?SYNC.getUserEmail():'')||'';
-async function api(path,opt){opt=opt||{};const h={'content-type':'application/json'};if(signed())h.authorization='Bearer '+SYNC.getToken();const r=await fetch('/api'+path,{method:opt.method||'GET',headers:h,body:opt.body?JSON.stringify(opt.body):undefined});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('Error '+r.status));return j}
-const pubUrl=tok=>location.origin+'/trace.html#p/'+tok;
-const day=d=>{try{return new Date(d+'T00:00:00Z').toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})}catch(e){return d}};
-const when=s=>{try{return new Date(s).toLocaleString(undefined,{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return s}};
-function qrSvg(text){const q=qrcode(0,'M');q.addData(text);q.make();return q.createSvgTag({cellSize:4,margin:2,scalable:true,alt:'QR code'})}
+const $ = s => document.querySelector(s),
+  T = KKTRACE;
+function toast(t) {
+  const el = $('#toast');
+  el.textContent = t;
+  el.classList.add('on');
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => el.classList.remove('on'), 2400);
+}
+const signed = () => typeof SYNC !== 'undefined' && SYNC.isAuthenticated();
+const myEmail = () => (SYNC.getUserEmail ? SYNC.getUserEmail() : '') || '';
+async function api(path, opt) {
+  opt = opt || {};
+  const h = { 'content-type': 'application/json' };
+  if (signed()) h.authorization = 'Bearer ' + SYNC.getToken();
+  const r = await fetch('/api' + path, {
+    method: opt.method || 'GET',
+    headers: h,
+    body: opt.body ? JSON.stringify(opt.body) : undefined,
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'Error ' + r.status);
+  return j;
+}
+const pubUrl = tok => location.origin + '/trace.html#p/' + tok;
+const day = d => {
+  try {
+    return new Date(d + 'T00:00:00Z').toLocaleDateString(undefined, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch (e) {
+    return d;
+  }
+};
+const when = s => {
+  try {
+    return new Date(s).toLocaleString(undefined, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch (e) {
+    return s;
+  }
+};
+function qrSvg(text) {
+  const q = qrcode(0, 'M');
+  q.addData(text);
+  q.make();
+  return q.createSvgTag({ cellSize: 4, margin: 2, scalable: true, alt: 'QR code' });
+}
 
 // ---------- this phone's signing key (private part never leaves the phone) ----------
-function kdb(){return new Promise((ok,no)=>{const q=indexedDB.open('KoffyKraftTrace',1);q.onupgradeneeded=()=>q.result.createObjectStore('k');q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
-async function kget(n){const db=await kdb();return new Promise(ok=>{const r=db.transaction('k').objectStore('k').get(n);r.onsuccess=()=>ok(r.result||null);r.onerror=()=>ok(null)})}
-async function kput(n,v){const db=await kdb();return new Promise((ok,no)=>{const t=db.transaction('k','readwrite');t.objectStore('k').put(v,n);t.oncomplete=()=>ok();t.onerror=()=>no(t.error)})}
-let KEY=null;
-async function myKey(){if(KEY)return KEY;const n='key:'+myEmail().toLowerCase();let k=await kget(n);if(!k){k=await T.newKey();k.reg=0;await kput(n,k)}if(!k.reg){await api('/trace/keys',{method:'POST',body:{jwk:k.jwk}});k.reg=1;await kput(n,k)}return KEY=k}
-async function append(lot,items,to){const k=await myKey();let last;for(let i=0;i<items.length;i+=50){const part=items.slice(i,i+50);for(let a=0;a<3;a++){const L=await api('/trace/lots/'+lot);const ev=L.events||[];const evs=await T.signRun(lot,{seq:ev.length,hash:ev.length?ev[ev.length-1].hash:''},k,part);try{last=await api('/trace/lots/'+lot+'/events',{method:'POST',body:{events:evs,to}});break}catch(e){if(a===2||!/changed while/.test(e.message))throw e}}}return last}
+function kdb() {
+  return new Promise((ok, no) => {
+    const q = indexedDB.open('KoffyKraftTrace', 1);
+    q.onupgradeneeded = () => q.result.createObjectStore('k');
+    q.onsuccess = () => ok(q.result);
+    q.onerror = () => no(q.error);
+  });
+}
+async function kget(n) {
+  const db = await kdb();
+  return new Promise(ok => {
+    const r = db.transaction('k').objectStore('k').get(n);
+    r.onsuccess = () => ok(r.result || null);
+    r.onerror = () => ok(null);
+  });
+}
+async function kput(n, v) {
+  const db = await kdb();
+  return new Promise((ok, no) => {
+    const t = db.transaction('k', 'readwrite');
+    t.objectStore('k').put(v, n);
+    t.oncomplete = () => ok();
+    t.onerror = () => no(t.error);
+  });
+}
+let KEY = null;
+async function myKey() {
+  if (KEY) return KEY;
+  const n = 'key:' + myEmail().toLowerCase();
+  let k = await kget(n);
+  if (!k) {
+    k = await T.newKey();
+    k.reg = 0;
+    await kput(n, k);
+  }
+  if (!k.reg) {
+    await api('/trace/keys', { method: 'POST', body: { jwk: k.jwk } });
+    k.reg = 1;
+    await kput(n, k);
+  }
+  return (KEY = k);
+}
+async function append(lot, items, to) {
+  const k = await myKey();
+  let last;
+  for (let i = 0; i < items.length; i += 50) {
+    const part = items.slice(i, i + 50);
+    for (let a = 0; a < 3; a++) {
+      const L = await api('/trace/lots/' + lot);
+      const ev = L.events || [];
+      const evs = await T.signRun(
+        lot,
+        { seq: ev.length, hash: ev.length ? ev[ev.length - 1].hash : '' },
+        k,
+        part
+      );
+      try {
+        last = await api('/trace/lots/' + lot + '/events', { method: 'POST', body: { events: evs, to } });
+        break;
+      } catch (e) {
+        if (a === 2 || !/changed while/.test(e.message)) throw e;
+      }
+    }
+  }
+  return last;
+}
 
 // ---------- routes ----------
-async function route(){const h=decodeURIComponent(location.hash.slice(1));let m;
- if((m=h.match(/^p\/([a-f0-9]{32})$/)))return publicView(m[1]);
- if(!signed()){$('#view').innerHTML='<h1>Lot passports</h1><div class="sub">A passport follows one coffee lot from the farm to the cup. Each step is signed on the phone that recorded it, linked to the step before, and stamped daily into the public Bitcoin record, so a buyer can check that nothing was changed later. Scan a passport QR to see one; no account is needed for that.</div><div class="card"><b>Sign in to make passports or receive lots.</b><div class="mini" style="margin:6px 0 10px">Handoffs between farms, processors and roasters go by email address.</div><a class="btn primary" href="account.html">Sign in</a></div>'+how();return}
- if(h==='seal')return sealView();
- if((m=h.match(/^lot\/([\w-]+)$/)))return lotView(m[1]);
- return homeView()}
-window.addEventListener('hashchange',route);
+async function route() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  let m;
+  if ((m = h.match(/^p\/([a-f0-9]{32})$/))) return publicView(m[1]);
+  if (!signed()) {
+    $('#view').innerHTML =
+      '<h1>Lot passports</h1><div class="sub">A passport follows one coffee lot from the farm to the cup. Each step is signed on the phone that recorded it, linked to the step before, and stamped daily into the public Bitcoin record, so a buyer can check that nothing was changed later. Scan a passport QR to see one; no account is needed for that.</div><div class="card"><b>Sign in to make passports or receive lots.</b><div class="mini" style="margin:6px 0 10px">Handoffs between farms, processors and roasters go by email address.</div><a class="btn primary" href="account.html">Sign in</a></div>' +
+      how();
+    return;
+  }
+  if (h === 'seal') return sealView();
+  if ((m = h.match(/^lot\/([\w-]+)$/))) return lotView(m[1]);
+  return homeView();
+}
+window.addEventListener('hashchange', route);
 
-function how(){return '<h2>How it works</h2><div class="card mini" style="font-size:13.5px">'+
- '<b style="color:var(--ink)">1. Seal.</b> From a green lot in Origin, tap <i>Passport and QR</i>. You choose what is public: farm location and notes are off unless you turn them on.<br>'+
- '<b style="color:var(--ink)">2. Hand over.</b> Send the lot with its weight to the buyer\'s email. They confirm the weight they received on their own phone, and can add their roasts.<br>'+
- '<b style="color:var(--ink)">3. Check.</b> The QR page checks every signature and link in the buyer\'s own browser, adds up the weights, and shows when each day was stamped into Bitcoin through OpenTimestamps.<br><br>'+
- 'What this proves: entries were made by the phones shown, in this order, and have not been changed since the day they were stamped. What it cannot prove: that what was typed in was true. Honest records, photos and buyers who visit still matter.</div>'}
+function how() {
+  return (
+    '<h2>How it works</h2><div class="card mini" style="font-size:13.5px">' +
+    '<b style="color:var(--ink)">1. Seal.</b> From a green lot in Origin, tap <i>Passport and QR</i>. You choose what is public: farm location and notes are off unless you turn them on.<br>' +
+    '<b style="color:var(--ink)">2. Hand over.</b> Send the lot with its weight to the buyer\'s email. They confirm the weight they received on their own phone, and can add their roasts.<br>' +
+    '<b style="color:var(--ink)">3. Check.</b> The QR page checks every signature and link in the buyer\'s own browser, adds up the weights, and shows when each day was stamped into Bitcoin through OpenTimestamps.<br><br>' +
+    'What this proves: entries were made by the phones shown, in this order, and have not been changed since the day they were stamped. What it cannot prove: that what was typed in was true. Honest records, photos and buyers who visit still matter.</div>'
+  );
+}
 
 // ---------- home: name, incoming lots, my passports ----------
-async function homeView(){const v=$('#view');v.innerHTML='<h1>Lot passports</h1><div class="sub">Signed, linked records for each lot, with a QR for the bag. <a href="contents.html">All features</a></div><div id="hv" class="mini">Loading…</div>';
- let me,inc,ls;try{[me,inc,ls]=await Promise.all([api('/trace/me'),api('/trace/incoming'),api('/trace/lots')])}catch(e){$('#hv').textContent=e.message;return}
- if(!$('#hv'))return;
- let html='<div class="card"><b>Name shown on your passports</b><div class="mini">Your farm, estate or roastery name. Your email is never shown.</div><div class="row" style="margin-top:6px"><input id="nm" value="'+esc(me.label||'')+'" placeholder="Thumpassery Estate" style="flex:1"><button class="btn small" id="nmS">Save</button></div></div>';
- if((inc.items||[]).length)html+='<h2>Lots sent to you</h2>'+inc.items.map(x=>'<div class="card"><b>'+esc(x.title)+'</b><div class="mini">From '+esc(x.sender)+' · '+esc(String(x.kg_sent))+' kg sent · '+when(x.created_at)+' · <a href="#p/'+esc(x.token)+'">See passport</a></div><label class="f">Weight you received, kg<input type="number" step="any" inputmode="decimal" id="kg_'+esc(x.id)+'" value="'+esc(String(x.kg_sent))+'"></label><button class="btn primary small" data-acc="'+esc(x.id)+'">Confirm receipt</button><div class="mini" style="margin-top:4px">Weigh before confirming. This is signed with your phone and adds the lot to your green coffee in Origin.</div></div>').join('');
- html+='<h2>Your passports</h2>'+((ls.items||[]).length?ls.items.map(x=>'<a class="card" style="display:block;text-decoration:none;color:inherit" href="#lot/'+esc(x.id)+'"><b>'+esc(x.title)+'</b><div class="mini">'+esc([x.role==='owner'?'Your lot':'Received',x.entries+' entries',x.withdrawn?'Withdrawn':'',when(x.updated_at)].filter(Boolean).join(' · '))+'</div></a>').join(''):'<div class="mini">None yet. Open a green lot in <a href="origin.html#green">Origin</a> and tap <i>Passport and QR</i>.</div>');
- $('#hv').outerHTML=html+how();
- $('#nmS').onclick=async()=>{try{await api('/trace/me',{method:'PUT',body:{label:$('#nm').value}});toast('Saved')}catch(e){toast(e.message)}};
- document.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>accept(inc.items.find(x=>x.id===b.dataset.acc),b))}
-async function accept(x,b){const kg=+$('#kg_'+x.id).value;if(!(kg>0)){toast('Enter the weight you received');return}b.disabled=true;b.textContent='Signing…';
- try{await append(x.lot_id,[{kind:'receive',data:{tid:x.id,kg}}]);
-  const today=new Date().toISOString().slice(0,10);
-  await ORIGIN.put({type:'green',code:'IN-'+x.token.slice(0,6).toUpperCase(),name:x.title,weightKg:kg,date:today,traceLot:x.lot_id,traceToken:x.token,traceRole:'received',notes:'Received from '+x.sender+' with a lot passport.'});
-  toast('Received and added to Origin');location.hash='lot/'+x.lot_id}catch(e){toast(e.message);b.disabled=false;b.textContent='Confirm receipt'}}
+async function homeView() {
+  const v = $('#view');
+  v.innerHTML =
+    '<h1>Lot passports</h1><div class="sub">Signed, linked records for each lot, with a QR for the bag. <a href="contents.html">All features</a></div><div id="hv" class="mini">Loading…</div>';
+  let me, inc, ls;
+  try {
+    [me, inc, ls] = await Promise.all([api('/trace/me'), api('/trace/incoming'), api('/trace/lots')]);
+  } catch (e) {
+    $('#hv').textContent = e.message;
+    return;
+  }
+  if (!$('#hv')) return;
+  let html =
+    '<div class="card"><b>Name shown on your passports</b><div class="mini">Your farm, estate or roastery name. Your email is never shown.</div><div class="row" style="margin-top:6px"><input id="nm" value="' +
+    esc(me.label || '') +
+    '" placeholder="Thumpassery Estate" style="flex:1"><button class="btn small" id="nmS">Save</button></div></div>';
+  if ((inc.items || []).length)
+    html +=
+      '<h2>Lots sent to you</h2>' +
+      inc.items
+        .map(
+          x =>
+            '<div class="card"><b>' +
+            esc(x.title) +
+            '</b><div class="mini">From ' +
+            esc(x.sender) +
+            ' · ' +
+            esc(String(x.kg_sent)) +
+            ' kg sent · ' +
+            when(x.created_at) +
+            ' · <a href="#p/' +
+            esc(x.token) +
+            '">See passport</a></div><label class="f">Weight you received, kg<input type="number" step="any" inputmode="decimal" id="kg_' +
+            esc(x.id) +
+            '" value="' +
+            esc(String(x.kg_sent)) +
+            '"></label><button class="btn primary small" data-acc="' +
+            esc(x.id) +
+            '">Confirm receipt</button><div class="mini" style="margin-top:4px">Weigh before confirming. This is signed with your phone and adds the lot to your green coffee in Origin.</div></div>'
+        )
+        .join('');
+  html +=
+    '<h2>Your passports</h2>' +
+    ((ls.items || []).length
+      ? ls.items
+          .map(
+            x =>
+              '<a class="card" style="display:block;text-decoration:none;color:inherit" href="#lot/' +
+              esc(x.id) +
+              '"><b>' +
+              esc(x.title) +
+              '</b><div class="mini">' +
+              esc(
+                [
+                  x.role === 'owner' ? 'Your lot' : 'Received',
+                  x.entries + ' entries',
+                  x.withdrawn ? 'Withdrawn' : '',
+                  when(x.updated_at),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+              ) +
+              '</div></a>'
+          )
+          .join('')
+      : '<div class="mini">None yet. Open a green lot in <a href="origin.html#green">Origin</a> and tap <i>Passport and QR</i>.</div>');
+  $('#hv').outerHTML = html + how();
+  $('#nmS').onclick = async () => {
+    try {
+      await api('/trace/me', { method: 'PUT', body: { label: $('#nm').value } });
+      toast('Saved');
+    } catch (e) {
+      toast(e.message);
+    }
+  };
+  document.querySelectorAll('[data-acc]').forEach(
+    b =>
+      (b.onclick = () =>
+        accept(
+          inc.items.find(x => x.id === b.dataset.acc),
+          b
+        ))
+  );
+}
+async function accept(x, b) {
+  const kg = +$('#kg_' + x.id).value;
+  if (!(kg > 0)) {
+    toast('Enter the weight you received');
+    return;
+  }
+  b.disabled = true;
+  b.textContent = 'Signing…';
+  try {
+    await append(x.lot_id, [{ kind: 'receive', data: { tid: x.id, kg } }]);
+    const today = new Date().toISOString().slice(0, 10);
+    await ORIGIN.put({
+      type: 'green',
+      code: 'IN-' + x.token.slice(0, 6).toUpperCase(),
+      name: x.title,
+      weightKg: kg,
+      date: today,
+      traceLot: x.lot_id,
+      traceToken: x.token,
+      traceRole: 'received',
+      notes: 'Received from ' + x.sender + ' with a lot passport.',
+    });
+    toast('Received and added to Origin');
+    location.hash = 'lot/' + x.lot_id;
+  } catch (e) {
+    toast(e.message);
+    b.disabled = false;
+    b.textContent = 'Confirm receipt';
+  }
+}
 
 // ---------- seal: compare this lot's records with what is already sealed ----------
-function opts(){try{return JSON.parse(localStorage.getItem('kk_trace_opts')||'{}')}catch(e){return{}}}
-function prep(it,o){const c={...it.card,loc:o.loc?it.card.loc:'',notes:o.notes?it.card.notes:''};return it.kind==='record'?{rtype:it.rtype,rid:it.rid,card:c,kg:it.kg||{},geo:o.loc&&it.geo?it.geo:null}:{rid:it.rid,card:c,kg:it.kg||{}}}
-const ikey=d=>(d.rtype||'roast')+':'+d.rid;
-async function sealView(){const v=$('#view');let plan;try{plan=JSON.parse(sessionStorage.getItem('kk_trace_plan')||'null')}catch(e){}
- if(!plan){v.innerHTML='<h1>Lot passport</h1><div class="card">Open a green lot in <a href="origin.html#green">Origin</a> and tap <i>Passport and QR</i>.</div>';return}
- v.innerHTML='<a class="back" href="origin.html#edit/green/'+encodeURIComponent(plan.greenId)+'">‹ Back</a><h1>'+esc(plan.title)+'</h1><div class="sub">Lot passport</div><div id="sv" class="mini">Checking…</div>';
- let L=null;if(plan.lot){try{L=await api('/trace/lots/'+plan.lot)}catch(e){L=null}}
- if(!$('#sv'))return;
- if(L&&L.lot.withdrawn){$('#sv').innerHTML='<div class="card">This passport was withdrawn. <a href="#lot/'+esc(plan.lot)+'">See it</a></div>';return}
- const last={};if(L)for(const e of L.events)if(e.body&&(e.body.kind==='record'||e.body.kind==='roast'))last[ikey(e.body.data)]=T.canon(e.body.data);
- const draw=()=>{if(!$('#sv'))return;const o=opts();const rows=plan.items.map(it=>{const d=prep(it,o),k=ikey(d),st=!last[k]?'new':last[k]===T.canon(d)?'same':'chg';return{it,d,st}});const todo=rows.filter(r=>r.st!=='same');
-  $('#sv').outerHTML='<div id="sv">'+(plan.role==='buyer'?'<div class="sub">You received this lot. Add your roasts of it to its passport.</div>':'<div class="card"><b>What the public sees</b><label class="ck"><input type="checkbox" id="oLoc"'+(o.loc?' checked':'')+'><span>Farm location and plot outline<br><span class="mini">Needed to prove where coffee was grown, for example for EU buyers under the deforestation rule. Off by default.</span></span></label><label class="ck"><input type="checkbox" id="oNotes"'+(o.notes?' checked':'')+'><span>Notes written on records</span></label></div>')+
-  '<div class="card"><b>'+(todo.length?todo.length+' to seal':'Everything is sealed')+'</b>'+rows.map(r=>'<div class="pick"><span><span class="kind k-'+(r.d.rtype||'roast')+'">'+esc(r.d.card.kind||'')+'</span>'+esc(r.d.card.title||'')+'</span><span class="tag '+r.st+'">'+{new:'New',chg:'Changed',same:'Sealed'}[r.st]+'</span></div>').join('')+(plan.items.length?'':'<div class="mini">No records to add yet.</div>')+
-  '<div class="row" style="margin-top:10px">'+(todo.length?'<button class="btn primary" id="go">Sign and seal '+todo.length+'</button>':'')+(plan.lot?'<a class="btn" href="#lot/'+esc(plan.lot)+'">QR, link and handoffs</a>':'')+'</div><div class="mini" style="margin-top:6px">Changed records are added as new entries; earlier entries stay, so the history shows what changed and when.</div></div></div>';
-  if($('#oLoc'))$('#oLoc').onchange=$('#oNotes').onchange=()=>{try{localStorage.setItem('kk_trace_opts',JSON.stringify({loc:$('#oLoc').checked,notes:$('#oNotes').checked}))}catch(e){}draw()};
-  if($('#go'))$('#go').onclick=()=>seal(plan,todo)};
- draw()}
-async function seal(plan,todo){const b=$('#go');b.disabled=true;b.textContent='Signing…';
- try{if(!plan.lot){const r=await api('/trace/lots',{method:'POST',body:{title:plan.title}});plan.lot=r.id;const g=await ORIGIN.get(plan.greenId);if(g)await ORIGIN.put({...g,traceLot:r.id,traceToken:r.token});try{sessionStorage.setItem('kk_trace_plan',JSON.stringify(plan))}catch(e){}}
-  await append(plan.lot,todo.map(r=>({kind:r.it.kind,data:r.d})));toast('Sealed');location.hash='lot/'+plan.lot}
- catch(e){toast(e.message);b.disabled=false;b.textContent='Try again'}}
+function opts() {
+  try {
+    return JSON.parse(localStorage.getItem('kk_trace_opts') || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+function prep(it, o) {
+  const c = { ...it.card, loc: o.loc ? it.card.loc : '', notes: o.notes ? it.card.notes : '' };
+  return it.kind === 'record'
+    ? { rtype: it.rtype, rid: it.rid, card: c, kg: it.kg || {}, geo: o.loc && it.geo ? it.geo : null }
+    : { rid: it.rid, card: c, kg: it.kg || {} };
+}
+const ikey = d => (d.rtype || 'roast') + ':' + d.rid;
+async function sealView() {
+  const v = $('#view');
+  let plan;
+  try {
+    plan = JSON.parse(sessionStorage.getItem('kk_trace_plan') || 'null');
+  } catch (e) {}
+  if (!plan) {
+    v.innerHTML =
+      '<h1>Lot passport</h1><div class="card">Open a green lot in <a href="origin.html#green">Origin</a> and tap <i>Passport and QR</i>.</div>';
+    return;
+  }
+  v.innerHTML =
+    '<a class="back" href="origin.html#edit/green/' +
+    encodeURIComponent(plan.greenId) +
+    '">‹ Back</a><h1>' +
+    esc(plan.title) +
+    '</h1><div class="sub">Lot passport</div><div id="sv" class="mini">Checking…</div>';
+  let L = null;
+  if (plan.lot) {
+    try {
+      L = await api('/trace/lots/' + plan.lot);
+    } catch (e) {
+      L = null;
+    }
+  }
+  if (!$('#sv')) return;
+  if (L && L.lot.withdrawn) {
+    $('#sv').innerHTML =
+      '<div class="card">This passport was withdrawn. <a href="#lot/' + esc(plan.lot) + '">See it</a></div>';
+    return;
+  }
+  const last = {};
+  if (L)
+    for (const e of L.events)
+      if (e.body && (e.body.kind === 'record' || e.body.kind === 'roast'))
+        last[ikey(e.body.data)] = T.canon(e.body.data);
+  const draw = () => {
+    if (!$('#sv')) return;
+    const o = opts();
+    const rows = plan.items.map(it => {
+      const d = prep(it, o),
+        k = ikey(d),
+        st = !last[k] ? 'new' : last[k] === T.canon(d) ? 'same' : 'chg';
+      return { it, d, st };
+    });
+    const todo = rows.filter(r => r.st !== 'same');
+    $('#sv').outerHTML =
+      '<div id="sv">' +
+      (plan.role === 'buyer'
+        ? '<div class="sub">You received this lot. Add your roasts of it to its passport.</div>'
+        : '<div class="card"><b>What the public sees</b><label class="ck"><input type="checkbox" id="oLoc"' +
+          (o.loc ? ' checked' : '') +
+          '><span>Farm location and plot outline<br><span class="mini">Needed to prove where coffee was grown, for example for EU buyers under the deforestation rule. Off by default.</span></span></label><label class="ck"><input type="checkbox" id="oNotes"' +
+          (o.notes ? ' checked' : '') +
+          '><span>Notes written on records</span></label></div>') +
+      '<div class="card"><b>' +
+      (todo.length ? todo.length + ' to seal' : 'Everything is sealed') +
+      '</b>' +
+      rows
+        .map(
+          r =>
+            '<div class="pick"><span><span class="kind k-' +
+            (r.d.rtype || 'roast') +
+            '">' +
+            esc(r.d.card.kind || '') +
+            '</span>' +
+            esc(r.d.card.title || '') +
+            '</span><span class="tag ' +
+            r.st +
+            '">' +
+            { new: 'New', chg: 'Changed', same: 'Sealed' }[r.st] +
+            '</span></div>'
+        )
+        .join('') +
+      (plan.items.length ? '' : '<div class="mini">No records to add yet.</div>') +
+      '<div class="row" style="margin-top:10px">' +
+      (todo.length ? '<button class="btn primary" id="go">Sign and seal ' + todo.length + '</button>' : '') +
+      (plan.lot ? '<a class="btn" href="#lot/' + esc(plan.lot) + '">QR, link and handoffs</a>' : '') +
+      '</div><div class="mini" style="margin-top:6px">Changed records are added as new entries; earlier entries stay, so the history shows what changed and when.</div></div></div>';
+    if ($('#oLoc'))
+      $('#oLoc').onchange = $('#oNotes').onchange = () => {
+        try {
+          localStorage.setItem(
+            'kk_trace_opts',
+            JSON.stringify({ loc: $('#oLoc').checked, notes: $('#oNotes').checked })
+          );
+        } catch (e) {}
+        draw();
+      };
+    if ($('#go')) $('#go').onclick = () => seal(plan, todo);
+  };
+  draw();
+}
+async function seal(plan, todo) {
+  const b = $('#go');
+  b.disabled = true;
+  b.textContent = 'Signing…';
+  try {
+    if (!plan.lot) {
+      const r = await api('/trace/lots', { method: 'POST', body: { title: plan.title } });
+      plan.lot = r.id;
+      const g = await ORIGIN.get(plan.greenId);
+      if (g) await ORIGIN.put({ ...g, traceLot: r.id, traceToken: r.token });
+      try {
+        sessionStorage.setItem('kk_trace_plan', JSON.stringify(plan));
+      } catch (e) {}
+    }
+    await append(
+      plan.lot,
+      todo.map(r => ({ kind: r.it.kind, data: r.d }))
+    );
+    toast('Sealed');
+    location.hash = 'lot/' + plan.lot;
+  } catch (e) {
+    toast(e.message);
+    b.disabled = false;
+    b.textContent = 'Try again';
+  }
+}
 
 // ---------- manage one lot ----------
-async function lotView(id){const v=$('#view');v.innerHTML='<div class="mini">Loading…</div>';let L;try{L=await api('/trace/lots/'+id)}catch(e){v.innerHTML='<h1>Lot passport</h1><div class="card">'+esc(e.message)+'</div>';return}
- const url=pubUrl(L.lot.token),chk=await T.verifyChain(L.events,L.keys),bad=chk.filter(x=>!x.ok&&!x.withdrawn).length,bal=T.balance(L.events);
- const local=(await ORIGIN.all('green').catch(()=>[])).find(g=>g.traceLot===id);
- let h='<a class="back" href="#">‹ Passports</a><h1>'+esc(L.lot.title)+'</h1><div class="sub">'+(L.role==='owner'?'Your lot':'Received lot')+' · '+L.events.length+' entries'+(L.lot.withdrawn?' · <b>withdrawn</b>':'')+'</div>';
- if(L.lot.withdrawn){v.innerHTML=h+'<div class="card">This passport was withdrawn. The details are no longer public; their fingerprints stay in the daily public record.</div>';return}
- h+='<div class="card" style="text-align:center"><div class="qr">'+qrSvg(url)+'</div><a class="link" href="'+esc(url)+'">'+esc(url)+'</a><div class="row" style="justify-content:center;margin-top:8px"><button class="btn small" id="cp">Copy link</button>'+(navigator.share?'<button class="btn small" id="sh">Share</button>':'')+'<button class="btn small" id="pr">Print labels</button><a class="btn small" href="#p/'+esc(L.lot.token)+'">Open passport</a></div>'+
-  '<div class="mini" style="margin-top:8px">'+(bad?'<span class="badc">'+bad+' entries do not check out</span>':'<span class="good">All entries check out</span>')+' · '+(bal.warnings.length?'<span class="wait">'+bal.warnings.length+' weight warning'+(bal.warnings.length>1?'s':'')+'</span>':'weights add up')+'</div></div>';
- if(local)h+='<div class="card"><b>Update</b><div class="mini">Seal new or changed records'+(L.role==='owner'?' and roasts':' and your roasts')+' from Origin.</div><a class="btn small" style="margin-top:6px" href="origin.html#passport/'+encodeURIComponent(local.id)+'">Seal changes</a></div>';
- h+='<h2>Hand over</h2><div class="card"><b>Send this lot to a buyer</b><div class="mini">They confirm the weight on their own phone. Their email is only used to reach them, never shown.</div><label class="f">Buyer email<input id="tE" type="email" placeholder="roaster@example.com"></label><label class="f">Name to show (optional)<input id="tN" placeholder="Their business name"></label><label class="f">Weight sent, kg<input id="tK" type="number" step="any" inputmode="decimal"></label><button class="btn primary small" id="tS">Sign and send</button></div>';
- const tr=L.transfers||[];if(tr.length)h+=tr.map(t=>'<div class="card mini" style="font-size:13.5px"><b style="color:var(--ink)">'+esc(t.to_email)+'</b> · '+esc(String(t.kg_sent))+' kg sent · '+({sent:'<span class="wait">waiting</span>',received:'<span class="good">received '+esc(String(t.kg_received))+' kg</span>',cancelled:'cancelled'}[t.status]||esc(t.status))+' · '+when(t.created_at)+(t.status==='sent'&&t.mine?' <button class="btn small" data-cx="'+esc(t.id)+'">Cancel</button>':'')+'</div>').join('');
- if(L.role==='owner')h+='<h2>Withdraw</h2><div class="card mini" style="font-size:13.5px">Removes the details from the public page. Fingerprints already stamped stay in the public record, which is what makes it trustworthy. <div style="margin-top:8px"><button class="btn small" id="wd">Withdraw passport</button></div></div>';
- v.innerHTML=h;
- $('#cp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(url).then(()=>toast('Link copied'),()=>toast(url))};
- if($('#sh'))$('#sh').onclick=()=>navigator.share({title:L.lot.title,text:'Lot passport: '+L.lot.title,url}).catch(()=>{});
- $('#pr').onclick=()=>{const n=+(prompt('How many labels? (3 per row on A4)','9')||0);if(!(n>0))return;const one='<div class="lab">'+qrSvg(url)+'<b>'+esc(L.lot.title)+'</b><small>Scan to see where this coffee comes from</small><small>KoffyKraft lot passport</small></div>';$('#labels').innerHTML=one.repeat(Math.min(60,n));setTimeout(()=>window.print(),100)};
- $('#tS').onclick=async()=>{const email=$('#tE').value.trim(),kg=+$('#tK').value,name=$('#tN').value.trim();if(!/@/.test(email)){toast('Enter the buyer email');return}if(!(kg>0)){toast('Enter the weight sent');return}const tid=crypto.randomUUID();$('#tS').disabled=true;try{await append(id,[{kind:'transfer',data:{tid,kg,to:name}}],{[tid]:email});toast('Sent; they have been emailed');lotView(id)}catch(e){toast(e.message);$('#tS').disabled=false}};
- document.querySelectorAll('[data-cx]').forEach(b=>b.onclick=async()=>{if(!confirm('Cancel this handoff?'))return;try{await append(id,[{kind:'cancel',data:{tid:b.dataset.cx}}]);lotView(id)}catch(e){toast(e.message)}});
- if($('#wd'))$('#wd').onclick=async()=>{if(!confirm('Withdraw this passport? The public page will stop showing the details.'))return;try{await api('/trace/lots/'+id,{method:'DELETE'});toast('Withdrawn');lotView(id)}catch(e){toast(e.message)}}}
+async function lotView(id) {
+  const v = $('#view');
+  v.innerHTML = '<div class="mini">Loading…</div>';
+  let L;
+  try {
+    L = await api('/trace/lots/' + id);
+  } catch (e) {
+    v.innerHTML = '<h1>Lot passport</h1><div class="card">' + esc(e.message) + '</div>';
+    return;
+  }
+  const url = pubUrl(L.lot.token),
+    chk = await T.verifyChain(L.events, L.keys),
+    bad = chk.filter(x => !x.ok && !x.withdrawn).length,
+    bal = T.balance(L.events);
+  const local = (await ORIGIN.all('green').catch(() => [])).find(g => g.traceLot === id);
+  let h =
+    '<a class="back" href="#">‹ Passports</a><h1>' +
+    esc(L.lot.title) +
+    '</h1><div class="sub">' +
+    (L.role === 'owner' ? 'Your lot' : 'Received lot') +
+    ' · ' +
+    L.events.length +
+    ' entries' +
+    (L.lot.withdrawn ? ' · <b>withdrawn</b>' : '') +
+    '</div>';
+  if (L.lot.withdrawn) {
+    v.innerHTML =
+      h +
+      '<div class="card">This passport was withdrawn. The details are no longer public; their fingerprints stay in the daily public record.</div>';
+    return;
+  }
+  h +=
+    '<div class="card" style="text-align:center"><div class="qr">' +
+    qrSvg(url) +
+    '</div><a class="link" href="' +
+    esc(url) +
+    '">' +
+    esc(url) +
+    '</a><div class="row" style="justify-content:center;margin-top:8px"><button class="btn small" id="cp">Copy link</button>' +
+    (navigator.share ? '<button class="btn small" id="sh">Share</button>' : '') +
+    '<button class="btn small" id="pr">Print labels</button><a class="btn small" href="#p/' +
+    esc(L.lot.token) +
+    '">Open passport</a></div>' +
+    '<div class="mini" style="margin-top:8px">' +
+    (bad
+      ? '<span class="badc">' + bad + ' entries do not check out</span>'
+      : '<span class="good">All entries check out</span>') +
+    ' · ' +
+    (bal.warnings.length
+      ? '<span class="wait">' +
+        bal.warnings.length +
+        ' weight warning' +
+        (bal.warnings.length > 1 ? 's' : '') +
+        '</span>'
+      : 'weights add up') +
+    '</div></div>';
+  if (local)
+    h +=
+      '<div class="card"><b>Update</b><div class="mini">Seal new or changed records' +
+      (L.role === 'owner' ? ' and roasts' : ' and your roasts') +
+      ' from Origin.</div><a class="btn small" style="margin-top:6px" href="origin.html#passport/' +
+      encodeURIComponent(local.id) +
+      '">Seal changes</a></div>';
+  h +=
+    '<h2>Hand over</h2><div class="card"><b>Send this lot to a buyer</b><div class="mini">They confirm the weight on their own phone. Their email is only used to reach them, never shown.</div><label class="f">Buyer email<input id="tE" type="email" placeholder="roaster@example.com"></label><label class="f">Name to show (optional)<input id="tN" placeholder="Their business name"></label><label class="f">Weight sent, kg<input id="tK" type="number" step="any" inputmode="decimal"></label><button class="btn primary small" id="tS">Sign and send</button></div>';
+  const tr = L.transfers || [];
+  if (tr.length)
+    h += tr
+      .map(
+        t =>
+          '<div class="card mini" style="font-size:13.5px"><b style="color:var(--ink)">' +
+          esc(t.to_email) +
+          '</b> · ' +
+          esc(String(t.kg_sent)) +
+          ' kg sent · ' +
+          ({
+            sent: '<span class="wait">waiting</span>',
+            received: '<span class="good">received ' + esc(String(t.kg_received)) + ' kg</span>',
+            cancelled: 'cancelled',
+          }[t.status] || esc(t.status)) +
+          ' · ' +
+          when(t.created_at) +
+          (t.status === 'sent' && t.mine
+            ? ' <button class="btn small" data-cx="' + esc(t.id) + '">Cancel</button>'
+            : '') +
+          '</div>'
+      )
+      .join('');
+  if (L.role === 'owner')
+    h +=
+      '<h2>Withdraw</h2><div class="card mini" style="font-size:13.5px">Removes the details from the public page. Fingerprints already stamped stay in the public record, which is what makes it trustworthy. <div style="margin-top:8px"><button class="btn small" id="wd">Withdraw passport</button></div></div>';
+  v.innerHTML = h;
+  $('#cp').onclick = () => {
+    navigator.clipboard &&
+      navigator.clipboard.writeText(url).then(
+        () => toast('Link copied'),
+        () => toast(url)
+      );
+  };
+  if ($('#sh'))
+    $('#sh').onclick = () =>
+      navigator.share({ title: L.lot.title, text: 'Lot passport: ' + L.lot.title, url }).catch(() => {});
+  $('#pr').onclick = () => {
+    const n = +(prompt('How many labels? (3 per row on A4)', '9') || 0);
+    if (!(n > 0)) return;
+    const one =
+      '<div class="lab">' +
+      qrSvg(url) +
+      '<b>' +
+      esc(L.lot.title) +
+      '</b><small>Scan to see where this coffee comes from</small><small>KoffyKraft lot passport</small></div>';
+    $('#labels').innerHTML = one.repeat(Math.min(60, n));
+    setTimeout(() => window.print(), 100);
+  };
+  $('#tS').onclick = async () => {
+    const email = $('#tE').value.trim(),
+      kg = +$('#tK').value,
+      name = $('#tN').value.trim();
+    if (!/@/.test(email)) {
+      toast('Enter the buyer email');
+      return;
+    }
+    if (!(kg > 0)) {
+      toast('Enter the weight sent');
+      return;
+    }
+    const tid = crypto.randomUUID();
+    $('#tS').disabled = true;
+    try {
+      await append(id, [{ kind: 'transfer', data: { tid, kg, to: name } }], { [tid]: email });
+      toast('Sent; they have been emailed');
+      lotView(id);
+    } catch (e) {
+      toast(e.message);
+      $('#tS').disabled = false;
+    }
+  };
+  document.querySelectorAll('[data-cx]').forEach(
+    b =>
+      (b.onclick = async () => {
+        if (!confirm('Cancel this handoff?')) return;
+        try {
+          await append(id, [{ kind: 'cancel', data: { tid: b.dataset.cx } }]);
+          lotView(id);
+        } catch (e) {
+          toast(e.message);
+        }
+      })
+  );
+  if ($('#wd'))
+    $('#wd').onclick = async () => {
+      if (!confirm('Withdraw this passport? The public page will stop showing the details.')) return;
+      try {
+        await api('/trace/lots/' + id, { method: 'DELETE' });
+        toast('Withdrawn');
+        lotView(id);
+      } catch (e) {
+        toast(e.message);
+      }
+    };
+}
 
 // ---------- public passport: checked in the reader's own browser ----------
-const ORDER=['estate','plot','harvest','process','green'];
-function geoSvg(g){const la=g.map(p=>p[0]),lo=g.map(p=>p[1]);const a0=Math.min(...la),a1=Math.max(...la),o0=Math.min(...lo),o1=Math.max(...lo);const W=120,H=90,s=Math.min((W-10)/Math.max(1e-9,o1-o0),(H-10)/Math.max(1e-9,a1-a0));return '<svg class="geo" viewBox="0 0 '+W+' '+H+'"><polygon fill="#cfe0bd" stroke="#4f6b2a" stroke-width="1.5" points="'+g.map(p=>(5+(p[1]-o0)*s)+','+(H-5-(p[0]-a0)*s)).join(' ')+'"/></svg>'}
-function geoJson(d){const ring=d.geo.map(p=>[p[1],p[0]]);ring.push(ring[0]);return JSON.stringify({type:'FeatureCollection',features:[{type:'Feature',properties:{name:d.card.title||'Plot'},geometry:{type:'Polygon',coordinates:[ring]}}]})}
-function sigLine(e,c,P){const b=e.body,a=P.anchors[e.day];return '<div class="sig">'+(c.ok?'<span class="good">✓ Checks out</span>':'<span class="badc">✗ '+(!c.hashOk?'Changed after signing':!c.linkOk?'Out of order':'Signature does not match')+'</span>')+' · Signed by <b>'+esc(P.labels[b.key]||'unknown')+'</b> ('+esc(e.party)+') · '+when(b.at)+' · entry '+(e.seq+1)+'<br>'+(a&&a.status==='ok'?'Stamped into the public record on '+day(a.at.slice(0,10)):'<span class="wait">Waiting for the daily public stamp</span>')+'</div>'}
-function recCard(e,c,P,n){const d=e.body.data||{},k=d.card||{};return '<div class="card"><span class="kind k-'+esc(d.rtype||'roast')+'">'+esc(k.kind||d.rtype||'')+'</span><b>'+esc(k.title||'')+'</b>'+(k.sub?'<div class="mini">'+esc(k.sub)+'</div>':'')+(k.date?'<div class="mini">'+esc(k.date)+'</div>':'')+((k.chips||[]).length?'<div>'+k.chips.map(x=>'<span class="chip">'+esc(x)+'</span>').join('')+'</div>':'')+
- ((k.rows||[]).length?'<div class="kv">'+k.rows.map(r=>'<span>'+esc(r[0])+'</span><div>'+esc(r[1])+'</div>').join('')+'</div>':'')+(k.notes?'<div class="mini" style="margin-top:6px">'+esc(k.notes)+'</div>':'')+
- (k.loc?'<div class="mini" style="margin-top:6px">Location <a href="https://www.openstreetmap.org/?mlat='+encodeURIComponent(k.loc.split(',')[0].trim())+'&mlon='+encodeURIComponent((k.loc.split(',')[1]||'').trim())+'#map=15/'+encodeURIComponent(k.loc.split(',')[0].trim())+'/'+encodeURIComponent((k.loc.split(',')[1]||'').trim())+'" target="_blank" rel="noopener">'+esc(k.loc)+'</a></div>':'')+
- (Array.isArray(d.geo)&&d.geo.length>2?geoSvg(d.geo)+'<a class="btn small" style="margin-top:6px" download="'+esc((k.title||'plot').replace(/[^\w-]+/g,'_'))+'.geojson" href="data:application/geo+json;charset=utf-8,'+encodeURIComponent(geoJson(d))+'">Plot outline (GeoJSON)</a>':'')+
- (n>1?'<div class="mini" style="margin-top:6px">Updated '+(n-1)+' time'+(n>2?'s':'')+'; latest shown.</div>':'')+sigLine(e,c,P)+'</div>'}
-async function publicView(tok){const v=$('#view');v.innerHTML='<div class="mini">Loading passport…</div>';let P;try{P=await api('/public/trace/'+tok)}catch(e){v.innerHTML='<h1>Lot passport</h1><div class="card">'+(/not found/.test(e.message)?'This passport does not exist.':esc(e.message))+'</div>';return}
- let h='<h1>'+esc(P.lot.title)+'</h1><div class="sub">Lot passport · started '+when(P.lot.created_at)+'</div>';
- if(P.lot.withdrawn){v.innerHTML=h+'<div class="banner wait">The owner withdrew this passport. Its details are no longer shown; the fingerprints of its '+P.events.length+' entries stay in the daily public record.</div>'+foot();return}
- const chk=await T.verifyChain(P.events,P.keys),bad=chk.map((c,i)=>c.ok?null:i+1).filter(Boolean);
- // daily stamps: re-check that each day's file holds these entries and matches the stamped fingerprint
- const days=[...new Set(P.events.map(e=>e.day))],dayOk={};
- await Promise.all(days.map(async d=>{const a=P.anchors[d];if(!a||a.status!=='ok')return;try{const txt=await (await fetch('/api/public/trace-day/'+d+'/manifest')).text();const lines=new Set(txt.split('\n'));dayOk[d]=(await T.sha(txt))===a.digest&&P.events.filter(e=>e.day===d).every(e=>lines.has(e.hash))}catch(e){dayOk[d]=false}}));
- const stamped=days.filter(d=>dayOk[d]).length,pending=days.filter(d=>!P.anchors[d]||P.anchors[d].status!=='ok').length,badDays=days.filter(d=>P.anchors[d]&&P.anchors[d].status==='ok'&&!dayOk[d]);
- h+=bad.length?'<div class="banner bad"><b>'+bad.length+' of '+P.events.length+' entries do not check out</b> (entry '+bad.join(', ')+'). Treat this passport with care and ask the owner.</div>'
-  :'<div class="banner ok"><b>✓ All '+P.events.length+' entries check out.</b> Each was signed on the phone that made it, they are in order, and none has been changed since signing. Checked just now in your browser.</div>';
- h+=badDays.length?'<div class="banner bad">The public stamp for '+badDays.map(day).join(', ')+' does not match these entries.</div>':(stamped?'<div class="banner ok">'+stamped+' day'+(stamped>1?'s':'')+' of entries stamped into the Bitcoin public record through OpenTimestamps'+(pending?'; '+pending+' waiting for tonight\'s stamp':'')+'.</div>':'<div class="banner wait">Waiting for the daily public stamp. Entries are stamped into the Bitcoin record each night (India time).</div>');
- const bal=T.balance(P.events);
- h+=bal.warnings.length?'<div class="banner bad"><b>Weight check:</b><br>'+bal.warnings.map(esc).join('<br>')+'</div>':'<div class="banner ok"><b>Weights add up.</b>'+(bal.cherry?' '+r1(bal.cherry)+' kg cherry':'')+(bal.green?(bal.cherry?' became ':' ')+r1(bal.green)+' kg green':'')+'; nobody sent or roasted more than they held.</div>';
- // latest version of each record
- const latest={},count={};P.events.forEach((e,i)=>{const b=e.body;if(!b||!(b.kind==='record'||b.kind==='roast'))return;const k=ikey(b.data);latest[k]=i;count[k]=(count[k]||0)+1});
- const idx=Object.values(latest);const recs=idx.filter(i=>P.events[i].body.kind==='record').sort((a,b)=>ORDER.indexOf(P.events[a].body.data.rtype)-ORDER.indexOf(P.events[b].body.data.rtype)||a-b);
- if(recs.length)h+='<h2>Origin</h2>'+recs.map(i=>recCard(P.events[i],chk[i],P,count[ikey(P.events[i].body.data)])).join('');
- const hand=P.events.map((e,i)=>[e,i]).filter(([e])=>e.body&&['transfer','receive','cancel'].includes(e.body.kind));
- if(hand.length)h+='<h2>Handoffs</h2>'+hand.map(([e,i])=>{const d=e.body.data||{};const t=e.body.kind==='transfer'?'Sent '+r1(+d.kg)+' kg'+(d.to?' to '+esc(d.to):''):e.body.kind==='receive'?'Received '+r1(+d.kg)+' kg':'Handoff cancelled';return '<div class="card"><span class="kind k-hand">Handoff</span><b>'+t+'</b>'+sigLine(e,chk[i],P)+'</div>'}).join('');
- const ro=idx.filter(i=>P.events[i].body.kind==='roast').sort((a,b)=>a-b);
- if(ro.length)h+='<h2>Roasts</h2>'+ro.map(i=>recCard(P.events[i],chk[i],P,count[ikey(P.events[i].body.data)])).join('');
- const notes=P.events.map((e,i)=>[e,i]).filter(([e])=>e.body&&e.body.kind==='note');
- if(notes.length)h+='<h2>Notes</h2>'+notes.map(([e,i])=>'<div class="card">'+esc(e.body.data.text||'')+sigLine(e,chk[i],P)+'</div>').join('');
- h+='<h2>Check it yourself</h2><div class="card mini" style="font-size:13.5px">Letters after each name: A is the lot\'s owner; B, C and so on are buyers in the order they confirmed. Every check above ran in your browser using <a href="trace-core.js">open code</a>.<br><br>To check a day\'s stamp without trusting KoffyKraft: download its list and proof below, then drop both on <a href="https://opentimestamps.org" target="_blank" rel="noopener">opentimestamps.org</a>. Each entry\'s fingerprint is a line in the list.'+
-  days.filter(d=>P.anchors[d]&&P.anchors[d].status==='ok').map(d=>'<div class="row" style="margin-top:8px"><b style="color:var(--ink);min-width:90px">'+day(d)+'</b><a class="btn small" href="/api/public/trace-day/'+d+'/manifest" download>List</a><a class="btn small" href="/api/public/trace-day/'+d+'/ots" download>Proof (.ots)</a></div>').join('')+
-  '<br><br>What this proves: entries were made by these signers, in this order, and not changed since. It cannot prove that what was entered was true.</div>'+foot();
- v.innerHTML=h}
-function foot(){return '<div class="foot">Made with <a href="home.html">KoffyKraft</a> · free and open source · © T M Thomas</div>'}
+const ORDER = ['estate', 'plot', 'harvest', 'process', 'green'];
+function geoSvg(g) {
+  const la = g.map(p => p[0]),
+    lo = g.map(p => p[1]);
+  const a0 = Math.min(...la),
+    a1 = Math.max(...la),
+    o0 = Math.min(...lo),
+    o1 = Math.max(...lo);
+  const W = 120,
+    H = 90,
+    s = Math.min((W - 10) / Math.max(1e-9, o1 - o0), (H - 10) / Math.max(1e-9, a1 - a0));
+  return (
+    '<svg class="geo" viewBox="0 0 ' +
+    W +
+    ' ' +
+    H +
+    '"><polygon fill="#cfe0bd" stroke="#4f6b2a" stroke-width="1.5" points="' +
+    g.map(p => 5 + (p[1] - o0) * s + ',' + (H - 5 - (p[0] - a0) * s)).join(' ') +
+    '"/></svg>'
+  );
+}
+function geoJson(d) {
+  const ring = d.geo.map(p => [p[1], p[0]]);
+  ring.push(ring[0]);
+  return JSON.stringify({
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        properties: { name: d.card.title || 'Plot' },
+        geometry: { type: 'Polygon', coordinates: [ring] },
+      },
+    ],
+  });
+}
+function sigLine(e, c, P) {
+  const b = e.body,
+    a = P.anchors[e.day];
+  return (
+    '<div class="sig">' +
+    (c.ok
+      ? '<span class="good">✓ Checks out</span>'
+      : '<span class="badc">✗ ' +
+        (!c.hashOk ? 'Changed after signing' : !c.linkOk ? 'Out of order' : 'Signature does not match') +
+        '</span>') +
+    ' · Signed by <b>' +
+    esc(P.labels[b.key] || 'unknown') +
+    '</b> (' +
+    esc(e.party) +
+    ') · ' +
+    when(b.at) +
+    ' · entry ' +
+    (e.seq + 1) +
+    '<br>' +
+    (a && a.status === 'ok'
+      ? 'Stamped into the public record on ' + day(a.at.slice(0, 10))
+      : '<span class="wait">Waiting for the daily public stamp</span>') +
+    '</div>'
+  );
+}
+function recCard(e, c, P, n) {
+  const d = e.body.data || {},
+    k = d.card || {};
+  return (
+    '<div class="card"><span class="kind k-' +
+    esc(d.rtype || 'roast') +
+    '">' +
+    esc(k.kind || d.rtype || '') +
+    '</span><b>' +
+    esc(k.title || '') +
+    '</b>' +
+    (k.sub ? '<div class="mini">' + esc(k.sub) + '</div>' : '') +
+    (k.date ? '<div class="mini">' + esc(k.date) + '</div>' : '') +
+    ((k.chips || []).length
+      ? '<div>' + k.chips.map(x => '<span class="chip">' + esc(x) + '</span>').join('') + '</div>'
+      : '') +
+    ((k.rows || []).length
+      ? '<div class="kv">' +
+        k.rows.map(r => '<span>' + esc(r[0]) + '</span><div>' + esc(r[1]) + '</div>').join('') +
+        '</div>'
+      : '') +
+    (k.notes ? '<div class="mini" style="margin-top:6px">' + esc(k.notes) + '</div>' : '') +
+    (k.loc
+      ? '<div class="mini" style="margin-top:6px">Location <a href="https://www.openstreetmap.org/?mlat=' +
+        encodeURIComponent(k.loc.split(',')[0].trim()) +
+        '&mlon=' +
+        encodeURIComponent((k.loc.split(',')[1] || '').trim()) +
+        '#map=15/' +
+        encodeURIComponent(k.loc.split(',')[0].trim()) +
+        '/' +
+        encodeURIComponent((k.loc.split(',')[1] || '').trim()) +
+        '" target="_blank" rel="noopener">' +
+        esc(k.loc) +
+        '</a></div>'
+      : '') +
+    (Array.isArray(d.geo) && d.geo.length > 2
+      ? geoSvg(d.geo) +
+        '<a class="btn small" style="margin-top:6px" download="' +
+        esc((k.title || 'plot').replace(/[^\w-]+/g, '_')) +
+        '.geojson" href="data:application/geo+json;charset=utf-8,' +
+        encodeURIComponent(geoJson(d)) +
+        '">Plot outline (GeoJSON)</a>'
+      : '') +
+    (n > 1
+      ? '<div class="mini" style="margin-top:6px">Updated ' +
+        (n - 1) +
+        ' time' +
+        (n > 2 ? 's' : '') +
+        '; latest shown.</div>'
+      : '') +
+    sigLine(e, c, P) +
+    '</div>'
+  );
+}
+async function publicView(tok) {
+  const v = $('#view');
+  v.innerHTML = '<div class="mini">Loading passport…</div>';
+  let P;
+  try {
+    P = await api('/public/trace/' + tok);
+  } catch (e) {
+    v.innerHTML =
+      '<h1>Lot passport</h1><div class="card">' +
+      (/not found/.test(e.message) ? 'This passport does not exist.' : esc(e.message)) +
+      '</div>';
+    return;
+  }
+  let h =
+    '<h1>' +
+    esc(P.lot.title) +
+    '</h1><div class="sub">Lot passport · started ' +
+    when(P.lot.created_at) +
+    '</div>';
+  if (P.lot.withdrawn) {
+    v.innerHTML =
+      h +
+      '<div class="banner wait">The owner withdrew this passport. Its details are no longer shown; the fingerprints of its ' +
+      P.events.length +
+      ' entries stay in the daily public record.</div>' +
+      foot();
+    return;
+  }
+  const chk = await T.verifyChain(P.events, P.keys),
+    bad = chk.map((c, i) => (c.ok ? null : i + 1)).filter(Boolean);
+  // daily stamps: re-check that each day's file holds these entries and matches the stamped fingerprint
+  const days = [...new Set(P.events.map(e => e.day))],
+    dayOk = {};
+  await Promise.all(
+    days.map(async d => {
+      const a = P.anchors[d];
+      if (!a || a.status !== 'ok') return;
+      try {
+        const txt = await (await fetch('/api/public/trace-day/' + d + '/manifest')).text();
+        const lines = new Set(txt.split('\n'));
+        dayOk[d] =
+          (await T.sha(txt)) === a.digest && P.events.filter(e => e.day === d).every(e => lines.has(e.hash));
+      } catch (e) {
+        dayOk[d] = false;
+      }
+    })
+  );
+  const stamped = days.filter(d => dayOk[d]).length,
+    pending = days.filter(d => !P.anchors[d] || P.anchors[d].status !== 'ok').length,
+    badDays = days.filter(d => P.anchors[d] && P.anchors[d].status === 'ok' && !dayOk[d]);
+  h += bad.length
+    ? '<div class="banner bad"><b>' +
+      bad.length +
+      ' of ' +
+      P.events.length +
+      ' entries do not check out</b> (entry ' +
+      bad.join(', ') +
+      '). Treat this passport with care and ask the owner.</div>'
+    : '<div class="banner ok"><b>✓ All ' +
+      P.events.length +
+      ' entries check out.</b> Each was signed on the phone that made it, they are in order, and none has been changed since signing. Checked just now in your browser.</div>';
+  h += badDays.length
+    ? '<div class="banner bad">The public stamp for ' +
+      badDays.map(day).join(', ') +
+      ' does not match these entries.</div>'
+    : stamped
+      ? '<div class="banner ok">' +
+        stamped +
+        ' day' +
+        (stamped > 1 ? 's' : '') +
+        ' of entries stamped into the Bitcoin public record through OpenTimestamps' +
+        (pending ? '; ' + pending + " waiting for tonight's stamp" : '') +
+        '.</div>'
+      : '<div class="banner wait">Waiting for the daily public stamp. Entries are stamped into the Bitcoin record each night (India time).</div>';
+  const bal = T.balance(P.events);
+  h += bal.warnings.length
+    ? '<div class="banner bad"><b>Weight check:</b><br>' + bal.warnings.map(esc).join('<br>') + '</div>'
+    : '<div class="banner ok"><b>Weights add up.</b>' +
+      (bal.cherry ? ' ' + r1(bal.cherry) + ' kg cherry' : '') +
+      (bal.green ? (bal.cherry ? ' became ' : ' ') + r1(bal.green) + ' kg green' : '') +
+      '; nobody sent or roasted more than they held.</div>';
+  // latest version of each record
+  const latest = {},
+    count = {};
+  P.events.forEach((e, i) => {
+    const b = e.body;
+    if (!b || !(b.kind === 'record' || b.kind === 'roast')) return;
+    const k = ikey(b.data);
+    latest[k] = i;
+    count[k] = (count[k] || 0) + 1;
+  });
+  const idx = Object.values(latest);
+  const recs = idx
+    .filter(i => P.events[i].body.kind === 'record')
+    .sort(
+      (a, b) =>
+        ORDER.indexOf(P.events[a].body.data.rtype) - ORDER.indexOf(P.events[b].body.data.rtype) || a - b
+    );
+  if (recs.length)
+    h +=
+      '<h2>Origin</h2>' +
+      recs.map(i => recCard(P.events[i], chk[i], P, count[ikey(P.events[i].body.data)])).join('');
+  const hand = P.events
+    .map((e, i) => [e, i])
+    .filter(([e]) => e.body && ['transfer', 'receive', 'cancel'].includes(e.body.kind));
+  if (hand.length)
+    h +=
+      '<h2>Handoffs</h2>' +
+      hand
+        .map(([e, i]) => {
+          const d = e.body.data || {};
+          const t =
+            e.body.kind === 'transfer'
+              ? 'Sent ' + r1(+d.kg) + ' kg' + (d.to ? ' to ' + esc(d.to) : '')
+              : e.body.kind === 'receive'
+                ? 'Received ' + r1(+d.kg) + ' kg'
+                : 'Handoff cancelled';
+          return (
+            '<div class="card"><span class="kind k-hand">Handoff</span><b>' +
+            t +
+            '</b>' +
+            sigLine(e, chk[i], P) +
+            '</div>'
+          );
+        })
+        .join('');
+  const ro = idx.filter(i => P.events[i].body.kind === 'roast').sort((a, b) => a - b);
+  if (ro.length)
+    h +=
+      '<h2>Roasts</h2>' +
+      ro.map(i => recCard(P.events[i], chk[i], P, count[ikey(P.events[i].body.data)])).join('');
+  const notes = P.events.map((e, i) => [e, i]).filter(([e]) => e.body && e.body.kind === 'note');
+  if (notes.length)
+    h +=
+      '<h2>Notes</h2>' +
+      notes
+        .map(
+          ([e, i]) => '<div class="card">' + esc(e.body.data.text || '') + sigLine(e, chk[i], P) + '</div>'
+        )
+        .join('');
+  h +=
+    '<h2>Check it yourself</h2><div class="card mini" style="font-size:13.5px">Letters after each name: A is the lot\'s owner; B, C and so on are buyers in the order they confirmed. Every check above ran in your browser using <a href="trace-core.js">open code</a>.<br><br>To check a day\'s stamp without trusting KoffyKraft: download its list and proof below, then drop both on <a href="https://opentimestamps.org" target="_blank" rel="noopener">opentimestamps.org</a>. Each entry\'s fingerprint is a line in the list.' +
+    days
+      .filter(d => P.anchors[d] && P.anchors[d].status === 'ok')
+      .map(
+        d =>
+          '<div class="row" style="margin-top:8px"><b style="color:var(--ink);min-width:90px">' +
+          day(d) +
+          '</b><a class="btn small" href="/api/public/trace-day/' +
+          d +
+          '/manifest" download>List</a><a class="btn small" href="/api/public/trace-day/' +
+          d +
+          '/ots" download>Proof (.ots)</a></div>'
+      )
+      .join('') +
+    '<br><br>What this proves: entries were made by these signers, in this order, and not changed since. It cannot prove that what was entered was true.</div>' +
+    foot();
+  v.innerHTML = h;
+}
+function foot() {
+  return '<div class="foot">Made with <a href="home.html">KoffyKraft</a> · free and open source · © T M Thomas</div>';
+}
 route();
 </script>
 </body>

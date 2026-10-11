@@ -4,7 +4,6 @@
 .wrangler/**
 wrangler.jsonc
 .gitignore
-index_previous_v12_2026-09-21.html
 tests
 tests/**
 scripts
