@@ -101,13 +101,13 @@ const M=[
  ['espresso','Espresso','esp','metal','18 g in, 36 g out, about 25 to 30 s',[]],
  ['lever','Lever espresso','esp','metal','16 to 18 g in, 1:2, about 30 to 35 s',[[1,'A spring sets the pressure, which falls as the shot runs.','P']]],
  ['moka','Moka pot','moka','metal','Basket full and level, medium heat',[]],
- ['coldbrew','Cold brew','cold','varies','1:12, coarse, about 14 hours',[]],
- ['colddrip','Cold drip (Kyoto)','cold','paper','About 1 drop per second, several hours',[[1,'Ice water drips slowly through the bed. Drip rate is the main lever.','P']]],
+ ['coldbrew','Cold brew','cold','varies','60 g : 700 g (about 1:12), coarse, about 14 hours at 20 °C',[]],
+ ['colddrip','Cold drip (Kyoto)','cold','paper','60 g : 600 g, about 1 drop per second, 4 to 6 hours',[[1,'Ice water drips slowly through the bed. Drip rate is the main lever.','P']]],
  ['nitro','Nitro cold brew','cold','varies','Cold brew, then nitrogen from a keg',[[1,'Nitrogen gives a creamy, foamy texture. Needs a keg and food-safe handling.','N']]],
  ['southindian','South Indian filter','trad','metal','2 to 3 tbsp powder, packed lightly, hot water, 15 to 20 min',[[1,'Decoction drips slowly into the lower chamber. Mixed with hot milk and sugar, then poured between tumbler and dabarah to froth.','P'],[2,'Chicory blends drip slower and taste heavier. Adjust powder and packing first.','P']]],
- ['turkish','Turkish / ibrik','trad','none','7 g per cup, powder-fine, add sugar before heating',[[1,'Heat slowly until the foam rises, do not boil. Let the grounds settle before drinking.','P']]],
- ['phin','Vietnamese phin','trad','metal','20 g, medium-coarse, bloom 30 s then fill',[[1,'Gravity filter with a press plate. Often dark robusta with condensed milk.','P']]],
- ['napoletana','Napoletana','trad','metal','4-cup pot, medium grind',[[1,'Heat the water in the bottom, then flip the pot so it drips through the coffee.','P']]],
+ ['turkish','Turkish / ibrik','trad','none','7 g and 60 ml per cup, powder-fine, sugar before heating, never boil',[[1,'Heat slowly until the foam rises, do not boil. Let the grounds settle before drinking.','P']]],
+ ['phin','Vietnamese phin','trad','metal','14 g : 120 ml, medium-coarse, bloom 30 to 45 s, about 5:00',[[1,'Gravity filter with a press plate. Often dark robusta with condensed milk.','P']]],
+ ['napoletana','Napoletana','trad','metal','Basket full, not pressed, medium-coarse, 10 to 12 min drip',[[1,'Heat the water in the bottom, then flip the pot so it drips through the coffee.','P']]],
  ['other','Other','drip','unknown','Note your recipe and change one thing at a time',[]]
 ];
 const METHODS=M.map(([id,n,f,fl,start,notes])=>({id,n,f,fl,start,notes}));
