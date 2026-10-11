@@ -36,3 +36,11 @@ Roast timer and graph, roastbooks, cup and brew pages, water, colour.js, varieti
 - User checks: two-phone shared space test, Gmail sign-in, feedback email arriving, Malayalam wording review, profile logo and colour.
 - Offers not yet decided: evidence labels on every tip (Study / Standard or maker / Expert practice / Common practice); a rate-of-rise span setting (Rao suggests 15 s or less, we use about 30 s).
 - Backlog: LalCafé TDS PDFs, water sheet, charge temperature "8250" explanation, Probat/Neotec conversion, Malayalam chart labels, live probe reading in the Timer, commercial licence email (.com or .coffee).
+
+## Proposed: verifiable traceability (shared engine service, for coffee and the crop app)
+1. Lot passport: unique lot ID, QR on the bag, public page with the journey (farm, harvest, process, green, roast), photos, optional GPS.
+2. Signed handoffs: sender records transfer, receiver confirms weight; each phone holds a WebCrypto signing key.
+3. Mass balance: flag lots where kg out exceeds kg in.
+4. Hash chain: each record stores SHA-256 of its contents plus the previous hash; QR page shows verified or changed.
+5. Daily anchoring of one Merkle root via OpenTimestamps (Bitcoin, free, no wallet). Only hashes go public, never personal or farm data, so deletion stays possible.
+No tokens or paid chains. Relevant to EU deforestation rule (plot geolocation); check current deadlines.
