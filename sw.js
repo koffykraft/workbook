@@ -1,5 +1,5 @@
 // KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
-const CACHE='koffykraft-roastbooks-v70';
+const CACHE='koffykraft-roastbooks-v71';
 const CORE=['./roastbooks.html','./koffykraft-wordmark.png','./koffykraft-db.js','./roastbook.html','./roast-timer-v14.html','./roast-graph.html','./roasts.html','./capture.html','./ocr.html','./data.html','./manifest.webmanifest','./koffykraft-icon.svg','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./origin.html','./origin-db.js','./cup.html','./kk.css','./prefs.js','./cloud-ui.js','./water.html','./license.html','./LICENSE','./pv.js','./varieties.js','./colour.js','./brewkb.js','./methods.html','./crop.html','./map.html','./tap.js','./home.html','./contents.html','./contents.js','./journey.html','./feedback.js','./export.js','./share.html','./profile.html','./snap.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE.map(u=>new Request(u,{cache:'reload'})))).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
