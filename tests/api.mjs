@@ -26,8 +26,11 @@ function d1(db) {
 
 export async function run(root, t) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kk-api-'));
-  fs.copyFileSync(path.join(root, 'worker.js'), path.join(tmp, 'worker.mjs'));
-  const worker = (await import(path.join(tmp, 'worker.mjs'))).default;
+  for (const f of ['worker.js', 'trace-api.js', 'trace-core.js']) fs.copyFileSync(path.join(root, f), path.join(tmp, f));
+  fs.writeFileSync(path.join(tmp, 'package.json'), '{"type":"module"}');
+  const worker = (await import(path.join(tmp, 'worker.js'))).default;
+  const { traceAnchor } = await import(path.join(tmp, 'trace-api.js'));
+  const T = globalThis.KKTRACE;
 
   const db = new DatabaseSync(':memory:');
   const migs = fs.readdirSync(path.join(root, 'migrations')).filter(f => f.endsWith('.sql')).sort();
@@ -36,11 +39,12 @@ export async function run(root, t) {
     t.check(`migration ${m} applies`, () => db.exec(sql));
   }
 
-  const mail = [];
+  const mail = [], stamps = [];
   const realFetch = globalThis.fetch;
   globalThis.fetch = async (url, opt) => {
     const u = String(url);
     if (u.includes('resend.com')) { mail.push(JSON.parse(opt.body)); return new Response('{"id":"x"}', { status: 200 }) }
+    if (u.includes('opentimestamps.org')) { stamps.push(u); return new Response(Uint8Array.of(0xf0, 0x01, 0xaa, 0x08, 0x00, 0x83, 0xdf, 0xe3, 0x0d, 0x2e, 0xf9, 0x0c, 0x8e, 0x01, 0x00)) }
     if (u.includes('cloudflare-dns.com')) return new Response(JSON.stringify({ Status: 0, Answer: [{ type: 15, data: '10 mx.example.com.' }] }));
     throw new Error('unexpected network call in test: ' + u);
   };
@@ -105,6 +109,37 @@ export async function run(root, t) {
     await t.acheck('profile keeps its link on update', async () => eq((await call('PUT', '/api/profile', { data: { title: 'Renamed' } }, owner)).j.token, ptok, 'token'));
     await t.acheck('public profile reads without sign-in', async () => eq((await call('GET', '/api/public/profile/' + ptok)).j.data.title, 'Renamed', 'title'));
     await t.acheck('unpublished profile is gone', async () => { await call('DELETE', '/api/profile', null, owner); eq((await call('GET', '/api/public/profile/' + ptok)).s, 404, 'status') });
+
+    // lot passports
+    const kO = await T.newKey(), kB = await T.newKey();
+    let lot, ltok;
+    const head = L => { const ev = L.events || []; return { seq: ev.length, hash: ev.length ? ev[ev.length - 1].hash : '' } };
+    const add = async (who, key, items, to, at) => { const L = (await call('GET', '/api/trace/lots/' + lot, null, who)).j || {}; const evs = await T.signRun(lot, at || head(L), key, items); return call('POST', '/api/trace/lots/' + lot + '/events', { events: evs, to }, who) };
+    const pub = async () => (await call('GET', '/api/public/trace/' + ltok)).j;
+    await t.acheck('passport: phones register signing keys', async () => { eq((await call('POST', '/api/trace/keys', { jwk: kO.jwk }, owner)).j.id, kO.id, 'owner key'); eq((await call('POST', '/api/trace/keys', { jwk: kB.jwk }, member)).j.id, kB.id, 'member key') });
+    await t.acheck('passport: a key cannot be claimed by another account', async () => eq((await call('POST', '/api/trace/keys', { jwk: kO.jwk }, stranger)).s, 409, 'status'));
+    await t.acheck('passport: owner creates a lot', async () => { const r = await call('POST', '/api/trace/lots', { title: 'G-1 Thumpassery' }, owner); eq(r.s, 201, 'status'); lot = r.j.id; ltok = r.j.token });
+    await t.acheck('passport: owner seals origin records', async () => { const r = await add(owner, kO, [{ kind: 'record', data: { rtype: 'estate', rid: 'e1', card: { title: 'Thumpassery' } } }, { kind: 'record', data: { rtype: 'harvest', rid: 'h1', card: { title: 'H1' }, kg: { cherry: 100 } } }, { kind: 'record', data: { rtype: 'green', rid: 'g1', card: { title: 'G-1' }, kg: { green: 18 } } }]); eq(r.s, 200, 'status'); eq(r.j.seq, 2, 'last seq') });
+    await t.acheck('passport: public page verifies every entry', async () => { const v = await pub(); eq(v.events.length, 3, 'entries'); const c = await T.verifyChain(v.events, v.keys); if (!c.every(x => x.ok)) throw new Error(JSON.stringify(c)); if (JSON.stringify(v).includes('@example.com')) throw new Error('email leaked') });
+    await t.acheck('passport: a stale head is refused', async () => eq((await add(owner, kO, [{ kind: 'note', data: { text: 'x' } }], null, { seq: 1, hash: 'abc' })).s, 409, 'status'));
+    await t.acheck('passport: a changed entry fails its signature', async () => { const L = (await call('GET', '/api/trace/lots/' + lot, null, owner)).j; const ev = await T.signRun(lot, head(L), kO, [{ kind: 'note', data: { text: 'true' } }]); ev[0].body.data.text = 'false'; ev[0].hash = await T.hashBody(ev[0].body); eq((await call('POST', '/api/trace/lots/' + lot + '/events', { events: ev }, owner)).s, 400, 'status') });
+    await t.acheck('passport: signing with someone else\'s key is refused', async () => eq((await add(owner, kB, [{ kind: 'note', data: { text: 'x' } }])).s, 400, 'status'));
+    await t.acheck('passport: strangers cannot add entries', async () => { const r = await call('POST', '/api/trace/lots/' + lot + '/events', { events: [] }, stranger); eq(r.s, 404, 'status') });
+    let tid = 'tid-' + Date.now();
+    await t.acheck('passport: handoff needs the buyer email', async () => eq((await add(owner, kO, [{ kind: 'transfer', data: { tid, kg: 10 } }])).s, 400, 'status'));
+    await t.acheck('passport: owner sends 10 kg and the buyer is emailed', async () => { const r = await add(owner, kO, [{ kind: 'transfer', data: { tid, kg: 10, to: 'Roaster' } }], { [tid]: 'Member@Example.com' }); eq(r.s, 200, 'status'); eq(mail.at(-1).to[0], 'member@example.com', 'email to'); if (!mail.at(-1).text.includes('/trace.html')) throw new Error('no link') });
+    await t.acheck('passport: buyer sees the incoming lot', async () => { const r = await call('GET', '/api/trace/incoming', null, member); eq(r.j.items.length, 1, 'items'); eq(r.j.items[0].kg_sent, 10, 'kg') });
+    await t.acheck('passport: buyer cannot add roasts before confirming', async () => eq((await add(member, kB, [{ kind: 'roast', data: { rid: 'r1', kg: { green: 1 } } }])).s, 403, 'status'));
+    await t.acheck('passport: buyer confirms and adds a roast', async () => { const r = await add(member, kB, [{ kind: 'receive', data: { tid, kg: 10 } }, { kind: 'roast', data: { rid: 'r1', card: { title: 'Roast #1' }, kg: { green: 4 } } }]); eq(r.s, 200, 'status'); eq((await call('GET', '/api/trace/incoming', null, member)).j.items.length, 0, 'incoming after') });
+    await t.acheck('passport: buyer cannot add origin records', async () => eq((await add(member, kB, [{ kind: 'record', data: { rtype: 'green', rid: 'g1', kg: { green: 999 } } }])).s, 403, 'status'));
+    await t.acheck('passport: weights add up, signers shown as parties', async () => { const v = await pub(); const b = T.balance(v.events); eq(b.warnings.length, 0, 'warnings ' + b.warnings.join(' ')); eq(v.events.at(-1).party, 'B', 'buyer party'); if (!Object.values(v.labels).includes('member')) throw new Error('labels') });
+    await t.acheck('passport: roasting more than received is flagged', async () => { eq((await add(member, kB, [{ kind: 'roast', data: { rid: 'r2', kg: { green: 7 } } }])).s, 200, 'status'); const b = T.balance((await pub()).events); if (!b.warnings.some(w => w.includes('Party B'))) throw new Error(b.warnings.join(' | ') || 'no warning') });
+    await t.acheck('passport: tampering is visible on the page', async () => { const v = await pub(); v.events[2].body.data.kg.green = 50; const c = await T.verifyChain(v.events, v.keys); if (c[2].ok || !c[1].ok) throw new Error('tamper not caught') });
+    let digest;
+    await t.acheck('passport: the day is stamped through OpenTimestamps', async () => { const tomorrow = new Date(Date.now() + 864e5); const r = await traceAnchor(env, tomorrow); eq(r.anchored.length, 1, 'days'); eq(r.anchored[0].status, 'ok', 'status'); eq(stamps.length, 2, 'calendars'); const v = await pub(); const d = v.events[0].day; digest = v.anchors[d].digest; eq(v.anchors[d].count, v.events.length, 'count') });
+    await t.acheck('passport: manifest and proof files check out', async () => { const d = (await pub()).events[0].day; const m = await worker.fetch(new Request('https://test.local/api/public/trace-day/' + d + '/manifest'), env, ctx); const txt = await m.text(); eq(sha(txt), digest, 'manifest digest'); const o = new Uint8Array(await (await worker.fetch(new Request('https://test.local/api/public/trace-day/' + d + '/ots'), env, ctx)).arrayBuffer()); eq(Buffer.from(o.slice(1, 15)).toString(), 'OpenTimestamps', 'magic'); eq(Buffer.from(o.slice(33, 65)).toString('hex'), digest, 'digest in proof') });
+    await t.acheck('passport: stamping runs daily and is admin-only by hand', async () => { if (typeof worker.scheduled !== 'function') throw new Error('no scheduled handler'); eq((await call('POST', '/api/trace/anchor', null, owner)).s, 403, 'owner'); eq((await call('POST', '/api/trace/anchor', null, admin)).s, 200, 'admin') });
+    await t.acheck('passport: only the owner withdraws; data goes, hashes stay', async () => { eq((await call('DELETE', '/api/trace/lots/' + lot, null, member)).s, 403, 'buyer'); eq((await call('DELETE', '/api/trace/lots/' + lot, null, owner)).s, 200, 'owner'); const v = await pub(); if (!v.lot.withdrawn || v.events.some(e => e.body)) throw new Error('data still public'); eq(v.events.length, 7, 'hashes kept') });
   } finally {
     globalThis.fetch = realFetch;
     fs.rmSync(tmp, { recursive: true, force: true });

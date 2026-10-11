@@ -14,8 +14,8 @@ export async function run(root, t) {
   for (const f of js) {
     const src = fs.readFileSync(path.join(root, f), 'utf8');
     t.check(`${f} parses`, () => {
-      // worker.js is an ES module; parse it as a script with its one export turned into a const
-      try { new vm.Script(src.replace(/^export default/m, 'const __default=')) }
+      // worker.js and trace-api.js are ES modules; parse them as scripts with imports dropped and exports turned into plain declarations
+      try { new vm.Script(src.replace(/^import .*$/mg, '').replace(/^export default/m, 'const __default=').replace(/^export /mg, '')) }
       catch (e) { throw new Error(e.message) }
     });
     t.check(`${f} has the licence notice`, () => { if (!src.slice(0, 400).includes('see NOTICE')) throw new Error('missing header') });

@@ -59,3 +59,7 @@ To use the code in a closed or paid product without the AGPL obligations, ask
 for a separate commercial licence: info@koffykraft.com.
 
 The program comes with no warranty. See sections 15 and 16 of the AGPL.
+
+
+Third-party code
+qrcode.js: QR Code Generator 1.4.4, (c) 2009 Kazuhiko Arase, MIT licence, included unchanged. "QR Code" is a registered trade mark of DENSO WAVE INCORPORATED.

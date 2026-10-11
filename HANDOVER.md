@@ -37,10 +37,10 @@ Roast timer and graph, roastbooks, cup and brew pages, water, colour.js, varieti
 - Offers not yet decided: evidence labels on every tip (Study / Standard or maker / Expert practice / Common practice); a rate-of-rise span setting (Rao suggests 15 s or less, we use about 30 s).
 - Backlog: LalCafé TDS PDFs, water sheet, charge temperature "8250" explanation, Probat/Neotec conversion, Malayalam chart labels, live probe reading in the Timer, commercial licence email (.com or .coffee).
 
-## Proposed: verifiable traceability (shared engine service, for coffee and the crop app)
-1. Lot passport: unique lot ID, QR on the bag, public page with the journey (farm, harvest, process, green, roast), photos, optional GPS.
-2. Signed handoffs: sender records transfer, receiver confirms weight; each phone holds a WebCrypto signing key.
-3. Mass balance: flag lots where kg out exceeds kg in.
-4. Hash chain: each record stores SHA-256 of its contents plus the previous hash; QR page shows verified or changed.
-5. Daily anchoring of one Merkle root via OpenTimestamps (Bitcoin, free, no wallet). Only hashes go public, never personal or farm data, so deletion stays possible.
-No tokens or paid chains. Relevant to EU deforestation rule (plot geolocation); check current deadlines.
+## Lot passports (built 11 Oct 2026)
+- Files: trace-core.js (hash, chain, signatures, weight check, OpenTimestamps file; shared by browser, server and tests), trace-api.js (server, imported by worker.js), trace.html (pages), qrcode.js (MIT, vendored), migrations/0015_trace.sql.
+- Flow: Origin green lot > Passport and QR > trace.html#seal signs new or changed records and roasts with this phone's key (WebCrypto ECDSA P-256, private key in IndexedDB KoffyKraftTrace, one per account) > #lot/<id> QR, labels, send to buyer by email > buyer confirms weight on trace.html (adds a green record with traceLot in their Origin) and seals their roasts > public #p/<token> checks everything in the reader's browser.
+- Public by default: no location, no notes, no stock; owner opts in to location and plot outline (GeoJSON for EU deforestation rule). Emails never shown. Parties shown as A (owner), B, C (buyers).
+- Daily cron 18:35 UTC (00:05 IST) stamps each finished UTC day's manifest of hashes via a.pool and b.pool OpenTimestamps calendars; failed days retry next run. Admin can POST /api/trace/anchor. Files at /api/public/trace-day/<day>/manifest and /ots, checkable at opentimestamps.org.
+- Withdraw removes entry bodies and signatures; hashes stay so stamped days still verify.
+- Ideas not done: photos in entries, upgrade .ots to the Bitcoin attestation server-side, passport link on share cards.

@@ -5,6 +5,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import crypto from 'node:crypto';
 
 async function loadPlaywright() {
   const tries = [process.env.PLAYWRIGHT_MODULE, 'playwright', path.join(process.env.HOME || '', '.npm-global/lib/node_modules/playwright/index.mjs')].filter(Boolean);
@@ -34,7 +35,7 @@ export async function run(root, t) {
   await ctx.route(/cdnjs|tile|arcgis|openstreetmap|googleapis/, r => r.abort());
   try {
     // 1. every main page opens cleanly
-    const pages = ['home', 'origin', 'cup', 'roasts', 'roast-timer-v14', 'roast-graph', 'account', 'contents', 'journey', 'methods', 'crop', 'water', 'map', 'share', 'profile', 'data', 'roastbooks', 'license', 'privacy', 'terms'];
+    const pages = ['home', 'origin', 'cup', 'roasts', 'roast-timer-v14', 'roast-graph', 'account', 'contents', 'journey', 'methods', 'crop', 'water', 'map', 'share', 'profile', 'trace', 'data', 'roastbooks', 'license', 'privacy', 'terms'];
     const p = await ctx.newPage();
     await p.route('**/api/**', r => r.fulfill({ status: 401, contentType: 'application/json', body: '{"error":"authentication required"}' }));
     for (const f of pages) {
@@ -55,6 +56,9 @@ export async function run(root, t) {
     // 2. key journeys with a stand-in API
     const q = await ctx.newPage(); const errs = []; q.on('pageerror', e => errs.push(e.message));
     const posted = []; let profile = null;
+    const tr = { keys: {}, events: [], lot: null };
+    const kid = j => crypto.createHash('sha256').update(JSON.stringify({ crv: j.crv, kty: j.kty, x: j.x, y: j.y })).digest('hex').slice(0, 16);
+    const trView = () => ({ lot: { id: 'L1', title: tr.lot, token: 'c'.repeat(32), withdrawn: false, created_at: new Date().toISOString() }, events: tr.events, keys: tr.keys, labels: Object.fromEntries(Object.keys(tr.keys).map(k => [k, 'Test Estate'])), anchors: {}, transfers: [], role: 'owner' });
     await q.route('**/api/**', r => {
       const u = new URL(r.request().url()), m = r.request().method(); let o = { ok: true, items: [] };
       if (u.pathname === '/api/spaces' && m === 'GET') o = { items: [{ id: 's1', name: 'Circle', coffee: 'Lot 12', entries: 0, members: 1, mine: true }] };
@@ -63,6 +67,11 @@ export async function run(root, t) {
       if (u.pathname === '/api/profile' && m === 'PUT') { profile = r.request().postDataJSON().data; o = { ok: true, token: 'b'.repeat(32) } }
       if (u.pathname === '/api/profile' && m === 'GET') o = { published: false };
       if (u.pathname.startsWith('/api/public/profile/')) o = { data: profile };
+      if (u.pathname === '/api/trace/keys') { const jw = r.request().postDataJSON().jwk; tr.keys[kid(jw)] = jw; o = { id: kid(jw) } }
+      if (u.pathname === '/api/trace/lots' && m === 'POST') { tr.lot = r.request().postDataJSON().title; o = { id: 'L1', token: 'c'.repeat(32) } }
+      if (u.pathname === '/api/trace/lots/L1') o = trView();
+      if (u.pathname === '/api/trace/lots/L1/events') { for (const x of r.request().postDataJSON().events) tr.events.push({ seq: x.body.seq, hash: x.hash, sig: x.sig, body: x.body, party: 'A', day: '2026-10-11' }); o = { ok: true } }
+      if (u.pathname === '/api/public/trace/' + 'c'.repeat(32)) o = trView();
       r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(o) });
     });
     await q.goto(base + 'cup.html'); await q.waitForTimeout(300);
@@ -128,6 +137,23 @@ export async function run(root, t) {
       await q.click('#pkAll'); await q.click('[data-pg="green"]'); const one = await q.$eval('#pkN', e => e.innerText);
       if (!/selected/.test(all) || one !== '1 selected') throw new Error(all + ' / ' + one);
       await q.click('#pkX');
+    });
+    await t.acheck('Passport seals a green lot from Origin with valid signatures', async () => {
+      await q.goto(base + 'origin.html#edit/green/g1'); await q.waitForTimeout(600);
+      await q.click('.passbtn'); await q.waitForURL(/trace\.html#seal/); await q.waitForSelector('#go', { timeout: 8000 });
+      await q.click('#go'); await q.waitForURL(/#lot\/L1/, { timeout: 8000 }); await q.waitForSelector('.qr svg', { timeout: 8000 });
+      const g = tr.events.find(e => e.body.data.rtype === 'green'); if (!g) throw new Error('green not sealed: ' + tr.events.length);
+      if (g.body.data.card.notes || g.body.data.geo) throw new Error('notes or location public by default');
+      const lot = await q.evaluate(async () => (await ORIGIN.get('g1')).traceLot); if (lot !== 'L1') throw new Error('green not linked: ' + lot);
+    });
+    await t.acheck('Passport page checks entries and catches a change', async () => {
+      await q.goto(base + 'trace.html#p/' + 'c'.repeat(32)); await q.waitForSelector('.banner', { timeout: 8000 });
+      const ok = await q.$eval('#view', e => e.innerText); if (!/All \d+ entries check out/.test(ok)) throw new Error('not verified: ' + ok.slice(0, 200));
+      if (!ok.includes('Weights add up')) throw new Error('no weight check');
+      const keep = JSON.stringify(tr.events); tr.events.at(-1).body.data.card.title = 'Swapped lot';
+      await q.goto(base + 'trace.html#q'); await q.goto(base + 'trace.html#p/' + 'c'.repeat(32)); await q.reload(); await q.waitForSelector('.banner', { timeout: 8000 });
+      const bad = await q.$eval('#view', e => e.innerText); tr.events = JSON.parse(keep);
+      if (!/do not check out/.test(bad) || !bad.includes('Changed after signing')) throw new Error('tamper not shown');
     });
     await t.acheck('Malayalam shows explanations only, labels stay English', async () => {
       await q.goto(base + 'home.html'); await q.evaluate(() => localStorage.setItem('kk_lang', 'ml'));
