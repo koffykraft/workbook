@@ -213,6 +213,21 @@ export async function run(root, t) {
       await q.selectOption('.kk-lang', 'en'); await q.waitForTimeout(600);
       if (await q.$$eval('[lang=ml]', a => a.length)) throw new Error('English did not come back');
     });
+    await t.acheck('Kannada, Tamil, Spanish and Portuguese show explanations', async () => {
+      for (const c of ['kn', 'ta', 'es', 'pt']) {
+        await q.goto(base + 'home.html'); await q.evaluate(c => localStorage.setItem('kk_lang', c), c);
+        await q.goto(base + 'home.html'); await q.waitForTimeout(600);
+        const n = await q.$$eval('[lang=' + c + ']', a => a.length); if (n < 3) throw new Error(c + ': only ' + n + ' blocks');
+      }
+      await q.evaluate(() => localStorage.setItem('kk_lang', 'en'));
+    });
+    await t.acheck('A kg field converts quintals and bags to kg', async () => {
+      await q.goto(base + 'origin.html#edit/green/g1'); await q.waitForTimeout(700);
+      const f = q.locator('input[data-k="weightKg"]'); await f.fill('3'); await f.focus();
+      await q.click('.kku button[data-u="quintal 46"]'); await q.waitForTimeout(100);
+      if ((await f.inputValue()) !== '138') throw new Error('got ' + (await f.inputValue()));
+      if (!(await q.$eval('.kku-done', e => e.innerText)).includes('138 kg')) throw new Error('no note');
+    });
     await t.acheck('no script errors during the journeys', async () => { if (errs.length) throw new Error(errs[0]) });
   } finally {
     await browser.close(); srv.close();

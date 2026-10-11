@@ -7,7 +7,7 @@ Read this first in any new chat. It records how the app is built, the working ru
 - Licence: AGPL-3.0 with section 7 terms in NOTICE (attribution, changed versions marked, names). Guide text CC BY-SA 4.0. KoffyKraft is a registered trade mark of T M Thomas in India (no class named). Commercial licence: info@koffykraft.com.
 - Writing rules: never use em dashes. Plain, short English. Credit every source; write in our own words, never copy (Asami, Lucia Solis and others have asked). Check ChatGPT-supplied material before using it.
 - Do not reveal TAGRO irrigation code. No supplier price lists. Do not get around blocked websites.
-- Languages: only overviews and explanations are translated (Malayalam now). Labels, buttons, fields, numbers and tips stay English. Same format for future languages (lang/<code>.js).
+- Languages: only overviews and explanations are translated: Malayalam, plus first drafts (11 Oct 2026) of Kannada, Tamil, Spanish and Portuguese that still need a native coffee speaker to review. Labels, buttons, fields, numbers and tips stay English. Same format for future languages (lang/<code>.js).
 
 ## Platform
 - Cloudflare Worker `roast` (worker.js) serving static assets from the repo root; `run_worker_first` for /api/* and /. D1 database `koffykraft` (migrations/ 0001 to 0014). Email via Resend (sendEmail).
@@ -65,6 +65,9 @@ Roast timer and graph, roastbooks, cup and brew pages, water, colour.js, varieti
 - PROTOCOLS (preset select on a new process run): washed arabica and robusta (Indian estate), East African raised beds, Kenyan double fermentation, eco-pulper, natural.
 - varieties.js: 46 robusta clones and 10 more arabicas from the WCR Arabica + Robusta catalog (2026), Vitória Incaper 8142, all in our own words (WCR is CC BY-NC-ND, do not copy text). Aliases in `a` (e.g. KR6, Balehonnur).
 - COFFEE_WORDS: processing words around the world, export grades, bags and units (Sweet Maria's, My Coffee Explorer, Cafe Imports, Royal Coffee).
+
+## Local weights (11 Oct 2026)
+- kk-units.js (origin.html): focus any kg field and a row of units appears (lb, arroba 15, quintal 46 and 100, bags 50/60/69/70, fanega 250 of cherry). Type the number, tap the unit, the field becomes kg. Records always store kg.
 
 ## Lot passports (built 11 Oct 2026)
 - Files: trace-core.js (hash, chain, signatures, weight check, OpenTimestamps file; shared by browser, server and tests), trace-api.js (server, imported by worker.js), trace.html (pages), qrcode.js (MIT, vendored), migrations/0015_trace.sql.

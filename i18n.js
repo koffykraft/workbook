@@ -7,7 +7,7 @@
 // page's English changes, that line simply shows in English until the translation is updated.
 (function () {
   if (window.KKI18N) return;
-  const LANGS = { en: 'English', ml: 'മലയാളം' };
+  const LANGS = { en: 'English', ml: 'മലയാളം', kn: 'ಕನ್ನಡ', ta: 'தமிழ்', es: 'Español', pt: 'Português' };
   let lang = 'en';
   try {
     lang = localStorage.getItem('kk_lang') || 'en';
@@ -46,7 +46,7 @@
   const css = document.createElement('style');
   css.textContent =
     '.kkh-right{display:flex;align-items:center;gap:8px}.kk-lang{width:auto!important;min-height:36px;font:inherit;font-size:14px!important;border:1px solid #ddd8d0;border-radius:999px;background:#fff;color:#171512;padding:6px 26px 6px 12px;-webkit-appearance:none;appearance:none;background-image:linear-gradient(45deg,transparent 50%,#77716a 50%),linear-gradient(135deg,#77716a 50%,transparent 50%);background-position:calc(100% - 14px) 52%,calc(100% - 9px) 52%;background-size:5px 5px;background-repeat:no-repeat}' +
-    '[lang=ml]{font-family:"Noto Sans Malayalam","Malayalam Sangam MN","Manjari",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;line-height:1.65;letter-spacing:0}h1 [lang]{font-size:.82em;line-height:1.3;display:inline-block}@media(max-width:360px){.kk-lang{padding:6px 22px 6px 9px;font-size:13px!important}}';
+    '[lang=ml]{font-family:"Noto Sans Malayalam","Malayalam Sangam MN","Manjari",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;line-height:1.65;letter-spacing:0}[lang=kn]{font-family:"Noto Sans Kannada","Kannada Sangam MN",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;line-height:1.65;letter-spacing:0}[lang=ta]{font-family:"Noto Sans Tamil","Tamil Sangam MN",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;line-height:1.65;letter-spacing:0}h1 [lang]{font-size:.82em;line-height:1.3;display:inline-block}@media(max-width:360px){.kk-lang{padding:6px 22px 6px 9px;font-size:13px!important}}';
   (document.head || document.documentElement).appendChild(css);
 
   let dict = null;
