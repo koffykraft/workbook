@@ -145,11 +145,20 @@ export default {
         await e.DB.prepare('SELECT 1 AS ok').first();
         database = true;
       } catch {}
+      // the one-time record table upgrade runs here too, so it never waits for a sign-in
+      let records = 'unknown';
+      try {
+        await recordTypesReady(e);
+        records = 'ready';
+      } catch (err) {
+        records = 'upgrade failed: ' + String(err.message || err).slice(0, 120);
+      }
       return j({
         ok: true,
         email_login: emailConfigured(e),
         email_provider: e.RESEND_API_KEY ? 'resend' : e.AUTH_EMAIL_SECRET ? 'mailgun' : 'none',
         database,
+        records,
       });
     }
     if (r.method === 'POST' && p === '/api/auth/request') {
@@ -957,6 +966,6 @@ export default {
     return j({ error: 'not found' }, 404);
   },
   async scheduled(ev, e, ctx) {
-    ctx.waitUntil(traceAnchor(e));
+    ctx.waitUntil(Promise.allSettled([recordTypesReady(e), traceAnchor(e)]));
   },
 };

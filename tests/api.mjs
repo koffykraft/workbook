@@ -130,6 +130,7 @@ export async function run(root, t) {
       eq((await res.json()).saved, 1, 'colour saved after upgrade');
       const rows = old.prepare('SELECT id FROM origin_records ORDER BY id').all().map(r => r.id).join(',');
       eq(rows, 'colour-u1,g-old', 'records after upgrade');
+      const st = await (await w2.fetch(new Request('https://test.local/api/status'), env2, ctx)).json(); eq(st.records, 'ready', 'status reports the upgrade');
       if (/CHECK/i.test(old.prepare("SELECT sql FROM sqlite_master WHERE name='origin_records'").get().sql)) throw new Error('type list still in schema');
     });
     // lot passports
