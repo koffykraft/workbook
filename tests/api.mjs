@@ -110,6 +110,28 @@ export async function run(root, t) {
     await t.acheck('public profile reads without sign-in', async () => eq((await call('GET', '/api/public/profile/' + ptok)).j.data.title, 'Renamed', 'title'));
     await t.acheck('unpublished profile is gone', async () => { await call('DELETE', '/api/profile', null, owner); eq((await call('GET', '/api/public/profile/' + ptok)).s, 404, 'status') });
 
+    // record sync, including colour readings
+    await t.acheck('records sync to the cloud and back, colour readings included', async () => {
+      const at = new Date().toISOString();
+      const r = await call('POST', '/api/origin', { records: [{ id: 'colour-t1', type: 'colour', name: 'Lot 1', agGround: 60, updatedAt: at }, { id: 'x-bad', type: 'virus', updatedAt: at }] }, owner);
+      eq(r.s, 200, 'status'); eq(r.j.saved, 1, 'saved'); eq(r.j.skipped, 1, 'unknown type skipped');
+      const g = await call('GET', '/api/origin', null, owner); if (!g.j.items.some(x => x.id === 'colour-t1' && x.agGround === 60)) throw new Error('colour reading not returned');
+      eq((await call('GET', '/api/origin', null, member)).j.items.length, 0, 'other users see nothing');
+    });
+    await t.acheck('an older database is upgraded in place and keeps its records', async () => {
+      const old = new DatabaseSync(':memory:');
+      for (const m of migs.filter(m => m < '0016')) old.exec(fs.readFileSync(path.join(root, 'migrations', m), 'utf8'));
+      old.prepare('INSERT INTO users(id,email,display_name) VALUES(?,?,?)').run('u1', 'u1@example.com', 'u1');
+      old.prepare('INSERT INTO auth_sessions(id,user_id,token_hash,expires_at) VALUES(?,?,?,?)').run('s-u1', 'u1', sha('tok-u1'), '2099-01-01 00:00:00');
+      old.prepare("INSERT INTO origin_records(id,owner_user_id,type,data_json,updated_at,deleted,synced_at) VALUES('g-old','u1','green','{\"id\":\"g-old\",\"type\":\"green\"}','2026-01-01',0,'2026-01-01')").run();
+      const w2 = (await import(path.join(tmp, 'worker.js') + '?fresh')).default;
+      const env2 = { ...env, DB: d1(old) };
+      const res = await w2.fetch(new Request('https://test.local/api/origin', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer tok-u1' }, body: JSON.stringify({ records: [{ id: 'colour-u1', type: 'colour', name: 'x', updatedAt: new Date().toISOString() }] }) }), env2, ctx);
+      eq((await res.json()).saved, 1, 'colour saved after upgrade');
+      const rows = old.prepare('SELECT id FROM origin_records ORDER BY id').all().map(r => r.id).join(',');
+      eq(rows, 'colour-u1,g-old', 'records after upgrade');
+      if (/CHECK/i.test(old.prepare("SELECT sql FROM sqlite_master WHERE name='origin_records'").get().sql)) throw new Error('type list still in schema');
+    });
     // lot passports
     const kO = await T.newKey(), kB = await T.newKey();
     let lot, ltok;

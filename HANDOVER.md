@@ -47,6 +47,11 @@ Roast timer and graph, roastbooks, cup and brew pages, water, colour.js, varieti
 ## First steps guide (11 Oct 2026)
 - home.html: role chips (grow, roast, brew) stored in localStorage kk_role; steps tick from real records (ORIGIN counts, roast count, kk_seen_methods set by methods.html). Hide stores kk_guide_hidden; the First steps link on home brings it back.
 
+## Colour check page (11 Oct 2026)
+- colour.html: standalone readings for any coffee (my roast, bought, sample, other), stored as ORIGIN type 'colour' (Cup cloud section). Meter: Agtron ground and whole bean, Gourmet or Commercial, L*a*b*; photo with white card via KKCOLOUR.measurePhoto. Names on three charts (Coffee Review, Sensegood, Moustache Coffee Club). Reference in localStorage kk_colour_ref.
+- colour.js exposes window.KKCOLOUR; the per-roast section in Roastbook still uses its own localStorage keys.
+- Record table: migration 0016 drops the type CHECK; worker.js recordTypesReady() does the same rebuild once at runtime on the first /api/origin POST, because the deploy token cannot run migrations.
+
 ## Pending
 - CoffeeMind guide points deployed (cache v86, 11 Oct 2026). The Cloudflare token was pasted in chat: roll it after the new app is set up.
 - User checks: two-phone shared space test, Gmail sign-in, feedback email arriving, Malayalam wording review, profile logo and colour.

@@ -32,7 +32,10 @@
     } catch (e) {}
   };
   const esc = s =>
-    String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    String(s ?? '').replace(
+      /[&<>"']/g,
+      c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+    );
   const lin = c => {
     c /= 255;
     return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
@@ -170,16 +173,41 @@
     [25, 30, 'French roast', ''],
     [15, 25, 'Italian roast', ''],
   ];
+  // Moustache Coffee Club's Agtron Gourmet bands (their Agtron colour scale article).
+  const NAMES_MC = [
+    [90, 200, 'Very light', ''],
+    [70, 90, 'Light', ''],
+    [65, 70, 'Medium-light', ''],
+    [55, 65, 'Medium', ''],
+    [45, 55, 'Medium-dark', ''],
+    [0, 45, 'Dark', ''],
+  ];
+  const SCHEMES = { cr: 'Coffee Review table', sg: 'Sensegood chart', mc: 'Moustache Coffee Club scale' };
   const scheme = () => {
     try {
-      return localStorage.getItem('kk_roast_names') || 'cr';
+      const v = localStorage.getItem('kk_roast_names') || 'cr';
+      return SCHEMES[v] ? v : 'cr';
     } catch (e) {
       return 'cr';
     }
   };
-  function roastName(n) {
+  const setScheme = v => {
+    try {
+      localStorage.setItem('kk_roast_names', SCHEMES[v] ? v : 'cr');
+    } catch (e) {}
+  };
+  const nextScheme = () => {
+    const k = Object.keys(SCHEMES);
+    return k[(k.indexOf(scheme()) + 1) % k.length];
+  };
+  function roastName(n, sch) {
     if (n == null || !isFinite(n)) return null;
-    if (scheme() === 'sg') {
+    sch = sch || scheme();
+    if (sch === 'mc') {
+      const x = NAMES_MC.find(([lo, hi]) => n >= lo && n < hi);
+      return x ? [x[2], x[3]] : null;
+    }
+    if (sch === 'sg') {
       if (n > 80) return ['Lighter than Arabic', 'above the chart'];
       if (n < 15) return ['Darker than Italian', 'below the chart'];
       const x = NAMES_SG.find(([lo, hi]) => n >= lo && n <= hi);
@@ -277,6 +305,88 @@
         .join('')
     );
   }
+  // Photo reading: show the photo, ask for a tap on the white card, then on the coffee.
+  // Calls done(lab, rgb) with CIELAB relative to the card.
+  function measurePhoto(file, work, done) {
+    const img = new Image();
+    img.onload = () => {
+      const max = 900,
+        sc = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.id = 'ccCanvas';
+      c.width = Math.round(img.width * sc);
+      c.height = Math.round(img.height * sc);
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      let white = null;
+      work.innerHTML = '<div class="cc-box" id="ccStep"><b>1.</b> Tap the white card.</div>';
+      work.appendChild(c);
+      const step = h => (work.querySelector('#ccStep').innerHTML = h);
+      const sample = (x, y) => {
+        const r = Math.max(6, Math.round(c.width / 45));
+        const d = ctx.getImageData(Math.max(0, x - r), Math.max(0, y - r), r * 2, r * 2).data;
+        let s = [0, 0, 0],
+          n = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          s[0] += d[i];
+          s[1] += d[i + 1];
+          s[2] += d[i + 2];
+          n++;
+        }
+        return { rgb: s.map(v => Math.round(v / n)), r };
+      };
+      c.onclick = ev => {
+        const b = c.getBoundingClientRect(),
+          x = Math.round(((ev.clientX - b.left) * c.width) / b.width),
+          y = Math.round(((ev.clientY - b.top) * c.height) / b.height);
+        const s = sample(x, y);
+        ctx.strokeStyle = white ? '#8d583b' : '#3f6b5a';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x - s.r, y - s.r, s.r * 2, s.r * 2);
+        if (!white) {
+          if (Math.min(...s.rgb) < 120) {
+            step(
+              'That spot looks too dark for a white card. Tap the white card again, or retake in brighter light.'
+            );
+            return;
+          }
+          white = s.rgb;
+          step('<b>2.</b> Now tap the middle of the coffee.');
+          return;
+        }
+        const lab = toLab(s.rgb, white);
+        if (lab.L > 85) {
+          step('That looks like the card, not the coffee. Tap the coffee.');
+          return;
+        }
+        done(lab, s.rgb);
+      };
+    };
+    img.onerror = () => {
+      work.innerHTML = '<div class="cc-box">Could not open that photo. Try again.</div>';
+    };
+    img.src = URL.createObjectURL(file);
+  }
+  // Agtron Gourmet to Commercial (Agtron E20CP manual): Commercial = 1.2 + 0.744 x Gourmet.
+  const toCommercial = g => 1.2 + 0.744 * g;
+  const toGourmet = c => (c - 1.2) / 0.744;
+  window.KKCOLOUR = {
+    toLab,
+    de2000,
+    words,
+    verdict,
+    roastName,
+    scheme,
+    setScheme,
+    nextScheme,
+    SCHEMES,
+    numOf,
+    calib2,
+    measurePhoto,
+    toCommercial,
+    toGourmet,
+  };
   window.colourSection = function (r, rows) {
     const host = document.getElementById('detail');
     if (!host) return;
@@ -381,11 +491,11 @@
           nm[0] +
           '</b>' +
           (nm[1] ? ', often called ' + nm[1] : '') +
-          '.<div class="cc-m" style="margin:4px 0 0"><a href="methods.html#p-colour" style="color:#8d583b">How to take a reliable reading</a>. Names from ' +
-          (scheme() === 'sg' ? 'the Sensegood chart' : 'the Coffee Review table, Agtron Gourmet scale') +
-          '. <a href="#" id="ccScheme" style="color:#8d583b">Use ' +
-          (scheme() === 'sg' ? 'Coffee Review' : 'Sensegood') +
-          ' names</a></div>' +
+          '.<div class="cc-m" style="margin:4px 0 0"><a href="methods.html#p-colour" style="color:#8d583b">How to take a reliable reading</a>. Names from the ' +
+          SCHEMES[scheme()] +
+          ', Agtron Gourmet scale. <a href="#" id="ccScheme" style="color:#8d583b">Use the ' +
+          SCHEMES[nextScheme()] +
+          '</a></div>' +
           (tn && tc !== ag
             ? '<div class="cc-m" style="margin:4px 0 0">Target ' +
               tc +
@@ -471,7 +581,7 @@
         (ph ? '<button type="button" class="cc-b" id="ccDel">Delete photo reading</button>' : '') +
         '</div>';
       h +=
-        '<details class="cc-m"><summary style="cursor:pointer;color:#8d583b;font-weight:600">How to take a good reading</summary><p>Meter: measure the same form every time (ground or whole bean) and note which. Ground is steadier.</p><p>Photo: grind a spoonful and press it flat in a small dish with a plain white card beside it. Same place and light every time: bright shade or a window, no direct sun, no flash, no shadow. Tap the white card, then the coffee. A phone sees visible light only, so Agtron from a photo is estimated from your own paired meter readings. Rough guide for ΔE: under 1 hard to see, 2 to 3 visible side by side.</p><p>Method: CIELAB and CIEDE2000, after Schanda (ed.), Colorimetry: Understanding the CIE System (2007). Roast names: Sensegood Instruments chart or Coffee Review roast table; the two use different bands, and names vary between roasters. Readings stay on this phone.</p></details><div id="ccWork"></div>';
+        '<div class="cc-m"><a href="colour.html" style="color:#8d583b">All colour readings, for any coffee</a></div><details class="cc-m"><summary style="cursor:pointer;color:#8d583b;font-weight:600">How to take a good reading</summary><p>Meter: measure the same form every time (ground or whole bean) and note which. Ground is steadier.</p><p>Photo: grind a spoonful and press it flat in a small dish with a plain white card beside it. Same place and light every time: bright shade or a window, no direct sun, no flash, no shadow. Tap the white card, then the coffee. A phone sees visible light only, so Agtron from a photo is estimated from your own paired meter readings. Rough guide for ΔE: under 1 hard to see, 2 to 3 visible side by side.</p><p>Method: CIELAB and CIEDE2000, after Schanda (ed.), Colorimetry: Understanding the CIE System (2007). Roast names: Coffee Review roast table, Sensegood Instruments chart or Moustache Coffee Club Agtron scale; they use different bands, and names vary between roasters. Readings stay on this phone.</p></details><div id="ccWork"></div>';
       box.innerHTML = h;
       const g = x => {
         const v = document.getElementById(x).value.trim();
@@ -505,9 +615,7 @@
       if (sc)
         sc.onclick = ev => {
           ev.preventDefault();
-          try {
-            localStorage.setItem('kk_roast_names', scheme() === 'sg' ? 'cr' : 'sg');
-          } catch (e) {}
+          setScheme(nextScheme());
           render();
         };
       const me = document.getElementById('ccMEdit');
@@ -546,72 +654,14 @@
         if (file) measure(file);
       };
     };
-    const measure = file => {
-      const work = document.getElementById('ccWork');
-      const img = new Image();
-      img.onload = () => {
-        const max = 900,
-          sc = Math.min(1, max / Math.max(img.width, img.height));
-        const c = document.createElement('canvas');
-        c.id = 'ccCanvas';
-        c.width = Math.round(img.width * sc);
-        c.height = Math.round(img.height * sc);
-        const ctx = c.getContext('2d', { willReadFrequently: true });
-        ctx.drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(img.src);
-        let white = null;
-        work.innerHTML = '<div class="cc-box" id="ccStep"><b>1.</b> Tap the white card.</div>';
-        work.appendChild(c);
-        const sample = (x, y) => {
-          const r = Math.max(6, Math.round(c.width / 45));
-          const d = ctx.getImageData(Math.max(0, x - r), Math.max(0, y - r), r * 2, r * 2).data;
-          let s = [0, 0, 0],
-            n = 0;
-          for (let i = 0; i < d.length; i += 4) {
-            s[0] += d[i];
-            s[1] += d[i + 1];
-            s[2] += d[i + 2];
-            n++;
-          }
-          return { rgb: s.map(v => Math.round(v / n)), r };
-        };
-        c.onclick = ev => {
-          const b = c.getBoundingClientRect(),
-            x = Math.round(((ev.clientX - b.left) * c.width) / b.width),
-            y = Math.round(((ev.clientY - b.top) * c.height) / b.height);
-          const s = sample(x, y);
-          ctx.strokeStyle = white ? '#8d583b' : '#3f6b5a';
-          ctx.lineWidth = 3;
-          ctx.strokeRect(x - s.r, y - s.r, s.r * 2, s.r * 2);
-          if (!white) {
-            const m = Math.min(...s.rgb);
-            if (m < 120) {
-              document.getElementById('ccStep').innerHTML =
-                'That spot looks too dark for a white card. Tap the white card again, or retake in brighter light.';
-              return;
-            }
-            white = s.rgb;
-            document.getElementById('ccStep').innerHTML = '<b>2.</b> Now tap the middle of the coffee.';
-            return;
-          }
-          const lab = toLab(s.rgb, white);
-          if (lab.L > 85) {
-            document.getElementById('ccStep').innerHTML =
-              'That looks like the card, not the coffee. Tap the coffee.';
-            return;
-          }
-          const a = load();
-          a[id] = { L: lab.L, a: lab.a, b: lab.b, C: lab.C, h: lab.h, rgb: s.rgb, at: Date.now(), label };
-          save(a);
-          if (!getRef()) setRef(id);
-          render();
-        };
-      };
-      img.onerror = () => {
-        work.innerHTML = '<div class="cc-box">Could not open that photo. Try again.</div>';
-      };
-      img.src = URL.createObjectURL(file);
-    };
+    const measure = file =>
+      measurePhoto(file, document.getElementById('ccWork'), (lab, rgb) => {
+        const a = load();
+        a[id] = { L: lab.L, a: lab.a, b: lab.b, C: lab.C, h: lab.h, rgb, at: Date.now(), label };
+        save(a);
+        if (!getRef()) setRef(id);
+        render();
+      });
     render();
   };
 })();

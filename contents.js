@@ -111,9 +111,9 @@ window.KK_CONTENTS = [
       ],
       [
         'Colour check',
-        'Roast colour from a meter reading or a phone photo with a white card.',
-        'Agtron numbers named with the Coffee Review table, colour difference (ΔE) between roasts, and nearest matches.',
-        'roasts.html',
+        'Record roast colour for any coffee: your roasts, bought coffee or samples.',
+        'From a colour meter (Agtron ground and whole bean, Gourmet or Commercial, L*a*b*) or a phone photo with a white card. Names the roast level on three charts (Coffee Review, Sensegood, Moustache Coffee Club), tracks the ground to whole-bean gap, colour difference (ΔE) against a reference and nearest matches. Saved like brews, with cloud sync.',
+        'colour.html',
       ],
       [
         'Capture and OCR',

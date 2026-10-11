@@ -4,7 +4,7 @@
 const ORIGIN = (() => {
   const NAME = 'KoffyKraftOrigin',
     STORE = 'records';
-  const TYPES = ['estate', 'plot', 'harvest', 'process', 'green', 'brew', 'cupping', 'tasting'];
+  const TYPES = ['estate', 'plot', 'harvest', 'process', 'green', 'brew', 'cupping', 'tasting', 'colour'];
   let DBP = null;
   function open() {
     if (DBP) return DBP;

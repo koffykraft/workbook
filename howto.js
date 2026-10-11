@@ -2144,6 +2144,11 @@
           'AG',
         ],
         [
+          2,
+          'Read both ground and whole bean when you can. Ground commonly reads 8 to 15 points higher. Track that gap for each profile: a sudden change can point to moisture, density or development. Colour check keeps both.',
+          'MA',
+        ],
+        [
           3,
           'Gourmet and Commercial scales: Commercial is about 1.2 + 0.744 × Gourmet (Gourmet 55 is Commercial 42). Agtron puts most specialty coffee at Gourmet 30 to 65 and commercial at 50 to 75. Always compare on the same scale and meter.',
           'AG',

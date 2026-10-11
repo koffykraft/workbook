@@ -6,7 +6,7 @@ const PREFS = (() => {
   const SECTIONS = {
     origin: 'Origin (farm, harvest, processing, green lots)',
     roasts: 'Roasts',
-    cup: 'Cup (brews, cupping, tasting tests)',
+    cup: 'Cup (brews, cupping, tasting tests, colour readings)',
   };
   const DEFAULT = { origin: 'selected', roasts: 'selected', cup: 'selected' };
   const MODES = ['off', 'selected', 'all'];
@@ -54,7 +54,9 @@ const PREFS = (() => {
   }
   // section for an Origin-store record type
   function sectionOf(type) {
-    return type === 'brew' || type === 'cupping' || type === 'tasting' ? 'cup' : 'origin';
+    return type === 'brew' || type === 'cupping' || type === 'tasting' || type === 'colour'
+      ? 'cup'
+      : 'origin';
   }
   return { SECTIONS, MODES, get, set, pull, read, sectionOf };
 })();

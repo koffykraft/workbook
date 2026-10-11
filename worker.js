@@ -97,6 +97,38 @@ async function sendEmail(e, to, subject, text) {
     return { ok: false };
   }
 }
+
+// One-time change, run by the Worker itself because deploy tokens may not reach the database:
+// the record table used to list its allowed types in the schema; new types (colour) need the
+// list gone. Same steps as migrations/0016_record_types.sql, in one transaction.
+let RECORD_TYPES_READY = null;
+function recordTypesReady(e) {
+  return (RECORD_TYPES_READY ||= (async () => {
+    const t = await e.DB.prepare(
+      "SELECT sql FROM sqlite_master WHERE type='table' AND name='origin_records'"
+    ).first();
+    if (!t || !/CHECK\s*\(\s*type\s+IN/i.test(t.sql || '')) return;
+    await e.DB.batch([
+      e.DB.prepare(
+        'CREATE TABLE IF NOT EXISTS origin_records_new (id TEXT PRIMARY KEY, owner_user_id TEXT NOT NULL, type TEXT NOT NULL, data_json TEXT NOT NULL, updated_at TEXT NOT NULL, deleted INTEGER NOT NULL DEFAULT 0, synced_at TEXT, FOREIGN KEY (owner_user_id) REFERENCES users(id))'
+      ),
+      e.DB.prepare(
+        'INSERT OR IGNORE INTO origin_records_new (id, owner_user_id, type, data_json, updated_at, deleted, synced_at) SELECT id, owner_user_id, type, data_json, updated_at, deleted, synced_at FROM origin_records'
+      ),
+      e.DB.prepare('DROP TABLE origin_records'),
+      e.DB.prepare('ALTER TABLE origin_records_new RENAME TO origin_records'),
+      e.DB.prepare(
+        'CREATE INDEX IF NOT EXISTS idx_origin_owner ON origin_records(owner_user_id, updated_at)'
+      ),
+      e.DB.prepare(
+        'CREATE INDEX IF NOT EXISTS idx_origin_owner_synced ON origin_records(owner_user_id, synced_at)'
+      ),
+    ]);
+  })().catch(err => {
+    RECORD_TYPES_READY = null;
+    throw err;
+  }));
+}
 export default {
   async fetch(r, e, ctx) {
     const u = new URL(r.url),
@@ -846,9 +878,10 @@ export default {
       });
     }
     if (r.method === 'POST' && p === '/api/origin') {
+      await recordTypesReady(e);
       const b = await body(r),
         recs = Array.isArray(b.records) ? b.records.slice(0, 500) : [];
-      const types = ['estate', 'plot', 'harvest', 'process', 'green', 'brew', 'cupping', 'tasting'];
+      const types = ['estate', 'plot', 'harvest', 'process', 'green', 'brew', 'cupping', 'tasting', 'colour'];
       const cnt = await e.DB.prepare('SELECT COUNT(*) AS n FROM origin_records WHERE owner_user_id=?')
         .bind(me.id)
         .first();

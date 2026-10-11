@@ -35,7 +35,7 @@ export async function run(root, t) {
   await ctx.route(/cdnjs|tile|arcgis|openstreetmap|googleapis/, r => r.abort());
   try {
     // 1. every main page opens cleanly
-    const pages = ['home', 'origin', 'cup', 'roasts', 'roast-timer-v14', 'roast-graph', 'account', 'contents', 'journey', 'methods', 'crop', 'water', 'map', 'share', 'profile', 'trace', 'data', 'roastbooks', 'license', 'privacy', 'terms', 'brew', 'capture', 'index', 'ocr', 'process-run', 'process', 'rehydration', 'roastbook', 'stats'];
+    const pages = ['home', 'origin', 'cup', 'roasts', 'roast-timer-v14', 'roast-graph', 'account', 'contents', 'journey', 'methods', 'crop', 'water', 'map', 'share', 'profile', 'trace', 'data', 'roastbooks', 'license', 'privacy', 'terms', 'brew', 'capture', 'index', 'ocr', 'process-run', 'process', 'rehydration', 'roastbook', 'stats', 'colour'];
     const p = await ctx.newPage();
     await p.route('**/api/**', r => r.fulfill({ status: 401, contentType: 'application/json', body: '{"error":"authentication required"}' }));
     for (const f of pages) {
@@ -163,6 +163,19 @@ export async function run(root, t) {
       const go = await q.$eval('.steps li.next .go', e => e.getAttribute('href')); if (!/edit\/plot\/new/.test(go)) throw new Error('next step link: ' + go);
       await q.click('#gHide'); if (await q.$('.guide')) throw new Error('did not hide');
       await q.evaluate(() => localStorage.removeItem('kk_guide_hidden'));
+    });
+    await t.acheck('Colour check saves a reading, names it and shows the ground and whole-bean gap', async () => {
+      await q.goto(base + 'colour.html#new'); await q.waitForSelector('#fName');
+      await q.fill('#fName', 'Test lot roast 1'); await q.click('[data-k="Bought coffee"]');
+      await q.fill('#fAgG', '60'); await q.fill('#fAgW', '49');
+      const res = await q.$eval('#result', e => e.innerText);
+      if (!/Agtron Gourmet 60/.test(res) || !/11 points higher/.test(res)) throw new Error('result: ' + res.slice(0, 200));
+      await q.click('#fSave'); await q.waitForURL(/#edit\//);
+      await q.goto(base + 'colour.html'); await q.waitForSelector('a.card');
+      const list = await q.$eval('#view', e => e.innerText); if (!list.includes('Test lot roast 1') || !list.includes('Bought coffee')) throw new Error('not listed');
+      const rec = await q.evaluate(async () => (await ORIGIN.all('colour'))[0]); if (rec.agGround !== 60 || rec.kind !== 'Bought coffee') throw new Error(JSON.stringify(rec));
+      await q.selectOption('#scheme', 'mc'); if (!(await q.$eval('#view', e => e.innerText)).includes('Medium')) throw new Error('scheme switch');
+      await q.selectOption('#scheme', 'cr');
     });
     await t.acheck('Malayalam shows explanations only, labels stay English', async () => {
       await q.goto(base + 'home.html'); await q.evaluate(() => localStorage.setItem('kk_lang', 'ml'));

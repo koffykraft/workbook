@@ -1,0 +1,787 @@
+<!doctype html>
+<!-- KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>KoffyKraft Colour check</title>
+<style>
+:root {
+  --bg: #f7f5f0;
+  --ink: #171512;
+  --muted: #77716a;
+  --line: #ddd8d0;
+  --coffee: #8d583b;
+  --ok: #3f6b5a;
+  --warn: #9a6a12;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+.app {
+  max-width: 720px;
+  margin: auto;
+  padding: 24px 16px 60px;
+}
+h1 {
+  font-size: 32px;
+  letter-spacing: -0.04em;
+  margin: 6px 0 4px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+h2 {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--coffee);
+  margin: 22px 0 8px;
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 13px 15px;
+  margin: 8px 0;
+}
+a.card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+.btn {
+  font: inherit;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 9px 14px;
+  cursor: pointer;
+  color: var(--ink);
+  text-decoration: none;
+}
+.btn.primary {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.btn.bad {
+  color: #b4432f;
+}
+.row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.f {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.f .full {
+  grid-column: 1 / -1;
+}
+label.l {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+input,
+select,
+textarea {
+  font: inherit;
+  font-size: 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #fff;
+  color: var(--ink);
+  width: 100%;
+}
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.chips button {
+  font: inherit;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 7px 12px;
+  cursor: pointer;
+  color: var(--ink);
+}
+.chips button.on {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.mini {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.mini a {
+  color: var(--coffee);
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--coffee);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+.sw {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #faf7f2;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+}
+.sw b {
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+.res {
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+.res b {
+  font-weight: 700;
+}
+.kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  font-size: 14px;
+}
+.kv span {
+  color: var(--muted);
+}
+.warn {
+  color: var(--warn);
+}
+.cc-box {
+  background: #faf7f2;
+  border: 1px solid #efe8de;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin: 8px 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+#ccCanvas {
+  width: 100%;
+  border-radius: 10px;
+  touch-action: manipulation;
+  margin-top: 8px;
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: #171512;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  opacity: 0;
+  transition: 0.2s;
+  pointer-events: none;
+  z-index: 2000;
+}
+.toast.on {
+  opacity: 1;
+}
+</style>
+<link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script><script src="i18n.js" defer></script>
+<script src="kk-base.js"></script>
+</head>
+<body>
+<main class="app">
+<header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="profile.html" aria-label="Me: profile and activity">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
+<div id="view"></div>
+</main>
+<div class="toast" id="toast"></div>
+<script src="sync.js"></script><script src="prefs.js"></script><script src="origin-db.js"></script><script src="cloud-ui.js"></script><script src="snap.js"></script><script src="colour.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const K = window.KKCOLOUR;
+function toast(t) {
+  const el = $('#toast');
+  el.textContent = t;
+  el.classList.add('on');
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => el.classList.remove('on'), 2200);
+}
+const today = () => new Date().toISOString().slice(0, 10);
+const fmtDay = d => {
+  try {
+    return new Date(d + 'T00:00:00').toLocaleDateString(undefined, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch (e) {
+    return d;
+  }
+};
+const KINDS = ['My roast', 'Bought coffee', 'Sample roast', 'Other'];
+const getRef = () => {
+  try {
+    return localStorage.getItem('kk_colour_ref') || '';
+  } catch (e) {
+    return '';
+  }
+};
+const setRef = v => {
+  try {
+    v ? localStorage.setItem('kk_colour_ref', v) : localStorage.removeItem('kk_colour_ref');
+  } catch (e) {}
+};
+
+// The Agtron Gourmet number for naming and comparing: ground first, then whole bean.
+function gourmet(r) {
+  const v = num(r.agGround) ?? num(r.agWhole);
+  if (v == null) return null;
+  return r.scale === 'commercial' ? K.toGourmet(v) : v;
+}
+// CIELAB for comparing: the meter's own if given, else the photo's.
+function labOf(r, src) {
+  if ((src || 'meter') === 'meter' && num(r.L) != null && num(r.a) != null && num(r.b) != null)
+    return {
+      L: +r.L,
+      a: +r.a,
+      b: +r.b,
+      C: Math.hypot(r.a, r.b),
+      h: ((Math.atan2(r.b, r.a) * 180) / Math.PI + 360) % 360,
+      src: 'meter',
+    };
+  if ((src || 'photo') === 'photo' && r.photo) return { ...r.photo, src: 'photo' };
+  return null;
+}
+function photoCalib(all) {
+  return K.calib2(
+    all
+      .map(r => {
+        const g = gourmet(r);
+        return r.photo && g != null && g >= 15 && g <= 110 ? [r.photo.L, g] : null;
+      })
+      .filter(Boolean)
+  );
+}
+function namesHtml(g) {
+  if (g == null) return '';
+  const cur = K.scheme();
+  const one = k => {
+    const n = K.roastName(g, k);
+    return n ? n[0] + (n[1] ? ' (' + n[1] + ')' : '') : 'outside the chart';
+  };
+  return (
+    '<div class="res">Agtron Gourmet <b>' +
+    r1(g) +
+    '</b>: <b>' +
+    esc(K.roastName(g, cur) ? K.roastName(g, cur)[0] : 'outside the chart') +
+    '</b> on the ' +
+    esc(K.SCHEMES[cur]) +
+    '.</div>' +
+    '<div class="mini" style="margin-top:4px">' +
+    Object.keys(K.SCHEMES)
+      .filter(k => k !== cur)
+      .map(k => esc(K.SCHEMES[k]) + ': ' + esc(one(k)))
+      .join(' · ') +
+    '. Names vary between roasters; the number is what to compare.</div>'
+  );
+}
+
+let ALL = [];
+async function loadAll() {
+  ALL = (await ORIGIN.all('colour')).sort(
+    (a, b) =>
+      String(b.at || '').localeCompare(String(a.at || '')) ||
+      String(b.updatedAt).localeCompare(String(a.updatedAt))
+  );
+}
+
+async function route() {
+  await loadAll();
+  const h = location.hash.slice(1);
+  const m = h.match(/^edit\/(.+)$/);
+  if (h === 'new') return editView(null);
+  if (m) return editView(ALL.find(r => r.id === decodeURIComponent(m[1])) || null);
+  listView();
+}
+window.addEventListener('hashchange', route);
+
+// ---------- list ----------
+let FILTER = '';
+function listView() {
+  const ref = getRef();
+  const rows = ALL.filter(r => !FILTER || r.kind === FILTER);
+  let h =
+    '<h1>Colour check</h1><div class="sub">Record roast colour for any coffee: your own roasts, coffee you bought, or sample roasts. From a colour meter or a phone photo with a white card. Compare readings, name the roast level, and see how far apart two coffees are. <a href="methods.html#p-colour">How to take a reliable reading</a></div>';
+  h +=
+    '<div class="row"><a class="btn primary" href="#new">+ New reading</a><label class="l" style="flex:1;min-width:180px">Roast names from<select id="scheme">' +
+    Object.entries(K.SCHEMES)
+      .map(
+        ([k, v]) =>
+          '<option value="' + k + '"' + (k === K.scheme() ? ' selected' : '') + '>' + esc(v) + '</option>'
+      )
+      .join('') +
+    '</select></label></div>';
+  if (ALL.length)
+    h +=
+      '<div class="chips" style="margin-top:12px"><button data-f=""' +
+      (!FILTER ? ' class="on"' : '') +
+      '>All</button>' +
+      KINDS.map(
+        k =>
+          '<button data-f="' + esc(k) + '"' + (FILTER === k ? ' class="on"' : '') + '>' + esc(k) + '</button>'
+      ).join('') +
+      '</div>';
+  h += '<h2>Readings</h2>';
+  h += rows.length
+    ? rows
+        .map(r => {
+          const g = gourmet(r),
+            n = g != null ? K.roastName(g) : null;
+          const sw = r.photo
+            ? '<span class="sw" style="background:rgb(' + r.photo.rgb.join(',') + ')"></span>'
+            : '<span class="sw">' + (g != null ? '<b>' + Math.round(g) + '</b>' : '') + '</span>';
+          return (
+            '<a class="card" href="#edit/' +
+            encodeURIComponent(r.id) +
+            '">' +
+            sw +
+            '<span style="flex:1;min-width:0"><b>' +
+            esc(r.name || 'Reading') +
+            '</b>' +
+            (r.id === ref ? ' <span class="mini">(reference)</span>' : '') +
+            '<div class="mini">' +
+            esc(
+              [
+                g != null ? 'Agtron ' + r1(g) + (n ? ', ' + n[0] : '') : r.photo ? 'Photo reading' : '',
+                r.kind,
+                r.at ? fmtDay(r.at) : '',
+              ]
+                .filter(Boolean)
+                .join(' · ')
+            ) +
+            '</div></span></a>'
+          );
+        })
+        .join('')
+    : '<div class="card mini">' +
+      (ALL.length
+        ? 'No readings of this kind.'
+        : 'No readings yet. Tap New reading: enter a meter number, or measure from a photo of ground coffee next to a white card.') +
+      '</div>';
+  $('#view').innerHTML = h;
+  $('#scheme').onchange = e => {
+    K.setScheme(e.target.value);
+    listView();
+  };
+  document.querySelectorAll('[data-f]').forEach(
+    b =>
+      (b.onclick = () => {
+        FILTER = b.dataset.f;
+        listView();
+      })
+  );
+}
+
+// ---------- one reading ----------
+let CUR = null,
+  ROASTS = [],
+  GREENS = [];
+async function editView(ex) {
+  CUR = ex
+    ? JSON.parse(JSON.stringify(ex))
+    : { type: 'colour', at: today(), kind: 'My roast', scale: 'gourmet', form: 'ground' };
+  try {
+    ROASTS = (await myRoasts())
+      .sort((a, b) => String(b.roastDate || '').localeCompare(String(a.roastDate || '')))
+      .slice(0, 200);
+  } catch (e) {
+    ROASTS = [];
+  }
+  try {
+    GREENS = await ORIGIN.all('green');
+  } catch (e) {
+    GREENS = [];
+  }
+  draw(!!ex);
+}
+const roastLabel = r =>
+  [r.roastNo ? '#' + r.roastNo : '', r.estate || r.coffeeCode || r.bean || 'Roast', r.roastDate || '']
+    .filter(Boolean)
+    .join(' · ');
+function draw(saved) {
+  const c = CUR,
+    v = k => esc(c[k] ?? '');
+  let h =
+    '<a class="back" href="#">‹ Colour check</a><h1>' +
+    (saved ? esc(c.name || 'Reading') : 'New reading') +
+    '</h1>';
+  if (saved) h += '<div id="cloudRow" class="cloudrow">' + cloudRowHtml(c) + '</div>';
+  h +=
+    '<h2>What you measured</h2><div class="card f">' +
+    '<label class="l full">Coffee<input id="fName" value="' +
+    v('name') +
+    '" placeholder="Lot 12 roast #3, or the bag\'s name"></label>' +
+    '<div class="full chips" id="fKind">' +
+    KINDS.map(
+      k =>
+        '<button type="button" data-k="' +
+        esc(k) +
+        '"' +
+        (c.kind === k ? ' class="on"' : '') +
+        '>' +
+        esc(k) +
+        '</button>'
+    ).join('') +
+    '</div>' +
+    '<label class="l">Date<input id="fAt" type="date" value="' +
+    v('at') +
+    '"></label>' +
+    '<label class="l">Roasted on (optional)<input id="fRoasted" type="date" value="' +
+    v('roastedOn') +
+    '"></label>' +
+    (ROASTS.length
+      ? '<label class="l full">Link to a roast in your Roastbook (optional)<select id="fRoast"><option value="">None</option>' +
+        ROASTS.map(
+          r =>
+            '<option value="' +
+            esc(r.id) +
+            '"' +
+            (String(c.roastId) === String(r.id) ? ' selected' : '') +
+            '>' +
+            esc(roastLabel(r)) +
+            '</option>'
+        ).join('') +
+        '</select></label>'
+      : '') +
+    (GREENS.length
+      ? '<label class="l full">Green lot (optional)<select id="fGreen"><option value="">None</option>' +
+        GREENS.map(
+          g =>
+            '<option value="' +
+            esc(g.id) +
+            '"' +
+            (c.greenId === g.id ? ' selected' : '') +
+            '>' +
+            esc([g.code, g.name].filter(Boolean).join(' · ')) +
+            '</option>'
+        ).join('') +
+        '</select></label>'
+      : '') +
+    '</div>';
+  h +=
+    '<h2>Meter reading</h2><div class="card f">' +
+    '<label class="l">Agtron, ground<input id="fAgG" type="number" inputmode="decimal" step="any" value="' +
+    v('agGround') +
+    '"></label>' +
+    '<label class="l">Agtron, whole bean<input id="fAgW" type="number" inputmode="decimal" step="any" value="' +
+    v('agWhole') +
+    '"></label>' +
+    '<label class="l">Scale<select id="fScale"><option value="gourmet"' +
+    (c.scale !== 'commercial' ? ' selected' : '') +
+    '>Gourmet (M-Basic)</option><option value="commercial"' +
+    (c.scale === 'commercial' ? ' selected' : '') +
+    '>Commercial</option></select></label>' +
+    '<label class="l">Meter (optional)<input id="fDev" value="' +
+    v('device') +
+    '" placeholder="Agtron E20CP, Lighttells, Sensegood…"></label>' +
+    '<label class="l">L* (optional)<input id="fL" type="number" inputmode="decimal" step="any" value="' +
+    v('L') +
+    '"></label>' +
+    '<label class="l">a*<input id="fA" type="number" inputmode="decimal" step="any" value="' +
+    v('a') +
+    '"></label>' +
+    '<label class="l">b*<input id="fB" type="number" inputmode="decimal" step="any" value="' +
+    v('b') +
+    '"></label>' +
+    '<div class="mini" style="align-self:end">L*a*b* is used for the colour difference when two readings both have it.</div>' +
+    '</div>';
+  h +=
+    '<h2>Photo reading</h2><div class="card">' +
+    (c.photo
+      ? '<div class="row" style="align-items:center"><span class="sw" style="background:rgb(' +
+        c.photo.rgb.join(',') +
+        ')"></span><span class="res">L* ' +
+        c.photo.L.toFixed(1) +
+        ' · a* ' +
+        c.photo.a.toFixed(1) +
+        ' · b* ' +
+        c.photo.b.toFixed(1) +
+        '</span></div>'
+      : '<div class="mini">No meter? Grind a spoonful, press it flat in a small dish with a plain white card beside it, in bright shade with no flash. Take the photo, tap the card, then the coffee.</div>') +
+    '<div class="row" style="margin-top:8px"><label class="btn' +
+    (c.photo ? '' : ' primary') +
+    '">' +
+    (c.photo ? 'Photo again' : 'Measure from a photo') +
+    '<input id="fFile" type="file" accept="image/*" capture="environment" hidden></label>' +
+    (c.photo ? '<button type="button" class="btn" id="fPhotoDel">Remove photo reading</button>' : '') +
+    '</div><div id="ccWork"></div></div>';
+  h +=
+    '<label class="l" style="margin-top:12px">Notes<textarea id="fNotes" rows="2" placeholder="Batch, sampling, light, anything unusual">' +
+    v('notes') +
+    '</textarea></label>';
+  h += '<h2>Result</h2><div class="card" id="result"></div>';
+  h +=
+    '<div class="row" style="margin-top:12px"><button type="button" class="btn primary" id="fSave">Save reading</button>' +
+    (saved
+      ? '<button type="button" class="btn" id="fRef">' +
+        (getRef() === c.id ? 'This is the reference' : 'Set as reference') +
+        '</button><button type="button" class="btn bad" id="fDel">Delete</button>'
+      : '') +
+    '</div>';
+  $('#view').innerHTML = h;
+  const read = () => {
+    c.name = $('#fName').value.trim();
+    c.at = $('#fAt').value || today();
+    c.roastedOn = $('#fRoasted').value || '';
+    const g = x => {
+      const el = $(x);
+      const t = el ? el.value.trim() : '';
+      return t === '' ? null : parseFloat(t);
+    };
+    c.agGround = g('#fAgG');
+    c.agWhole = g('#fAgW');
+    c.L = g('#fL');
+    c.a = g('#fA');
+    c.b = g('#fB');
+    c.scale = $('#fScale').value;
+    c.device = $('#fDev').value.trim();
+    c.notes = $('#fNotes').value.trim();
+    const rs = $('#fRoast');
+    if (rs) {
+      c.roastId = rs.value || '';
+      const rr = ROASTS.find(x => String(x.id) === rs.value);
+      c.roastLabel = rr ? roastLabel(rr) : '';
+    }
+    const gs = $('#fGreen');
+    if (gs) c.greenId = gs.value || '';
+  };
+  document.querySelectorAll('#fKind [data-k]').forEach(
+    b =>
+      (b.onclick = () => {
+        c.kind = b.dataset.k;
+        document.querySelectorAll('#fKind [data-k]').forEach(x => x.classList.toggle('on', x === b));
+      })
+  );
+  document.querySelectorAll('#view input, #view select, #view textarea').forEach(el =>
+    el.addEventListener('input', () => {
+      read();
+      result();
+    })
+  );
+  const rs = $('#fRoast');
+  if (rs)
+    rs.addEventListener('change', () => {
+      if (!$('#fName').value.trim()) {
+        const rr = ROASTS.find(x => String(x.id) === rs.value);
+        if (rr) $('#fName').value = roastLabel(rr);
+      }
+      read();
+      result();
+    });
+  $('#fFile').onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    K.measurePhoto(f, $('#ccWork'), (lab, rgb) => {
+      read();
+      c.photo = { L: lab.L, a: lab.a, b: lab.b, C: lab.C, h: lab.h, rgb, at: Date.now() };
+      draw(saved);
+      toast('Photo measured. Save to keep it.');
+    });
+  };
+  if ($('#fPhotoDel'))
+    $('#fPhotoDel').onclick = () => {
+      read();
+      delete c.photo;
+      draw(saved);
+    };
+  $('#fSave').onclick = save;
+  if ($('#fDel'))
+    $('#fDel').onclick = async () => {
+      if (!confirm('Delete this reading?')) return;
+      await ORIGIN.remove(c.id);
+      if (getRef() === c.id) setRef('');
+      toast('Deleted');
+      location.hash = '';
+    };
+  if ($('#fRef'))
+    $('#fRef').onclick = () => {
+      setRef(c.id);
+      draw(saved);
+      toast('Reference set');
+    };
+  if (saved) bindCloudRow(c);
+  result();
+}
+function result() {
+  const c = CUR,
+    out = [];
+  const g = gourmet(c);
+  if (g != null) {
+    out.push(namesHtml(g));
+    out.push(
+      '<div class="mini" style="margin-top:4px">' +
+        (c.scale === 'commercial'
+          ? 'Entered on the Commercial scale; Gourmet about ' + r1(g) + '.'
+          : 'Commercial scale about ' + r1(K.toCommercial(g)) + '.') +
+        ' Conversion from the Agtron E20CP manual.</div>'
+    );
+  }
+  const gw = num(c.agGround),
+    ww = num(c.agWhole);
+  if (gw != null && ww != null) {
+    const d = gw - ww;
+    out.push(
+      '<div class="cc-box">' +
+        (d >= 0
+          ? 'Ground reads <b>' + r1(d) + '</b> points higher than whole bean.'
+          : '<span class="warn">Whole bean reads higher than ground, which is unusual. Check the sample and the reading form.</span>') +
+        (d >= 0
+          ? d >= 8 && d <= 15
+            ? ' A usual gap.'
+            : d > 15
+              ? ' A wide gap: the outside roasted much darker than the inside.'
+              : ' A narrow gap: the bean roasted evenly through.'
+          : '') +
+        '<div class="mini" style="margin-top:4px">Ground commonly reads 8 to 15 points higher (Moustache Coffee Club). Track the gap for each profile: a sudden change can point to moisture, density or development.</div></div>'
+    );
+  }
+  const all = ALL.filter(r => r.id !== c.id);
+  if (c.photo && g == null) {
+    const C = photoCalib(all);
+    if (C.k != null) {
+      const est = C.c0 + C.k * c.photo.L,
+        n = K.roastName(est);
+      out.push(
+        '<div class="cc-box">From the photo: about <b>Agtron ' +
+          Math.round(est) +
+          '</b> ±' +
+          Math.max(2, Math.round(C.res * 2)) +
+          (n ? ', ' + n[0] : '') +
+          '.<div class="mini" style="margin-top:4px">Learned from ' +
+          C.n +
+          ' of your readings that have both a photo and an Agtron number.</div></div>'
+      );
+    } else
+      out.push(
+        '<div class="mini">A photo-to-Agtron estimate starts once 3 readings have both a photo and an Agtron number (' +
+          C.n +
+          ' so far).</div>'
+      );
+  }
+  const ref = getRef(),
+    rr = ref && ref !== c.id ? ALL.find(r => r.id === ref) : null;
+  const cmp = o => {
+    for (const src of ['meter', 'photo']) {
+      const A = labOf(c, src),
+        B = labOf(o, src);
+      if (A && B) return { src, d: K.de2000(B, A), A, B };
+    }
+    const ga = gourmet(c),
+      gb = gourmet(o);
+    return ga != null && gb != null ? { src: 'agtron', d: Math.abs(ga - gb), ga, gb } : null;
+  };
+  if (rr) {
+    const x = cmp(rr);
+    if (x)
+      out.push(
+        '<div class="cc-box">Against the reference, ' +
+          esc(rr.name || 'reading') +
+          ': ' +
+          (x.src === 'agtron'
+            ? '<b>' +
+              r1(x.d) +
+              '</b> Agtron points ' +
+              (x.ga > x.gb ? 'lighter' : x.ga < x.gb ? 'darker' : 'apart') +
+              '.'
+            : '<b>ΔE00 ' +
+              x.d.toFixed(1) +
+              '</b> (' +
+              x.src +
+              ' readings), ' +
+              K.verdict(x.d) +
+              '. This one is ' +
+              K.words(x.A, x.B) +
+              '.') +
+          '</div>'
+      );
+  }
+  const near = all
+    .map(o => ({ o, x: cmp(o) }))
+    .filter(y => y.x)
+    .sort((p, q) => (p.x.src === 'agtron') - (q.x.src === 'agtron') || p.x.d - q.x.d)
+    .slice(0, 5);
+  if (near.length)
+    out.push(
+      '<div class="mini" style="margin-top:8px">Nearest readings</div>' +
+        near
+          .map(
+            y =>
+              '<div class="row" style="justify-content:space-between;font-size:13.5px;padding:5px 0;border-bottom:1px solid #f0ebe3"><span>' +
+              esc(y.o.name || 'Reading') +
+              '</span><span>' +
+              (y.x.src === 'agtron' ? r1(y.x.d) + ' Agtron' : 'ΔE ' + y.x.d.toFixed(1)) +
+              '</span></div>'
+          )
+          .join('')
+    );
+  $('#result').innerHTML = out.length
+    ? out.join('')
+    : '<div class="mini">Enter an Agtron number or measure from a photo to see the roast level and comparisons.</div>';
+}
+async function save() {
+  const c = CUR;
+  if (!c.name) {
+    toast('Name the coffee you measured');
+    $('#fName').focus();
+    return;
+  }
+  if (gourmet(c) == null && !c.photo && labOf(c, 'meter') == null) {
+    toast('Enter an Agtron number, L*a*b*, or measure from a photo');
+    return;
+  }
+  const r = await ORIGIN.put(c);
+  if (!getRef()) setRef(r.id);
+  toast('Saved');
+  if (location.hash === '#edit/' + encodeURIComponent(r.id)) route();
+  else location.hash = 'edit/' + encodeURIComponent(r.id);
+}
+route();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+</script>
+</body>
+</html>
