@@ -15,6 +15,7 @@ const S={
  M:{t:'Moccamaster: SCA certified brewers and the Golden Cup standard',u:'https://us.moccamaster.com/blogs/blog/certified-by-the-sca-moccamaster-and-the-golden-cup-standard'},
  B:{t:'Five Senses Coffee: Batch brew fundamentals',u:'https://fivesenses.com.au/blogs/news/batch-brew-fundamentals'},
  R:{t:'Scott Rao: Bed depth, why it matters (2025)',u:'https://www.scottrao.com/blog/2025/11/11/bed-depth-why-it-matters'},
+ RM:{t:'Scott Rao: extraction myths',u:'https://www.scottrao.com/blog/extraction-myths'},
  P:{t:'Common practice',u:''}
 };
 // Level: 1 basic, 2 intermediate, 3 advanced. Each tip: [level, text, source]
@@ -114,7 +115,7 @@ const METHODS=M.map(([id,n,f,fl,start,notes])=>({id,n,f,fl,start,notes}));
 const byName={};METHODS.forEach(m=>byName[m.n]=m);
 // Topics
 const T=[
- ['strength','Strength and extraction','drip',[[1,'Strength is how concentrated the cup is (TDS %). Extraction is how much of the coffee dissolved (%).','P'],[1,'Ratio moves strength. Grind, time, heat and stirring move extraction.','P'],[2,'Sweetness was highest at lower strength; higher strength raised bitterness and drying.','F'],[3,'Extraction % = TDS % × beverage g ÷ coffee g. The chart in Cup plots your brews.','P']]],
+ ['strength','Strength and extraction','drip',[[1,'Strength is how concentrated the cup is (TDS %). Extraction is how much of the coffee dissolved (%).','P'],[2,'Another view (Scott Rao): bitterness and astringency at normal extraction usually come from channeling, not over-extraction. Even extraction matters more than the number.','RM'],[3,'Rao has made non-astringent brews at 28 to 29% with very even brewers; he argues true over-extraction is rare in normal brewing.','RM'],[1,'Ratio moves strength. Grind, time, heat and stirring move extraction.','P'],[2,'Sweetness was highest at lower strength; higher strength raised bitterness and drying.','F'],[3,'Extraction % = TDS % × beverage g ÷ coffee g. The chart in Cup plots your brews.','P']]],
  ['roast','Roast level and brewing','',[[1,'Darker roasts extract faster and taste more bitter. Use cooler water or a coarser grind.','P'],[2,'Darker roasts: more bitter, ashy, smoky, woody, dark chocolate and body. Lighter roasts: more fruit, citrus and sweetness.','F'],[2,'Light roasts sour faster as strength rises. Raise strength in small steps.','F'],[3,'Roast separated coffees more than extraction did. Some flavours cannot be brewed away; change the roast.','F']]],
  ['uneven','Uneven extraction and channels','',[[1,'Bitter and sour in the same cup often means some coffee extracted too much and some too little.','P'],[1,'Drip: pour evenly and keep the bed flat. Espresso: distribute evenly and tamp level.','P'],[2,'Espresso: grinding too fine clogs parts of the puck. Extraction falls and shots vary. Go coarser.','C'],[3,'A refractometer gives an average. Part of a clogged puck may be far over-extracted while part stays dry.','C']]],
  ['taste','From taste to cause','',[[1,'Use the taste list in Cup dial-in: pick what stands out and see likely causes for your method.','P']]],

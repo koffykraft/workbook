@@ -77,5 +77,10 @@
 "A short routine for the first few brews of a new bag.": "പുതിയ ഒരു പാക്കറ്റിലെ ആദ്യ കുറച്ച് ബ്രൂവുകൾക്കുള്ള ഒരു ചെറിയ രീതി.",
 "Roasted coffee changes every day. Space, oxygen, heat and time take its aroma.": "റോസ്റ്റ് ചെയ്ത കാപ്പി ഓരോ ദിവസവും മാറുന്നു. ഒഴിഞ്ഞ ഇടം, ഓക്സിജൻ, ചൂട്, സമയം എന്നിവ അതിന്റെ സുഗന്ധം കുറയ്ക്കുന്നു.",
 "Brewed with room-temperature water over many hours: lower acidity, sweet and smooth.": "സാധാരണ താപനിലയിലുള്ള വെള്ളത്തിൽ മണിക്കൂറുകളോളം വെച്ച് ഉണ്ടാക്കുന്നത്: പുളിപ്പ് കുറവ്, മധുരവും മൃദുവും.",
-"For roasters: a fair way to taste what a roast change did.": "റോസ്റ്റർമാർക്ക്: റോസ്റ്റിലെ ഒരു മാറ്റം രുചിയിൽ എന്ത് ചെയ്തു എന്ന് ന്യായമായി രുചിച്ചറിയാനുള്ള രീതി."
+"For roasters: a fair way to taste what a roast change did.": "റോസ്റ്റർമാർക്ക്: റോസ്റ്റിലെ ഒരു മാറ്റം രുചിയിൽ എന്ത് ചെയ്തു എന്ന് ന്യായമായി രുചിച്ചറിയാനുള്ള രീതി.",
+"How to find the right grind for your brewer, dose and grinder, instead of copying someone else's number.": "മറ്റൊരാളുടെ നമ്പർ പകർത്താതെ, നിങ്ങളുടെ ബ്രൂവറിനും അളവിനും ഗ്രൈൻഡറിനും ശരിയായ പൊടിവലിപ്പം എങ്ങനെ കണ്ടെത്താം.",
+"A simple way to brew many different coffees well.": "പല തരം കാപ്പികളും നന്നായി ഉണ്ടാക്കാനുള്ള ലളിതമായ ഒരു വഴി.",
+"Habits that make cupping scores reliable.": "കപ്പിംഗ് സ്കോറുകൾ വിശ്വസനീയമാക്കുന്ന ശീലങ്ങൾ.",
+"For roasters: readings you can compare from batch to batch.": "റോസ്റ്റർമാർക്ക്: ഓരോ ബാച്ചും തമ്മിൽ താരതമ്യം ചെയ്യാവുന്ന അളവുകൾ.",
+"For roasters: one roastery's way of keeping every batch on target.": "റോസ്റ്റർമാർക്ക്: ഓരോ ബാച്ചും ലക്ഷ്യത്തിൽ നിലനിർത്താൻ ഒരു റോസ്റ്ററി ഉപയോഗിക്കുന്ന രീതി."
 };
