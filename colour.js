@@ -371,6 +371,150 @@
   // Agtron Gourmet to Commercial (Agtron E20CP manual): Commercial = 1.2 + 0.744 x Gourmet.
   const toCommercial = g => 1.2 + 0.744 * g;
   const toGourmet = c => (c - 1.2) / 0.744;
+  // ---- Other meters, converted to Agtron Gourmet where a conversion is published ----
+  // Tonino's published table (my-tonino.com, details): Tonino against a reference Agtron Gourmet.
+  const TONINO = [
+    [50, 20],
+    [60, 30],
+    [75, 40],
+    [85, 50],
+    [100, 60],
+    [115, 70],
+    [125, 80],
+    [130, 90],
+  ];
+  const interp = (pts, x) => {
+    if (x == null || !isFinite(x) || x < pts[0][0] || x > pts[pts.length - 1][0]) return null;
+    for (let i = 1; i < pts.length; i++)
+      if (x <= pts[i][0]) {
+        const [x0, y0] = pts[i - 1],
+          [x1, y1] = pts[i];
+        return y0 + ((x - x0) * (y1 - y0)) / (x1 - x0);
+      }
+    return null;
+  };
+  const flip = pts => pts.map(([a, b]) => [b, a]);
+  const TILES = [25, 35, 45, 55, 65, 75, 85, 95];
+  const same = v => v;
+  // toG: reading to Agtron Gourmet; fromG: back. null = no published conversion: learn from pairs.
+  // anchor: the same roast on this meter and on Agtron Gourmet, from the SCA cupping roast target
+  // (Lighttells SCAA roast level sheet): Gourmet 63 = Commercial 48 = ColorTrack 62 = Colorette 3b 96.
+  const METERS = {
+    'agtron-g': { name: 'Agtron Gourmet (M-Basic)', toG: same, fromG: same, src: 'Agtron Gourmet scale' },
+    'agtron-c': {
+      name: 'Agtron Commercial (E20, E20CP)',
+      toG: toGourmet,
+      fromG: toCommercial,
+      src: 'Agtron E20CP manual: Commercial = 1.2 + 0.744 × Gourmet',
+    },
+    lighttells: {
+      name: 'Lighttells',
+      toG: same,
+      fromG: same,
+      src: 'reads on the Agtron Gourmet scale (Lighttells SCAA roast level sheet)',
+    },
+    'javalytics-g': {
+      name: 'Javalytics, Gourmet mode',
+      toG: same,
+      fromG: same,
+      src: 'reads on the Agtron scale it is set to (Lighttells SCAA roast level sheet)',
+    },
+    'javalytics-c': {
+      name: 'Javalytics, Commercial mode',
+      toG: toGourmet,
+      fromG: toCommercial,
+      src: 'Commercial mode, converted with the Agtron E20CP manual formula',
+    },
+    tonino: {
+      name: 'Tonino',
+      toG: v => interp(TONINO, v),
+      fromG: g => interp(flip(TONINO), g),
+      src: "Tonino's published table, approximate (±2 Tonino units)",
+    },
+    'sca-tile': {
+      name: 'SCA roast colour tile (#25 to #95)',
+      toG: same,
+      fromG: g => TILES.reduce((a, t) => (Math.abs(t - g) < Math.abs(a - g) ? t : a), TILES[0]),
+      src: 'tiles are numbered on the Agtron Gourmet scale',
+    },
+    colortrack: { name: 'ColorTrack', toG: null, anchor: [62, 63] },
+    colorette: { name: 'Probat Colorette', toG: null, anchor: [96, 63], anchorNote: 'Colorette 3b' },
+    neotec: { name: 'Neuhaus Neotec ColorTest', toG: null },
+    other: { name: 'Other meter', toG: null },
+  };
+
+  // ---- Colour spaces (D65, 2° observer) ----
+  const WP = { X: 95.047, Y: 100, Z: 108.883 };
+  const KA = (175 / 198.04) * (WP.X + WP.Y),
+    KB = (70 / 218.11) * (WP.Y + WP.Z);
+  function labToXyz(L, a, b) {
+    const fy = (L + 16) / 116,
+      fx = fy + a / 500,
+      fz = fy - b / 200;
+    const inv = t => (t ** 3 > 0.008856 ? t ** 3 : (t - 16 / 116) / 7.787);
+    return { X: WP.X * inv(fx), Y: WP.Y * inv(fy), Z: WP.Z * inv(fz) };
+  }
+  function xyzToLab(X, Y, Z) {
+    const f = t => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+    const fx = f(X / WP.X),
+      fy = f(Y / WP.Y),
+      fz = f(Z / WP.Z);
+    return { L: 116 * fy - 16, a: 500 * (fx - fy), b: 200 * (fy - fz) };
+  }
+  function xyzToHunter(X, Y, Z) {
+    const y = Y / WP.Y,
+      r = Math.sqrt(y);
+    return { L: 100 * r, a: r ? (KA * (X / WP.X - y)) / r : 0, b: r ? (KB * (y - Z / WP.Z)) / r : 0 };
+  }
+  function hunterToXyz(L, a, b) {
+    const r = L / 100,
+      y = r * r;
+    return { X: WP.X * ((a / KA) * r + y), Y: WP.Y * y, Z: WP.Z * (y - (b / KB) * r) };
+  }
+  function xyzToSrgb(X, Y, Z) {
+    const x = X / 100,
+      y = Y / 100,
+      z = Z / 100;
+    const lin = [
+      3.2406 * x - 1.5372 * y - 0.4986 * z,
+      -0.9689 * x + 1.8758 * y + 0.0415 * z,
+      0.0557 * x - 0.204 * y + 1.057 * z,
+    ];
+    const g = c => (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
+    return lin.map(c => Math.round(Math.min(1, Math.max(0, g(c))) * 255));
+  }
+  const hex = rgb =>
+    '#' +
+    rgb
+      .map(v => v.toString(16).padStart(2, '0'))
+      .join('')
+      .toUpperCase();
+  // Every common way to write the same colour, from CIELAB.
+  function spaces(lab) {
+    const xyz = labToXyz(lab.L, lab.a, lab.b),
+      hl = xyzToHunter(xyz.X, xyz.Y, xyz.Z),
+      rgb = xyzToSrgb(xyz.X, xyz.Y, xyz.Z);
+    return {
+      lab,
+      lch: {
+        L: lab.L,
+        C: Math.hypot(lab.a, lab.b),
+        h: ((Math.atan2(lab.b, lab.a) * 180) / Math.PI + 360) % 360,
+      },
+      xyz,
+      hunter: hl,
+      rgb,
+      hex: hex(rgb),
+    };
+  }
+  // CIELAB from a reading entered as CIELAB or Hunter Lab.
+  function toCielab(L, a, b, space) {
+    if (space === 'hunter') {
+      const x = hunterToXyz(L, a, b);
+      return xyzToLab(x.X, x.Y, x.Z);
+    }
+    return { L, a, b };
+  }
   window.KKCOLOUR = {
     toLab,
     de2000,
@@ -386,6 +530,16 @@
     measurePhoto,
     toCommercial,
     toGourmet,
+    METERS,
+    TILES,
+    spaces,
+    toCielab,
+    labToXyz,
+    xyzToLab,
+    xyzToHunter,
+    hunterToXyz,
+    xyzToSrgb,
+    hex,
   };
   window.colourSection = function (r, rows) {
     const host = document.getElementById('detail');

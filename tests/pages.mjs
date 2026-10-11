@@ -167,7 +167,7 @@ export async function run(root, t) {
     await t.acheck('Colour check saves a reading, names it and shows the ground and whole-bean gap', async () => {
       await q.goto(base + 'colour.html#new'); await q.waitForSelector('#fName');
       await q.fill('#fName', 'Test lot roast 1'); await q.click('[data-k="Bought coffee"]');
-      await q.fill('#fAgG', '60'); await q.fill('#fAgW', '49');
+      await q.fill('#fMG', '60'); await q.fill('#fMW', '49');
       const res = await q.$eval('#result', e => e.innerText);
       if (!/Agtron Gourmet 60/.test(res) || !/11 points higher/.test(res)) throw new Error('result: ' + res.slice(0, 200));
       await q.click('#fSave'); await q.waitForURL(/#edit\//);
@@ -176,6 +176,18 @@ export async function run(root, t) {
       const rec = await q.evaluate(async () => (await ORIGIN.all('colour'))[0]); if (rec.agGround !== 60 || rec.kind !== 'Bought coffee') throw new Error(JSON.stringify(rec));
       await q.selectOption('#scheme', 'mc'); if (!(await q.$eval('#view', e => e.innerText)).includes('Medium')) throw new Error('scheme switch');
       await q.selectOption('#scheme', 'cr');
+    });
+    await t.acheck('Colour check converts other meters and colour spaces', async () => {
+      await q.goto(base + 'colour.html#new'); await q.waitForSelector('#fName');
+      await q.fill('#fName', 'Tonino test'); await q.selectOption('#fMeter', 'tonino'); await q.fill('#fMG', '105');
+      let res = await q.$eval('#result', e => e.innerText);
+      if (!/Agtron Gourmet 63\.3/.test(res) || !/Agtron Commercial\s+48/.test(res)) throw new Error('tonino: ' + res.slice(0, 300));
+      await q.selectOption('#fMeter', 'colortrack');
+      if (!/No published conversion/.test(await q.$eval('#fConv', e => e.innerText)) || await q.$eval('#fKnownWrap', e => e.hidden)) throw new Error('colortrack should ask for pairs');
+      await q.selectOption('#fMeter', 'agtron-g'); await q.fill('#fMG', ''); await q.selectOption('#fSpace', 'hunter');
+      await q.fill('#fL', '33.54'); await q.fill('#fA', '7.49'); await q.fill('#fB', '11.28');
+      res = await q.$eval('#result', e => e.innerText);
+      if (!/L\* 40\.0 · a\* 10\.0 · b\* 20\.0/.test(res) || !/#78583E/.test(res)) throw new Error('hunter: ' + res.slice(0, 400));
     });
     await t.acheck('Malayalam shows explanations only, labels stay English', async () => {
       await q.goto(base + 'home.html'); await q.evaluate(() => localStorage.setItem('kk_lang', 'ml'));

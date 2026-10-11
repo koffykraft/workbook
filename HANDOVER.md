@@ -49,6 +49,8 @@ Roast timer and graph, roastbooks, cup and brew pages, water, colour.js, varieti
 
 ## Colour check page (11 Oct 2026)
 - colour.html: standalone readings for any coffee (my roast, bought, sample, other), stored as ORIGIN type 'colour' (Cup cloud section). Meter: Agtron ground and whole bean, Gourmet or Commercial, L*a*b*; photo with white card via KKCOLOUR.measurePhoto. Names on three charts (Coffee Review, Sensegood, Moustache Coffee Club). Reference in localStorage kk_colour_ref.
+- Meters (KKCOLOUR.METERS): Agtron G/C (E20CP manual formula), Lighttells and Javalytics (Agtron scale, Lighttells SCAA sheet), Tonino (published table, piecewise), SCA tiles; ColorTrack, Colorette, Neotec, Other learned from the user's own pairs (agKnown), with the SCA cupping anchor shown. Colour spaces: CIELAB, LCh, Hunter Lab (input too), XYZ, sRGB/HEX, D65. Records keep raw meter values (meter, mGround, mWhole, space) plus Gourmet equivalents in agGround/agWhole.
+- worker.js /api/status reports records: ready after the one-time record table upgrade (also run nightly).
 - colour.js exposes window.KKCOLOUR; the per-roast section in Roastbook still uses its own localStorage keys.
 - Record table: migration 0016 drops the type CHECK; worker.js recordTypesReady() does the same rebuild once at runtime on the first /api/origin POST, because the deploy token cannot run migrations.
 

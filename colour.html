@@ -268,22 +268,51 @@ const setRef = v => {
 };
 
 // The Agtron Gourmet number for naming and comparing: ground first, then whole bean.
-function gourmet(r) {
-  const v = num(r.agGround) ?? num(r.agWhole);
+const meterOf = r => r.meter || (r.scale === 'commercial' ? 'agtron-c' : 'agtron-g');
+const meterInfo = r => K.METERS[meterOf(r)] || K.METERS.other;
+// Pairs from your own readings (this meter's number and the Agtron Gourmet of the same sample)
+// teach KoffyKraft a meter that has no published conversion.
+function learned(meter, exceptId) {
+  return K.calib2(
+    ALL.filter(
+      r => r.id !== exceptId && meterOf(r) === meter && num(r.mGround) != null && num(r.agKnown) != null
+    ).map(r => [+r.mGround, +r.agKnown])
+  );
+}
+function convG(r, v) {
   if (v == null) return null;
-  return r.scale === 'commercial' ? K.toGourmet(v) : v;
+  const M = meterInfo(r);
+  if (M.toG) return M.toG(v);
+  const C = learned(meterOf(r), r.id);
+  return C.k != null ? C.c0 + C.k * v : null;
+}
+// Agtron Gourmet of the ground sample (or whole bean when that is all there is).
+function gourmet(r) {
+  if (!r.meter) {
+    const v = num(r.agGround) ?? num(r.agWhole);
+    return v == null ? null : r.scale === 'commercial' ? K.toGourmet(v) : v;
+  }
+  if (num(r.agKnown) != null) return +r.agKnown;
+  return convG(r, num(r.mGround)) ?? convG(r, num(r.mWhole));
+}
+function gourmetPair(r) {
+  if (!r.meter) {
+    const f = v => (v == null ? null : r.scale === 'commercial' ? K.toGourmet(v) : v);
+    return [f(num(r.agGround)), f(num(r.agWhole))];
+  }
+  return [num(r.agKnown) ?? convG(r, num(r.mGround)), convG(r, num(r.mWhole))];
 }
 // CIELAB for comparing: the meter's own if given, else the photo's.
 function labOf(r, src) {
-  if ((src || 'meter') === 'meter' && num(r.L) != null && num(r.a) != null && num(r.b) != null)
+  if ((src || 'meter') === 'meter' && num(r.L) != null && num(r.a) != null && num(r.b) != null) {
+    const x = K.toCielab(+r.L, +r.a, +r.b, r.space);
     return {
-      L: +r.L,
-      a: +r.a,
-      b: +r.b,
-      C: Math.hypot(r.a, r.b),
-      h: ((Math.atan2(r.b, r.a) * 180) / Math.PI + 360) % 360,
+      ...x,
+      C: Math.hypot(x.a, x.b),
+      h: ((Math.atan2(x.b, x.a) * 180) / Math.PI + 360) % 360,
       src: 'meter',
     };
+  }
   if ((src || 'photo') === 'photo' && r.photo) return { ...r.photo, src: 'photo' };
   return null;
 }
@@ -505,30 +534,48 @@ function draw(saved) {
     '</div>';
   h +=
     '<h2>Meter reading</h2><div class="card f">' +
-    '<label class="l">Agtron, ground<input id="fAgG" type="number" inputmode="decimal" step="any" value="' +
-    v('agGround') +
+    '<label class="l full">Meter<select id="fMeter">' +
+    Object.entries(K.METERS)
+      .map(
+        ([k, m]) =>
+          '<option value="' +
+          k +
+          '"' +
+          (meterOf(c) === k ? ' selected' : '') +
+          '>' +
+          esc(m.name) +
+          '</option>'
+      )
+      .join('') +
+    '</select></label>' +
+    '<label class="l">Reading, ground<input id="fMG" type="number" inputmode="decimal" step="any" value="' +
+    esc(c.mGround ?? c.agGround ?? '') +
     '"></label>' +
-    '<label class="l">Agtron, whole bean<input id="fAgW" type="number" inputmode="decimal" step="any" value="' +
-    v('agWhole') +
+    '<label class="l">Reading, whole bean<input id="fMW" type="number" inputmode="decimal" step="any" value="' +
+    esc(c.mWhole ?? c.agWhole ?? '') +
     '"></label>' +
-    '<label class="l">Scale<select id="fScale"><option value="gourmet"' +
-    (c.scale !== 'commercial' ? ' selected' : '') +
-    '>Gourmet (M-Basic)</option><option value="commercial"' +
-    (c.scale === 'commercial' ? ' selected' : '') +
-    '>Commercial</option></select></label>' +
-    '<label class="l">Meter (optional)<input id="fDev" value="' +
+    '<div class="full mini" id="fConv"></div>' +
+    '<label class="l full" id="fKnownWrap">Agtron Gourmet of the same sample, if you know it<input id="fKnown" type="number" inputmode="decimal" step="any" value="' +
+    v('agKnown') +
+    '"></label>' +
+    '<label class="l full">Meter model (optional)<input id="fDev" value="' +
     v('device') +
-    '" placeholder="Agtron E20CP, Lighttells, Sensegood…"></label>' +
-    '<label class="l">L* (optional)<input id="fL" type="number" inputmode="decimal" step="any" value="' +
+    '" placeholder="E20CP, CM-100 Plus, Tonino v2…"></label>' +
+    '<label class="l full">Colour values (optional)<select id="fSpace"><option value="cielab"' +
+    (c.space !== 'hunter' ? ' selected' : '') +
+    '>CIELAB L*a*b*</option><option value="hunter"' +
+    (c.space === 'hunter' ? ' selected' : '') +
+    '>Hunter Lab (HunterLab meters)</option></select></label>' +
+    '<label class="l">L<input id="fL" type="number" inputmode="decimal" step="any" value="' +
     v('L') +
     '"></label>' +
-    '<label class="l">a*<input id="fA" type="number" inputmode="decimal" step="any" value="' +
+    '<label class="l">a<input id="fA" type="number" inputmode="decimal" step="any" value="' +
     v('a') +
     '"></label>' +
-    '<label class="l">b*<input id="fB" type="number" inputmode="decimal" step="any" value="' +
+    '<label class="l">b<input id="fB" type="number" inputmode="decimal" step="any" value="' +
     v('b') +
     '"></label>' +
-    '<div class="mini" style="align-self:end">L*a*b* is used for the colour difference when two readings both have it.</div>' +
+    '<div class="mini" style="align-self:end">Used for the colour difference when two readings both have values.</div>' +
     '</div>';
   h +=
     '<h2>Photo reading</h2><div class="card">' +
@@ -573,13 +620,20 @@ function draw(saved) {
       const t = el ? el.value.trim() : '';
       return t === '' ? null : parseFloat(t);
     };
-    c.agGround = g('#fAgG');
-    c.agWhole = g('#fAgW');
+    c.meter = $('#fMeter').value;
+    c.mGround = g('#fMG');
+    c.mWhole = g('#fMW');
+    c.agKnown = meterInfo(c).toG ? null : g('#fKnown');
+    c.space = $('#fSpace').value;
     c.L = g('#fL');
     c.a = g('#fA');
     c.b = g('#fB');
-    c.scale = $('#fScale').value;
     c.device = $('#fDev').value.trim();
+    // keep Agtron Gourmet equivalents on the record for lists, sharing and older pages
+    const [gg, gw] = gourmetPair(c);
+    c.agGround = gg == null ? null : Math.round(gg * 10) / 10;
+    c.agWhole = gw == null ? null : Math.round(gw * 10) / 10;
+    c.scale = 'gourmet';
     c.notes = $('#fNotes').value.trim();
     const rs = $('#fRoast');
     if (rs) {
@@ -650,19 +704,105 @@ function draw(saved) {
 function result() {
   const c = CUR,
     out = [];
-  const g = gourmet(c);
+  const g = gourmet(c),
+    M = meterInfo(c);
+  // how this meter's number became Agtron Gourmet
+  const conv = $('#fConv'),
+    knownWrap = $('#fKnownWrap');
+  if (conv) {
+    const C = M.toG ? null : learned(meterOf(c), c.id);
+    conv.innerHTML = M.toG
+      ? 'Converted to Agtron Gourmet: ' + esc(M.src) + '.'
+      : 'No published conversion for ' +
+        esc(M.name) +
+        '. ' +
+        (C && C.k != null
+          ? 'Using a line learned from ' +
+            C.n +
+            ' of your readings with both numbers (±' +
+            Math.max(1, Math.round(C.res * 2)) +
+            ').'
+          : 'Add the Agtron Gourmet of the same sample below when you know it; after 3 such readings KoffyKraft converts this meter for you (' +
+            ((C && C.n) || 0) +
+            ' so far).') +
+        (M.anchor
+          ? ' Reference point: the SCA cupping roast reads about ' +
+            M.anchor[0] +
+            ' on ' +
+            esc(M.anchorNote || M.name) +
+            ' and ' +
+            M.anchor[1] +
+            ' on Agtron Gourmet (Lighttells SCAA roast level sheet).'
+          : '');
+    knownWrap.hidden = !!M.toG;
+  }
   if (g != null) {
     out.push(namesHtml(g));
+    const rows = [
+      ['Agtron Gourmet', r1(g)],
+      ['Agtron Commercial', r1(K.toCommercial(g))],
+      ['SCA tile, nearest', '#' + K.METERS['sca-tile'].fromG(g)],
+    ];
+    const t = K.METERS.tonino.fromG(g);
+    if (t != null) rows.push(['Tonino, about', Math.round(t)]);
+    for (const k of ['colortrack', 'colorette', 'neotec', 'other']) {
+      const C = learned(k, null);
+      if (C.k != null && C.k)
+        rows.push(['Your ' + K.METERS[k].name + ', about', Math.round((g - C.c0) / C.k)]);
+    }
     out.push(
-      '<div class="mini" style="margin-top:4px">' +
-        (c.scale === 'commercial'
-          ? 'Entered on the Commercial scale; Gourmet about ' + r1(g) + '.'
-          : 'Commercial scale about ' + r1(K.toCommercial(g)) + '.') +
-        ' Conversion from the Agtron E20CP manual.</div>'
+      '<div class="cc-box"><b>On other scales</b><div class="kv" style="margin-top:6px">' +
+        rows.map(x => '<span>' + esc(x[0]) + '</span><div>' + esc(String(x[1])) + '</div>').join('') +
+        '</div><div class="mini" style="margin-top:6px">Commercial from the Agtron E20CP manual; Tonino from its published table; tiles are numbered on the Gourmet scale. Meters differ by a point or two even when calibrated, and grind size moves readings: compare like with like.</div></div>'
     );
   }
-  const gw = num(c.agGround),
-    ww = num(c.agWhole);
+  const lab = labOf(c, 'meter') || labOf(c, 'photo');
+  if (lab) {
+    const sp = K.spaces(lab),
+      f = x => x.toFixed(1);
+    out.push(
+      '<div class="cc-box"><b>Colour values</b> (' +
+        (labOf(c, 'meter') ? 'meter' : 'photo') +
+        ', D65)<div class="row" style="align-items:center;margin-top:6px"><span class="sw" style="background:' +
+        sp.hex +
+        '"></span><div class="kv" style="flex:1">' +
+        '<span>CIELAB</span><div>L* ' +
+        f(sp.lab.L) +
+        ' · a* ' +
+        f(sp.lab.a) +
+        ' · b* ' +
+        f(sp.lab.b) +
+        '</div>' +
+        '<span>LCh</span><div>L ' +
+        f(sp.lch.L) +
+        ' · C ' +
+        f(sp.lch.C) +
+        ' · h ' +
+        f(sp.lch.h) +
+        '°</div>' +
+        '<span>Hunter Lab</span><div>L ' +
+        f(sp.hunter.L) +
+        ' · a ' +
+        f(sp.hunter.a) +
+        ' · b ' +
+        f(sp.hunter.b) +
+        '</div>' +
+        '<span>XYZ</span><div>' +
+        f(sp.xyz.X) +
+        ' · ' +
+        f(sp.xyz.Y) +
+        ' · ' +
+        f(sp.xyz.Z) +
+        '</div>' +
+        '<span>sRGB</span><div>' +
+        sp.rgb.join(', ') +
+        ' · ' +
+        sp.hex +
+        '</div>' +
+        '</div></div><div class="mini" style="margin-top:6px">RGB and HEX are for screens and print: they show the colour, they do not measure the roast. Agtron meters read near-infrared, which a colour space cannot convert to.</div></div>'
+    );
+  }
+  const [gw, ww] = gourmetPair(c);
   if (gw != null && ww != null) {
     const d = gw - ww;
     out.push(

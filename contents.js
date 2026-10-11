@@ -112,7 +112,7 @@ window.KK_CONTENTS = [
       [
         'Colour check',
         'Record roast colour for any coffee: your roasts, bought coffee or samples.',
-        'From a colour meter (Agtron ground and whole bean, Gourmet or Commercial, L*a*b*) or a phone photo with a white card. Names the roast level on three charts (Coffee Review, Sensegood, Moustache Coffee Club), tracks the ground to whole-bean gap, colour difference (ΔE) against a reference and nearest matches. Saved like brews, with cloud sync.',
+        'Meters: Agtron Gourmet and Commercial, Lighttells, Javalytics, Tonino, SCA tiles, and ColorTrack, Colorette or Neotec learned from your own paired readings. Shows each reading on the other scales, and colour values as CIELAB, LCh, Hunter Lab, XYZ and sRGB or HEX. Or measure from a phone photo with a white card. Names the roast level on three charts, tracks the ground to whole-bean gap, ΔE against a reference and nearest matches. Saved like brews, with cloud sync.',
         'colour.html',
       ],
       [
