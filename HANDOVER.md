@@ -32,7 +32,7 @@ Roast timer and graph, roastbooks, cup and brew pages, water, colour.js, varieti
 - New migrations must be applied to D1 (`npx wrangler d1 migrations apply koffykraft --remote`).
 
 ## Pending
-- Deploy commit ebaa45a (CoffeeMind guide points, cache v86): needs the Cloudflare token.
+- CoffeeMind guide points deployed (cache v86, 11 Oct 2026). The Cloudflare token was pasted in chat: roll it after the new app is set up.
 - User checks: two-phone shared space test, Gmail sign-in, feedback email arriving, Malayalam wording review, profile logo and colour.
 - Offers not yet decided: evidence labels on every tip (Study / Standard or maker / Expert practice / Common practice); a rate-of-rise span setting (Rao suggests 15 s or less, we use about 30 s).
 - Backlog: LalCafé TDS PDFs, water sheet, charge temperature "8250" explanation, Probat/Neotec conversion, Malayalam chart labels, live probe reading in the Timer, commercial licence email (.com or .coffee).
