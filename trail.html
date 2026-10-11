@@ -242,6 +242,22 @@ textarea {
   max-width: 96vw;
   max-height: 88vh;
 }
+.recbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 1000;
+  background: var(--bg);
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+}
+.recbar .btn {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+.rec-map #map {
+  height: 42vh;
+}
 .live {
   font-size: 13px;
   color: var(--muted);
@@ -616,9 +632,9 @@ async function recView() {
     paused: true,
   };
   v.innerHTML =
-    '<a class="link" href="#">‹ Trails</a><h1>Recording</h1><div class="sub">Keep this screen open while you walk. Tap Add a stop at anything worth showing: a plot, the drying beds, a spring.</div>' +
+    '<div class="rec-map"><a class="link" href="#">‹ Trails</a><h1>Recording</h1><div class="sub">Keep this screen open while you walk. Tap 📷 Photo here or ＋ Stop at anything worth showing: a plot, the drying beds, a spring. The buttons stay at the bottom of the screen.</div>' +
     '<div id="map"></div><div class="live" id="live">Waiting for the location…</div><div id="st"></div>' +
-    '<div class="row"><button class="btn rec" id="go"></button><button class="btn" id="stop">＋ Add a stop</button><button class="btn" id="fin">Finish</button></div>';
+    '<div class="row recbar"><button class="btn rec" id="go"></button><button class="btn" id="cam">📷 Photo here</button><button class="btn" id="stop">＋ Stop</button><button class="btn" id="fin">Finish</button></div></div>';
   mapIn('map');
   drawTrail(REC, true);
   $('#st').innerHTML = statsHtml(REC.points);
@@ -640,14 +656,26 @@ async function recView() {
     btn();
     await T.put(REC);
   };
-  $('#stop').onclick = () => {
+  // A stop where you stand; before the first GPS fix, at the middle of the map (said in the sheet).
+  const here = () => {
     const last = REC.lastFix;
-    if (!last) return toast('No location yet');
-    stopSheet(REC, { lat: last[0], lng: last[1], alt: last[2], t: last[4] }, async () => {
+    if (last) return { lat: last[0], lng: last[1], alt: last[2], t: last[4] };
+    const c = map && map.getCenter ? map.getCenter() : null;
+    return c && isFinite(c.lat)
+      ? { lat: r6(c.lat), lng: r6(c.lng), alt: null, t: Date.now(), guess: true }
+      : null;
+  };
+  const newStop = camera => {
+    const at = here();
+    if (!at) return toast('No location yet');
+    stopSheet(REC, at, async () => {
       await T.put(REC);
       drawTrail(REC, false);
     });
+    if (camera) $('#sCam').click(); // opens the camera straight away
   };
+  $('#stop').onclick = () => newStop(false);
+  $('#cam').onclick = () => newStop(true);
   $('#fin').onclick = async () => {
     if (!REC.points.length && !REC.stops.length) {
       if (confirm('Nothing recorded yet. Leave without saving?')) {
@@ -732,9 +760,10 @@ function stopSheet(t, at, done, s) {
     ', ' +
     (+s.lng).toFixed(5) +
     (s.alt != null ? ' · ' + Math.round(s.alt) + ' m' : '') +
+    (at && at.guess ? ' · <b>not located yet</b>: placed at the middle of the map' : '') +
     '</div><label class="f">Name<input id="sT" maxlength="80" placeholder="Block 3, SLN 795"></label><label class="f">Kind<select id="sK">' +
     KINDS.map(k => '<option' + (k === s.kind ? ' selected' : '') + '>' + k + '</option>').join('') +
-    '</select></label><label class="f">What to see here<textarea id="sD" maxlength="2000" placeholder="Shade, age of plants, what the buyer should notice"></textarea></label><label class="f">Photos<input id="sP" type="file" accept="image/*" multiple></label><div class="pics" id="sPics"></div><div class="row" style="margin-top:12px"><button class="btn primary" id="sOk">Save stop</button><button class="btn" id="sNo">Cancel</button>' +
+    '</select></label><label class="f">What to see here<textarea id="sD" maxlength="2000" placeholder="Shade, age of plants, what the buyer should notice"></textarea></label><div class="f" style="margin:8px 0 0;font-size:12px;color:var(--muted);font-weight:600">Photos</div><div class="row"><label class="btn small" style="cursor:pointer">📷 Take a photo<input id="sCam" type="file" accept="image/*" capture="environment" hidden></label><label class="btn small" style="cursor:pointer">🖼 From gallery<input id="sP" type="file" accept="image/*" multiple hidden></label></div><div class="pics" id="sPics"></div><div class="row" style="margin-top:12px"><button class="btn primary" id="sOk">Save stop</button><button class="btn" id="sNo">Cancel</button>' +
     (isNew ? '' : '<button class="btn" id="sDel" style="margin-left:auto">Delete stop</button>') +
     '</div></div>';
   document.body.appendChild(el);
@@ -751,7 +780,7 @@ function stopSheet(t, at, done, s) {
     for (const p of added) box.insertAdjacentHTML('beforeend', '<img src="' + blobUrl(p.blob) + '" alt="">');
   };
   showPics();
-  $('#sP').onchange = async e => {
+  $('#sCam').onchange = $('#sP').onchange = async e => {
     for (const f of [...e.target.files].slice(0, 12)) {
       const sm = await shrink(f);
       added.push({
@@ -856,7 +885,7 @@ async function trailView(id, edit) {
                 .join('') +
               '</div><div class="row" style="margin-top:6px"><button class="btn small" data-ed="' +
               esc(s.id) +
-              '">Edit stop</button></div></div></div>'
+              '">📷 Add photos or edit</button></div></div></div>'
           )
           .join('')
       : '<div class="card mini">No stops on this trail.</div>') +

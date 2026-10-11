@@ -257,8 +257,12 @@ export async function run(root, t) {
       await q.goto(base + 'trail.html#rec'); await q.waitForTimeout(600);
       await q.click('#go'); await q.waitForTimeout(300);
       for (let i = 1; i <= 4; i++) { await ctx.setGeolocation({ latitude: 9.0 + i * 0.0002, longitude: 76.9, accuracy: 5 }); await q.waitForTimeout(350) }
+      if (!(await q.isVisible('#cam'))) throw new Error('no Photo here button');
+      const barOk = await q.evaluate(() => { const r = document.querySelector('.recbar').getBoundingClientRect(); return r.bottom <= innerHeight + 1 && r.top >= 0 });
+      if (!barOk) throw new Error('record buttons not on screen');
       await q.click('#stop'); await q.fill('#sT', 'Drying beds'); await q.fill('#sD', 'Raised beds, day 4');
       const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+      if (!(await q.isVisible('label:has(#sCam)')) || !(await q.isVisible('label:has(#sP)'))) throw new Error('photo buttons not shown');
       await q.setInputFiles('#sP', { name: 'beds.png', mimeType: 'image/png', buffer: png }); await q.waitForTimeout(300);
       await q.click('#sOk'); await q.waitForTimeout(300);
       await q.click('#fin'); await q.waitForTimeout(500);
