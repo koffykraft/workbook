@@ -55,3 +55,20 @@ nav.kkh-nav{display:flex;flex:none;justify-content:space-between;font-size:14px;
 .links a,#fbK button,.row>button,.btn.small,.chips button,.chip,.probe-choice button,.unit-choice button{min-height:36px}
 .option-toggle{min-height:40px;display:inline-flex;align-items:center;gap:8px}
 .option-toggle input[type=checkbox]{width:22px;height:22px;min-height:0}
+
+/* One button shape everywhere. Pages keep their own colours (a dark main action stays dark);
+   these rules only set shape, size and type so every page feels the same. */
+:where(main a:not([class]), .app a:not([class])) { color: var(--kk-coffee); }
+body .btn, body .pick, body label.btn {
+  font-family: inherit; font-size: 14px; font-weight: 600; line-height: 1.2;
+  border-radius: 999px; padding: 9px 15px; min-height: 40px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  text-decoration: none; cursor: pointer; vertical-align: middle;
+}
+body .btn.small { font-size: 13px; padding: 7px 12px; min-height: 36px; }
+body .pick { border: 1px solid var(--kk-line); background: #fff; color: var(--kk-ink); border-radius: 14px; min-height: 48px; width: 100%; }
+body .pick:active, body .btn:active { transform: translateY(1px); }
+a.kk-plain { display: inline-flex; align-items: center; min-height: 40px; color: var(--kk-coffee); font-weight: 600; text-decoration: none; }
+/* Account button: a plain line icon in the ink colour instead of the blue emoji */
+.kkh-acct { font-size: 0 !important; color: var(--kk-ink); }
+.kkh-acct::before { content: ''; width: 20px; height: 20px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6'/%3E%3C/svg%3E") center/contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6'/%3E%3C/svg%3E") center/contain no-repeat; }

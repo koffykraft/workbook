@@ -2,198 +2,174 @@
 <!-- KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE. -->
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coffee Rehydration Calculator</title>
-    <style>
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background-color: #f4f6f8;
-  color: #333;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  margin: 0;
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fff">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>KoffyKraft Rehydration</title>
+<style>
+:root {
+  --bg: #f7f5f0;
+  --ink: #171512;
+  --muted: #77716a;
+  --line: #ddd8d0;
+  --coffee: #8d583b;
+  --warn: #9a6a12;
 }
-.calculator-card {
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 450px;
-  padding: 24px;
+* {
   box-sizing: border-box;
 }
-h2 {
-  margin-top: 0;
-  color: #1e293b;
-  font-size: 1.5rem;
-  border-bottom: 2px solid #e2e8f0;
-  padding-bottom: 12px;
-  text-align: center;
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
 }
-.input-group {
-  margin-bottom: 16px;
+.app {
+  max-width: 720px;
+  margin: auto;
+  padding: 24px 16px 60px;
+}
+h1 {
+  font-size: 32px;
+  letter-spacing: -0.04em;
+  margin: 6px 0 4px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.sub a {
+  color: var(--coffee);
+}
+h2 {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--coffee);
+  margin: 22px 0 8px;
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 15px;
+  margin: 8px 0;
+}
+.f {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.f .full {
+  grid-column: 1 / -1;
 }
 label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 600;
-  color: #475569;
-  font-size: 0.9rem;
-}
-.input-wrapper {
-  position: relative;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
 }
 input {
+  font: inherit;
+  font-size: 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #fff;
+  color: var(--ink);
   width: 100%;
-  padding: 10px 40px 10px 12px;
-  font-size: 1rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  outline: none;
-  transition: border-color 0.2s;
 }
-input:focus {
-  border-color: #3b82f6;
+.big {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
-.unit {
-  position: absolute;
-  right: 12px;
-  color: #94a3b8;
-  font-size: 0.9rem;
-  pointer-events: none;
-}
-.results-section {
-  margin-top: 24px;
-  background-color: #f8fafc;
-  border-radius: 6px;
-  padding: 16px;
-  border: 1px solid #e2e8f0;
-}
-.result-row {
+.res {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
   padding: 8px 0;
+  border-top: 1px solid #f0ebe3;
+  font-size: 15px;
 }
-.result-row:not(:last-child) {
-  border-bottom: 1px dashed #e2e8f0;
+.res:first-child {
+  border-top: 0;
 }
-.result-label {
-  font-weight: 500;
-  color: #334155;
+.mini {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
 }
-.result-value {
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: #0f172a;
-}
-body.kk-rehyd {
-  display: block;
-  min-height: 0;
-  background: #f7f5f0;
-}
-body.kk-rehyd .calculator-card {
-  max-width: none;
-  box-shadow: none;
-  border: 1px solid #ddd8d0;
-  border-radius: 16px;
-}
-body.kk-rehyd h2 {
-  text-align: left;
-  border: 0;
-  padding: 0;
-  font-size: 28px;
-  letter-spacing: -0.02em;
+.warn {
+  color: var(--warn);
+  font-weight: 600;
 }
 </style>
 <link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script><script src="i18n.js" defer></script></head>
-<body class="kk-rehyd">
-<main style="max-width:680px;margin:0 auto;padding:16px 16px 60px"><header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="profile.html" aria-label="Me: profile and activity">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
+<body>
+<main class="app">
+<header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="profile.html" aria-label="Me: profile and activity">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
+<h1>Rehydration</h1>
+<div class="sub">How much green coffee to weigh out, and how much water to add, to reach a target moisture before processing or roasting. <a href="contents.html">All features</a></div>
 
-<div class="calculator-card">
-    <h2>Coffee Rehydration</h2>
-    
-    <div class="input-group">
-        <label for="startingMoisture">Starting Moisture</label>
-        <div class="input-wrapper">
-            <input type="number" id="startingMoisture" value="11.2" step="0.1" min="0" max="100">
-            <span class="unit">%</span>
-        </div>
-    </div>
-
-    <div class="input-group">
-        <label for="targetMoisture">Target Moisture</label>
-        <div class="input-wrapper">
-            <input type="number" id="targetMoisture" value="14.0" step="0.1" min="0" max="100">
-            <span class="unit">%</span>
-        </div>
-    </div>
-
-    <div class="input-group">
-        <label for="desiredBatchSize">Desired Batch Size</label>
-        <div class="input-wrapper">
-            <input type="number" id="desiredBatchSize" value="5.220" step="0.001" min="0">
-            <span class="unit">kg</span>
-        </div>
-    </div>
-
-    <div class="results-section">
-        <div class="result-row">
-            <span class="result-label">Start with green coffee:</span>
-            <span class="result-value"><span id="greenCoffeeResult">5.06</span> kg</span>
-        </div>
-        <div class="result-row">
-            <span class="result-label">Add water:</span>
-            <span class="result-value"><span id="waterResult">0.165</span> kg</span>
-        </div>
-    </div>
+<h2>Your coffee</h2>
+<div class="card f">
+  <label>Moisture now, %<input type="number" id="startingMoisture" value="11.2" step="0.1" min="0" max="99" inputmode="decimal"></label>
+  <label>Target moisture, %<input type="number" id="targetMoisture" value="14.0" step="0.1" min="0" max="99" inputmode="decimal"></label>
+  <label class="full">Batch you want at the end, kg<input type="number" id="desiredBatchSize" value="5.220" step="0.001" min="0" inputmode="decimal"></label>
 </div>
 
+<h2>Result</h2>
+<div class="card">
+  <div class="res"><span>Weigh out green coffee</span><span class="big"><span id="greenCoffeeResult">5.06</span> kg</span></div>
+  <div class="res"><span>Add water</span><span class="big"><span id="waterResult">0.165</span> kg</span></div>
+  <div class="mini" id="note" style="margin-top:6px">Water in kg is the same as litres. Add it slowly while mixing, then let the coffee rest sealed so it soaks in evenly.</div>
+</div>
+<div class="mini" style="margin-top:10px">How it works: the dry matter stays the same, so green to weigh = batch × (1 − target) ÷ (1 − now), and water = batch − green.</div>
+</main>
 <script>
 const startingMoistureInput = document.getElementById('startingMoisture');
 const targetMoistureInput = document.getElementById('targetMoisture');
 const desiredBatchSizeInput = document.getElementById('desiredBatchSize');
-
 const greenCoffeeResult = document.getElementById('greenCoffeeResult');
 const waterResult = document.getElementById('waterResult');
+const note = document.getElementById('note');
+const NOTE = note.textContent;
 
 function calculateRehydration() {
-  // Convert percentage inputs to decimals
   const mcs = parseFloat(startingMoistureInput.value) / 100;
   const mcf = parseFloat(targetMoistureInput.value) / 100;
   const y = parseFloat(desiredBatchSizeInput.value);
-
-  // Validation checking
+  note.className = 'mini';
+  note.textContent = NOTE;
   if (isNaN(mcs) || isNaN(mcf) || isNaN(y) || mcs >= 1 || mcf >= 1 || y <= 0) {
-    greenCoffeeResult.textContent = '—';
-    waterResult.textContent = '—';
+    greenCoffeeResult.textContent = '·';
+    waterResult.textContent = '·';
+    note.textContent = 'Enter both moistures (below 100%) and a batch size above zero.';
     return;
   }
-
-  // Formula: x = (y * (1 - mcf)) / (1 - mcs)
+  // dry matter is constant: x (1 - mcs) = y (1 - mcf)
   const x = (y * (1 - mcf)) / (1 - mcs);
   const waterToAdd = y - x;
-
-  // Display results matching the rounding format from image.png
   greenCoffeeResult.textContent = x.toFixed(2);
   waterResult.textContent = waterToAdd.toFixed(3);
+  if (waterToAdd < 0) {
+    note.className = 'mini warn';
+    note.textContent =
+      'The target is drier than the coffee is now, so no water is needed: the coffee would have to lose ' +
+      (-waterToAdd).toFixed(3) +
+      ' kg of water by drying.';
+  }
 }
-
-// Attach real-time input listeners
 startingMoistureInput.addEventListener('input', calculateRehydration);
 targetMoistureInput.addEventListener('input', calculateRehydration);
 desiredBatchSizeInput.addEventListener('input', calculateRehydration);
-
-// Run on initial load
 calculateRehydration();
 </script>
-
-</main>
-<script src="pv.js" defer></script>
 </body>
 </html>
