@@ -4,7 +4,7 @@
 // users, and stamps each day's hashes into Bitcoin through OpenTimestamps calendars.
 import './trace-core.js';
 const T = globalThis.KKTRACE;
-const KINDS = ['record', 'roast', 'transfer', 'receive', 'cancel', 'note'];
+const KINDS = ['record', 'roast', 'transfer', 'receive', 'cancel', 'note', 'photo'];
 const CALS = ['https://a.pool.opentimestamps.org', 'https://b.pool.opentimestamps.org'];
 const tok16 = () => {
   const a = new Uint8Array(16);
@@ -25,6 +25,7 @@ const SCHEMA = [
   'CREATE INDEX IF NOT EXISTS trace_transfers_lot ON trace_transfers(lot_id)',
   'CREATE INDEX IF NOT EXISTS trace_transfers_to ON trace_transfers(to_email, status)',
   'CREATE TABLE IF NOT EXISTS trace_anchors ( day TEXT PRIMARY KEY, digest TEXT NOT NULL, count INTEGER NOT NULL, ots_b64 TEXT, calendars TEXT, status TEXT NOT NULL, error TEXT, created_at TEXT NOT NULL )',
+  'CREATE TABLE IF NOT EXISTS trace_btc ( day TEXT PRIMARY KEY, blocks TEXT NOT NULL, upgraded_at TEXT NOT NULL )',
 ];
 let READY = null;
 const ready = e =>
@@ -68,12 +69,20 @@ async function lotView(e, lot) {
     anchors = {};
   if (days.length) {
     const q = await e.DB.prepare(
-      'SELECT day,digest,count,status,created_at FROM trace_anchors WHERE day IN (' + qs(days.length) + ')'
+      'SELECT a.day,a.digest,a.count,a.status,a.created_at,b.blocks FROM trace_anchors a LEFT JOIN trace_btc b ON b.day=a.day WHERE a.day IN (' +
+        qs(days.length) +
+        ')'
     )
       .bind(...days)
       .all();
     for (const a of q.results || [])
-      anchors[a.day] = { digest: a.digest, count: a.count, status: a.status, at: a.created_at };
+      anchors[a.day] = {
+        digest: a.digest,
+        count: a.count,
+        status: a.status,
+        at: a.created_at,
+        bitcoin: a.blocks ? JSON.parse(a.blocks) : null,
+      };
   }
   return {
     lot: {
@@ -302,6 +311,8 @@ export async function traceApi(r, e, p, me, H, isAdmin, ctx) {
       if (hash !== it.hash || !(await T.verifySig(jwk, hash, it.sig)))
         return j({ error: 'signature does not match the entry' }, 400);
       if (ro === 'invited' && x.kind !== 'receive') return j({ error: 'confirm the handoff first' }, 403);
+      if (x.kind === 'photo' && !/^[a-f0-9]{64}$/.test(String(d.sha || '')))
+        return j({ error: 'photo fingerprint missing' }, 400);
       if (x.kind === 'record' && ro !== 'owner')
         return j({ error: 'only the owner adds origin records' }, 403);
       const tid = String(d.tid || '');
@@ -453,4 +464,39 @@ export async function traceAnchor(e, now = new Date()) {
     done.push({ day, count: hs.length, status: ok ? 'ok' : 'failed', error: err || undefined });
   }
   return { anchored: done };
+}
+
+// A few hours after stamping, the calendars can give the full path into a Bitcoin block. Swap
+// each pending proof for the full one, so the .ots file checks without any calendar.
+export async function traceUpgrade(e, fetchFn = fetch, now = new Date()) {
+  await ready(e);
+  const cut = new Date(now.getTime() - 3 * 3600e3).toISOString();
+  const q = await e.DB.prepare(
+    "SELECT day,ots_b64 FROM trace_anchors WHERE status='ok' AND ots_b64 IS NOT NULL AND created_at<? AND day NOT IN (SELECT day FROM trace_btc) ORDER BY day LIMIT 7"
+  )
+    .bind(cut)
+    .all();
+  const done = [];
+  for (const a of q.results || []) {
+    try {
+      const u = await T.otsUpgrade(T.unb64(a.ots_b64), fetchFn);
+      if (!u.changed || !u.bitcoin.length) {
+        done.push({ day: a.day, bitcoin: false });
+        continue;
+      }
+      const blocks = [...new Set(u.bitcoin)].sort((x, y) => x - y);
+      await e.DB.batch([
+        e.DB.prepare('UPDATE trace_anchors SET ots_b64=? WHERE day=?').bind(T.b64(u.file), a.day),
+        e.DB.prepare('INSERT OR REPLACE INTO trace_btc(day,blocks,upgraded_at) VALUES(?,?,?)').bind(
+          a.day,
+          JSON.stringify(blocks),
+          now.toISOString()
+        ),
+      ]);
+      done.push({ day: a.day, bitcoin: true, blocks });
+    } catch (x) {
+      done.push({ day: a.day, bitcoin: false, error: x.message });
+    }
+  }
+  return { upgraded: done };
 }

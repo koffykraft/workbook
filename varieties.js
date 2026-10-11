@@ -1840,6 +1840,103 @@ const COFFEE_WORDS = [
     'Fanega',
     'A Latin American measure of coffee cherry, about 250 kg. Used for fruit only, not processed coffee.',
   ],
+  // Local words at origin: UCDA (Uganda), Sucafina, Sweet Maria's, Revista Cultivar, Perfect Daily Grind,
+  // Indonesian Ministry of Agriculture, Thu Vien Phap Luat, IS 4074:2019 (via FSSAI). Our own words.
+  [
+    'Local words at origin',
+    'Kiboko (Uganda)',
+    "Uganda's word for robusta cherry dried whole on the farm, the form most small farmers sell in (UCDA).",
+  ],
+  [
+    'Local words at origin',
+    'FAQ (Uganda)',
+    'Fair average quality: in Uganda, robusta after the dried cherry is hulled, before export grading. Kiboko becomes FAQ at the hulling mill.',
+  ],
+  [
+    'Local words at origin',
+    'Drugar (Uganda)',
+    'Dried Uganda arabica: a natural, processed at home rather than at a wet mill. Usually paid less than washed arabica (Sucafina).',
+  ],
+  [
+    'Local words at origin',
+    'Bugisu (Uganda)',
+    "Washed arabica from the Mount Elgon slopes in eastern Uganda, sold by grade (Bugisu AA, A, PB). Often Uganda's best priced arabica (UCDA).",
+  ],
+  [
+    'Local words at origin',
+    'Mbuni (Kenya)',
+    "Kenyan Swahili for natural coffee dried in the cherry. At auction it still means the low-grade naturals from unripe or overripe late-season cherry (Sweet Maria's).",
+  ],
+  [
+    'Local words at origin',
+    'Terreiro (Brazil)',
+    'A drying yard: cement, brick, tarmac or bare earth, where cherry or parchment is spread and turned in the sun.',
+  ],
+  [
+    'Local words at origin',
+    'Varrição, café de varrição (Brazil)',
+    'Sweeping up the cherry that fell to the ground at harvest. It controls the berry borer, but the swept coffee touched soil and is sold apart, cheaper (Revista Cultivar).',
+  ],
+  [
+    'Local words at origin',
+    'Bica corrida (Brazil)',
+    'Hulled and cleaned coffee not yet sorted by screen size or defects. It has its own market price (Perfect Daily Grind).',
+  ],
+  [
+    'Local words at origin',
+    'Tipo (COB) (Brazil)',
+    "Brazil's official grade from the defects counted in a 300 g green sample, from Tipo 2 (best) to Tipo 8. NY 2/3 in export contracts comes from this table.",
+  ],
+  [
+    'Local words at origin',
+    'Peneira (Brazil)',
+    'Sieve, and the screen size it sorts to. Peneira 17/18 means beans held on screens 17 and 18 (in 64ths of an inch).',
+  ],
+  [
+    'Local words at origin',
+    'Guardiola (Latin America)',
+    "A rotating drum dryer, often fired with parchment husk. Brings parchment down slowly over a day or more, and is gentler than a vertical dryer (Sweet Maria's).",
+  ],
+  [
+    'Local words at origin',
+    'Kopi gelondong (Indonesia)',
+    'Coffee cherry as picked from the plant; dried whole it is kopi gelondong kering (Indonesian Ministry of Agriculture post-harvest guide).',
+  ],
+  [
+    'Local words at origin',
+    'Kopi HS (Indonesia)',
+    'Hard skin: washed coffee still in its parchment, dried to about 12% (Indonesian Ministry of Agriculture).',
+  ],
+  [
+    'Local words at origin',
+    'Kopi beras, kopi biji (Indonesia)',
+    'Green coffee, hulled out of its husk or parchment, sold as WP (wet process) or DP (dry process) (Indonesian Ministry of Agriculture).',
+  ],
+  [
+    'Local words at origin',
+    'Cà phê vối (Vietnam)',
+    'The Vietnamese name for robusta, the coffee of the Central Highlands (Thư Viện Pháp Luật).',
+  ],
+  [
+    'Local words at origin',
+    'Cà phê chè (Vietnam)',
+    'Common Vietnamese name for arabica, grown mostly around Da Lat, Son La and Quang Tri.',
+  ],
+  [
+    'Local words at origin',
+    'Triage (India)',
+    'In Indian grading, defective beans (broken, withered, spotted, small or misshapen) without blacks, browns or sours. Sold as its own grade (IS 4074:2019).',
+  ],
+  [
+    'Local words at origin',
+    'Blacks, browns, bits, BBB (India)',
+    'Blacks and browns: beans more than a quarter discoloured, including stinkers and sours. Bits: pieces smaller than a third of a bean. BBB: the three together, a cheaper grade (IS 4074:2019).',
+  ],
+  [
+    'Local words at origin',
+    'Monsooned Malabar grades (India)',
+    'AAA, AA and A for arabica by screen size, Robusta AA, and Triage grades for each, under the Indian Standard for monsooned coffee (IS 4074:2019).',
+  ],
 ];
 function openVarieties(input, species) {
   const browse = !input;
@@ -2008,7 +2105,7 @@ function openVarieties(input, species) {
         )
         .join('') +
       (!list.length ? '<div style="color:#77716a">No match.</div>' : '') +
-      '<div style="font-size:11.5px;color:#77716a;margin:10px 0">Written by KoffyKraft in plain words, checked against the <a href="https://varieties.worldcoffeeresearch.org/" target="_blank" rel="noopener" style="color:#8d583b">World Coffee Research catalogue</a> and <a href="https://coffeeboard.gov.in/" target="_blank" rel="noopener" style="color:#8d583b">Coffee Board of India</a> usage. Regional words from the <a href="https://library.sweetmarias.com/glossary/beneficio/" target="_blank" rel="noopener" style="color:#8d583b">Sweet Maria\'s Coffee Library</a> and <a href="https://mycoffeeexplorer.com/glossary/pulped-natural" target="_blank" rel="noopener" style="color:#8d583b">My Coffee Explorer</a>; grades from the <a href="https://dev-cdn.cafeimports.com/images/Common-Coffee-Grades-Chart.pdf" target="_blank" rel="noopener" style="color:#8d583b">Cafe Imports grades chart</a>; bag weights from <a href="https://cdn.royalcoffee.com/wp-content/uploads/2020/08/14100208/CoffeeWeights_FINAL.pdf" target="_blank" rel="noopener" style="color:#8d583b">Royal Coffee</a>. Grades vary by exporter and year: check the contract.</div></div></div>';
+      '<div style="font-size:11.5px;color:#77716a;margin:10px 0">Written by KoffyKraft in plain words, checked against the <a href="https://varieties.worldcoffeeresearch.org/" target="_blank" rel="noopener" style="color:#8d583b">World Coffee Research catalogue</a> and <a href="https://coffeeboard.gov.in/" target="_blank" rel="noopener" style="color:#8d583b">Coffee Board of India</a> usage. Regional words from the <a href="https://library.sweetmarias.com/glossary/beneficio/" target="_blank" rel="noopener" style="color:#8d583b">Sweet Maria\'s Coffee Library</a> and <a href="https://mycoffeeexplorer.com/glossary/pulped-natural" target="_blank" rel="noopener" style="color:#8d583b">My Coffee Explorer</a>; grades from the <a href="https://dev-cdn.cafeimports.com/images/Common-Coffee-Grades-Chart.pdf" target="_blank" rel="noopener" style="color:#8d583b">Cafe Imports grades chart</a>; bag weights from <a href="https://cdn.royalcoffee.com/wp-content/uploads/2020/08/14100208/CoffeeWeights_FINAL.pdf" target="_blank" rel="noopener" style="color:#8d583b">Royal Coffee</a>. Local words checked against <a href="https://ugandacoffee.go.ug/" target="_blank" rel="noopener" style="color:#8d583b">UCDA</a>, <a href="https://sucafina.com/na/news/uganda-harvest-update" target="_blank" rel="noopener" style="color:#8d583b">Sucafina</a>, <a href="https://revistacultivar.com.br/noticias/varricao-do-cafe-e-aliada-no-controle-da-broca" target="_blank" rel="noopener" style="color:#8d583b">Revista Cultivar</a>, <a href="https://perfectdailygrind.com/pt/2022/05/31/classificacao-dos-cafes-no-brasil-explicada-tipos-e-defeitos/" target="_blank" rel="noopener" style="color:#8d583b">Perfect Daily Grind</a>, the <a href="https://jdih.pertanian.go.id/sources/files/Lampiran_Pascapanen_Kopi.pdf" target="_blank" rel="noopener" style="color:#8d583b">Indonesian Ministry of Agriculture</a> and the Indian Standard for monsooned coffee (IS 4074:2019). Grades vary by exporter and year: check the contract.</div></div></div>';
     document.getElementById('vpClose').onclick = close;
     document.getElementById('vpList').onclick = () => {
       view = 'list';

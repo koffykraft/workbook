@@ -1,5 +1,5 @@
 // KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
-import { tracePublic, traceApi, traceAnchor } from './trace-api.js';
+import { tracePublic, traceApi, traceAnchor, traceUpgrade } from './trace-api.js';
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 const j = (v, s = 200) => new Response(JSON.stringify(v), { status: s, headers: JSON_HEADERS });
 function bearer(r) {
@@ -966,6 +966,6 @@ export default {
     return j({ error: 'not found' }, 404);
   },
   async scheduled(ev, e, ctx) {
-    ctx.waitUntil(Promise.allSettled([recordTypesReady(e), traceAnchor(e)]));
+    ctx.waitUntil(Promise.allSettled([recordTypesReady(e), traceAnchor(e).then(() => traceUpgrade(e))]));
   },
 };

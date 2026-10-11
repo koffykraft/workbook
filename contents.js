@@ -67,6 +67,12 @@ window.KK_CONTENTS = [
         'map.html',
       ],
       [
+        'Trails',
+        'Walk a farm or a buyer visit and record the path, with stops, notes and photos.',
+        'Like a hiking trail app, for coffee. Distance, time and climb. Kept only on your device, never in the cloud. Save a trail pack (zip with photos and a page that opens anywhere), GPX for hiking apps, KML for Google Earth or GeoJSON, and open them again later.',
+        'trail.html',
+      ],
+      [
         'Crop care',
         'Plant health, flowering, fruit set, berry drop and harvest, from the Coffee Board research institute.',
         'Basic, Intermediate and Advanced levels, Arabica or Robusta, a year calendar, and chemical options hidden unless you ask for them.',

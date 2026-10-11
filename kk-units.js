@@ -1,7 +1,8 @@
 // KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // Local weights to kg. Records always store kg, so lots from different countries compare.
 // When a kg field is in focus, a row of local units appears under it: type the number in that
-// unit (for example 3 quintals), tap the unit, and the field changes to kg.
+// unit (for example 3 quintals), tap the unit, and the field changes to kg. Gram fields marked
+// data-unit="g" (roast batches) offer oz, lb and kg the same way.
 // Sources: Royal Coffee, coffee bag weights; Sweet Maria's Coffee Library (quintal, fanega).
 (function () {
   if (window.KKUNITS) return;
@@ -16,19 +17,34 @@
     { u: 'bag 70', kg: 70, t: 'Colombia' },
     { u: 'fanega', kg: 250, t: 'cherry only, about 250 kg' },
   ];
+  // gram fields (roast batches): ounces and pounds for roasters who weigh that way
+  const GUNITS = [
+    { u: 'oz', g: 28.349523125, t: 'ounce' },
+    { u: 'lb', g: 453.59237, t: 'pound' },
+    { u: 'kg', g: 1000, t: 'kilogram' },
+  ];
   const toKg = (v, u) => {
     const x = UNITS.find(a => a.u === u);
     const n = parseFloat(v);
     return x && Number.isFinite(n) ? Math.round(n * x.kg * 100) / 100 : null;
   };
-  window.KKUNITS = { UNITS, toKg };
+  const toG = (v, u) => {
+    const x = GUNITS.find(a => a.u === u);
+    const n = parseFloat(v);
+    return x && Number.isFinite(n) ? Math.round(n * x.g * 10) / 10 : null;
+  };
+  window.KKUNITS = { UNITS, GUNITS, toKg, toG };
 
-  // which fields hold kg: data-k or data-sk ending in Kg, or the plain kg columns
-  const isKg = el =>
-    el &&
-    el.tagName === 'INPUT' &&
-    el.type === 'number' &&
-    /(^kg$|Kg$|^cherryIn$)/.test(el.dataset.k || el.dataset.sk || '');
+  // which fields hold kg (data-k or data-sk ending in Kg, or the plain kg columns) or grams
+  // (data-unit="g"). Returns 'kg', 'g' or ''.
+  const kindOf = el =>
+    !el || el.tagName !== 'INPUT' || el.type !== 'number'
+      ? ''
+      : el.dataset.unit === 'g'
+        ? 'g'
+        : /(^kg$|Kg$|^cherryIn$)/.test(el.dataset.k || el.dataset.sk || '')
+          ? 'kg'
+          : '';
   const css = document.createElement('style');
   css.textContent =
     '.kku{display:flex;flex-wrap:wrap;gap:5px;margin:5px 0 2px;font-size:12px;color:#77716a;align-items:center}.kku button{font:inherit;font-size:12px;border:1px solid #ddd8d0;background:#fff;color:#171512;border-radius:999px;padding:4px 9px;min-height:28px}.kku-done{font-size:12px;color:#5b7a3a;margin-top:3px}';
@@ -40,7 +56,9 @@
   };
   document.addEventListener('focusin', e => {
     const el = e.target;
-    if (!isKg(el)) return drop();
+    const kind = kindOf(el);
+    if (!kind) return drop();
+    const list = kind === 'g' ? GUNITS : UNITS;
     if (bar && bar._for === el) return;
     drop();
     bar = document.createElement('div');
@@ -48,15 +66,15 @@
     bar._for = el;
     bar.innerHTML =
       '<span>In another unit? Type it, then tap:</span>' +
-      UNITS.map(
-        x => '<button type="button" data-u="' + x.u + '" title="' + x.t + '">' + x.u + '</button>'
-      ).join('');
+      list
+        .map(x => '<button type="button" data-u="' + x.u + '" title="' + x.t + '">' + x.u + '</button>')
+        .join('');
     bar.addEventListener('mousedown', ev => ev.preventDefault());
     bar.addEventListener('click', ev => {
       const b = ev.target.closest('button[data-u]');
       if (!b) return;
       const was = el.value,
-        kg = toKg(was, b.dataset.u);
+        kg = kind === 'g' ? toG(was, b.dataset.u) : toKg(was, b.dataset.u);
       if (kg == null) return;
       el.value = kg;
       el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -65,7 +83,7 @@
       if (!el.isConnected) return;
       const note = document.createElement('div');
       note.className = 'kku-done';
-      note.textContent = was + ' ' + b.dataset.u + ' = ' + kg + ' kg';
+      note.textContent = was + ' ' + b.dataset.u + ' = ' + kg + ' ' + kind;
       const at = el.closest('.unitwrap') || el;
       at.parentNode.insertBefore(note, at.nextSibling);
       setTimeout(() => note.remove(), 6000);

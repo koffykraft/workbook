@@ -805,7 +805,7 @@ details.mini a {
 </main>
 <div class="toast" id="toast"></div>
 <script src="sync.js"></script>
-<script src="prefs.js"></script><script src="origin-db.js"></script><script src="sharecard.js"></script><script src="export.js"></script><script src="varieties.js"></script><script src="cloud-ui.js"></script>
+<script src="prefs.js"></script><script src="origin-db.js"></script><script src="sharecard.js"></script><script src="qrcode.js"></script><script src="export.js"></script><script src="varieties.js"></script><script src="cloud-ui.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 const today = () => new Date().toISOString().slice(0, 10);
@@ -3108,7 +3108,7 @@ function listView() {
   $('#view').innerHTML =
     '<h1>Origin</h1><div class="sub">Farm, harvest, processing and green lots. ' +
     syncBadge() +
-    ' · <a href="#" onclick="openVarieties(null,\'\');return false" style="color:var(--coffee);font-weight:600">Coffee varieties and words</a> · <a href="crop.html" style="color:var(--coffee);font-weight:600">Crop care</a> · <a href="map.html" style="color:var(--coffee);font-weight:600">Map</a> · <a href="#" onclick="openPicker();return false" style="color:var(--coffee);font-weight:600">Share</a> · <a href="#" onclick="originExport();return false" style="color:var(--coffee);font-weight:600">Export</a></div><div class="tabs">' +
+    ' · <a href="#" onclick="openVarieties(null,\'\');return false" style="color:var(--coffee);font-weight:600">Coffee varieties and words</a> · <a href="crop.html" style="color:var(--coffee);font-weight:600">Crop care</a> · <a href="map.html" style="color:var(--coffee);font-weight:600">Map</a> · <a href="trail.html" style="color:var(--coffee);font-weight:600">Trails</a> · <a href="#" onclick="openPicker();return false" style="color:var(--coffee);font-weight:600">Share</a> · <a href="#" onclick="originExport();return false" style="color:var(--coffee);font-weight:600">Export</a></div><div class="tabs">' +
     tabs
       .map(
         ([k, l]) =>
@@ -3452,6 +3452,7 @@ function cardData(t, r) {
               )
             : lineage(r).estates[0];
   if (e && e.name) d.brand = e.name;
+  if (t === 'green' && r.traceToken) d.qr = location.origin + '/trace.html#p/' + r.traceToken;
   return d;
 }
 function cardData0(t, r) {

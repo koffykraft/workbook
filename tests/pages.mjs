@@ -35,7 +35,7 @@ export async function run(root, t) {
   await ctx.route(/cdnjs|tile|arcgis|openstreetmap|googleapis/, r => r.abort());
   try {
     // 1. every main page opens cleanly
-    const pages = ['home', 'origin', 'cup', 'roasts', 'roast-timer-v14', 'roast-graph', 'account', 'contents', 'journey', 'methods', 'crop', 'water', 'map', 'share', 'profile', 'trace', 'data', 'roastbooks', 'license', 'privacy', 'terms', 'brew', 'capture', 'index', 'ocr', 'process-run', 'process', 'rehydration', 'roastbook', 'stats', 'colour'];
+    const pages = ['home', 'origin', 'cup', 'roasts', 'roast-timer-v14', 'roast-graph', 'account', 'contents', 'journey', 'methods', 'crop', 'water', 'map', 'share', 'profile', 'trace', 'data', 'roastbooks', 'license', 'privacy', 'terms', 'brew', 'capture', 'index', 'ocr', 'process-run', 'process', 'rehydration', 'roastbook', 'stats', 'colour', 'trail'];
     const p = await ctx.newPage();
     await p.route('**/api/**', r => r.fulfill({ status: 401, contentType: 'application/json', body: '{"error":"authentication required"}' }));
     for (const f of pages) {
@@ -227,6 +227,57 @@ export async function run(root, t) {
       await q.click('.kku button[data-u="quintal 46"]'); await q.waitForTimeout(100);
       if ((await f.inputValue()) !== '138') throw new Error('got ' + (await f.inputValue()));
       if (!(await q.$eval('.kku-done', e => e.innerText)).includes('138 kg')) throw new Error('no note');
+    });
+    await t.acheck('Timer gram fields take ounces and pounds', async () => {
+      await q.goto(base + 'roast-timer-v14.html'); await q.waitForTimeout(500);
+      const f = q.locator('#greenWeight'); await f.fill('2'); await f.focus();
+      await q.click('.kku button[data-u="lb"]'); await q.waitForTimeout(100);
+      if ((await f.inputValue()) !== '907.2') throw new Error('got ' + (await f.inputValue()));
+    });
+    await t.acheck('Timer probe list and readers work', async () => {
+      const r = await q.evaluate(() => {
+        const sel = [...document.querySelectorAll('#kkpMode option')].map(o => o.value);
+        const dv = new DataView(Uint8Array.of(0x00, 0x2c, 0x07, 0x00, 0xff).buffer); // 1836 × 10^-1 = 183.6 °C
+        const es = new DataView(Uint8Array.of(0x8c, 0x47).buffer); // 18316 → 183.16 °C
+        return { sel, ht: KKPROBE.parseHT(dv), es: KKPROBE.parseES(es), tc4: KKPROBE.nums('24.5,182.3,170.1') };
+      });
+      for (const m of ['manual', 'serial-line', 'serial-tc4', 'ble']) if (!r.sel.includes(m)) throw new Error('missing ' + m);
+      if (Math.abs(r.ht - 183.6) > 0.01 || Math.abs(r.es - 183.16) > 0.01 || r.tc4[1] !== 182.3) throw new Error(JSON.stringify(r));
+    });
+    await t.acheck('Green lot share card carries the passport link', async () => {
+      await q.goto(base + 'origin.html'); await q.waitForTimeout(500);
+      const d = await q.evaluate(() => cardData('green', { id: 'gx', code: 'G-9', weightKg: 5, traceToken: 'ab'.repeat(16) }));
+      if (!d.qr || !d.qr.endsWith('/trace.html#p/' + 'ab'.repeat(16))) throw new Error('no qr: ' + d.qr);
+    });
+    await t.acheck('Trail: record a walk with a stop and photo, kept on the device, saved as a pack', async () => {
+      const stub = 'const mk=()=>{const f=function(){return p};const p=new Proxy(f,{get:(t,k)=>k==="then"?undefined:p,apply:()=>p});return p};window.L=mk();';
+      await q.route(/leaflet.*\.js/, r => r.fulfill({ contentType: 'text/javascript', body: stub }));
+      await ctx.grantPermissions(['geolocation']);
+      await ctx.setGeolocation({ latitude: 9.0, longitude: 76.9, accuracy: 5 });
+      await q.goto(base + 'trail.html#rec'); await q.waitForTimeout(600);
+      await q.click('#go'); await q.waitForTimeout(300);
+      for (let i = 1; i <= 4; i++) { await ctx.setGeolocation({ latitude: 9.0 + i * 0.0002, longitude: 76.9, accuracy: 5 }); await q.waitForTimeout(350) }
+      await q.click('#stop'); await q.fill('#sT', 'Drying beds'); await q.fill('#sD', 'Raised beds, day 4');
+      const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+      await q.setInputFiles('#sP', { name: 'beds.png', mimeType: 'image/png', buffer: png }); await q.waitForTimeout(300);
+      await q.click('#sOk'); await q.waitForTimeout(300);
+      await q.click('#fin'); await q.waitForTimeout(500);
+      await q.fill('#eN', 'Thumpassery walk'); await q.click('#eOk'); await q.waitForTimeout(600);
+      const r = await q.evaluate(async () => {
+        const t = (await T.all()).find(x => x.name === 'Thumpassery walk');
+        const photos = {}; for (const p of await P.of(t.id)) photos[p.id] = p;
+        const z = await unzip(await (await pack(t, photos)).arrayBuffer());
+        return { pts: t.points.length, stops: t.stops.length, ph: t.stops[0].photos.length, gpx: gpx(t), files: Object.keys(z), dist: stats(t.points).dist, cloud: !!(window.SYNC || window.KKSYNC) };
+      });
+      if (r.pts < 3) throw new Error('points ' + r.pts);
+      if (r.stops !== 1 || r.ph !== 1) throw new Error('stop or photo missing');
+      if (!r.gpx.includes('<trkpt') || !r.gpx.includes('Drying beds')) throw new Error('gpx');
+      for (const f of ['index.html', 'trail.gpx', 'trail.kml', 'trail.geojson', 'koffykraft-trail.json', 'photos/001.jpg']) if (!r.files.includes(f)) throw new Error('pack missing ' + f);
+      if (r.dist < 50 || r.dist > 120) throw new Error('distance ' + r.dist);
+      if (r.cloud) throw new Error('trail page loads cloud sync');
+      const listed = await q.evaluate(async () => { location.hash = ''; await new Promise(o => setTimeout(o, 400)); return document.body.innerText.includes('Thumpassery walk') });
+      if (!listed) throw new Error('not in list');
+      await q.unroute(/leaflet.*\.js/);
     });
     await t.acheck('no script errors during the journeys', async () => { if (errs.length) throw new Error(errs[0]) });
   } finally {

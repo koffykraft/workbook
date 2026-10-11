@@ -725,7 +725,7 @@ nav.kkh-nav {
  <div class="field"><label for="roastNo">Roast number</label><input id="roastNo" type="number" value="1"></div>
  <div class="field"><label for="roastDate">Date</label><input id="roastDate" type="date"></div>
  <div class="field"><label for="moisture">Moisture %</label><input id="moisture" type="number" step=".1"></div>
- <div class="field"><label for="greenWeight">Green weight g</label><input id="greenWeight" type="number"></div>
+ <div class="field"><label for="greenWeight">Green weight g</label><input id="greenWeight" type="number" data-unit="g"></div>
  <div class="field"><label for="chargeTemp">Charge temperature <span class="unitMark">°C</span></label><input id="chargeTemp" type="number"></div>
  <div class="field"><label for="targetColor">Roast colour target</label><input id="targetColor" placeholder="Medium dark / colour"></div>
 </div>
@@ -820,6 +820,7 @@ nav.kkh-nav {
  <div class="field"><label id="currentTempLabel">Current ET °C</label><input id="currentTemp" type="number" inputmode="decimal" placeholder="175"></div>
  <button class="btn ghost" id="plusOne">+1°C</button>
 </div>
+<div id="probeBox"></div>
 <div class="event-grid">
  <button class="event turn" data-event="Turning"><strong>Turning</strong><small>Tap at the bottom</small></button>
  <button class="event yellow" data-event="Yellow"><strong>Yellow</strong><small>Tap to record</small></button>
@@ -847,7 +848,7 @@ nav.kkh-nav {
 <section class="card">
 <h2>Result</h2>
 <div class="grid">
- <div class="field"><label for="roastedWeight">Roasted weight g</label><input id="roastedWeight" type="number"></div>
+ <div class="field"><label for="roastedWeight">Roasted weight g</label><input id="roastedWeight" type="number" data-unit="g"></div>
  <div class="field"><label for="finalColor">Final roast colour</label><input id="finalColor"></div>
  <div class="field full"><label for="notes">Notes</label><textarea id="notes"></textarea></div>
 </div>
@@ -885,7 +886,7 @@ nav.kkh-nav {
  <button class="btn danger" id="finish">Finish</button>
 </div>
 
-<script src="sync.js"></script><script src="prefs.js"></script><script src="origin-db.js"></script>
+<script src="sync.js"></script><script src="kk-units.js" defer></script><script src="kk-probe.js"></script><script src="prefs.js"></script><script src="origin-db.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const phaseNames = ['Turning', 'Yellow', 'Maillard', 'First Crack', 'Second Crack', 'Drop'];
@@ -1259,7 +1260,7 @@ function bindPress(el, tap, longpress) {
   el.addEventListener('contextmenu', e => e.preventDefault());
 }
 
-function recordReading(temp, probe = currentProbe()) {
+function recordReading(temp, probe = currentProbe(), quiet = false) {
   if (!state.running) startPause();
   temp = Number(temp);
   if (!Number.isFinite(temp)) return;
@@ -1279,10 +1280,10 @@ function recordReading(temp, probe = currentProbe()) {
       state.events.some(e => e.name === 'Turning' && e.time > arr[i].time));
   if (i >= 0 && !returned) {
     arr[i] = item;
-    toast(`${labelProbe(probe)} ${temp}°C updated`);
+    if (!quiet) toast(`${labelProbe(probe)} ${temp}°C updated`);
   } else {
     arr.push(item);
-    toast(`${labelProbe(probe)} ${temp}°C recorded`);
+    if (!quiet) toast(`${labelProbe(probe)} ${temp}°C recorded`);
   }
   arr.sort((a, b) => a.time - b.time);
   $('currentTemp').value = temp;
@@ -1995,6 +1996,34 @@ setInterval(() => {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 }
+
+// Live probe (kk-probe.js): keep the latest reading per probe, and while the roast runs record it
+// every few seconds, the same as typing it in.
+const probeLive = { exhaust: null, bean: null, any: null, at: 0 };
+const probeUI = window.KKPROBE
+  ? KKPROBE.mount($('probeBox'), {
+      onTemp: by => Object.assign(probeLive, by),
+    })
+  : null;
+setInterval(() => {
+  if (!probeUI || !state.running) return;
+  const now = Date.now();
+  if (now - probeLive.at < probeUI.every() * 1000) return;
+  const conv = c => Math.round(Number(convertNumber(c, 'C', state.unit || 'C')));
+  let did = false;
+  for (const p of ['exhaust', 'bean']) {
+    const v =
+      probeLive[p] != null
+        ? probeLive[p]
+        : probeLive.any != null && p === currentProbe()
+          ? probeLive.any
+          : null;
+    if (v == null || (state.mode !== 'both' && state.mode !== p)) continue;
+    recordReading(conv(v), p, true);
+    did = true;
+  }
+  if (did) probeLive.at = now;
+}, 1000);
 </script><script src="pv.js" defer></script>
 </body>
 </html>

@@ -1,7 +1,8 @@
 // KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // Share cards: turns one or more records into images (Instagram post or story) or a PDF (email, WhatsApp),
 // drawn on this phone and handed to the share sheet. Nothing is uploaded.
-// Use: KKCARD.open([{kind,title,sub,date,rows:[[label,value]],notes,loc,chips}], {heading, brand})
+// Use: KKCARD.open([{kind,title,sub,date,rows:[[label,value]],notes,loc,chips,qr}], {heading, brand})
+// qr: a lot passport link, drawn as a QR code when qrcode.js is on the page.
 (function () {
   if (window.KKCARD) return;
   const FONT = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif';
@@ -209,6 +210,30 @@
     }
     // footer
     const fy = H - P - W * 0.02;
+    // lot passport QR (needs qrcode.js on the page), bottom right above the footer
+    const qs = it.qr && window.qrcode ? Math.round(W * 0.17) : 0;
+    if (qs && draw) {
+      const q = window.qrcode(0, 'M');
+      q.addData(it.qr);
+      q.make();
+      const n = q.getModuleCount(),
+        cell = qs / (n + 2),
+        QX = W - P - qs,
+        QY = fy - W * 0.05 - qs;
+      x.fillStyle = '#fff';
+      x.fillRect(QX, QY, qs, qs);
+      x.fillStyle = '#171512';
+      for (let r = 0; r < n; r++)
+        for (let c = 0; c < n; c++)
+          if (q.isDark(r, c))
+            x.fillRect(QX + (c + 1) * cell, QY + (r + 1) * cell, Math.ceil(cell), Math.ceil(cell));
+      f(W * 0.022, 600);
+      x.fillStyle = '#77716a';
+      x.textAlign = 'right';
+      x.textBaseline = 'alphabetic';
+      x.fillText('Scan for the lot passport', W - P, QY - W * 0.012);
+      x.textAlign = 'left';
+    }
     f(W * 0.024, 400);
     if (draw) {
       x.textBaseline = 'alphabetic';
@@ -218,7 +243,7 @@
       x.fillText('Made with KoffyKraft · roast.koffykraft.coffee', W - P, fy);
       x.textAlign = 'left';
     }
-    return y < fy - W * 0.05;
+    return y < fy - W * 0.05 - (qs ? qs + W * 0.05 : 0);
   }
   function render(it, W, H, b, o) {
     const c = document.createElement('canvas');

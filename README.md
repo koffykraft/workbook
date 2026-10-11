@@ -26,7 +26,7 @@ The written guides (brew guide, crop care, journey of the bean, water, varieties
 
 ## Commercial licence
 
-To use this code in a closed or paid product without the AGPL obligations, you need a separate commercial licence from the copyright holder. Contact info@koffykraft.com.
+To use this code in a closed or paid product without the AGPL obligations, you need a separate commercial licence from the copyright holder. Contact info@koffykraft.coffee.
 
 The KoffyKraft name and logo are not covered by the code licence and may not be used for other products.
 

@@ -1,0 +1,1317 @@
+<!doctype html>
+<!-- KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fff">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>KoffyKraft Trails</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root {
+  --bg: #f7f5f0;
+  --ink: #171512;
+  --muted: #77716a;
+  --line: #ddd8d0;
+  --coffee: #8d583b;
+  --ok: #3f6b5a;
+  --bad: #b4432f;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial;
+  color: var(--ink);
+  background: var(--bg);
+}
+.app {
+  max-width: 760px;
+  margin: auto;
+  padding: 24px 16px 60px;
+}
+h1 {
+  font-size: 32px;
+  letter-spacing: -0.04em;
+  margin: 6px 0 4px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.sub a,
+a.link {
+  color: var(--coffee);
+}
+h2 {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--coffee);
+  margin: 20px 0 8px;
+}
+#map {
+  height: 52vh;
+  min-height: 300px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  background: #dfe6df;
+}
+.row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.btn {
+  font: inherit;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 9px 14px;
+  cursor: pointer;
+  color: var(--ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  touch-action: manipulation;
+}
+.btn.primary {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.btn.rec {
+  background: var(--bad);
+  color: #fff;
+  border-color: var(--bad);
+}
+.btn.small {
+  font-size: 13px;
+  padding: 7px 11px;
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin: 8px 0;
+}
+.mini {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 10px 0;
+}
+.stats div {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px;
+  text-align: center;
+}
+.stats b {
+  display: block;
+  font-size: 18px;
+}
+.stats span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.tl {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.tl b {
+  font-size: 16px;
+}
+label.f {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  margin: 8px 0;
+}
+input,
+select,
+textarea {
+  font: inherit;
+  font-size: 16px;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+}
+textarea {
+  min-height: 80px;
+}
+.pics {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.pics img {
+  width: 92px;
+  height: 92px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  cursor: zoom-in;
+}
+.stop {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 10px;
+}
+.num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--coffee);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+.pin {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--coffee);
+  color: #fff;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 12px;
+}
+.me {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2f7bd8;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 6px rgba(47, 123, 216, 0.25);
+}
+.sheet {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 2000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sheet > div {
+  background: #fff;
+  width: 100%;
+  max-width: 760px;
+  max-height: 92vh;
+  overflow: auto;
+  border-radius: 18px 18px 0 0;
+  padding: 16px 16px 28px;
+}
+.view {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 2100;
+  display: grid;
+  place-items: center;
+}
+.view img {
+  max-width: 96vw;
+  max-height: 88vh;
+}
+.live {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 6px 0;
+}
+.live b {
+  color: var(--ink);
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  z-index: 3000;
+  max-width: 90vw;
+}
+.toast.show {
+  opacity: 1;
+}
+@media (max-width: 420px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+</style>
+<link rel="stylesheet" href="kk.css"><script src="tap.js" defer></script><script src="i18n.js" defer></script><script src="kk-base.js"></script>
+</head>
+<body><main class="app">
+<header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="profile.html" aria-label="Me: profile and activity">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html" aria-current="page">Origin</a><a href="roast-timer-v14.html">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
+<div id="view"></div>
+</main>
+<div class="toast" id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// Trails: walk a farm, a processing site or a buyer's visit, record the path, and add stops with
+// notes and photos. Everything stays on this device (IndexedDB "KoffyKraftTrails"); nothing is
+// sent to KoffyKraft. Save a trail pack (.zip with GPX, GeoJSON, photos and a page to open it)
+// to the phone or a computer to keep or share it.
+const $ = s => document.querySelector(s);
+function toast(t) {
+  const el = $('#toast');
+  el.textContent = t;
+  el.classList.add('show');
+  clearTimeout(el._h);
+  el._h = setTimeout(() => el.classList.remove('show'), 2200);
+}
+const KINDS = [
+  'Plot',
+  'Nursery',
+  'Drying yard',
+  'Wet mill',
+  'Store',
+  'Water',
+  'Shade tree',
+  'View',
+  'Meeting',
+  'Other',
+];
+
+// ---------- local database ----------
+let DBP = null;
+function db() {
+  return (DBP =
+    DBP ||
+    new Promise((ok, no) => {
+      const r = indexedDB.open('KoffyKraftTrails', 1);
+      r.onupgradeneeded = () => {
+        const d = r.result;
+        d.createObjectStore('trails', { keyPath: 'id' });
+        d.createObjectStore('photos', { keyPath: 'id' }).createIndex('trail', 'trailId');
+      };
+      r.onsuccess = () => ok(r.result);
+      r.onerror = () => no(r.error);
+    }));
+}
+async function tx(store, mode, fn) {
+  const d = await db();
+  return new Promise((ok, no) => {
+    const t = d.transaction(store, mode),
+      s = t.objectStore(store);
+    let out;
+    Promise.resolve(fn(s)).then(v => (out = v));
+    t.oncomplete = () => ok(out);
+    t.onerror = () => no(t.error);
+  });
+}
+const req = r =>
+  new Promise((ok, no) => ((r.onsuccess = () => ok(r.result)), (r.onerror = () => no(r.error))));
+const T = {
+  all: () => tx('trails', 'readonly', s => req(s.getAll())),
+  get: id => tx('trails', 'readonly', s => req(s.get(id))),
+  put: t => tx('trails', 'readwrite', s => req(s.put({ ...t, updated: new Date().toISOString() }))),
+  del: async id => {
+    const ps = await P.of(id);
+    await tx('photos', 'readwrite', s => ps.forEach(p => s.delete(p.id)));
+    return tx('trails', 'readwrite', s => req(s.delete(id)));
+  },
+};
+const P = {
+  put: p => tx('photos', 'readwrite', s => req(s.put(p))),
+  get: id => tx('photos', 'readonly', s => req(s.get(id))),
+  of: trailId => tx('photos', 'readonly', s => req(s.index('trail').getAll(trailId))),
+  del: id => tx('photos', 'readwrite', s => req(s.delete(id))),
+};
+const uid = () =>
+  crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+
+// ---------- numbers ----------
+function hav(a, b) {
+  const R = 6371008.8,
+    rad = Math.PI / 180;
+  const dLa = (b[0] - a[0]) * rad,
+    dLo = (b[1] - a[1]) * rad;
+  const h = Math.sin(dLa / 2) ** 2 + Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(dLo / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+// pts: [lat, lng, alt|null, acc, time ms]
+function stats(pts) {
+  let dist = 0,
+    gain = 0,
+    lo = null,
+    hi = null,
+    last = null;
+  for (let i = 1; i < pts.length; i++) dist += hav(pts[i - 1], pts[i]);
+  // GPS heights jump about; count a climb only once it passes 3 m
+  for (const p of pts) {
+    if (p[2] == null) continue;
+    lo = lo == null ? p[2] : Math.min(lo, p[2]);
+    hi = hi == null ? p[2] : Math.max(hi, p[2]);
+    if (last == null) last = p[2];
+    else if (p[2] - last > 3) {
+      gain += p[2] - last;
+      last = p[2];
+    } else if (last - p[2] > 3) last = p[2];
+  }
+  const ms = pts.length > 1 ? pts[pts.length - 1][4] - pts[0][4] : 0;
+  return { dist, gain, lo, hi, ms };
+}
+const km = m => (m >= 1000 ? r2(m / 1000) + ' km' : Math.round(m) + ' m');
+const dur = ms => {
+  const m = Math.round(ms / 60000);
+  return m >= 60 ? Math.floor(m / 60) + ' h ' + (m % 60) + ' min' : m + ' min';
+};
+const when = s => (s ? new Date(s).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '');
+function statsHtml(pts) {
+  const s = stats(pts);
+  return (
+    '<div class="stats"><div><b>' +
+    km(s.dist) +
+    '</b><span>distance</span></div><div><b>' +
+    dur(s.ms) +
+    '</b><span>time</span></div><div><b>' +
+    Math.round(s.gain) +
+    ' m</b><span>climb</span></div><div><b>' +
+    (s.hi != null ? Math.round(s.hi) + ' m' : '–') +
+    '</b><span>highest</span></div></div>'
+  );
+}
+
+// ---------- photos: shrink on this phone before saving ----------
+async function shrink(file, max = 1600) {
+  try {
+    const bm = await createImageBitmap(file);
+    const k = Math.min(1, max / Math.max(bm.width, bm.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(bm.width * k);
+    c.height = Math.round(bm.height * k);
+    c.getContext('2d').drawImage(bm, 0, 0, c.width, c.height);
+    const blob = await new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.82));
+    return { blob: blob || file, w: c.width, h: c.height };
+  } catch (e) {
+    return { blob: file, w: null, h: null };
+  }
+}
+const urls = [];
+const blobUrl = b => {
+  const u = URL.createObjectURL(b);
+  urls.push(u);
+  return u;
+};
+function freeUrls() {
+  while (urls.length) URL.revokeObjectURL(urls.pop());
+}
+
+// ---------- map ----------
+let map = null,
+  layer = null;
+function mapIn(el) {
+  if (map) map.remove();
+  meMark = null;
+  map = L.map(el, { zoomControl: true }).setView([10.3, 76.6], 8);
+  const sat = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    { maxNativeZoom: 18, maxZoom: 21, attribution: 'Esri, Maxar, Earthstar Geographics' }
+  );
+  const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 20,
+    maxNativeZoom: 19,
+    attribution: '© OpenStreetMap contributors',
+  });
+  sat.addTo(map);
+  L.control.layers({ Satellite: sat, Street: street }, {}, { position: 'topright' }).addTo(map);
+  L.control.scale({ metric: true, imperial: false }).addTo(map);
+  layer = L.layerGroup().addTo(map);
+  return map;
+}
+const pinIcon = n =>
+  L.divIcon({
+    className: '',
+    html: '<div class="pin">' + n + '</div>',
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+  });
+function drawTrail(t, fit) {
+  if (!map) return;
+  layer.clearLayers();
+  const line = t.points.map(p => [p[0], p[1]]);
+  if (line.length > 1) L.polyline(line, { color: '#ff7a1a', weight: 5, opacity: 0.95 }).addTo(layer);
+  if (line.length)
+    L.circleMarker(line[0], {
+      radius: 6,
+      color: '#fff',
+      weight: 2,
+      fillColor: '#3f6b5a',
+      fillOpacity: 1,
+    }).addTo(layer);
+  (t.stops || []).forEach((s, i) =>
+    L.marker([s.lat, s.lng], { icon: pinIcon(i + 1) })
+      .bindTooltip(esc(s.title || 'Stop ' + (i + 1)))
+      .on('click', () => {
+        const el = document.getElementById('stop-' + s.id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      })
+      .addTo(layer)
+  );
+  if (fit) {
+    const all = line.concat((t.stops || []).map(s => [s.lat, s.lng]));
+    if (all.length > 1) map.fitBounds(all, { padding: [30, 30], maxZoom: 18 });
+    else if (all.length) map.setView(all[0], 17);
+  }
+}
+
+// ---------- list ----------
+async function listView() {
+  stopWatch();
+  const v = $('#view');
+  const ts = (await T.all()).sort((a, b) => (b.created || '').localeCompare(a.created || ''));
+  v.innerHTML =
+    '<h1>Trails</h1><div class="sub">Walk an estate, a drying yard or a buyer\'s visit. The phone records the path; you add stops with notes and photos. Like a hiking trail app, for coffee. <b>Trails stay on this device</b>: nothing goes to the cloud. Save a trail pack to your phone or computer to keep it safe or send it to someone.</div>' +
+    '<div class="row"><a class="btn primary" href="#rec">● Start a trail</a><label class="btn" style="cursor:pointer">Open a trail file<input id="imp" type="file" accept=".zip,.gpx,.geojson,.json,application/zip,application/gpx+xml" hidden></label></div>' +
+    '<h2>Your trails</h2>' +
+    (ts.length
+      ? ts
+          .map(t => {
+            const s = stats(t.points || []);
+            return (
+              '<div class="card"><a class="tl" href="#t/' +
+              esc(t.id) +
+              '"><b>' +
+              esc(t.name || 'Trail') +
+              '</b><div class="mini">' +
+              when(t.created) +
+              ' · ' +
+              km(s.dist) +
+              ' · ' +
+              (t.stops || []).length +
+              ' stops' +
+              (t.draft ? ' · <b style="color:var(--bad)">not finished</b>' : '') +
+              '</div></a></div>'
+            );
+          })
+          .join('')
+      : '<div class="card mini">No trails yet. Tap Start a trail, then walk. Keep the screen on while you walk: phones stop giving the location to web pages when the screen is off.</div>') +
+    '<div class="card mini">Map imagery: Esri World Imagery and OpenStreetMap contributors. Heights come from the phone\'s GPS and can be off by 10 m or more. Photos are made smaller on the phone (longest side 1600 px) before they are kept.</div>';
+  $('#imp').onchange = e => importFile(e.target.files[0]);
+}
+
+// ---------- recording ----------
+let watch = null,
+  wake = null,
+  REC = null,
+  meMark = null;
+function stopWatch() {
+  if (watch != null) navigator.geolocation.clearWatch(watch);
+  watch = null;
+  if (wake) wake.release().catch(() => {});
+  wake = null;
+}
+async function keepAwake() {
+  try {
+    if ('wakeLock' in navigator) wake = await navigator.wakeLock.request('screen');
+  } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && watch != null) keepAwake();
+});
+async function recView() {
+  const v = $('#view');
+  const drafts = (await T.all()).filter(t => t.draft);
+  REC = drafts[0] || {
+    id: uid(),
+    name: 'Trail ' + new Date().toLocaleDateString(),
+    kind: 'Farm walk',
+    created: new Date().toISOString(),
+    points: [],
+    stops: [],
+    draft: true,
+    paused: true,
+  };
+  v.innerHTML =
+    '<a class="link" href="#">‹ Trails</a><h1>Recording</h1><div class="sub">Keep this screen open while you walk. Tap Add a stop at anything worth showing: a plot, the drying beds, a spring.</div>' +
+    '<div id="map"></div><div class="live" id="live">Waiting for the location…</div><div id="st"></div>' +
+    '<div class="row"><button class="btn rec" id="go"></button><button class="btn" id="stop">＋ Add a stop</button><button class="btn" id="fin">Finish</button></div>';
+  mapIn('map');
+  drawTrail(REC, true);
+  $('#st').innerHTML = statsHtml(REC.points);
+  const btn = () =>
+    ($('#go').textContent = REC.paused ? (REC.points.length ? '● Resume' : '● Start') : '❚❚ Pause');
+  btn();
+  if (!('geolocation' in navigator)) $('#live').textContent = 'This browser cannot give the location.';
+  else
+    watch = navigator.geolocation.watchPosition(
+      pos => onPos(pos),
+      err =>
+        ($('#live').textContent =
+          'Location: ' + err.message + '. Allow location for this site and try again.'),
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 30000 }
+    );
+  keepAwake();
+  $('#go').onclick = async () => {
+    REC.paused = !REC.paused;
+    btn();
+    await T.put(REC);
+  };
+  $('#stop').onclick = () => {
+    const last = REC.lastFix;
+    if (!last) return toast('No location yet');
+    stopSheet(REC, { lat: last[0], lng: last[1], alt: last[2], t: last[4] }, async () => {
+      await T.put(REC);
+      drawTrail(REC, false);
+    });
+  };
+  $('#fin').onclick = async () => {
+    if (!REC.points.length && !REC.stops.length) {
+      if (confirm('Nothing recorded yet. Leave without saving?')) {
+        await T.del(REC.id);
+        location.hash = '';
+      }
+      return;
+    }
+    REC.draft = false;
+    REC.paused = true;
+    delete REC.lastFix;
+    await T.put(REC);
+    stopWatch();
+    location.hash = '#t/' + REC.id + '/edit';
+  };
+}
+async function onPos(pos) {
+  const c = pos.coords,
+    fix = [
+      r6(c.latitude),
+      r6(c.longitude),
+      c.altitude != null ? r1(c.altitude) : null,
+      Math.round(c.accuracy || 0),
+      pos.timestamp || Date.now(),
+    ];
+  if (!REC) return;
+  REC.lastFix = fix;
+  $('#live').innerHTML =
+    'Here: <b>' +
+    fix[0].toFixed(5) +
+    ', ' +
+    fix[1].toFixed(5) +
+    '</b> · accurate to ' +
+    fix[3] +
+    ' m' +
+    (fix[2] != null ? ' · height ' + Math.round(fix[2]) + ' m' : '') +
+    (REC.paused ? ' · paused' : ' · recording');
+  if (map) {
+    if (!meMark)
+      meMark = L.marker([fix[0], fix[1]], {
+        icon: L.divIcon({
+          className: '',
+          html: '<div class="me"></div>',
+          iconSize: [18, 18],
+          iconAnchor: [9, 9],
+        }),
+      });
+    meMark.setLatLng([fix[0], fix[1]]).addTo(map);
+    if (!REC.points.length) map.setView([fix[0], fix[1]], 17);
+  }
+  if (REC.paused || fix[3] > 50) return; // skip rough fixes
+  const last = REC.points[REC.points.length - 1];
+  if (last && hav(last, fix) < 5 && fix[4] - last[4] < 30000) return;
+  REC.points.push(fix);
+  drawTrail(REC, false);
+  $('#st').innerHTML = statsHtml(REC.points);
+  await T.put(REC);
+}
+const r6 = v => Math.round(v * 1e6) / 1e6;
+
+// ---------- a stop: notes and photos ----------
+function stopSheet(t, at, done, s) {
+  const isNew = !s;
+  s = s || {
+    id: uid(),
+    lat: at.lat,
+    lng: at.lng,
+    alt: at.alt,
+    t: at.t || Date.now(),
+    title: '',
+    kind: 'Plot',
+    text: '',
+    photos: [],
+  };
+  const el = document.createElement('div');
+  el.className = 'sheet';
+  el.innerHTML =
+    '<div><h2 style="margin-top:0">' +
+    (isNew ? 'Add a stop' : 'Edit stop') +
+    '</h2><div class="mini">' +
+    (+s.lat).toFixed(5) +
+    ', ' +
+    (+s.lng).toFixed(5) +
+    (s.alt != null ? ' · ' + Math.round(s.alt) + ' m' : '') +
+    '</div><label class="f">Name<input id="sT" maxlength="80" placeholder="Block 3, SLN 795"></label><label class="f">Kind<select id="sK">' +
+    KINDS.map(k => '<option' + (k === s.kind ? ' selected' : '') + '>' + k + '</option>').join('') +
+    '</select></label><label class="f">What to see here<textarea id="sD" maxlength="2000" placeholder="Shade, age of plants, what the buyer should notice"></textarea></label><label class="f">Photos<input id="sP" type="file" accept="image/*" multiple></label><div class="pics" id="sPics"></div><div class="row" style="margin-top:12px"><button class="btn primary" id="sOk">Save stop</button><button class="btn" id="sNo">Cancel</button>' +
+    (isNew ? '' : '<button class="btn" id="sDel" style="margin-left:auto">Delete stop</button>') +
+    '</div></div>';
+  document.body.appendChild(el);
+  $('#sT').value = s.title || '';
+  $('#sD').value = s.text || '';
+  const added = [];
+  const showPics = async () => {
+    const box = $('#sPics');
+    box.innerHTML = '';
+    for (const id of s.photos) {
+      const p = await P.get(id);
+      if (p) box.insertAdjacentHTML('beforeend', '<img src="' + blobUrl(p.blob) + '" alt="">');
+    }
+    for (const p of added) box.insertAdjacentHTML('beforeend', '<img src="' + blobUrl(p.blob) + '" alt="">');
+  };
+  showPics();
+  $('#sP').onchange = async e => {
+    for (const f of [...e.target.files].slice(0, 12)) {
+      const sm = await shrink(f);
+      added.push({
+        id: uid(),
+        trailId: t.id,
+        stopId: s.id,
+        blob: sm.blob,
+        w: sm.w,
+        h: sm.h,
+        name: f.name,
+        taken: f.lastModified || null,
+      });
+    }
+    showPics();
+  };
+  const close = () => el.remove();
+  $('#sNo').onclick = close;
+  if ($('#sDel'))
+    $('#sDel').onclick = async () => {
+      if (!confirm('Delete this stop and its photos?')) return;
+      for (const id of s.photos) await P.del(id);
+      t.stops = t.stops.filter(x => x.id !== s.id);
+      close();
+      done();
+    };
+  $('#sOk').onclick = async () => {
+    s.title = $('#sT').value.trim();
+    s.kind = $('#sK').value;
+    s.text = $('#sD').value.trim();
+    for (const p of added) {
+      await P.put(p);
+      s.photos.push(p.id);
+    }
+    if (isNew) t.stops.push(s);
+    close();
+    toast('Stop saved on this device');
+    done();
+  };
+}
+
+// ---------- one trail ----------
+async function trailView(id, edit) {
+  stopWatch();
+  const t = await T.get(id);
+  const v = $('#view');
+  if (!t) {
+    v.innerHTML =
+      '<a class="link" href="#">‹ Trails</a><div class="card">This trail is not on this device.</div>';
+    return;
+  }
+  if (t.draft) {
+    location.hash = '#rec';
+    return;
+  }
+  freeUrls();
+  const photos = {};
+  for (const p of await P.of(id)) photos[p.id] = p;
+  v.innerHTML =
+    '<a class="link" href="#">‹ Trails</a><h1>' +
+    esc(t.name || 'Trail') +
+    '</h1><div class="sub">' +
+    esc(t.kind || '') +
+    ' · ' +
+    when(t.created) +
+    (t.by ? ' · by ' + esc(t.by) : '') +
+    '</div>' +
+    (edit
+      ? '<div class="card"><label class="f">Name<input id="eN" maxlength="80"></label><label class="f">Kind<select id="eK">' +
+        ['Farm walk', 'Buyer visit', 'Processing site', 'Harvest round', 'Other']
+          .map(k => '<option' + (k === t.kind ? ' selected' : '') + '>' + k + '</option>')
+          .join('') +
+        '</select></label><label class="f">Made by (optional)<input id="eB" maxlength="80" placeholder="Your name or estate"></label><label class="f">About this trail<textarea id="eD" maxlength="4000"></textarea></label><button class="btn primary" id="eOk">Save</button></div>'
+      : t.text
+        ? '<div class="card">' + esc(t.text).replace(/\n/g, '<br>') + '</div>'
+        : '') +
+    '<div id="map"></div>' +
+    statsHtml(t.points || []) +
+    '<div class="row"><button class="btn small" id="addStop">＋ Add a stop on the map</button>' +
+    (edit ? '' : '<a class="btn small" href="#t/' + esc(id) + '/edit">Edit</a>') +
+    '</div><h2>Stops</h2>' +
+    ((t.stops || []).length
+      ? t.stops
+          .map(
+            (s, i) =>
+              '<div class="card stop" id="stop-' +
+              esc(s.id) +
+              '"><div class="num">' +
+              (i + 1) +
+              '</div><div><b>' +
+              esc(s.title || 'Stop ' + (i + 1)) +
+              '</b> <span class="mini">' +
+              esc(s.kind || '') +
+              (s.alt != null ? ' · ' + Math.round(s.alt) + ' m' : '') +
+              '</span>' +
+              (s.text ? '<div style="margin-top:4px">' + esc(s.text).replace(/\n/g, '<br>') + '</div>' : '') +
+              '<div class="pics">' +
+              (s.photos || [])
+                .filter(pid => photos[pid])
+                .map(
+                  pid => '<img data-big="' + esc(pid) + '" src="' + blobUrl(photos[pid].blob) + '" alt="">'
+                )
+                .join('') +
+              '</div><div class="row" style="margin-top:6px"><button class="btn small" data-ed="' +
+              esc(s.id) +
+              '">Edit stop</button></div></div></div>'
+          )
+          .join('')
+      : '<div class="card mini">No stops on this trail.</div>') +
+    '<h2>Save and share</h2><div class="card"><div class="row"><button class="btn small primary" id="xZip">Trail pack (.zip, with photos)</button><button class="btn small" id="xGpx">GPX</button><button class="btn small" id="xKml">KML (Google Earth)</button><button class="btn small" id="xGeo">GeoJSON</button>' +
+    (navigator.canShare ? '<button class="btn small" id="xShare">Share</button>' : '') +
+    '</div><div class="mini" style="margin-top:8px">The trail pack holds the path, the stops, every photo and a page that opens in any browser, even offline. GPX opens in hiking apps (AllTrails, Gaia, Komoot, OsmAnd); KML in Google Earth. Nothing is uploaded; the file is saved where you choose.</div></div>' +
+    '<div class="card mini">Stored only on this device. Clearing the browser\'s site data deletes it, so save a trail pack. <button class="btn small" id="del" style="margin-left:6px">Delete trail</button></div>';
+  mapIn('map');
+  drawTrail(t, true);
+  if (edit) {
+    $('#eN').value = t.name || '';
+    $('#eB').value = t.by || '';
+    $('#eD').value = t.text || '';
+    $('#eOk').onclick = async () => {
+      t.name = $('#eN').value.trim() || 'Trail';
+      t.kind = $('#eK').value;
+      t.by = $('#eB').value.trim();
+      t.text = $('#eD').value.trim();
+      await T.put(t);
+      location.hash = '#t/' + id;
+    };
+  }
+  const redraw = async () => {
+    await T.put(t);
+    trailView(id, edit);
+  };
+  let picking = false;
+  $('#addStop').onclick = () => {
+    picking = true;
+    toast('Tap the map where the stop is');
+  };
+  map.on('click', e => {
+    if (!picking) return;
+    picking = false;
+    stopSheet(t, { lat: r6(e.latlng.lat), lng: r6(e.latlng.lng), alt: null, t: Date.now() }, redraw);
+  });
+  document.querySelectorAll('[data-ed]').forEach(
+    b =>
+      (b.onclick = () =>
+        stopSheet(
+          t,
+          null,
+          redraw,
+          t.stops.find(s => s.id === b.dataset.ed)
+        ))
+  );
+  document.querySelectorAll('[data-big]').forEach(
+    im =>
+      (im.onclick = () => {
+        const o = document.createElement('div');
+        o.className = 'view';
+        o.innerHTML = '<img src="' + im.src + '" alt="">';
+        o.onclick = () => o.remove();
+        document.body.appendChild(o);
+      })
+  );
+  const base =
+    (t.name || 'trail')
+      .replace(/[^\w-]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 40) || 'trail';
+  $('#xGpx').onclick = () => save(new Blob([gpx(t)], { type: 'application/gpx+xml' }), base + '.gpx');
+  $('#xKml').onclick = () =>
+    save(new Blob([kml(t)], { type: 'application/vnd.google-earth.kml+xml' }), base + '.kml');
+  $('#xGeo').onclick = () =>
+    save(new Blob([JSON.stringify(geo(t), null, 1)], { type: 'application/geo+json' }), base + '.geojson');
+  $('#xZip').onclick = async () => save(await pack(t, photos), base + '.zip');
+  if ($('#xShare'))
+    $('#xShare').onclick = async () => {
+      const f = new File([await pack(t, photos)], base + '.zip', { type: 'application/zip' });
+      if (navigator.canShare({ files: [f] }))
+        navigator.share({ files: [f], title: t.name, text: 'Trail: ' + t.name }).catch(() => {});
+      else save(f, base + '.zip');
+    };
+  $('#del').onclick = async () => {
+    if (!confirm('Delete this trail and its photos from this device?')) return;
+    await T.del(id);
+    location.hash = '';
+  };
+}
+function save(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => (URL.revokeObjectURL(a.href), a.remove()), 4000);
+  toast('Saved ' + name);
+}
+
+// ---------- files ----------
+const x = s =>
+  String(s ?? '').replace(
+    /[<>&"']/g,
+    c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' })[c]
+  );
+const iso = ms => new Date(ms).toISOString();
+function gpx(t) {
+  return (
+    '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="KoffyKraft Trails" xmlns="http://www.topografix.com/GPX/1/1">\n<metadata><name>' +
+    x(t.name) +
+    '</name>' +
+    (t.text ? '<desc>' + x(t.text) + '</desc>' : '') +
+    (t.by ? '<author><name>' + x(t.by) + '</name></author>' : '') +
+    '<time>' +
+    x(t.created) +
+    '</time></metadata>\n' +
+    (t.stops || [])
+      .map(
+        s =>
+          '<wpt lat="' +
+          s.lat +
+          '" lon="' +
+          s.lng +
+          '">' +
+          (s.alt != null ? '<ele>' + s.alt + '</ele>' : '') +
+          '<time>' +
+          iso(s.t) +
+          '</time><name>' +
+          x(s.title || 'Stop') +
+          '</name>' +
+          (s.text ? '<desc>' + x(s.text) + '</desc>' : '') +
+          '<type>' +
+          x(s.kind || '') +
+          '</type></wpt>'
+      )
+      .join('\n') +
+    '\n<trk><name>' +
+    x(t.name) +
+    '</name><type>' +
+    x(t.kind || '') +
+    '</type><trkseg>\n' +
+    (t.points || [])
+      .map(
+        p =>
+          '<trkpt lat="' +
+          p[0] +
+          '" lon="' +
+          p[1] +
+          '">' +
+          (p[2] != null ? '<ele>' + p[2] + '</ele>' : '') +
+          '<time>' +
+          iso(p[4]) +
+          '</time></trkpt>'
+      )
+      .join('\n') +
+    '\n</trkseg></trk>\n</gpx>\n'
+  );
+}
+function kml(t) {
+  const co = p => p[1] + ',' + p[0] + (p[2] != null ? ',' + p[2] : '');
+  return (
+    '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>' +
+    x(t.name) +
+    '</name><Style id="path"><LineStyle><color>ff1a7aff</color><width>4</width></LineStyle></Style>' +
+    (t.points && t.points.length > 1
+      ? '<Placemark><name>' +
+        x(t.name) +
+        '</name><styleUrl>#path</styleUrl><LineString><tessellate>1</tessellate><coordinates>' +
+        t.points.map(co).join(' ') +
+        '</coordinates></LineString></Placemark>'
+      : '') +
+    (t.stops || [])
+      .map(
+        s =>
+          '<Placemark><name>' +
+          x(s.title || 'Stop') +
+          '</name><description>' +
+          x([s.kind, s.text].filter(Boolean).join(': ')) +
+          '</description><Point><coordinates>' +
+          co([s.lat, s.lng, s.alt]) +
+          '</coordinates></Point></Placemark>'
+      )
+      .join('') +
+    '</Document></kml>\n'
+  );
+}
+function geo(t, names) {
+  const f = [];
+  if (t.points && t.points.length > 1)
+    f.push({
+      type: 'Feature',
+      properties: {
+        name: t.name,
+        kind: t.kind,
+        by: t.by || '',
+        about: t.text || '',
+        created: t.created,
+        times: t.points.map(p => iso(p[4])),
+      },
+      geometry: {
+        type: 'LineString',
+        coordinates: t.points.map(p => (p[2] != null ? [p[1], p[0], p[2]] : [p[1], p[0]])),
+      },
+    });
+  (t.stops || []).forEach((s, i) =>
+    f.push({
+      type: 'Feature',
+      properties: {
+        n: i + 1,
+        name: s.title,
+        kind: s.kind,
+        text: s.text,
+        time: iso(s.t),
+        photos: names ? (s.photos || []).map(id => names[id]).filter(Boolean) : undefined,
+      },
+      geometry: { type: 'Point', coordinates: s.alt != null ? [s.lng, s.lat, s.alt] : [s.lng, s.lat] },
+    })
+  );
+  return { type: 'FeatureCollection', features: f };
+}
+// A page inside the pack that shows the trail without KoffyKraft or a connection.
+function packPage(t, names) {
+  const s = stats(t.points || []);
+  return (
+    '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' +
+    x(t.name) +
+    '</title><style>body{font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:760px;margin:auto;padding:20px;color:#171512;background:#f7f5f0}h1{margin:0}.m{color:#77716a;font-size:14px}.s{background:#fff;border:1px solid #ddd8d0;border-radius:14px;padding:12px 14px;margin:10px 0}img{max-width:100%;border-radius:10px;margin-top:8px}</style><h1>' +
+    x(t.name) +
+    '</h1><p class="m">' +
+    x(t.kind || '') +
+    ' · ' +
+    x(when(t.created)) +
+    (t.by ? ' · by ' + x(t.by) : '') +
+    ' · ' +
+    km(s.dist) +
+    ' · ' +
+    Math.round(s.gain) +
+    ' m climb</p>' +
+    (t.text ? '<p>' + x(t.text).replace(/\n/g, '<br>') + '</p>' : '') +
+    (t.stops || [])
+      .map(
+        (st, i) =>
+          '<div class="s"><b>' +
+          (i + 1) +
+          '. ' +
+          x(st.title || 'Stop') +
+          '</b> <span class="m">' +
+          x(st.kind || '') +
+          ' · <a href="https://www.openstreetmap.org/?mlat=' +
+          st.lat +
+          '&mlon=' +
+          st.lng +
+          '#map=18/' +
+          st.lat +
+          '/' +
+          st.lng +
+          '">' +
+          (+st.lat).toFixed(5) +
+          ', ' +
+          (+st.lng).toFixed(5) +
+          '</a></span>' +
+          (st.text ? '<p>' + x(st.text).replace(/\n/g, '<br>') + '</p>' : '') +
+          (st.photos || [])
+            .filter(id => names[id])
+            .map(id => '<img src="' + names[id] + '" alt="">')
+            .join('') +
+          '</div>'
+      )
+      .join('') +
+    '<p class="m">Made with KoffyKraft Trails (roast.koffykraft.coffee). The path is in trail.gpx and trail.geojson; open trail.gpx in a hiking app or trail.kml in Google Earth. To open this trail in KoffyKraft, choose Open a trail file and pick this .zip.</p>'
+  );
+}
+async function pack(t, photos) {
+  const names = {},
+    files = [];
+  let n = 0;
+  for (const s of t.stops || [])
+    for (const id of s.photos || []) {
+      const p = photos[id];
+      if (!p) continue;
+      names[id] = 'photos/' + String(++n).padStart(3, '0') + '.jpg';
+      files.push([names[id], new Uint8Array(await p.blob.arrayBuffer())]);
+    }
+  const enc = new TextEncoder();
+  const keep = { ...t, photoFiles: names };
+  files.unshift(
+    ['index.html', enc.encode(packPage(t, names))],
+    ['trail.gpx', enc.encode(gpx(t))],
+    ['trail.kml', enc.encode(kml(t))],
+    ['trail.geojson', enc.encode(JSON.stringify(geo(t, names), null, 1))],
+    ['koffykraft-trail.json', enc.encode(JSON.stringify(keep))]
+  );
+  return new Blob([zip(files)], { type: 'application/zip' });
+}
+
+// Minimal zip, files stored as they are (photos are already compressed). CRC-32 as the format needs.
+const CRC = (() => {
+  const t = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[i] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(b) {
+  let c = 0xffffffff;
+  for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+function zip(files) {
+  const enc = new TextEncoder(),
+    parts = [],
+    dir = [];
+  let off = 0;
+  const d = new Date(),
+    dt = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate(),
+    tm = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  for (const [name, data] of files) {
+    const nm = enc.encode(name),
+      crc = crc32(data);
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true);
+    h.setUint16(4, 20, true);
+    h.setUint16(6, 0x0800, true); // names in UTF-8
+    h.setUint16(8, 0, true);
+    h.setUint16(10, tm, true);
+    h.setUint16(12, dt, true);
+    h.setUint32(14, crc, true);
+    h.setUint32(18, data.length, true);
+    h.setUint32(22, data.length, true);
+    h.setUint16(26, nm.length, true);
+    parts.push(new Uint8Array(h.buffer), nm, data);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0, 0x02014b50, true);
+    c.setUint16(4, 20, true);
+    c.setUint16(6, 20, true);
+    c.setUint16(8, 0x0800, true);
+    c.setUint16(12, tm, true);
+    c.setUint16(14, dt, true);
+    c.setUint32(16, crc, true);
+    c.setUint32(20, data.length, true);
+    c.setUint32(24, data.length, true);
+    c.setUint16(28, nm.length, true);
+    c.setUint32(42, off, true);
+    dir.push(new Uint8Array(c.buffer), nm);
+    off += 30 + nm.length + data.length;
+  }
+  const size = dir.reduce((a, p) => a + p.length, 0);
+  const e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true);
+  e.setUint16(8, files.length, true);
+  e.setUint16(10, files.length, true);
+  e.setUint32(12, size, true);
+  e.setUint32(16, off, true);
+  return new Blob([...parts, ...dir, new Uint8Array(e.buffer)]);
+}
+// Read a zip: stored files, and deflated ones where the browser can inflate.
+async function unzip(buf) {
+  const b = new Uint8Array(buf),
+    v = new DataView(buf),
+    out = {};
+  let e = b.length - 22;
+  while (e >= 0 && v.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('not a zip file');
+  let p = v.getUint32(e + 16, true);
+  const n = v.getUint16(e + 10, true),
+    dec = new TextDecoder();
+  for (let i = 0; i < n; i++) {
+    const method = v.getUint16(p + 10, true),
+      csize = v.getUint32(p + 20, true),
+      nl = v.getUint16(p + 28, true),
+      xl = v.getUint16(p + 30, true),
+      cl = v.getUint16(p + 32, true),
+      lo = v.getUint32(p + 42, true);
+    const name = dec.decode(b.slice(p + 46, p + 46 + nl));
+    const start = lo + 30 + v.getUint16(lo + 26, true) + v.getUint16(lo + 28, true);
+    const raw = b.slice(start, start + csize);
+    if (method === 0) out[name] = raw;
+    else if (method === 8 && 'DecompressionStream' in window)
+      out[name] = new Uint8Array(
+        await new Response(
+          new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))
+        ).arrayBuffer()
+      );
+    p += 46 + nl + xl + cl;
+  }
+  return out;
+}
+async function importFile(f) {
+  if (!f) return;
+  try {
+    const name = f.name.toLowerCase();
+    let t;
+    const photos = [];
+    if (name.endsWith('.zip')) {
+      const z = await unzip(await f.arrayBuffer());
+      const j = z['koffykraft-trail.json'];
+      if (j) {
+        t = JSON.parse(new TextDecoder().decode(j));
+        const names = t.photoFiles || {};
+        delete t.photoFiles;
+        const idMap = {};
+        for (const [oldId, path] of Object.entries(names))
+          if (z[path]) {
+            const nid = uid();
+            idMap[oldId] = nid;
+            photos.push({ id: nid, blob: new Blob([z[path]], { type: 'image/jpeg' }) });
+          }
+        t.id = uid();
+        for (const s of t.stops || []) s.photos = (s.photos || []).map(id => idMap[id]).filter(Boolean);
+        for (const p of photos) {
+          p.trailId = t.id;
+          p.stopId = (t.stops.find(s => s.photos.includes(p.id)) || {}).id;
+        }
+      } else if (z['trail.gpx']) t = fromGpx(new TextDecoder().decode(z['trail.gpx']));
+      else throw new Error('no trail inside this zip');
+    } else if (name.endsWith('.gpx')) t = fromGpx(await f.text());
+    else t = fromGeo(JSON.parse(await f.text()));
+    t.id = t.id || uid();
+    t.draft = false;
+    t.imported = new Date().toISOString();
+    await T.put(t);
+    for (const p of photos) await P.put(p);
+    toast('Trail opened and kept on this device');
+    location.hash = '#t/' + t.id;
+  } catch (e) {
+    toast('Could not open: ' + e.message);
+  }
+}
+function fromGpx(text) {
+  const d = new DOMParser().parseFromString(text, 'application/xml');
+  if (d.querySelector('parsererror')) throw new Error('not a GPX file');
+  const txt = (el, sel) => ((el.querySelector(sel) || {}).textContent || '').trim();
+  const ms = el => {
+    const s = txt(el, 'time');
+    return s ? Date.parse(s) : Date.now();
+  };
+  const ele = el => {
+    const s = txt(el, 'ele');
+    return s ? +s : null;
+  };
+  const points = [...d.querySelectorAll('trkpt,rtept')].map(p => [
+    +p.getAttribute('lat'),
+    +p.getAttribute('lon'),
+    ele(p),
+    0,
+    ms(p),
+  ]);
+  const stops = [...d.querySelectorAll('wpt')].map(w => ({
+    id: uid(),
+    lat: +w.getAttribute('lat'),
+    lng: +w.getAttribute('lon'),
+    alt: ele(w),
+    t: ms(w),
+    title: txt(w, 'name'),
+    kind: KINDS.includes(txt(w, 'type')) ? txt(w, 'type') : 'Other',
+    text: txt(w, 'desc'),
+    photos: [],
+  }));
+  return {
+    name: txt(d, 'metadata > name') || txt(d, 'trk > name') || 'Imported trail',
+    kind: 'Farm walk',
+    text: txt(d, 'metadata > desc'),
+    created: points.length ? iso(points[0][4]) : new Date().toISOString(),
+    points,
+    stops,
+  };
+}
+function fromGeo(g) {
+  const fs = g.type === 'FeatureCollection' ? g.features : [g];
+  const line = fs.find(f => f.geometry && f.geometry.type === 'LineString');
+  const pr = (line && line.properties) || {};
+  const times = pr.times || [];
+  const points = line
+    ? line.geometry.coordinates.map((c, i) => [
+        c[1],
+        c[0],
+        c[2] != null ? c[2] : null,
+        0,
+        times[i] ? Date.parse(times[i]) : Date.now(),
+      ])
+    : [];
+  const stops = fs
+    .filter(f => f.geometry && f.geometry.type === 'Point')
+    .map(f => ({
+      id: uid(),
+      lat: f.geometry.coordinates[1],
+      lng: f.geometry.coordinates[0],
+      alt: f.geometry.coordinates[2] != null ? f.geometry.coordinates[2] : null,
+      t: f.properties && f.properties.time ? Date.parse(f.properties.time) : Date.now(),
+      title: (f.properties && (f.properties.name || f.properties.title)) || '',
+      kind: 'Other',
+      text: (f.properties && (f.properties.text || f.properties.description)) || '',
+      photos: [],
+    }));
+  if (!points.length && !stops.length) throw new Error('no path or points in this file');
+  return {
+    name: pr.name || 'Imported trail',
+    kind: pr.kind || 'Farm walk',
+    by: pr.by || '',
+    text: pr.about || '',
+    created: pr.created || new Date().toISOString(),
+    points,
+    stops,
+  };
+}
+
+// ---------- routes ----------
+function route() {
+  const h = location.hash.slice(1);
+  let m;
+  if (h === 'rec') recView();
+  else if ((m = h.match(/^t\/([\w-]+)(\/edit)?$/))) trailView(m[1], !!m[2]);
+  else listView();
+}
+window.addEventListener('hashchange', route);
+window.addEventListener('pagehide', stopWatch);
+route();
+</script>
+<script src="pv.js" defer></script>
+</body>
+</html>

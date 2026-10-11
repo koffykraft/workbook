@@ -29,7 +29,7 @@ export async function run(root, t) {
   for (const f of ['worker.js', 'trace-api.js', 'trace-core.js']) fs.copyFileSync(path.join(root, f), path.join(tmp, f));
   fs.writeFileSync(path.join(tmp, 'package.json'), '{"type":"module"}');
   const worker = (await import(path.join(tmp, 'worker.js'))).default;
-  const { traceAnchor } = await import(path.join(tmp, 'trace-api.js'));
+  const { traceAnchor, traceUpgrade } = await import(path.join(tmp, 'trace-api.js'));
   const T = globalThis.KKTRACE;
 
   const db = new DatabaseSync(':memory:');
@@ -39,12 +39,13 @@ export async function run(root, t) {
     t.check(`migration ${m} applies`, () => db.exec(sql));
   }
 
-  const mail = [], stamps = [];
+  const mail = [], stamps = [], upg = [];
   const realFetch = globalThis.fetch;
   globalThis.fetch = async (url, opt) => {
     const u = String(url);
     if (u.includes('resend.com')) { mail.push(JSON.parse(opt.body)); return new Response('{"id":"x"}', { status: 200 }) }
-    if (u.includes('opentimestamps.org')) { stamps.push(u); return new Response(Uint8Array.of(0xf0, 0x01, 0xaa, 0x08, 0x00, 0x83, 0xdf, 0xe3, 0x0d, 0x2e, 0xf9, 0x0c, 0x8e, 0x01, 0x00)) }
+    if (u.includes('opentimestamps.org/timestamp/')) { upg.push(u); return new Response(Uint8Array.of(0x08, 0x00, 0x05, 0x88, 0x96, 0x0d, 0x73, 0xd7, 0x19, 0x01, 0x03, 0xb0, 0xe0, 0x35)) }
+    if (u.includes('opentimestamps.org')) { stamps.push(u); const cal = [...Buffer.from(new URL(u).origin)]; const pl = [cal.length, ...cal]; return new Response(Uint8Array.of(0xf0, 0x01, 0xaa, 0x08, 0x00, 0x83, 0xdf, 0xe3, 0x0d, 0x2e, 0xf9, 0x0c, 0x8e, pl.length, ...pl)) }
     if (u.includes('cloudflare-dns.com')) return new Response(JSON.stringify({ Status: 0, Answer: [{ type: 15, data: '10 mx.example.com.' }] }));
     throw new Error('unexpected network call in test: ' + u);
   };
@@ -158,11 +159,13 @@ export async function run(root, t) {
     await t.acheck('passport: weights add up, signers shown as parties', async () => { const v = await pub(); const b = T.balance(v.events); eq(b.warnings.length, 0, 'warnings ' + b.warnings.join(' ')); eq(v.events.at(-1).party, 'B', 'buyer party'); if (!Object.values(v.labels).includes('member')) throw new Error('labels') });
     await t.acheck('passport: roasting more than received is flagged', async () => { eq((await add(member, kB, [{ kind: 'roast', data: { rid: 'r2', kg: { green: 7 } } }])).s, 200, 'status'); const b = T.balance((await pub()).events); if (!b.warnings.some(w => w.includes('Party B'))) throw new Error(b.warnings.join(' | ') || 'no warning') });
     await t.acheck('passport: tampering is visible on the page', async () => { const v = await pub(); v.events[2].body.data.kg.green = 50; const c = await T.verifyChain(v.events, v.keys); if (c[2].ok || !c[1].ok) throw new Error('tamper not caught') });
+    await t.acheck('passport: photo fingerprints are sealed, bad ones refused', async () => { eq((await add(owner, kO, [{ kind: 'photo', data: { sha: 'ab'.repeat(32), name: 'beds.jpg', note: 'Drying beds' } }])).s, 200, 'good'); eq((await add(owner, kO, [{ kind: 'photo', data: { name: 'x.jpg' } }])).s, 400, 'no fingerprint') });
     let digest;
     await t.acheck('passport: the day is stamped through OpenTimestamps', async () => { const tomorrow = new Date(Date.now() + 864e5); const r = await traceAnchor(env, tomorrow); eq(r.anchored.length, 1, 'days'); eq(r.anchored[0].status, 'ok', 'status'); eq(stamps.length, 2, 'calendars'); const v = await pub(); const d = v.events[0].day; digest = v.anchors[d].digest; eq(v.anchors[d].count, v.events.length, 'count') });
     await t.acheck('passport: manifest and proof files check out', async () => { const d = (await pub()).events[0].day; const m = await worker.fetch(new Request('https://test.local/api/public/trace-day/' + d + '/manifest'), env, ctx); const txt = await m.text(); eq(sha(txt), digest, 'manifest digest'); const o = new Uint8Array(await (await worker.fetch(new Request('https://test.local/api/public/trace-day/' + d + '/ots'), env, ctx)).arrayBuffer()); eq(Buffer.from(o.slice(1, 15)).toString(), 'OpenTimestamps', 'magic'); eq(Buffer.from(o.slice(33, 65)).toString('hex'), digest, 'digest in proof') });
+    await t.acheck('passport: proofs are upgraded to the Bitcoin block', async () => { const later = new Date(Date.now() + 2 * 864e5); const r = await traceUpgrade(env, fetch, later); eq(r.upgraded.length, 1, 'days'); eq(r.upgraded[0].bitcoin, true, 'bitcoin'); eq(upg.length, 2, 'calendars asked'); const v = await pub(); const d = v.events[0].day; eq(v.anchors[d].bitcoin[0], 880688, 'block'); const o = new Uint8Array(await (await worker.fetch(new Request('https://test.local/api/public/trace-day/' + d + '/ots'), env, ctx)).arrayBuffer()); const info = T.otsInfo(o); eq(info.pending.length, 0, 'pending left'); eq(info.bitcoin.length, 2, 'bitcoin notes'); eq(Buffer.from(o.slice(33, 65)).toString('hex'), digest, 'digest kept'); eq((await traceUpgrade(env, fetch, later)).upgraded.length, 0, 'done once') });
     await t.acheck('passport: stamping runs daily and is admin-only by hand', async () => { if (typeof worker.scheduled !== 'function') throw new Error('no scheduled handler'); eq((await call('POST', '/api/trace/anchor', null, owner)).s, 403, 'owner'); eq((await call('POST', '/api/trace/anchor', null, admin)).s, 200, 'admin') });
-    await t.acheck('passport: only the owner withdraws; data goes, hashes stay', async () => { eq((await call('DELETE', '/api/trace/lots/' + lot, null, member)).s, 403, 'buyer'); eq((await call('DELETE', '/api/trace/lots/' + lot, null, owner)).s, 200, 'owner'); const v = await pub(); if (!v.lot.withdrawn || v.events.some(e => e.body)) throw new Error('data still public'); eq(v.events.length, 7, 'hashes kept') });
+    await t.acheck('passport: only the owner withdraws; data goes, hashes stay', async () => { eq((await call('DELETE', '/api/trace/lots/' + lot, null, member)).s, 403, 'buyer'); eq((await call('DELETE', '/api/trace/lots/' + lot, null, owner)).s, 200, 'owner'); const v = await pub(); if (!v.lot.withdrawn || v.events.some(e => e.body)) throw new Error('data still public'); eq(v.events.length, 8, 'hashes kept') });
   } finally {
     globalThis.fetch = realFetch;
     fs.rmSync(tmp, { recursive: true, force: true });

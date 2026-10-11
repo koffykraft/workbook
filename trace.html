@@ -765,6 +765,27 @@ async function seal(plan, todo) {
 }
 
 // ---------- manage one lot ----------
+// A photo's fingerprint: SHA-256 of the file exactly as saved, plus size and shape. The photo
+// itself never leaves the phone.
+async function photoPrint(f) {
+  const sha = await T.sha(await f.arrayBuffer());
+  let w = null,
+    hgt = null;
+  try {
+    const bm = await createImageBitmap(f);
+    w = bm.width;
+    hgt = bm.height;
+    bm.close && bm.close();
+  } catch (e) {}
+  return {
+    sha,
+    name: String(f.name || 'photo').slice(0, 80),
+    kb: Math.round(f.size / 102.4) / 10,
+    w,
+    h: hgt,
+    taken: f.lastModified ? new Date(f.lastModified).toISOString() : null,
+  };
+}
 async function lotView(id) {
   const v = $('#view');
   v.innerHTML = '<div class="mini">Loading…</div>';
@@ -828,6 +849,19 @@ async function lotView(id) {
       ' from Origin.</div><a class="btn small" style="margin-top:6px" href="origin.html#passport/' +
       encodeURIComponent(local.id) +
       '">Seal changes</a></div>';
+  const photos = L.events.filter(e => e.body && e.body.kind === 'photo');
+  h +=
+    '<h2>Photos</h2><div class="card"><b>Add photo fingerprints</b><div class="mini">The photo stays on this phone. Only its fingerprint (SHA-256) and the note go into the passport, so later anyone can check that a photo you send them is the original, unchanged.</div><label class="f">Note (optional)<input id="phN" maxlength="200" placeholder="Drying beds, day 4"></label><label class="f">Photos<input id="phF" type="file" accept="image/*" multiple></label>' +
+    (photos.length
+      ? '<div class="mini" style="margin-top:8px">' +
+        photos.length +
+        ' photo' +
+        (photos.length > 1 ? 's' : '') +
+        ' sealed: ' +
+        photos.map(e => esc(e.body.data.name || 'photo')).join(', ') +
+        '</div>'
+      : '') +
+    '</div>';
   h +=
     '<h2>Hand over</h2><div class="card"><b>Send this lot to a buyer</b><div class="mini">They confirm the weight on their own phone. Their email is only used to reach them, never shown.</div><label class="f">Buyer email<input id="tE" type="email" placeholder="roaster@example.com"></label><label class="f">Name to show (optional)<input id="tN" placeholder="Their business name"></label><label class="f">Weight sent, kg<input id="tK" type="number" step="any" inputmode="decimal"></label><button class="btn primary small" id="tS">Sign and send</button></div>';
   const tr = L.transfers || [];
@@ -878,6 +912,20 @@ async function lotView(id) {
       '</b><small>Scan to see where this coffee comes from</small><small>KoffyKraft lot passport</small></div>';
     $('#labels').innerHTML = one.repeat(Math.min(60, n));
     setTimeout(() => window.print(), 100);
+  };
+  $('#phF').onchange = async ev => {
+    const files = [...ev.target.files].slice(0, 20);
+    if (!files.length) return;
+    const note = $('#phN').value.trim().slice(0, 200);
+    try {
+      const items = [];
+      for (const f of files) items.push({ kind: 'photo', data: { ...(await photoPrint(f)), note } });
+      await append(id, items);
+      toast(items.length + ' photo fingerprint' + (items.length > 1 ? 's' : '') + ' sealed');
+      lotView(id);
+    } catch (e) {
+      toast(e.message);
+    }
   };
   $('#tS').onclick = async () => {
     const email = $('#tE').value.trim(),
@@ -1089,6 +1137,10 @@ async function publicView(tok) {
       }
     })
   );
+  const inBtc = days.filter(d => dayOk[d] && P.anchors[d] && P.anchors[d].bitcoin).length,
+    btcBlocks = [...new Set(days.flatMap(d => (P.anchors[d] && P.anchors[d].bitcoin) || []))].map(
+      n => 'block ' + n
+    );
   const stamped = days.filter(d => dayOk[d]).length,
     pending = days.filter(d => !P.anchors[d] || P.anchors[d].status !== 'ok').length,
     badDays = days.filter(d => P.anchors[d] && P.anchors[d].status === 'ok' && !dayOk[d]);
@@ -1114,7 +1166,14 @@ async function publicView(tok) {
         (stamped > 1 ? 's' : '') +
         ' of entries stamped into the Bitcoin public record through OpenTimestamps' +
         (pending ? '; ' + pending + " waiting for tonight's stamp" : '') +
-        '.</div>'
+        '. ' +
+        (inBtc
+          ? inBtc +
+            ' confirmed in a Bitcoin block (' +
+            btcBlocks.join(', ') +
+            '); those proofs check without any calendar.'
+          : 'Full Bitcoin confirmation follows within a day or two.') +
+        '</div>'
       : '<div class="banner wait">Waiting for the daily public stamp. Entries are stamped into the Bitcoin record each night (India time).</div>';
   const bal = T.balance(P.events);
   h += bal.warnings.length
@@ -1182,6 +1241,36 @@ async function publicView(tok) {
           ([e, i]) => '<div class="card">' + esc(e.body.data.text || '') + sigLine(e, chk[i], P) + '</div>'
         )
         .join('');
+  const pics = P.events.map((e, i) => [e, i]).filter(([e]) => e.body && e.body.kind === 'photo');
+  if (pics.length)
+    h +=
+      '<h2>Photos</h2><div class="card mini" style="font-size:13.5px">The photos stay with their owner; the passport holds each one\'s fingerprint. If someone sends you a photo of this lot, check it here: it matches only if it is the original file, unchanged.<label class="f">Check a photo<input id="phC" type="file" accept="image/*" multiple></label><div id="phR"></div></div>' +
+      pics
+        .map(([e, i]) => {
+          const x = e.body.data || {};
+          return (
+            '<div class="card" data-ph="' +
+            esc(x.sha || '') +
+            '"><span class="kind k-hand">Photo</span><b>' +
+            esc(x.name || 'photo') +
+            '</b>' +
+            (x.note ? '<div>' + esc(x.note) + '</div>' : '') +
+            '<div class="mini">' +
+            [
+              x.w && x.h ? x.w + ' × ' + x.h : '',
+              x.kb ? x.kb + ' KB' : '',
+              x.taken ? 'file dated ' + day(String(x.taken).slice(0, 10)) : '',
+            ]
+              .filter(Boolean)
+              .join(' · ') +
+            '<br><code style="font-size:11px;word-break:break-all">' +
+            esc(x.sha || '') +
+            '</code></div>' +
+            sigLine(e, chk[i], P) +
+            '</div>'
+          );
+        })
+        .join('');
   h +=
     '<h2>Check it yourself</h2><div class="card mini" style="font-size:13.5px">Letters after each name: A is the lot\'s owner; B, C and so on are buyers in the order they confirmed. Every check above ran in your browser using <a href="trace-core.js">open code</a>.<br><br>To check a day\'s stamp without trusting KoffyKraft: download its list and proof below, then drop both on <a href="https://opentimestamps.org" target="_blank" rel="noopener">opentimestamps.org</a>. Each entry\'s fingerprint is a line in the list.' +
     days
@@ -1200,6 +1289,23 @@ async function publicView(tok) {
     '<br><br>What this proves: entries were made by these signers, in this order, and not changed since. It cannot prove that what was entered was true.</div>' +
     foot();
   v.innerHTML = h;
+  if ($('#phC'))
+    $('#phC').onchange = async ev => {
+      const out = [];
+      for (const f of ev.target.files) {
+        const sha = await T.sha(await f.arrayBuffer());
+        const hit = document.querySelector('[data-ph="' + sha + '"]');
+        out.push(
+          hit
+            ? '<div class="good">✓ ' + esc(f.name) + ' matches a sealed photo.</div>'
+            : '<div class="badc">✗ ' +
+                esc(f.name) +
+                ' does not match any sealed photo. It may be a different photo, or edited or resized.</div>'
+        );
+        if (hit) hit.style.outline = '2px solid #5b7a3a';
+      }
+      $('#phR').innerHTML = out.join('');
+    };
 }
 function foot() {
   return '<div class="foot">Made with <a href="home.html">KoffyKraft</a> · free and open source · © T M Thomas</div>';

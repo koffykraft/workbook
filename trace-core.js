@@ -153,6 +153,133 @@
     return out;
   }
 
+  // ---- Bitcoin upgrade of a proof ----
+  // A fresh proof ends in "pending" notes from the calendars. A few hours later each calendar
+  // has put the day's digest into a Bitcoin transaction and can return the rest of the path.
+  // otsUpgrade reads the proof tree, asks each calendar for its part, and writes the full proof.
+  const PENDING = '83dfe30d2ef90c8e',
+    BITCOIN = '0588960d73d71901';
+  const HDR = 31 + 1 + 1 + 32; // magic, version, sha256 tag, digest
+  function rdVarint(b, o) {
+    let v = 0,
+      sh = 0,
+      x;
+    do {
+      x = b[o.p++];
+      if (x === undefined) throw new Error('proof ends early');
+      v += (x & 0x7f) * Math.pow(2, sh);
+      sh += 7;
+    } while (x & 0x80);
+    return v;
+  }
+  function rdBytes(b, o) {
+    const n = rdVarint(b, o);
+    if (o.p + n > b.length) throw new Error('proof ends early');
+    const out = b.slice(o.p, o.p + n);
+    o.p += n;
+    return out;
+  }
+  const varint = n => {
+    const out = [];
+    do {
+      let x = n % 128;
+      n = Math.floor(n / 128);
+      if (n) x |= 0x80;
+      out.push(x);
+    } while (n);
+    return out;
+  };
+  function otsParse(b, o) {
+    const items = [];
+    for (;;) {
+      let t = b[o.p++];
+      const more = t === 0xff;
+      if (more) t = b[o.p++];
+      if (t === undefined) throw new Error('proof ends early');
+      if (t === 0x00) {
+        const tag = hex(b.slice(o.p, o.p + 8));
+        o.p += 8;
+        items.push({ att: tag, payload: rdBytes(b, o) });
+      } else {
+        const arg = t === 0xf0 || t === 0xf1 ? rdBytes(b, o) : null;
+        items.push({ op: t, arg, child: otsParse(b, o) });
+      }
+      if (!more) return items;
+    }
+  }
+  function otsWrite(items, out) {
+    items.forEach((it, i) => {
+      if (i < items.length - 1) out.push(0xff);
+      if (it.att) {
+        out.push(0x00, ...unhex(it.att), ...varint(it.payload.length), ...it.payload);
+      } else {
+        out.push(it.op);
+        if (it.arg) out.push(...varint(it.arg.length), ...it.arg);
+        otsWrite(it.child, out);
+      }
+    });
+    return out;
+  }
+  async function applyOp(op, arg, msg) {
+    const cat = (a, b) => {
+      const c = new Uint8Array(a.length + b.length);
+      c.set(a);
+      c.set(b, a.length);
+      return c;
+    };
+    if (op === 0xf0) return cat(msg, arg);
+    if (op === 0xf1) return cat(arg, msg);
+    if (op === 0x08) return new Uint8Array(await crypto.subtle.digest('SHA-256', msg));
+    if (op === 0x02) return new Uint8Array(await crypto.subtle.digest('SHA-1', msg));
+    return null; // other ops are not used by the calendars before a pending note
+  }
+  // Only the public OpenTimestamps calendars are asked, never an address taken blindly from a file.
+  const calOk = u => /^https:\/\/[a-z0-9.-]+\.(opentimestamps\.org|eternitywall\.com)$/.test(u);
+  function otsSummary(items, acc = { bitcoin: [], pending: [] }) {
+    for (const it of items) {
+      if (it.att === BITCOIN) acc.bitcoin.push(rdVarint(it.payload, { p: 0 }));
+      else if (it.att === PENDING) acc.pending.push(new TextDecoder().decode(rdBytes(it.payload, { p: 0 })));
+      else if (it.child) otsSummary(it.child, acc);
+    }
+    return acc;
+  }
+  async function otsUpgrade(file, fetchFn) {
+    file = new Uint8Array(file);
+    const digest = file.slice(33, HDR);
+    const tree = otsParse(file, { p: HDR });
+    let changed = false;
+    async function walk(items, msg) {
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        if (it.att === PENDING) {
+          let uri = '';
+          try {
+            uri = new TextDecoder().decode(rdBytes(it.payload, { p: 0 }));
+          } catch (e) {}
+          if (!calOk(uri)) continue;
+          try {
+            const r = await fetchFn(uri + '/timestamp/' + hex(msg), {
+              headers: { accept: 'application/vnd.opentimestamps.v1', 'user-agent': 'KoffyKraft trace' },
+            });
+            if (!r.ok) continue;
+            const sub = otsParse(new Uint8Array(await r.arrayBuffer()), { p: 0 });
+            if (!otsSummary(sub).bitcoin.length) continue;
+            items.splice(i, 1, ...sub);
+            i += sub.length - 1;
+            changed = true;
+          } catch (e) {}
+        } else if (it.child) {
+          const m = await applyOp(it.op, it.arg, msg);
+          if (m) await walk(it.child, m);
+        }
+      }
+    }
+    await walk(tree, digest);
+    const out = changed ? Uint8Array.from([...file.slice(0, HDR), ...otsWrite(tree, [])]) : file;
+    return { file: out, changed, ...otsSummary(tree) };
+  }
+  const otsInfo = file => otsSummary(otsParse(new Uint8Array(file), { p: HDR }));
+
   // ---- weight check ----
   // Every party (A = the lot's owner, B, C... = buyers in order) may not send or roast more
   // than they hold. The owner holds the green weight; a buyer holds what they confirmed.
@@ -229,6 +356,8 @@
     verifyChain,
     manifest,
     otsFile,
+    otsUpgrade,
+    otsInfo,
     balance,
   };
 })(globalThis);

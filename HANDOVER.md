@@ -4,7 +4,7 @@ Read this first in any new chat. It records how the app is built, the working ru
 
 ## Owner and rules
 - Owner: T M Thomas (KoffyKraft, Kerala). Repo github.com/koffykraft/workbook. Live at roast.koffykraft.coffee (also roast.tagroos.workers.dev).
-- Licence: AGPL-3.0 with section 7 terms in NOTICE (attribution, changed versions marked, names). Guide text CC BY-SA 4.0. KoffyKraft is a registered trade mark of T M Thomas in India (no class named). Commercial licence: info@koffykraft.com.
+- Licence: AGPL-3.0 with section 7 terms in NOTICE (attribution, changed versions marked, names). Guide text CC BY-SA 4.0. KoffyKraft is a registered trade mark of T M Thomas in India (no class named). Commercial licence: info@koffykraft.coffee.
 - Writing rules: never use em dashes. Plain, short English. Credit every source; write in our own words, never copy (Asami, Lucia Solis and others have asked). Check ChatGPT-supplied material before using it.
 - Do not reveal TAGRO irrigation code. No supplier price lists. Do not get around blocked websites.
 - Languages: only overviews and explanations are translated: Malayalam, plus first drafts (11 Oct 2026) of Kannada, Tamil, Spanish and Portuguese that still need a native coffee speaker to review. Labels, buttons, fields, numbers and tips stay English. Same format for future languages (lang/<code>.js).
@@ -36,7 +36,7 @@ Roast timer and graph, roastbooks, cup and brew pages, water, colour.js, varieti
 - `tests/lint.mjs` runs ESLint on every script and page. Each page is checked with only the globals its own `<script src>` files provide, so a missing include fails the checks. It also checks that every onclick and onchange calls a function that exists.
 - Shared helpers live in `kk-base.js` (esc, num, r1, r2). Load it before a page's own script or snap.js; never define these again in a page.
 - Every page is opened in a phone-size browser by the checks (42 pages).
-- Not served: tests, scripts, node_modules, trace-api.js (see .assetsignore).
+- Every page is opened in a phone-size browser by the checks. Not served: tests, scripts, node_modules, trace-api.js (see .assetsignore).
 
 ## File map
 - Pages: home (start), origin (farm records), roast-timer-v14 (live roast), roast-graph, roasts (Roastbook), cup (brews and cupping), methods (brew guide), water, crop, map, journey, contents (all features), share (spaces), profile (me and send-out profile), trace (lot passports), account, data, license, privacy, terms. Smaller tools: capture, ocr, process, process-run, rehydration, stats, roastbook, roastbooks, brew, index.
@@ -69,10 +69,25 @@ Roast timer and graph, roastbooks, cup and brew pages, water, colour.js, varieti
 ## Local weights (11 Oct 2026)
 - kk-units.js (origin.html): focus any kg field and a row of units appears (lb, arroba 15, quintal 46 and 100, bags 50/60/69/70, fanega 250 of cherry). Type the number, tap the unit, the field becomes kg. Records always store kg.
 
+## Roast weights and live probe (11 Oct 2026)
+- kk-units.js also handles gram fields marked data-unit="g" (Timer green and roasted weight): oz, lb, kg chips.
+- kk-probe.js (Timer, folded "Probe" panel): Type readings, USB one number per line (Web Serial, 115200), USB TC4/Artisan (sends CHAN;1200, UNITS;C, READ each second; channel order selectable), Bluetooth standard thermometer (Health Thermometer 0x1809/0x2A1C or Environmental Sensing 0x181A/0x2A6E). Records the latest reading every 5 to 30 s while the roast runs (quiet recordReading). Chrome/Edge only; not iPhone. Untested with real hardware.
+
+## Trails (11 Oct 2026)
+- trail.html: AllTrails-style walk recorder. GPS path (watchPosition, fixes worse than 50 m skipped, a point every 5 m or 30 s), wake lock, stops with kind, notes and photos (shrunk to 1600 px JPEG). IndexedDB KoffyKraftTrails (trails, photos). Never synced, no sync.js on the page.
+- Save: trail pack zip (index.html viewer, GPX, KML, GeoJSON, koffykraft-trail.json, photos/), or GPX, KML, GeoJSON alone; Share sheet with the zip. Open a trail file: our zip, GPX, GeoJSON. Own zip writer (stored) and reader (stored or deflate-raw).
+- Phones stop giving location to web pages with the screen off; the page says so.
+
+## Local words (11 Oct 2026)
+- COFFEE_WORDS group 'Local words at origin' (Uganda, Kenya, Brazil, Latin America, Indonesia, Vietnam, India), sources in the comment and footer.
+
 ## Lot passports (built 11 Oct 2026)
 - Files: trace-core.js (hash, chain, signatures, weight check, OpenTimestamps file; shared by browser, server and tests), trace-api.js (server, imported by worker.js), trace.html (pages), qrcode.js (MIT, vendored), migrations/0015_trace.sql.
 - Flow: Origin green lot > Passport and QR > trace.html#seal signs new or changed records and roasts with this phone's key (WebCrypto ECDSA P-256, private key in IndexedDB KoffyKraftTrace, one per account) > #lot/<id> QR, labels, send to buyer by email > buyer confirms weight on trace.html (adds a green record with traceLot in their Origin) and seals their roasts > public #p/<token> checks everything in the reader's browser.
 - Public by default: no location, no notes, no stock; owner opts in to location and plot outline (GeoJSON for EU deforestation rule). Emails never shown. Parties shown as A (owner), B, C (buyers).
 - Daily cron 18:35 UTC (00:05 IST) stamps each finished UTC day's manifest of hashes via a.pool and b.pool OpenTimestamps calendars; failed days retry next run. Admin can POST /api/trace/anchor. Files at /api/public/trace-day/<day>/manifest and /ots, checkable at opentimestamps.org.
 - Withdraw removes entry bodies and signatures; hashes stay so stamped days still verify.
-- Ideas not done: photos in entries, upgrade .ots to the Bitcoin attestation server-side, passport link on share cards.
+- Photo fingerprints (kind 'photo', data {sha, name, kb, w, h, taken, note}): the photo stays on the phone; the public page has Check a photo, which hashes a file in the browser and matches it.
+- Bitcoin upgrade: KKTRACE.otsUpgrade parses the proof, asks each pending calendar (only *.opentimestamps.org or eternitywall.com) for /timestamp/<commitment>, splices in the returned path. traceUpgrade runs in the cron after traceAnchor for stamps older than 3 h; table trace_btc(day, blocks); public anchors carry bitcoin block heights.
+- Share cards: a green lot with traceToken gets a passport QR (sharecard.js item.qr, qrcode.js on origin.html).
+- Not done: Malayalam chart labels (conflicts with labels-stay-English rule), Probat/Neotec published conversion (none published; learned from pairs), LalCafé TDS PDFs, water sheet, charge temperature "8250" note (details lost; skipped by owner).
