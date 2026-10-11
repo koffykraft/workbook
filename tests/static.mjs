@@ -7,7 +7,7 @@ import path from 'node:path';
 
 export async function run(root, t) {
   const files = fs.readdirSync(root);
-  const skip = /^(index_previous|tagrobuild)/;
+  const skip = /^(index_previous)/;
   const js = files.filter(f => f.endsWith('.js') && !skip.test(f));
   const html = files.filter(f => f.endsWith('.html') && !skip.test(f));
 
