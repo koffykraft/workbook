@@ -29,3 +29,13 @@ The written guides (brew guide, crop care, journey of the bean, water, varieties
 To use this code in a closed or paid product without the AGPL obligations, you need a separate commercial licence from the copyright holder. Contact info@koffykraft.com.
 
 The KoffyKraft name and logo are not covered by the code licence and may not be used for other products.
+
+## Checks before every deploy
+
+`npm test` runs about 220 automatic checks in roughly 15 seconds:
+
+- **static**: every script and page parses, links point to real files, the offline file list is complete, licence notices are present.
+- **api**: the server code runs against a fresh local copy of the database with all migrations, covering sign-in rules, feedback (and its email), shared spaces permissions, public links and profiles.
+- **pages**: every main page opens on a phone-sized screen without errors or sideways scrolling, and the key journeys work: share a brew and a green lot, view a space, publish a profile.
+
+`npm run deploy` runs the checks and only deploys if all pass. `npm run test:fast` skips the browser checks. Needs Node 22.5 or newer; the browser checks need Playwright (`npm i -D playwright && npx playwright install chromium`).

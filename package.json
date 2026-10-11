@@ -1,0 +1,15 @@
+{
+  "name": "koffykraft-workbook",
+  "private": true,
+  "license": "SEE LICENSE IN NOTICE",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node tests/run.mjs",
+    "test:fast": "node tests/run.mjs static api",
+    "deploy": "bash scripts/deploy.sh"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  },
+  "engines": { "node": ">=22.5" }
+}

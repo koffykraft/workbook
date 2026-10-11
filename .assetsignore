@@ -5,3 +5,12 @@
 wrangler.jsonc
 .gitignore
 index_previous_v12_2026-09-21.html
+tests
+tests/**
+scripts
+scripts/**
+node_modules
+node_modules/**
+package.json
+package-lock.json
+.assetsignore
