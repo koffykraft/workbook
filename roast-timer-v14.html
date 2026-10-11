@@ -8,23 +8,23 @@
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-title" content="KoffyKraft"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><title>KoffyKraft Open Roast Timer v13 - Revised</title>
 <style>
 :root{
- --bg:#f4f0e8;--card:#fffaf3;--ink:#211c17;--muted:#746c63;--line:#d8cec2;
- --dark:#171512;--accent:#8b4b2e;--exhaust:#b85f32;--bean:#287a91;
+ --bg:#f7f5f0;--card:#fff;--ink:#171512;--muted:#77716a;--line:#ddd8d0;
+ --dark:#171512;--accent:#8d583b;--exhaust:#b85f32;--bean:#287a91;
  --turn:#537184;--yellow:#d8ad2f;--maillard:#aa6938;--fc:#a64031;
  --sc:#692724;--drop:#202020;--danger:#9b342d
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
 button,input,textarea,select{font:inherit}
 button{touch-action:manipulation}
 .app{max-width:800px;margin:auto;padding:env(safe-area-inset-top) 12px calc(96px + env(safe-area-inset-bottom))}
 header{padding:16px 4px 10px}
 .kicker{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700}
-h1{font-size:clamp(2rem,8vw,3.5rem);line-height:.94;margin:.18em 0 .16em}
+h1{font-size:32px;letter-spacing:-.04em;line-height:1.05;margin:6px 0 4px}
 .sub{margin:0;color:var(--muted);line-height:1.35}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0;box-shadow:0 7px 22px rgba(44,32,22,.05)}
-.card h2{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;margin:0 0 12px;color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}
+.card h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 12px;color:var(--accent)}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.grid>*{min-width:0}.full{grid-column:1/-1}
 .field{display:flex;flex-direction:column;gap:5px}
 label{font-size:.73rem;color:var(--muted);font-weight:700}
@@ -101,21 +101,22 @@ nav.kkh-nav{display:flex;flex:none;justify-content:space-between;font-size:14px;
 <body>
 <div class="app">
 <header class="kkh"><div class="kkh-top"><a class="kkh-brand" href="home.html">KoffyKraft</a><a class="kkh-acct" href="profile.html" aria-label="Me: profile and activity">👤</a></div><nav class="kkh-nav" aria-label="Main"><a href="origin.html">Origin</a><a href="roast-timer-v14.html" aria-current="page">Timer</a><a href="roast-graph.html">Graph</a><a href="roasts.html">Roastbook</a><a href="cup.html">Cup</a><a href="account.html">Account</a></nav></header>
+<h1>Roast timer</h1><p class="sub" style="font-size:13.5px;margin-bottom:6px">Time the roast, mark events and log temperatures as you go. Finished roasts go to the <a href="roasts.html" style="color:#8d583b">Roastbook</a>.</p>
 
 <section class="card">
 <h2>Roaster and coffee identity</h2>
 <div class="grid">
- <div class="field full"><label>Roastery / user name</label><input id="roasteryName" placeholder="Optional"></div>
- <div class="field full"><label>Machine / roaster profile</label><input id="machineName" placeholder="Optional"></div>
- <div class="field full"><label>Source green lot <a href="origin.html#green" style="font-weight:400;color:#8d583b;margin-left:6px">Manage</a></label><select id="greenLotId"><option value="">None, type the details below</option></select><div id="greenLotInfo" style="font-size:12px;color:#77716a;margin-top:4px"></div></div>
- <div class="field full"><label>Estate / coffee</label><input id="estate" placeholder="Type once, reuse later"></div>
- <div class="field"><label>Coffee code</label><input id="coffeeCode" placeholder="CP"></div>
- <div class="field"><label>Roast number</label><input id="roastNo" type="number" value="1"></div>
- <div class="field"><label>Date</label><input id="roastDate" type="date"></div>
- <div class="field"><label>Moisture %</label><input id="moisture" type="number" step=".1"></div>
- <div class="field"><label>Green weight g</label><input id="greenWeight" type="number"></div>
- <div class="field"><label>Charge temperature <span class="unitMark">°C</span></label><input id="chargeTemp" type="number"></div>
- <div class="field"><label>Roast colour target</label><input id="targetColor" placeholder="Medium dark / colour"></div>
+ <div class="field full"><label for="roasteryName">Roastery / user name</label><input id="roasteryName" placeholder="Optional"></div>
+ <div class="field full"><label for="machineName">Machine / roaster profile</label><input id="machineName" placeholder="Optional"></div>
+ <div class="field full"><label for="greenLotId">Source green lot <a href="origin.html#green" style="font-weight:400;color:#8d583b;margin-left:6px">Manage</a></label><select id="greenLotId"><option value="">None, type the details below</option></select><div id="greenLotInfo" style="font-size:12px;color:#77716a;margin-top:4px"></div></div>
+ <div class="field full"><label for="estate">Estate / coffee</label><input id="estate" placeholder="Type once, reuse later"></div>
+ <div class="field"><label for="coffeeCode">Coffee code</label><input id="coffeeCode" placeholder="CP"></div>
+ <div class="field"><label for="roastNo">Roast number</label><input id="roastNo" type="number" value="1"></div>
+ <div class="field"><label for="roastDate">Date</label><input id="roastDate" type="date"></div>
+ <div class="field"><label for="moisture">Moisture %</label><input id="moisture" type="number" step=".1"></div>
+ <div class="field"><label for="greenWeight">Green weight g</label><input id="greenWeight" type="number"></div>
+ <div class="field"><label for="chargeTemp">Charge temperature <span class="unitMark">°C</span></label><input id="chargeTemp" type="number"></div>
+ <div class="field"><label for="targetColor">Roast colour target</label><input id="targetColor" placeholder="Medium dark / colour"></div>
 </div>
 <div class="chips" id="estateChips"></div><div class="key" id="roastKey">KEY: —</div>
 </section>
@@ -172,10 +173,10 @@ nav.kkh-nav{display:flex;flex:none;justify-content:space-between;font-size:14px;
 <section class="card">
 <h2>Configurable temperature tiles</h2>
 <div class="tile-config">
- <div class="field"><label>Start <span class="unitMark">°C</span></label><input id="tileStart" type="number" value="170"></div>
- <div class="field"><label>End <span class="unitMark">°C</span></label><input id="tileEnd" type="number" value="210"></div>
- <div class="field"><label>Interval <span class="unitMark">°C</span></label><input id="tileStep" type="number" value="1" min=".1" step=".1"></div>
- <div class="field"><label>Decimals</label><select id="tileDecimals"><option value="0">Whole °C</option><option value="1">0.1°C</option></select></div>
+ <div class="field"><label for="tileStart">Start <span class="unitMark">°C</span></label><input id="tileStart" type="number" value="170"></div>
+ <div class="field"><label for="tileEnd">End <span class="unitMark">°C</span></label><input id="tileEnd" type="number" value="210"></div>
+ <div class="field"><label for="tileStep">Interval <span class="unitMark">°C</span></label><input id="tileStep" type="number" value="1" min=".1" step=".1"></div>
+ <div class="field"><label for="tileDecimals">Decimals</label><select id="tileDecimals"><option value="0">Whole °C</option><option value="1">0.1°C</option></select></div>
  <button class="btn ghost make" id="generate">Make tiles</button>
 </div>
 <div class="tiles" id="tiles"></div>
@@ -185,9 +186,9 @@ nav.kkh-nav{display:flex;flex:none;justify-content:space-between;font-size:14px;
 <section class="card">
 <h2>Result</h2>
 <div class="grid">
- <div class="field"><label>Roasted weight g</label><input id="roastedWeight" type="number"></div>
- <div class="field"><label>Final roast colour</label><input id="finalColor"></div>
- <div class="field full"><label>Notes</label><textarea id="notes"></textarea></div>
+ <div class="field"><label for="roastedWeight">Roasted weight g</label><input id="roastedWeight" type="number"></div>
+ <div class="field"><label for="finalColor">Final roast colour</label><input id="finalColor"></div>
+ <div class="field full"><label for="notes">Notes</label><textarea id="notes"></textarea></div>
 </div>
 <div class="summary" style="margin-top:12px">
  <div class="metric"><b id="totalTime">--</b><span>Total roast</span></div>

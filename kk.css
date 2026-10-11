@@ -49,3 +49,9 @@ nav.kkh-nav{display:flex;flex:none;justify-content:space-between;font-size:14px;
 /* Share to a space: visible pill under a record's title */
 .sharebtn{display:inline-flex;align-items:center;gap:6px;margin-top:8px;border:1px solid var(--kk-coffee);color:var(--kk-coffee)!important;background:#fff;border-radius:999px;padding:8px 14px;font-weight:600;font-size:14px;text-decoration:none}
 .sharebtn::before{content:'';width:14px;height:14px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='18' cy='5' r='3'/%3E%3Ccircle cx='6' cy='12' r='3'/%3E%3Ccircle cx='18' cy='19' r='3'/%3E%3Cpath d='M8.6 13.5l6.8 4M15.4 6.5l-6.8 4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='18' cy='5' r='3'/%3E%3Ccircle cx='6' cy='12' r='3'/%3E%3Ccircle cx='18' cy='19' r='3'/%3E%3Cpath d='M8.6 13.5l6.8 4M15.4 6.5l-6.8 4'/%3E%3C/svg%3E") center/contain no-repeat}
+
+/* Tap comfort: pill buttons and chips at least 36 px tall, brand link a full thumb's height */
+.kkh-brand{padding:11px 0}
+.links a,#fbK button,.row>button,.btn.small,.chips button,.chip,.probe-choice button,.unit-choice button{min-height:36px}
+.option-toggle{min-height:40px;display:inline-flex;align-items:center;gap:8px}
+.option-toggle input[type=checkbox]{width:22px;height:22px;min-height:0}
