@@ -82,5 +82,7 @@
 "A simple way to brew many different coffees well.": "പല തരം കാപ്പികളും നന്നായി ഉണ്ടാക്കാനുള്ള ലളിതമായ ഒരു വഴി.",
 "Habits that make cupping scores reliable.": "കപ്പിംഗ് സ്കോറുകൾ വിശ്വസനീയമാക്കുന്ന ശീലങ്ങൾ.",
 "For roasters: readings you can compare from batch to batch.": "റോസ്റ്റർമാർക്ക്: ഓരോ ബാച്ചും തമ്മിൽ താരതമ്യം ചെയ്യാവുന്ന അളവുകൾ.",
-"For roasters: one roastery's way of keeping every batch on target.": "റോസ്റ്റർമാർക്ക്: ഓരോ ബാച്ചും ലക്ഷ്യത്തിൽ നിലനിർത്താൻ ഒരു റോസ്റ്ററി ഉപയോഗിക്കുന്ന രീതി."
+"For roasters: one roastery's way of keeping every batch on target.": "റോസ്റ്റർമാർക്ക്: ഓരോ ബാച്ചും ലക്ഷ്യത്തിൽ നിലനിർത്താൻ ഒരു റോസ്റ്ററി ഉപയോഗിക്കുന്ന രീതി.",
+"For roasters: judge the roast apart from the green coffee.": "റോസ്റ്റർമാർക്ക്: ഗ്രീൻ കോഫിയിൽ നിന്ന് വേറിട്ട് റോസ്റ്റിനെ വിലയിരുത്തുക.",
+"For roasters: two decisions that shape the cup.": "റോസ്റ്റർമാർക്ക്: കപ്പിന്റെ രുചി രൂപപ്പെടുത്തുന്ന രണ്ട് തീരുമാനങ്ങൾ."
 };

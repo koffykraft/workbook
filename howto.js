@@ -53,6 +53,20 @@ const S={
  RU:{t:'Scott Rao: how to become a better cupper (2023)',u:'https://www.scottrao.com/blog/2023/3/8/how-to-become-a-better-cupper'},
  RS:{t:'Scott Rao: coffee shots on the Decent (2021)',u:'https://www.scottrao.com/blog/2021/9/28/decent-coffee-shots'},
  GA:{t:'Jonathan Gagné, Coffee ad Astra: fuller flavour with the AeroPress (2021)',u:'https://coffeeadastra.com/2021/09/07/reaching-fuller-flavor-profiles-with-the-aeropress/'},
+ RR:{t:'Scott Rao: a scoring system for roast quality (2018)',u:'https://www.scottrao.com/blog/2018/3/18/its-time-to-create-a-scoring-system-for-roast-quality'},
+ RK:{t:'Scott Rao: what is baked coffee (2018)',u:'https://www.scottrao.com/blog/2018/2/24/what-is-baked-coffee-most-pros-dont-know'},
+ RT:{t:'Scott Rao: batch brew basics, continued (2017)',u:'https://www.scottrao.com/blog/2017/7/10/batch-brew-basics-continued'},
+ RV:{t:'Scott Rao: seeing through roasts',u:'https://www.scottrao.com/blog/seeing-through-roasts'},
+ RO:{t:'Scott Rao: the soak',u:'https://www.scottrao.com/blog/the-soak'},
+ RE:{t:'Scott Rao: roasting for espresso vs filter',u:'https://www.scottrao.com/blog/roasting-for-espresso-vs-filter'},
+ RP:{t:'Scott Rao: observations on hand pours (2016)',u:'https://www.scottrao.com/blog/2016/10/8/some-observations-on-hand-pours'},
+ AG:{t:'Agtron E20CP-III Coffee Roast Analyzer operations manual (2018)',u:''},
+ SC:{t:'SCA News: roast level and brew temperature affect the colour of brewed coffee (Yeager et al., J. Food Science)',u:'https://sca.coffee/sca-news/25/issue-17/the-color-in-your-cup-roast-level-and-brew-temperature-significantly-affect-the-color-of-brewed-coffee-m7b3x'},
+ MA:{t:'Moustache Coffee Club: the Agtron colour scale',u:'https://www.moustachecoffeeclub.com/blog/agtron-color-scale'},
+ MV:{t:'Moustache Coffee Club: V60 light roast recipe',u:'https://www.moustachecoffeeclub.com/blog/v60-light-roast-recipe'},
+ MD:{t:'Moustache Coffee Club: dialling in light roast',u:'https://www.moustachecoffeeclub.com/blog/how-to-dial-in-light-roast-coffee-for-home-baristas'},
+ MR:{t:'Moustache Coffee Club: coffee resting time',u:'https://www.moustachecoffeeclub.com/blog/coffee-resting-time'},
+ MC:{t:'Moustache Coffee Club: light roast cold brew',u:'https://www.moustachecoffeeclub.com/blog/light-roast-cold-brew'},
  FG:{t:'Frost, Ristenpart and Guinard, J. Food Science (2020)',u:'https://scholar.google.com/scholar?q=Effects+of+brew+strength+brew+yield+and+roast+on+the+sensory+quality+of+drip+brewed+coffee'}
 };
 const H={
@@ -70,7 +84,9 @@ const H={
    [2,null,null,'Faster than 2:30 and sour: grind finer. Slower than 4:00 and bitter: grind coarser. Change one thing at a time.','P'],
    [3,null,null,'Log brew time and, if you have a refractometer, TDS. Aim to change only grind until the cup is sweet, then fine-tune ratio for strength.','P'],
    [3,null,null,'Pour height and speed move extraction: a higher, faster stream stirs more. Keep them the same while you change grind.','P'],
-   [3,null,null,'Bed depth: very small doses make a shallow bed that tastes astringent more easily. For light, dense coffee Rao suggests 20 to 25 g in a V60, grinding coarser to keep the time.','RB']],
+   [3,null,null,'Bed depth: very small doses make a shallow bed that tastes astringent more easily. For light, dense coffee Rao suggests 20 to 25 g in a V60, grinding coarser to keep the time.','RB'],
+   [2,null,null,'Light roasts: water at 96 to 98 °C and one or two steps finer than for a medium roast. Adjust grind first, then temperature, then ratio.','MV'],
+   [3,null,null,'Rao\'s hand-pour notes: wet the bed with about 3 g water per gram of coffee and stir so the bubbling stops within 10 to 15 seconds. Keep the slurry near 89 to 93 °C, and after the prewet add the rest in one steady pour so it stays hot.','RP']],
   watch:[[1,'Pouring on the paper walls lets water bypass the coffee.','P'],[2,'A drawdown that stalls near the end usually means too many fines: grind a little coarser or swirl less.','P']],
   care:[[1,'Rinse the cone after use. Wash with mild soap now and then; plastic cones hold old coffee oils.','P']]},
  kalita:{need:'Kalita Wave dripper and wave filter, kettle, scale, timer. 15 g coffee, 250 g water.',
@@ -101,7 +117,8 @@ const H={
    [1,135,500,'Pour to 500 g.','CX'],
    [1,240,500,'Let it drain, then lift the filter out. Done at about 4:00 to 4:45.','P'],
    [2,null,null,'The thick paper slows flow. If it chokes past 5:00 and tastes harsh, grind coarser.','P'],
-   [3,null,null,'For larger brews keep the same ratio and pour schedule shape; the drawdown grows with bed depth, so grind a little coarser.','P']],
+   [3,null,null,'For larger brews keep the same ratio and pour schedule shape; the drawdown grows with bed depth, so grind a little coarser.','P'],
+   [3,null,null,'Rao finds the Chemex hard to brew well: keep it to about 475 ml, pour quickly and spin the slurry.','RP']],
   watch:[[1,'If the filter seals against the glass, the air channel blocks and the brew stalls. Keep the thick side over the spout.','CX']],
   care:[[1,'Wash the glass by hand. Remove the wooden collar first if you wash it in water.','P']]},
  aeropress:{need:'AeroPress with a paper filter, kettle, scale or the scoop, stirrer, mug. 15 g coffee, about 230 g water.',
@@ -171,7 +188,9 @@ const H={
    [2,null,null,'Contact time for a full batch is usually 4 to 8 minutes. Very short and sour: grind finer. Long and bitter: grind coarser.','BB'],
    [2,null,null,'Run one blank cycle and weigh what comes out, so you know how much water the brewer really uses.','BB'],
    [3,null,null,'Bed depth matters: 3 to 5 cm is a good range. Half batches in a full-size basket make a shallow bed that under-extracts; use a half-batch setting or smaller basket.','P'],
-   [3,null,null,'Very small batches in a big brewer make the bed too shallow and taste astringent; keep the bed 3 to 5 cm deep.','RB']],
+   [3,null,null,'Very small batches in a big brewer make the bed too shallow and taste astringent; keep the bed 3 to 5 cm deep.','RB'],
+   [3,null,null,'Rao\'s batch numbers: 16:1 to 18:1, bed 3 to 5 cm (use a basket insert for 1 litre), grind in the coarsest 15% of the grinder\'s range, total contact 6:00 to 6:30 with a programmed brew time of 4:30 or less, no more than 2 litres a batch, and fresh carafes at least every 30 minutes.','RT'],
+   [3,null,null,'If it tastes weak at a coarse setting, check burr sharpness, bed depth, brew time and whether the spray head wets the whole bed before grinding finer.','RT']],
   watch:[[1,'A hot plate keeps cooking the coffee. Use an airpot or brew only what you will drink.','BB']],
   care:[[1,'Clean the spray head and basket daily; old oils taint every batch. Descale on schedule for your water.','BB']]},
  moccamaster:{need:'Moccamaster with a #4 paper filter, scale, spoon. 45 g coffee for 750 ml, or 60 g for 1 litre.',
@@ -327,7 +346,8 @@ const H={
    [1,80,250,'Set it on the cup or server: the valve opens and it drains. Lid back on.','CL'],
    [1,150,250,'Done at about 2:30 to 2:45.','CL'],
    [2,null,null,'Steep longer for more extraction; the drain adds about a minute of contact.','P'],
-   [3,null,null,'Water first means the bed forms evenly and drains through paper with no bypass, so it is a fair way to compare coffees.','P']],
+   [3,null,null,'Water first means the bed forms evenly and drains through paper with no bypass, so it is a fair way to compare coffees.','P'],
+   [3,null,null,'Rao\'s version: water at 94 to 95 °C, wet all the coffee quickly, stir gently, cover and steep 2:00 to 3:00, stir again, then drain.','RP']],
   watch:[[1,'Do not set it on the cup until you mean to drain; the valve opens at once.','P']],
   care:[[1,'Take the valve apart and rinse now and then; old coffee blocks it.','P']]},
  switch:{need:'Hario Switch (V60 with a valve), paper, kettle, scale. 14 g coffee, 200 g water.',
@@ -409,7 +429,8 @@ const H={
    [3,null,null,'A study modelling espresso found that grinding too fine clogs parts of the puck, so extraction falls and shots vary. A slightly coarser grind with a smaller dose gave more repeatable shots.','CA'],
    [3,null,null,'Temperature last, in 1 °C steps. Pull two or three shots to confirm before you trust a change.','EX'],
    [3,null,null,'Rao keeps shots under 35 seconds; very light roasts can run much longer ratios, up to about 5:1 in 30 seconds.','RD'],
-   [3,null,null,'Filter-strength "coffee shots": on a profiling machine such as the Decent, a fine grind with paper above and below the puck, a long bloom, low flow and pressure, stopped near 5:1 and diluted with hot water to filter strength. Not for a standard machine.','RS']],
+   [3,null,null,'Filter-strength "coffee shots": on a profiling machine such as the Decent, a fine grind with paper above and below the puck, a long bloom, low flow and pressure, stopped near 5:1 and diluted with hot water to filter strength. Not for a standard machine.','RS'],
+   [2,null,null,'Light roasts: try 18 g in, about 45 g out (1:2.5), water 94 to 96 °C, a short low-pressure pre-infusion; shots often run 30 to 45 seconds. Sour and thin: finer. Dry and chalky: back off one step.','MD']],
   watch:[[1,'Gushing in under 15 seconds: grind finer or check the puck for cracks and uneven tamping.','EX']],
   care:[[1,'Knock out the puck and rinse the group screen after each session. Backflush and descale as your machine maker says.','P']]},
  lever:{need:'Lever espresso machine, espresso grinder, tamper, scale. 16 to 18 g in, about 1:2 out.',
@@ -559,7 +580,8 @@ const PRO=[
   [2,'Write notes before anyone talks. Do not change grind or water to make one bowl taste better.','RU'],
   [2,'Put a competitor\'s coffee on the table for reference.','RU'],
   [3,'Test yourself: hide three bowls of the same coffee among the others, and cup the same coffee on several days.','RU'],
-  [3,'For roast checks: if a roast tastes better ground coarser or with cooler water, suspect a roast defect.','RU']]},
+  [3,'For roast checks: if a roast tastes better ground coarser or with cooler water, suspect a roast defect.','RU'],
+  [3,'When buying green from sample roasts, check the sample roasts are consistent first. A better-roasted sample can win over better green; learn to taste baking (less sweetness) and underdevelopment (less fruit) apart from the coffee itself.','RV']]},
  {id:'colour',n:'Measuring roast colour',d:'For roasters: readings you can compare from batch to batch.',steps:[
   [1,'Measure ground coffee; whole-bean readings vary with the bean surface. Note both if you can.','RC'],
   [1,'Always use the same grinder and setting, fairly fine, and tamp the sample flat. Coarse grinds read lighter.','RC'],
@@ -567,6 +589,11 @@ const PRO=[
   [2,'Remove quakers to the same standard each time; they read much lighter and move the number.','RC'],
   [2,'Small sample trays save coffee but vary more. Repeat a reading that looks odd.','RC'],
   [3,'Recalibrate the meter before each session. A worn grinder can drift readings by 5 to 6 points in a year.','RC'],
+  [2,'Agtron: it is the ground reading that classifies the roast. The gap between whole-bean and ground readings shows how evenly the bean roasted; ground usually reads several points lighter, and the gap narrows on darker roasts.','AG'],
+  [2,'Agtron: read at room temperature, never warm, and within about 15 minutes of cooling. A sample can read up to 4 points darker after 24 hours.','AG'],
+  [3,'Agtron E20CP: grind like auto-drip (most particles 0.6 to 0.8 mm), level the dish with a straight edge without pressing. Too coarse ploughs waves; too fine cakes. Calibrate with the disk each session. Rao, using other meters, prefers a finer, tamped sample: whatever you choose, never change it.','AG'],
+  [3,'Gourmet and Commercial scales: Commercial is about 1.2 + 0.744 × Gourmet (Gourmet 55 is Commercial 42). Agtron puts most specialty coffee at Gourmet 30 to 65 and commercial at 50 to 75. Always compare on the same scale and meter.','AG'],
+  [3,'Colour in the cup is not colour of the grounds: a study found cold brews redder and hot brews browner from the same roast, and a light roast brewed hot looked like a medium brewed cold.','SC'],
   [3,'Cross-check with weight loss: steady weight loss but jumping colour points to the measurement; steady colour but odd weight loss points to weighing or lost beans.','RC']]},
  {id:'qc',n:'Roast QC routine',d:'For roasters: one roastery\'s way of keeping every batch on target.',steps:[
   [1,'Record development time, weight loss and ground colour for every batch.','RQ'],
@@ -577,6 +604,16 @@ const PRO=[
   [3,'Sort out quakers and defects after roasting; decide the sort level by cupping more than one level.','RQ'],
   [3,'Batches that miss the targets can be blended or sold under a different name, not as the main coffee.','RQ'],
   [3,'Store green in airtight bags, cool and at steady humidity, and check its moisture over time.','RQ']]},
+ {id:'roastscore',n:'Scoring roast quality',d:'For roasters: judge the roast apart from the green coffee.',steps:[
+  [1,'Score the roast separately from the coffee. A roast can only show the coffee\'s full potential (0) or fall short (minus).','RR'],
+  [1,'Four parts, each 0, -1 or -2: development of the bean core; whether it shows the flavours you aimed for; baked; roasty (char, smoke, harsh). Total from -8 to 0.','RR'],
+  [2,'Baked: -1 slightly baked but still fairly sweet; -2 clearly hollow and lacking sweetness. Roasty: -1 a hint of char or smoke; -2 strongly burnt or harsh.','RR'],
+  [3,'Do not subtract the roast score from the green score; keep the two judgements apart. Write the roast score in the cupping notes in Cup.','RR']]},
+ {id:'roasttech',n:'Roasting choices: soak, espresso and milk',d:'For roasters: two decisions that shape the cup.',steps:[
+  [2,'The soak: charge with low gas, then raise to high within the first two minutes. Beans give off little moisture early, so they need less heat then. Rao warns against charging too hot or soaking with the gas fully off.','RO'],
+  [2,'Black or milk matters more than filter or espresso. For milk drinks, a slightly darker roast is usually worth it.','RE'],
+  [3,'Why espresso is often roasted darker: espresso extracts cooler (the first contact is around 70 °C, mixed around 79 °C, against about 90 °C for filter), which can taste sour. A little more development offsets that, especially if extraction is low.','RE'],
+  [3,'If your espresso extractions are high (around 20% or more), the case for a darker espresso roast is weaker. Taste blind and decide.','RE']]},
  {id:'fresh',n:'Resting, storing and freezing roasted coffee',d:'Roasted coffee changes every day. Space, oxygen, heat and time take its aroma.',steps:[
   [1,'Keep beans whole until you brew. Store them sealed, cool and dark.','FR'],
   [1,'Heat is the biggest enemy: aroma loss roughly doubles with every 10 °C rise. Never leave coffee in a hot car or near the stove.','FR'],
@@ -586,6 +623,8 @@ const PRO=[
   [2,'Freezing works: roasted beans hold little water, so freezing only cools them, and keeps them fresh about ten times longer.','FR'],
   [3,'To freeze: seal well in small portions; tape over the valve. To thaw: leave the sealed bag out at least 1 hour for 250 g, 2 hours for 500 g, before opening, so moisture does not condense on cold beans.','FR'],
   [3,'Dark and fast roasts make more gas and can push oil to the surface, which goes rancid quickly. Brew them sooner.','FR'],
+  [2,'Typical resting windows to try: dark roasts 1 to 3 days for filter, 2 to 5 for espresso; medium 3 to 7 and 5 to 10; light 7 to 14 (some up to about 21) and 10 to 21. Naturals, anaerobics and very light roasts often peak later. Starting points only.','MR'],
+  [3,'Find your own peak: split a bag into four or five sealed portions and brew the same recipe on days 3, 7, 14 and 21, changing nothing but the age.','MR'],
   [3,'Packaging: a paper bag is fine for use within a week. For months, use a high-barrier bag with a one-way valve, ideally nitrogen flushed.','FR']]},
  {id:'cold',n:'Cold brew',d:'Brewed with room-temperature water over many hours: lower acidity, sweet and smooth.',steps:[
   [1,'Use about 60 g of coarse coffee to 700 g of filtered water (about 1:12), stirred to wet everything.','CB'],
@@ -594,6 +633,7 @@ const PRO=[
   [2,'Going to 22 hours raised strength and extraction to about 2% and 19 to 20%, and more phenolics, but did not score better.','CB'],
   [2,'Cold brew was less acidic than hot coffee from the same beans in every test.','CB'],
   [3,'In that study the medium grind extracted much less than the coarse, likely because the finer bed packed and slowed diffusion. Grind finer only if your filter and stirring keep the bed open.','CB'],
+  [3,'Light roasts in cold brew: one roaster suggests a slightly finer grind and longer steeps, 16 to 20 hours at room temperature or 20 to 24 in the fridge, tasting from 16 hours. This goes beyond the 14 hours that tested best in the study, which used a medium roast.','MC'],
   [3,'Cold brew never meets boiling water. Clean every container, keep it cold, and do not store it sealed at room temperature.','P']]},
  {id:'roastcup',n:'Tasting roast changes in the cup',d:'For roasters: a fair way to taste what a roast change did.',steps:[
   [1,'Brew the roasts side by side with the same recipe, grind and water, one week after roasting.','AL'],
@@ -602,7 +642,8 @@ const PRO=[
   [2,'Colour alone does not describe a roast. Record development time with every colour reading.','AL'],
   [3,'Longer, lower-temperature roasts raised pH (less perceived acidity) and lowered aroma intensity in a study of five origins.','GL'],
   [3,'Origins reacted differently to the same profile: some formed aroma early, others, including a robusta, much later. A profile that suits one coffee may not suit another; taste each.','GL'],
-  [3,'A long, flat development with little temperature rise is the "baked" defect: flat and bready. Watch the rate of rise near the end.','AL']]}
+  [3,'Baked coffee tastes hollow, flat and less sweet. Rao now traces it mainly to a sharp crash in the rate of rise around first crack, not to long roasts as such.','RK'],
+  [3,'To see a crash: a thin bean probe (4 mm or less) that shows the turn by 1:30, readings every second, a rate-of-rise span of 15 seconds or less and no extra smoothing. Cup blind first, then compare with the curves.','RK']]}
 ];
 window.KK_HOWTO={S,H,PRO};
 })();

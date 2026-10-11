@@ -16,6 +16,8 @@ const S={
  B:{t:'Five Senses Coffee: Batch brew fundamentals',u:'https://fivesenses.com.au/blogs/news/batch-brew-fundamentals'},
  R:{t:'Scott Rao: Bed depth, why it matters (2025)',u:'https://www.scottrao.com/blog/2025/11/11/bed-depth-why-it-matters'},
  RM:{t:'Scott Rao: extraction myths',u:'https://www.scottrao.com/blog/extraction-myths'},
+ MX:{t:'Moustache Coffee Club: coffee acidity explained',u:'https://www.moustachecoffeeclub.com/blog/coffee-acidity-explained'},
+ MB:{t:'Moustache Coffee Club: fix bitter coffee',u:'https://www.moustachecoffeeclub.com/blog/fix-bitter-coffee'},
  P:{t:'Common practice',u:''}
 };
 // Level: 1 basic, 2 intermediate, 3 advanced. Each tip: [level, text, source]
@@ -119,6 +121,8 @@ const T=[
  ['roast','Roast level and brewing','',[[1,'Darker roasts extract faster and taste more bitter. Use cooler water or a coarser grind.','P'],[2,'Darker roasts: more bitter, ashy, smoky, woody, dark chocolate and body. Lighter roasts: more fruit, citrus and sweetness.','F'],[2,'Light roasts sour faster as strength rises. Raise strength in small steps.','F'],[3,'Roast separated coffees more than extraction did. Some flavours cannot be brewed away; change the roast.','F']]],
  ['uneven','Uneven extraction and channels','',[[1,'Bitter and sour in the same cup often means some coffee extracted too much and some too little.','P'],[1,'Drip: pour evenly and keep the bed flat. Espresso: distribute evenly and tamp level.','P'],[2,'Espresso: grinding too fine clogs parts of the puck. Extraction falls and shots vary. Go coarser.','C'],[3,'A refractometer gives an average. Part of a clogged puck may be far over-extracted while part stays dry.','C']]],
  ['taste','From taste to cause','',[[1,'Use the taste list in Cup dial-in: pick what stands out and see likely causes for your method.','P']]],
+ ['acidity','Acidity','',[[1,'Acidity in coffee is a taste of brightness, not the pH. Light roasts keep more; dark roasts and cold brew taste softer.','MX'],[2,'Bright: washed Ethiopia and Kenya, high Central America. Softer: many naturals and Sumatra. Vinegar notes point to over-fermentation.','MX'],[2,'Less acidity: darker roast, cold brew, more extraction, more alkaline water, or milk. More brightness: lighter roast, cleaner low-mineral water.','MX'],[3,'Titratable acidity tracks sourness better than pH. Brewed coffee sits around pH 4.5 to 6.0, cold brew at the upper end.','MX']]],
+ ['bitter','Bitter coffee: causes','',[[1,'Check in this order: grind too fine or brew too long; water too hot; too much coffee for the water; a dark roast; hard water; dirty grinder or brewer.','MB'],[1,'Change one thing per brew. A pinch of salt or milk hides bitterness but does not fix it.','MB'],[2,'Bitterness that stays whatever you do usually comes from the roast. Stale coffee tastes flat or papery and no brew change fixes it.','MB']]],
  ['water','Water','',[[1,'Use clean, filtered water without off smells.','P'],[2,'Alkalinity (buffer) softens acidity. Lower buffer lets acidity show. Mix your own on the Water page.','P']]],
  ['cold','Cold brew safety','cold',[[1,'Cold brew never meets near-boiling water. Clean equipment, refrigerate, and date it.','N'],[1,'Do not seal and store at room temperature.','N']]]
 ];
