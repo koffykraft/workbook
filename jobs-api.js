@@ -38,7 +38,7 @@ export async function api(r, e, p, me, H) {
       return j({ error: 'date and kind required' }, 400);
     const old = await e.DB.prepare('SELECT owner_user_id FROM jobs WHERE id=?').bind(id).first();
     if (old && old.owner_user_id !== me.id) return j({ error: 'not yours' }, 403);
-    const basis = ['unit', 'day', 'fixed'].includes(b.basis) ? b.basis : 'unit';
+    const basis = ['unit', 'day', 'hour', 'fixed'].includes(b.basis) ? b.basis : 'unit';
     const done = b.status === 'Planned' ? 0 : 1;
     // only this account's workers can be paid
     const ids = (Array.isArray(b.lines) ? b.lines : [])

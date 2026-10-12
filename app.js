@@ -265,7 +265,28 @@ function fieldsHtml(defs, rec) {
           '</select>';
       else if (d.t === 'area')
         input = '<textarea data-k="' + esc(d.k) + '"' + ph + '>' + esc(v) + '</textarea>';
-      else
+      else if (d.list && d.list.length && d.t !== 'number' && d.t !== 'date' && d.pick !== false) {
+        // a pick list that phones show as a proper list, with "Other" for anything not on it
+        const known = d.list.map(String).includes(String(v));
+        const other = v !== '' && !known;
+        input =
+          '<select data-pick="' +
+          esc(d.k) +
+          '"><option value=""></option>' +
+          d.list
+            .map(o => '<option' + (String(o) === String(v) ? ' selected' : '') + '>' + esc(o) + '</option>')
+            .join('') +
+          '<option value="__other"' +
+          (other ? ' selected' : '') +
+          '>Other (type it)</option></select>' +
+          '<input data-k="' +
+          esc(d.k) +
+          '" type="text" placeholder="Type it" style="margin-top:6px' +
+          (other ? '' : ';display:none') +
+          '" value="' +
+          esc(v) +
+          '">';
+      } else
         input =
           '<input data-k="' +
           esc(d.k) +
@@ -289,6 +310,22 @@ function fieldsHtml(defs, rec) {
     })
     .join('');
 }
+// pick lists from fieldsHtml: the choice goes into the text box beside it, which holds the value
+document.addEventListener('change', e => {
+  const sel = e.target;
+  if (!sel || !sel.dataset || sel.dataset.pick == null) return;
+  const box = sel.nextElementSibling;
+  if (!box) return;
+  if (sel.value === '__other') {
+    box.style.display = '';
+    box.value = '';
+    box.focus();
+  } else {
+    box.style.display = 'none';
+    box.value = sel.value;
+  }
+  box.dispatchEvent(new Event('input', { bubbles: true }));
+});
 const SET = name => (APP.settings && APP.settings[name]) || {};
 const W = k => (APP.words && APP.words[k]) || k;
 document.addEventListener('DOMContentLoaded', () => {

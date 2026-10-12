@@ -191,6 +191,7 @@ async function editView(id) {
     [
       ['unit', 'Quantity'],
       ['day', 'Days worked'],
+      ['hour', 'Hours worked'],
       ['fixed', 'Fixed sum each'],
     ]
       .map(
@@ -270,23 +271,37 @@ async function editView(id) {
     $('#tot').textContent =
       o.lines.length +
       ' workers' +
-      (q ? ' · ' + r2(q) + ' ' + (o.basis === 'day' ? 'days' : o.unit) : '') +
+      (q ? ' · ' + r2(q) + ' ' + (o.basis === 'day' ? 'days' : o.basis === 'hour' ? 'hours' : o.unit) : '') +
       ' · ' +
       money(amt);
     document
       .querySelectorAll('[data-q]')
       .forEach(
-        i => (i.placeholder = o.basis === 'fixed' ? CUR : o.basis === 'day' ? 'days' : o.unit || 'qty')
+        i =>
+          (i.placeholder =
+            o.basis === 'fixed'
+              ? CUR
+              : o.basis === 'day'
+                ? 'days'
+                : o.basis === 'hour'
+                  ? 'hours'
+                  : o.unit || 'qty')
       );
   };
   $('#kind').onchange = () => {
     const k = kindOf($('#kind').value);
     $('#unit').value = k.unit || '';
     $('#basis').value = k.basis || 'unit';
+    // the rate last used for this kind of work, or the app's usual rate
+    const last = JOBS.filter(j => j.kind === k.name && num(j.rate) != null).sort((a, b) =>
+      String(b.day).localeCompare(String(a.day))
+    )[0];
+    if ($('#rate') && (last || k.rate != null)) $('#rate').value = last ? last.rate : k.rate;
     total();
   };
   $('#view').oninput = total;
   $('#view').onchange = total;
+  if (!id) $('#kind').onchange();
   total();
   $('#save').onclick = async () => {
     const o = read();
@@ -320,5 +335,6 @@ route();
 recordsSync();
 </script>
 <script src="pv.js" defer></script>
+<script src="kk-family.js" defer></script>
 </body>
 </html>

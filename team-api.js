@@ -13,11 +13,26 @@ export const SQL = [
   'CREATE TABLE IF NOT EXISTS team_holidays (owner_user_id TEXT NOT NULL, day TEXT NOT NULL, name TEXT, paid INTEGER NOT NULL DEFAULT 1, PRIMARY KEY (owner_user_id, day))',
   'CREATE TABLE IF NOT EXISTS team_items (id TEXT PRIMARY KEY, owner_user_id TEXT NOT NULL, worker_id TEXT NOT NULL, month TEXT NOT NULL, kind TEXT NOT NULL, amount REAL NOT NULL, note TEXT)',
   'CREATE INDEX IF NOT EXISTS idx_team_items_owner ON team_items(owner_user_id, month)',
+  // more about each worker (address, emergency contact, how wages are paid, skills, task), kept as
+  // JSON beside the worker so new details need no change to the workers table
+  'CREATE TABLE IF NOT EXISTS team_worker_info (id TEXT PRIMARY KEY, owner_user_id TEXT NOT NULL, data_json TEXT NOT NULL)',
   'CREATE TABLE IF NOT EXISTS team_audit (id TEXT PRIMARY KEY, owner_user_id TEXT NOT NULL, at TEXT NOT NULL, what TEXT NOT NULL, before_json TEXT, after_json TEXT, reason TEXT)',
 ];
 const DAY = /^\d{4}-\d{2}-\d{2}$/,
   MONTH = /^\d{4}-\d{2}$/;
-const STATUS = ['P', 'H', 'A', 'L', 'O']; // present, half day, absent, on leave, off
+const STATUS = ['P', 'H', 'A', 'L', 'O'];
+const INFO_KEYS = [
+  'address',
+  'emergencyName',
+  'emergencyPhone',
+  'paidBy',
+  'payTo',
+  'skills',
+  'task',
+  'taskTrees',
+  'languages',
+  'idNote',
+]; // present, half day, absent, on leave, off
 const num = v => (v == null || v === '' || !Number.isFinite(+v) ? null : +v);
 const s = (v, n) => String(v == null ? '' : v).slice(0, n || 200);
 function metres(a, b) {
@@ -95,11 +110,13 @@ export async function month(e, owner, m, set) {
       const payable = c.P + c.H * half + c.paidLeave + c.paidHol;
       let base = 0;
       if (w.pay_type === 'daily') base = (w.rate || 0) * payable;
+      else if (w.pay_type === 'hourly') base = (w.rate || 0) * c.ot;
       else if (w.pay_type === 'monthly')
         base = scheduled.length
           ? ((w.rate || 0) * Math.min(payable, scheduled.length)) / scheduled.length
           : 0;
-      const ot = (w.ot_rate || 0) * c.ot;
+      // for hourly workers the muster's hours box holds the hours worked, not overtime
+      const ot = w.pay_type === 'hourly' ? 0 : (w.ot_rate || 0) * c.ot;
       const pc = piece.find(p => p.worker_id === w.id) || { amount: 0, qty: 0 };
       const items = (I.results || []).filter(i => i.worker_id === w.id);
       const plus = items
@@ -147,11 +164,19 @@ export async function api(r, e, p, me, H) {
   // ---- workers ----
   if (r.method === 'GET' && p === '/api/team/workers') {
     const q = await e.DB.prepare(
-      'SELECT * FROM team_workers WHERE owner_user_id=? ORDER BY active DESC, name'
+      'SELECT w.*, i.data_json AS info_json FROM team_workers w LEFT JOIN team_worker_info i ON i.id=w.id AND i.owner_user_id=w.owner_user_id WHERE w.owner_user_id=? ORDER BY w.active DESC, w.name'
     )
       .bind(me.id)
       .all();
-    return j({ items: q.results || [] });
+    return j({
+      items: (q.results || []).map(({ info_json, ...w }) => {
+        let info = {};
+        try {
+          info = JSON.parse(info_json || '{}');
+        } catch {}
+        return { ...w, info };
+      }),
+    });
   }
   if (r.method === 'POST' && p === '/api/team/workers') {
     const b = await body(r);
@@ -169,7 +194,7 @@ export async function api(r, e, p, me, H) {
       phone: s(b.phone, 30),
       role: s(b.role, 60),
       place_id: s(b.place_id, 80),
-      pay_type: ['daily', 'monthly', 'piece'].includes(b.pay_type) ? b.pay_type : 'daily',
+      pay_type: ['daily', 'monthly', 'hourly', 'piece'].includes(b.pay_type) ? b.pay_type : 'daily',
       rate: num(b.rate),
       ot_rate: num(b.ot_rate),
       joined: DAY.test(b.joined) ? b.joined : null,
@@ -182,6 +207,15 @@ export async function api(r, e, p, me, H) {
         'INSERT INTO team_workers(id,owner_user_id,name,code,phone,role,place_id,pay_type,rate,ot_rate,joined,left_on,active,notes,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,code=excluded.code,phone=excluded.phone,role=excluded.role,place_id=excluded.place_id,pay_type=excluded.pay_type,rate=excluded.rate,ot_rate=excluded.ot_rate,joined=excluded.joined,left_on=excluded.left_on,active=excluded.active,notes=excluded.notes,updated_at=excluded.updated_at'
       ).bind(id, me.id, ...Object.values(row), new Date().toISOString()),
     ];
+    if (b.info && typeof b.info === 'object') {
+      const info = {};
+      for (const k of INFO_KEYS) if (b.info[k] != null && b.info[k] !== '') info[k] = s(b.info[k], 300);
+      stmts.push(
+        e.DB.prepare(
+          'INSERT INTO team_worker_info(id,owner_user_id,data_json) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET data_json=excluded.data_json'
+        ).bind(id, me.id, JSON.stringify(info))
+      );
+    }
     // a change of pay is kept in the audit log
     if (old && (old.rate !== row.rate || old.pay_type !== row.pay_type))
       stmts.push(

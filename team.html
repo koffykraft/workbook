@@ -190,13 +190,16 @@ async function muster() {
               '</div></div>'
           )
           .join('') +
-        '</div><details class="card"><summary class="mini">Overtime and notes</summary>' +
+        '</div><details class="card"' +
+        (here.some(w => w.pay_type === 'hourly') ? ' open' : '') +
+        '><summary class="mini">Hours, overtime and notes</summary>' +
         here
           .map(
             w =>
               '<div class="form" style="margin-top:6px"><label>' +
               esc(w.name) +
-              ' OT hours<input data-ot="' +
+              (w.pay_type === 'hourly' ? ' hours worked' : ' OT hours') +
+              '<input data-ot="' +
               esc(w.id) +
               '" type="number" step="0.5" inputmode="decimal" value="' +
               esc((marks.get(w.id) || {}).ot_hours ?? '') +
@@ -303,7 +306,12 @@ function workers() {
                 w.pay_type === 'piece'
                   ? 'piece rate'
                   : w.rate
-                    ? money(w.rate) + (w.pay_type === 'monthly' ? ' a month' : ' a day')
+                    ? money(w.rate) +
+                      (w.pay_type === 'monthly'
+                        ? ' a month'
+                        : w.pay_type === 'hourly'
+                          ? ' an hour'
+                          : ' a day')
                     : '',
                 (PLACES.find(p => p.id === w.place_id) || {}).label,
               ]
@@ -349,6 +357,20 @@ function workerForm(id) {
     ' value="' +
     esc(w[k] ?? '') +
     '"></label>';
+  const info = (k, l, full, type, ph) =>
+    '<label' +
+    (full ? ' class="full"' : '') +
+    '>' +
+    l +
+    '<input data-i="' +
+    k +
+    '" type="' +
+    (type || 'text') +
+    '"' +
+    (ph ? ' placeholder="' + esc(ph) + '"' : '') +
+    ' value="' +
+    esc((w.info || {})[k] ?? '') +
+    '"></label>';
   $('#view').innerHTML =
     '<a href="#workers">‹ Workers</a><h2>' +
     esc(w.name || 'New worker') +
@@ -368,7 +390,8 @@ function workerForm(id) {
     [
       ['daily', 'By the day'],
       ['monthly', 'Monthly salary'],
-      ['piece', 'Piece rate only'],
+      ['hourly', 'By the hour'],
+      ['piece', 'Piece rate only (from Jobs)'],
     ]
       .map(
         ([k, l]) =>
@@ -376,7 +399,7 @@ function workerForm(id) {
       )
       .join('') +
     '</select></label>' +
-    inp('rate', 'Rate, ' + CUR, 'number', ' step="any" inputmode="decimal"') +
+    inp('rate', 'Rate, ' + CUR + ' (a day, month or hour)', 'number', ' step="any" inputmode="decimal"') +
     inp('ot_rate', 'Overtime, ' + CUR + ' an hour', 'number', ' step="any" inputmode="decimal"') +
     '<div></div>' +
     inp('joined', 'Joined', 'date') +
@@ -387,11 +410,29 @@ function workerForm(id) {
     '<label class="full">Notes<textarea data-k="notes">' +
     esc(w.notes || '') +
     '</textarea></label></div>' +
+    '<details class="card"' +
+    (Object.keys(w.info || {}).length ? ' open' : '') +
+    '><summary><b>More details</b> <span class="mini">address, emergency contact, wages, skills, task</span></summary><div class="form" style="margin-top:8px">' +
+    info('address', 'Address', 'full') +
+    info('emergencyName', 'Emergency contact') +
+    info('emergencyPhone', 'Their phone', '', 'tel') +
+    '<label>Wages paid by<select data-i="paidBy">' +
+    opts(['', 'Cash', 'Bank transfer', 'UPI', 'Cheque'], (w.info || {}).paidBy || '') +
+    '</select></label>' +
+    info('payTo', 'UPI or bank for wages') +
+    info('skills', 'Skills', 'full', '', 'Tapping, sheeting, spraying, driving') +
+    info('task', 'Task or block', '', '', 'Tapping task, block or round') +
+    info('taskTrees', 'Trees in the task', '', 'number') +
+    info('languages', 'Languages') +
+    info('idNote', 'ID or welfare card held', '', '', 'Which card, not the number') +
+    '</div></details>' +
     '<div class="row sticky"><button class="btn app" id="save">Save</button><a class="btn" href="#workers">Cancel</a></div>';
   $('#save').onclick = async () => {
     const o = { ...w, id: w.id || uid('wk') };
     document.querySelectorAll('[data-k]').forEach(el => (o[el.dataset.k] = el.value.trim()));
     o.active = $('#act').checked;
+    o.info = {};
+    document.querySelectorAll('[data-i]').forEach(el => (o.info[el.dataset.i] = el.value.trim()));
     if (!o.name) return toast('Name needed');
     if (w.id && (String(w.rate ?? '') !== String(o.rate) || w.pay_type !== o.pay_type)) {
       const why = prompt('Pay is changing. Reason (kept in the log):');
@@ -705,5 +746,6 @@ view();
 recordsSync();
 </script>
 <script src="pv.js" defer></script>
+<script src="kk-family.js" defer></script>
 </body>
 </html>

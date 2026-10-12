@@ -96,6 +96,8 @@ const APP = {
         'Other',
       ],
       severity: ['Low', 'Medium', 'High'],
+      workKinds: ['Weeding', 'Pruning', 'Planting', 'Gap filling', 'Spraying', 'Mulching', 'Other'],
+      treeWord: 'plants',
     },
     team: {
       currency: '₹',
@@ -249,14 +251,14 @@ const APP = {
       page: 'fieldlog',
       label: 'Field log',
       blurb:
-        'What went on each block: fertiliser, manure and lime with the nutrients they carry, watering, and pests, disease and plant health.',
+        'What went on each block: fertiliser, manure and lime with the nutrients they carry, watering, plant health with GPS points for the map, and work done.',
     },
     {
       name: 'team',
       page: 'team',
       label: 'Team',
       blurb:
-        'Workers, the daily muster with a GPS check, leave and holidays, advances, and the monthly register with wages.',
+        'Workers with their details, the daily muster with a GPS check, pay by the day, month, hour or piece, leave and holidays, advances, and the monthly register with wages.',
     },
     {
       name: 'jobs',
