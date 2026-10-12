@@ -4,6 +4,8 @@ import * as weather from './weather-api.js';
 import * as fieldlog from './fieldlog-api.js';
 import * as team from './team-api.js';
 import * as jobs from './jobs-api.js';
+import * as ledger from './ledger-api.js';
+import * as land from './land-api.js';
 export const MODULE_SETTINGS = {
   weather: {
     source: 'openmeteo',
@@ -137,5 +139,56 @@ export const MODULE_SETTINGS = {
       },
     ],
   },
+  ledger: {
+    currency: '₹',
+    products: [
+      'Fresh cherry',
+      'Parchment',
+      'Dry cherry',
+      'Clean coffee (green)',
+      'Roasted coffee',
+      'Ground coffee',
+      'Other',
+    ],
+    units: ['kg', 'quintal', 't', 'piece', 'l'],
+    modes: ['Cash', 'Bank transfer', 'UPI', 'Cheque'],
+    paymentCategories: [
+      'Wages',
+      'Fertiliser and manure',
+      'Plant protection',
+      'Fuel and power',
+      'Pulping and curing',
+      'Transport',
+      'Tools and repairs',
+      'Rent and lease',
+      'Taxes and licences',
+      'Other',
+    ],
+    receiptKinds: ['Against a sale', 'Advance from buyer', 'Subsidy or grant', 'Other income'],
+  },
+  land: {
+    currency: '₹',
+    areaUnits: ['acre', 'ha', 'cent', 'are'],
+    titleKinds: ['Owned', 'Joint', 'Leased in', 'Leased out', 'Family, not yet partitioned', 'Other'],
+    dueKinds: [
+      'Land tax',
+      'Building tax',
+      'Water charges',
+      'Electricity',
+      'Insurance premium',
+      'Loan instalment',
+      'Other',
+    ],
+    licenceKinds: [
+      'Coffee Board grower registration',
+      'FSSAI food licence or registration',
+      'Pesticide or fertiliser licence',
+      'Shop or factory licence',
+      'Pollution consent',
+      'Vehicle papers',
+      'Other',
+    ],
+    soonDays: 60,
+  },
 };
-export const MODULES = [weather, fieldlog, team, jobs];
+export const MODULES = [weather, fieldlog, team, jobs, ledger, land];

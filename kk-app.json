@@ -9,32 +9,189 @@
   "account": "profile.html",
   "placesPage": "origin",
   "syncRecords": false,
-  "places": { "farm": "estate", "block": "plot", "parent": "estateId" },
-  "words": { "farm": "Estate", "farms": "Estates", "block": "Plot", "blocks": "Plots", "crop": "coffee" },
-  "nav": [["origin", "Origin"], ["roast-timer-v14", "Timer"], ["roast-graph", "Graph"], ["roasts", "Roastbook"], ["cup", "Cup"], ["account", "Account"]],
+  "places": {
+    "farm": "estate",
+    "block": "plot",
+    "parent": "estateId"
+  },
+  "words": {
+    "farm": "Estate",
+    "farms": "Estates",
+    "block": "Plot",
+    "blocks": "Plots",
+    "crop": "coffee"
+  },
+  "nav": [
+    [
+      "origin",
+      "Origin"
+    ],
+    [
+      "roast-timer-v14",
+      "Timer"
+    ],
+    [
+      "roast-graph",
+      "Graph"
+    ],
+    [
+      "roasts",
+      "Roastbook"
+    ],
+    [
+      "cup",
+      "Cup"
+    ],
+    [
+      "account",
+      "Account"
+    ]
+  ],
   "moduleNav": "subnav",
   "moduleParent": "origin",
-  "subnav": [["origin", "Records"]],
-  "modules": ["weather", "fieldlog", "team", "jobs"],
+  "subnav": [
+    [
+      "origin",
+      "Records"
+    ]
+  ],
+  "modules": [
+    "weather",
+    "fieldlog",
+    "team",
+    "jobs",
+    "ledger",
+    "land"
+  ],
   "settings": {
     "fieldlog": {
-      "waterKinds": ["Blossom irrigation", "Backing irrigation", "Summer irrigation", "Fertigation", "Other"],
-      "healthIssues": ["White stem borer", "Coffee berry borer", "Shot hole borer", "Mealybug", "Green scale", "Leaf rust", "Black rot", "Root disease", "Nematodes", "Nutrient deficiency", "Drought stress", "Waterlogging", "Weeds", "Animal damage", "Other"]
+      "waterKinds": [
+        "Blossom irrigation",
+        "Backing irrigation",
+        "Summer irrigation",
+        "Fertigation",
+        "Other"
+      ],
+      "healthIssues": [
+        "White stem borer",
+        "Coffee berry borer",
+        "Shot hole borer",
+        "Mealybug",
+        "Green scale",
+        "Leaf rust",
+        "Black rot",
+        "Root disease",
+        "Nematodes",
+        "Nutrient deficiency",
+        "Drought stress",
+        "Waterlogging",
+        "Weeds",
+        "Animal damage",
+        "Other"
+      ]
     },
-    "team": { "roles": ["Picker", "Worker", "Supervisor", "Writer", "Driver", "Watchman", "Other"] },
+    "team": {
+      "roles": [
+        "Picker",
+        "Worker",
+        "Supervisor",
+        "Writer",
+        "Driver",
+        "Watchman",
+        "Other"
+      ]
+    },
     "jobs": {
       "kinds": [
-        { "name": "Picking", "unit": "kg", "basis": "unit" },
-        { "name": "Gleaning", "unit": "kg", "basis": "unit" },
-        { "name": "Weeding", "unit": "day", "basis": "day" },
-        { "name": "Pruning", "unit": "plant", "basis": "unit" },
-        { "name": "Handling (desuckering)", "unit": "day", "basis": "day" },
-        { "name": "Shade regulation", "unit": "day", "basis": "day" },
-        { "name": "Spraying", "unit": "tank", "basis": "unit" },
-        { "name": "Manuring", "unit": "plant", "basis": "unit" },
-        { "name": "Liming", "unit": "day", "basis": "day" },
-        { "name": "Pulping and drying", "unit": "day", "basis": "day" },
-        { "name": "Other", "unit": "", "basis": "fixed" }
+        {
+          "name": "Picking",
+          "unit": "kg",
+          "basis": "unit"
+        },
+        {
+          "name": "Gleaning",
+          "unit": "kg",
+          "basis": "unit"
+        },
+        {
+          "name": "Weeding",
+          "unit": "day",
+          "basis": "day"
+        },
+        {
+          "name": "Pruning",
+          "unit": "plant",
+          "basis": "unit"
+        },
+        {
+          "name": "Handling (desuckering)",
+          "unit": "day",
+          "basis": "day"
+        },
+        {
+          "name": "Shade regulation",
+          "unit": "day",
+          "basis": "day"
+        },
+        {
+          "name": "Spraying",
+          "unit": "tank",
+          "basis": "unit"
+        },
+        {
+          "name": "Manuring",
+          "unit": "plant",
+          "basis": "unit"
+        },
+        {
+          "name": "Liming",
+          "unit": "day",
+          "basis": "day"
+        },
+        {
+          "name": "Pulping and drying",
+          "unit": "day",
+          "basis": "day"
+        },
+        {
+          "name": "Other",
+          "unit": "",
+          "basis": "fixed"
+        }
+      ]
+    },
+    "ledger": {
+      "products": [
+        "Fresh cherry",
+        "Parchment",
+        "Dry cherry",
+        "Clean coffee (green)",
+        "Roasted coffee",
+        "Ground coffee",
+        "Other"
+      ],
+      "paymentCategories": [
+        "Wages",
+        "Fertiliser and manure",
+        "Plant protection",
+        "Fuel and power",
+        "Pulping and curing",
+        "Transport",
+        "Tools and repairs",
+        "Rent and lease",
+        "Taxes and licences",
+        "Other"
+      ]
+    },
+    "land": {
+      "licenceKinds": [
+        "Coffee Board grower registration",
+        "FSSAI food licence or registration",
+        "Pesticide or fertiliser licence",
+        "Shop or factory licence",
+        "Pollution consent",
+        "Vehicle papers",
+        "Other"
       ]
     }
   }

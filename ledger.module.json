@@ -1,0 +1,47 @@
+{
+  "name": "ledger",
+  "page": "ledger",
+  "label": "Sales and money",
+  "blurb": "Sales sheet, receipts and payments: what each buyer owes, money in and out by month, and the month's wages from Team in one tap.",
+  "files": [
+    "ledger.html",
+    "ledger-api.js"
+  ],
+  "settings": {
+    "currency": "\u20b9",
+    "products": [
+      "Produce",
+      "Other"
+    ],
+    "units": [
+      "kg",
+      "quintal",
+      "t",
+      "piece",
+      "l"
+    ],
+    "modes": [
+      "Cash",
+      "Bank transfer",
+      "UPI",
+      "Cheque"
+    ],
+    "paymentCategories": [
+      "Wages",
+      "Fertiliser and manure",
+      "Plant protection",
+      "Fuel and power",
+      "Transport",
+      "Tools and repairs",
+      "Rent and lease",
+      "Taxes and licences",
+      "Other"
+    ],
+    "receiptKinds": [
+      "Against a sale",
+      "Advance from buyer",
+      "Subsidy or grant",
+      "Other income"
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "land",
+  "page": "land",
+  "label": "Land and dues",
+  "blurb": "Land and ownership records, land tax and other dues paid with the next due date, and licences and registrations with their renewal dates.",
+  "files": ["land.html", "land-api.js"],
+  "settings": {
+    "currency": "₹",
+    "areaUnits": ["acre", "ha", "cent", "are"],
+    "titleKinds": ["Owned", "Joint", "Leased in", "Leased out", "Family, not yet partitioned", "Other"],
+    "dueKinds": ["Land tax", "Building tax", "Water charges", "Electricity", "Insurance premium", "Loan instalment", "Other"],
+    "licenceKinds": ["Plantation or grower registration", "Dealer or processor licence", "Pesticide or fertiliser licence", "Factory or shop licence", "Pollution consent", "Vehicle papers", "Other"],
+    "soonDays": 60
+  }
+}

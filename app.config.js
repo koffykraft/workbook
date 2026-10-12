@@ -39,8 +39,10 @@ const APP = {
     ['fieldlog', 'Field log'],
     ['team', 'Team'],
     ['jobs', 'Jobs'],
+    ['ledger', 'Sales and money'],
+    ['land', 'Land and dues'],
   ],
-  modules: ['weather', 'fieldlog', 'team', 'jobs'],
+  modules: ['weather', 'fieldlog', 'team', 'jobs', 'ledger', 'land'],
   settings: {
     weather: {
       source: 'openmeteo',
@@ -174,12 +176,65 @@ const APP = {
         },
       ],
     },
+    ledger: {
+      currency: '₹',
+      products: [
+        'Fresh cherry',
+        'Parchment',
+        'Dry cherry',
+        'Clean coffee (green)',
+        'Roasted coffee',
+        'Ground coffee',
+        'Other',
+      ],
+      units: ['kg', 'quintal', 't', 'piece', 'l'],
+      modes: ['Cash', 'Bank transfer', 'UPI', 'Cheque'],
+      paymentCategories: [
+        'Wages',
+        'Fertiliser and manure',
+        'Plant protection',
+        'Fuel and power',
+        'Pulping and curing',
+        'Transport',
+        'Tools and repairs',
+        'Rent and lease',
+        'Taxes and licences',
+        'Other',
+      ],
+      receiptKinds: ['Against a sale', 'Advance from buyer', 'Subsidy or grant', 'Other income'],
+    },
+    land: {
+      currency: '₹',
+      areaUnits: ['acre', 'ha', 'cent', 'are'],
+      titleKinds: ['Owned', 'Joint', 'Leased in', 'Leased out', 'Family, not yet partitioned', 'Other'],
+      dueKinds: [
+        'Land tax',
+        'Building tax',
+        'Water charges',
+        'Electricity',
+        'Insurance premium',
+        'Loan instalment',
+        'Other',
+      ],
+      licenceKinds: [
+        'Coffee Board grower registration',
+        'FSSAI food licence or registration',
+        'Pesticide or fertiliser licence',
+        'Shop or factory licence',
+        'Pollution consent',
+        'Vehicle papers',
+        'Other',
+      ],
+      soonDays: 60,
+    },
   },
   navOn: {
     weather: 'origin',
     fieldlog: 'origin',
     team: 'origin',
     jobs: 'origin',
+    ledger: 'origin',
+    land: 'origin',
   },
   mods: [
     {
@@ -209,6 +264,20 @@ const APP = {
       label: 'Jobs',
       blurb:
         'Field work by place and day: who did it, how much, and at what rate. Piece work feeds the Team wages.',
+    },
+    {
+      name: 'ledger',
+      page: 'ledger',
+      label: 'Sales and money',
+      blurb:
+        "Sales sheet, receipts and payments: what each buyer owes, money in and out by month, and the month's wages from Team in one tap.",
+    },
+    {
+      name: 'land',
+      page: 'land',
+      label: 'Land and dues',
+      blurb:
+        'Land and ownership records, land tax and other dues paid with the next due date, and licences and registrations with their renewal dates.',
     },
   ],
   types: ['estate', 'plot'],

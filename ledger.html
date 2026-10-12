@@ -1,0 +1,478 @@
+<!doctype html>
+<!-- KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f5ef">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Sales and money</title>
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="kk.css"><script src="app.config.js"></script><script src="tap.js" defer></script><script src="kk-base.js"></script>
+</head>
+<body data-page="ledger"><main class="app">
+<header id="kh"></header>
+<h1>Sales and money</h1>
+<div class="sub">The sales sheet, money received and money paid out. What each buyer still owes is worked out from their sales and receipts.</div>
+<div id="view"></div>
+<div id="kf"></div>
+</main>
+<script src="app.js"></script><script src="sync.js"></script><script src="origin-db.js"></script><script src="places.js"></script>
+<script>
+// Ledger: sales sheet, receipts and payments, with what each buyer owes and the month's cash.
+const $ = s => document.querySelector(s);
+const S = SET('ledger');
+const CUR = S.currency || '₹';
+const TABS = [
+  ['sale', 'Sales sheet'],
+  ['receipt', 'Receipts'],
+  ['payment', 'Payments'],
+  ['summary', 'Summary'],
+];
+let TAB = 'sale',
+  YEAR = String(new Date().getFullYear()),
+  MON = '',
+  ROWS = [],
+  LOTS = [];
+const money = v =>
+  CUR +
+  ' ' +
+  (Math.round((v || 0) * 100) / 100).toLocaleString('en-IN', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+const opts = (list, sel) =>
+  list.map(o => '<option' + (o === sel ? ' selected' : '') + '>' + esc(o) + '</option>').join('');
+const saleAmt = r => {
+  const q = num(r.qty),
+    p = num(r.rate);
+  return q != null && p != null
+    ? Math.round(q * p * (1 + (num(r.tax_pct) || 0) / 100) * 100) / 100
+    : num(r.amount) || 0;
+};
+async function load() {
+  const d = await API.get('/api/ledger?from=' + YEAR + '-01-01&to=' + YEAR + '-12-31');
+  const mine = API.pending('/api/ledger').filter(x => String(x.day).startsWith(YEAR));
+  ROWS = [
+    ...mine.map(x => ({ ...x, amount: x.kind === 'sale' ? saleAmt(x) : num(x.amount) })),
+    ...(d.items || []).filter(x => !mine.some(m => m.id === x.id)),
+  ];
+  if ((APP.types || []).includes('lot'))
+    try {
+      LOTS = await ORIGIN.all('lot');
+    } catch (e) {
+      LOTS = [];
+    }
+  return d.offline;
+}
+const parties = kind =>
+  [
+    ...new Set(
+      ROWS.filter(r => !kind || r.kind === kind)
+        .map(r => r.party)
+        .filter(Boolean)
+    ),
+  ].sort();
+function tabs() {
+  return (
+    '<div class="tabs row" style="margin:8px 0">' +
+    TABS.map(
+      ([k, l]) => '<a class="btn small' + (k === TAB ? ' primary' : '') + '" href="#' + k + '">' + l + '</a>'
+    ).join('') +
+    '</div>'
+  );
+}
+function filters() {
+  const ys = [];
+  for (let y = new Date().getFullYear(); y >= new Date().getFullYear() - 6; y--) ys.push(String(y));
+  return (
+    '<div class="form"><label>Year<select id="yr">' +
+    opts(ys, YEAR) +
+    '</select></label><label>Month<select id="mo"><option value="">Whole year</option>' +
+    [...Array(12)]
+      .map((_, i) => {
+        const k = String(i + 1).padStart(2, '0');
+        return (
+          '<option value="' +
+          k +
+          '"' +
+          (k === MON ? ' selected' : '') +
+          '>' +
+          new Date(2000, i, 1).toLocaleDateString('en-IN', { month: 'long' }) +
+          '</option>'
+        );
+      })
+      .join('') +
+    '</select></label></div>'
+  );
+}
+async function view() {
+  if (needAccount($('#view'), 'sales and money')) return;
+  const h = location.hash.slice(1);
+  let m;
+  if ((m = h.match(/^(new|edit)\/(sale|receipt|payment)(?:\/(.+))?$/)))
+    return form(m[2], m[3] ? decodeURIComponent(m[3]) : null);
+  TAB = TABS.some(t => t[0] === h) ? h : TAB;
+  let off;
+  try {
+    off = await load();
+  } catch (e) {
+    return ($('#view').innerHTML = '<div class="card">Could not load: ' + esc(e.message) + '</div>');
+  }
+  const inMon = r => !MON || String(r.day).slice(5, 7) === MON;
+  const rows = ROWS.filter(r => r.kind === TAB && inMon(r));
+  const total = rows.reduce((a, r) => a + (r.amount || 0), 0);
+  let body = '';
+  if (TAB === 'sale')
+    body = rows.length
+      ? '<div class="card scroll"><table class="t"><tr><th>Date</th><th>Buyer</th><th>Product</th><th class="n">Qty</th><th class="n">Rate</th><th class="n">Amount</th><th>Ref</th></tr>' +
+        rows
+          .map(
+            r =>
+              '<tr data-go="#edit/sale/' +
+              esc(encodeURIComponent(r.id)) +
+              '" style="cursor:pointer"><td>' +
+              esc(fmtDate(r.day)) +
+              '</td><td>' +
+              esc(r.party || '') +
+              '</td><td>' +
+              esc(r.product || '') +
+              '</td><td class="n">' +
+              (r.qty != null && r.qty !== '' ? esc(r.qty) + ' ' + esc(r.unit || '') : '') +
+              '</td><td class="n">' +
+              (r.rate ? money(r.rate) : '') +
+              '</td><td class="n">' +
+              money(r.amount) +
+              (r.pending ? ' ⏳' : '') +
+              '</td><td>' +
+              esc(r.ref || '') +
+              '</td></tr>'
+          )
+          .join('') +
+        '<tr><td colspan="5"><b>Total</b></td><td class="n"><b>' +
+        money(total) +
+        '</b></td><td></td></tr></table></div>'
+      : '<div class="card mini">No sales in this period.</div>';
+  else if (TAB !== 'summary')
+    body = rows.length
+      ? rows
+          .map(
+            r =>
+              '<div class="card"><a class="item" href="#edit/' +
+              TAB +
+              '/' +
+              encodeURIComponent(r.id) +
+              '"><b>' +
+              money(r.amount) +
+              '</b> <span class="mini">' +
+              esc(fmtDate(r.day) + ' · ' + (r.party || '') + (r.pending ? ' · waiting to send' : '')) +
+              '</span><div class="mini">' +
+              esc([r.category, r.mode, r.ref, r.notes].filter(Boolean).join(' · ')) +
+              '</div></a></div>'
+          )
+          .join('') +
+        '<div class="card"><b>Total ' +
+        money(total) +
+        '</b></div>'
+      : '<div class="card mini">Nothing in this period.</div>';
+  else body = await summary();
+  $('#view').innerHTML =
+    tabs() +
+    filters() +
+    (TAB !== 'summary'
+      ? '<div class="row" style="margin:10px 0"><a class="btn app" href="#new/' +
+        TAB +
+        '">＋ ' +
+        { sale: 'Sale', receipt: 'Receipt', payment: 'Payment' }[TAB] +
+        '</a>' +
+        (rows.length ? '<button class="btn" id="csv">Export CSV</button>' : '') +
+        (TAB === 'payment' && (APP.modules || []).includes('team')
+          ? '<button class="btn" id="wages">Add a month\'s wages</button>'
+          : '') +
+        '</div>'
+      : '') +
+    (off ? '<div class="card mini">Offline: showing the last copy on this phone.</div>' : '') +
+    body;
+  $('#yr').onchange = () => ((YEAR = $('#yr').value), view());
+  $('#mo').onchange = () => ((MON = $('#mo').value), view());
+  document.querySelectorAll('[data-go]').forEach(tr => (tr.onclick = () => (location.hash = tr.dataset.go)));
+  if ($('#csv'))
+    $('#csv').onclick = () =>
+      saveCsv(
+        { sale: 'sales', receipt: 'receipts', payment: 'payments' }[TAB] +
+          '-' +
+          YEAR +
+          (MON ? '-' + MON : ''),
+        rows,
+        [
+          ['day', 'Date'],
+          ['party', TAB === 'payment' ? 'Paid to' : TAB === 'sale' ? 'Buyer' : 'From'],
+          ['product', 'Product'],
+          ['qty', 'Quantity'],
+          ['unit', 'Unit'],
+          ['rate', 'Rate'],
+          ['tax_pct', 'Tax %'],
+          ['amount', 'Amount'],
+          ['category', 'Category or kind'],
+          ['mode', 'Mode'],
+          ['ref', 'Reference'],
+          ['notes', 'Notes'],
+        ]
+      );
+  if ($('#wages')) $('#wages').onclick = addWages;
+}
+async function summary() {
+  const owed = await API.get('/api/ledger/owed').catch(() => ({ items: [] }));
+  const months = [...Array(12)]
+    .map((_, i) => {
+      const k = YEAR + '-' + String(i + 1).padStart(2, '0');
+      const m = ROWS.filter(r => String(r.day).startsWith(k));
+      const t = kind => m.filter(r => r.kind === kind).reduce((a, r) => a + (r.amount || 0), 0);
+      return { k, sale: t('sale'), receipt: t('receipt'), payment: t('payment') };
+    })
+    .filter(m => m.sale || m.receipt || m.payment);
+  const cats = {};
+  ROWS.filter(r => r.kind === 'payment').forEach(
+    r => (cats[r.category || 'Other'] = (cats[r.category || 'Other'] || 0) + (r.amount || 0))
+  );
+  const tot = k => months.reduce((a, m) => a + m[k], 0);
+  return (
+    '<div class="card scroll"><b>' +
+    YEAR +
+    ' by month</b><table class="t" style="margin-top:6px"><tr><th>Month</th><th class="n">Sales</th><th class="n">Received</th><th class="n">Paid out</th><th class="n">Cash in − out</th></tr>' +
+    months
+      .map(
+        m =>
+          '<tr><td>' +
+          new Date(m.k + '-01T00:00').toLocaleDateString('en-IN', { month: 'short' }) +
+          '</td><td class="n">' +
+          money(m.sale) +
+          '</td><td class="n">' +
+          money(m.receipt) +
+          '</td><td class="n">' +
+          money(m.payment) +
+          '</td><td class="n">' +
+          money(m.receipt - m.payment) +
+          '</td></tr>'
+      )
+      .join('') +
+    '<tr><td><b>Year</b></td><td class="n"><b>' +
+    money(tot('sale')) +
+    '</b></td><td class="n"><b>' +
+    money(tot('receipt')) +
+    '</b></td><td class="n"><b>' +
+    money(tot('payment')) +
+    '</b></td><td class="n"><b>' +
+    money(tot('receipt') - tot('payment')) +
+    '</b></td></tr></table></div>' +
+    (Object.keys(cats).length
+      ? '<div class="card"><b>Paid out in ' +
+        YEAR +
+        ', by kind</b><table class="t" style="margin-top:6px">' +
+        Object.entries(cats)
+          .sort((a, b) => b[1] - a[1])
+          .map(([c, v]) => '<tr><td>' + esc(c) + '</td><td class="n">' + money(v) + '</td></tr>')
+          .join('') +
+        '</table></div>'
+      : '') +
+    '<div class="card scroll"><b>What buyers owe</b>' +
+    ((owed.items || []).length
+      ? '<table class="t" style="margin-top:6px"><tr><th>Buyer</th><th class="n">Sold</th><th class="n">Received</th><th class="n">Owes</th></tr>' +
+        owed.items
+          .map(
+            o =>
+              '<tr><td>' +
+              esc(o.party) +
+              '</td><td class="n">' +
+              money(o.sold) +
+              '</td><td class="n">' +
+              money(o.received) +
+              '</td><td class="n"><b' +
+              (o.owed > 0 ? ' style="color:var(--bad)"' : '') +
+              '>' +
+              money(o.owed) +
+              '</b></td></tr>'
+          )
+          .join('') +
+        '</table>'
+      : '<div class="mini">No sales yet.</div>') +
+    '<div class="mini" style="margin-top:6px">All years. Receipts count against a buyer when they carry the same buyer name. This is a farm record, not a set of accounts.</div></div>'
+  );
+}
+async function addWages() {
+  const m = prompt('Month of wages to add (YYYY-MM):', today().slice(0, 7));
+  if (!m || !/^\d{4}-\d{2}$/.test(m)) return;
+  let M;
+  try {
+    M = await API.get('/api/team/month?month=' + m);
+  } catch (e) {
+    return toast(e.message);
+  }
+  const rows = (M.rows || []).filter(r => r.net > 0);
+  if (!rows.length) return toast('No wages for ' + m);
+  if (
+    !confirm(
+      'Add ' +
+        rows.length +
+        ' wage payments for ' +
+        m +
+        ', ' +
+        money(rows.reduce((a, r) => a + r.net, 0)) +
+        ' in all? Adding again updates them rather than doubling.'
+    )
+  )
+    return;
+  const last = new Date(+m.slice(0, 4), +m.slice(5), 0).getDate();
+  for (const r of rows)
+    await API.post('/api/ledger', {
+      id: 'wage-' + m + '-' + r.id,
+      kind: 'payment',
+      day: m + '-' + String(last).padStart(2, '0'),
+      party: r.name,
+      category: (S.paymentCategories || ['Wages'])[0],
+      amount: r.net,
+      mode: 'Cash',
+      ref: 'Wages ' + m,
+      notes: r.payable + ' payable days',
+    });
+  toast('Wages added');
+  view();
+}
+async function form(kind, id) {
+  if (!ROWS.length) await load().catch(() => {});
+  const r = (id && ROWS.find(x => x.id === id)) || {
+    kind,
+    day: today(),
+    unit: (S.units || ['kg'])[0],
+    mode: (S.modes || ['Cash'])[0],
+  };
+  const L = (l, html, full) => '<label' + (full ? ' class="full"' : '') + '>' + l + html + '</label>';
+  const inp = (k, type, extra) =>
+    '<input data-k="' +
+    k +
+    '" type="' +
+    (type || 'text') +
+    '"' +
+    (type === 'number' ? ' step="any" inputmode="decimal"' : '') +
+    (extra || '') +
+    ' value="' +
+    esc(r[k] ?? '') +
+    '">';
+  const sel = (k, list) =>
+    '<select data-k="' +
+    k +
+    '"><option value=""></option>' +
+    opts(list, r[k]) +
+    (r[k] && !list.includes(r[k]) ? '<option selected>' + esc(r[k]) + '</option>' : '') +
+    '</select>';
+  const dl = (idn, list) =>
+    '<datalist id="' + idn + '">' + list.map(x => '<option value="' + esc(x) + '">').join('') + '</datalist>';
+  let f = L('Date', inp('day', 'date'));
+  if (kind === 'sale')
+    f +=
+      L('Buyer', inp('party', 'text', ' list="pp"')) +
+      dl('pp', parties('sale')) +
+      (LOTS.length
+        ? L(
+            'From a lot',
+            '<select id="lot"><option value=""></option>' +
+              LOTS.map(
+                l =>
+                  '<option value="' +
+                  esc(l.id) +
+                  '">' +
+                  esc(
+                    (l.code || 'Lot') + ' · ' + (l.product || '') + ' · ' + (l.dryKg || l.wetKg || '') + ' kg'
+                  ) +
+                  '</option>'
+              ).join('') +
+              '</select>',
+            1
+          )
+        : '') +
+      L('Product', inp('product', 'text', ' list="pr"')) +
+      dl('pr', S.products || []) +
+      L('Quantity', inp('qty', 'number')) +
+      L('Unit', sel('unit', S.units || ['kg'])) +
+      L('Rate, ' + CUR, inp('rate', 'number')) +
+      L('Tax %', inp('tax_pct', 'number', ' placeholder="0"')) +
+      L('Bill or lot reference', inp('ref'), 1) +
+      '<div class="full mini" id="calc"></div>';
+  if (kind === 'receipt')
+    f +=
+      L('From', inp('party', 'text', ' list="pp"')) +
+      dl('pp', parties('sale')) +
+      L('Kind', sel('category', S.receiptKinds || [])) +
+      L('Amount, ' + CUR, inp('amount', 'number')) +
+      L('Mode', sel('mode', S.modes || [])) +
+      L('Reference', inp('ref'));
+  if (kind === 'payment')
+    f +=
+      L('Paid to', inp('party', 'text', ' list="pp"')) +
+      dl('pp', parties('payment')) +
+      L('For', sel('category', S.paymentCategories || [])) +
+      L('Amount, ' + CUR, inp('amount', 'number')) +
+      L('Mode', sel('mode', S.modes || [])) +
+      L('Bill or reference', inp('ref'));
+  $('#view').innerHTML =
+    '<a href="#' +
+    kind +
+    '">‹ Back</a><h2>' +
+    { sale: 'Sale', receipt: 'Receipt', payment: 'Payment' }[kind] +
+    '</h2><div class="form">' +
+    f +
+    L('Notes', '<textarea data-k="notes">' + esc(r.notes || '') + '</textarea>', 1) +
+    '</div>' +
+    '<div class="row sticky"><button class="btn app" id="save">Save</button><a class="btn" href="#' +
+    kind +
+    '">Cancel</a>' +
+    (id ? '<button class="btn danger" id="del" style="margin-left:auto">Delete</button>' : '') +
+    '</div>';
+  const read = () => {
+    const o = { ...r, kind };
+    document.querySelectorAll('[data-k]').forEach(el => (o[el.dataset.k] = el.value.trim()));
+    return o;
+  };
+  const calc = () => {
+    if (!$('#calc')) return;
+    const o = read();
+    $('#calc').innerHTML = saleAmt(o) ? 'Amount <b>' + money(saleAmt(o)) + '</b>' : '';
+  };
+  $('#view').oninput = calc;
+  calc();
+  if ($('#lot'))
+    $('#lot').onchange = () => {
+      const l = LOTS.find(x => x.id === $('#lot').value);
+      if (!l) return;
+      document.querySelector('[data-k="product"]').value = l.grade || l.product || '';
+      document.querySelector('[data-k="qty"]').value = l.dryKg || l.wetKg || '';
+      document.querySelector('[data-k="ref"]').value = l.code || '';
+      calc();
+    };
+  $('#save').onclick = async () => {
+    const o = read();
+    o.id = o.id || uid(kind);
+    if (kind === 'sale') o.amount = saleAmt(o);
+    if (!num(o.amount)) return toast('Enter the amount' + (kind === 'sale' ? ', or quantity and rate' : ''));
+    if (!o.party)
+      return toast(kind === 'sale' ? 'Who bought it?' : kind === 'receipt' ? 'From whom?' : 'Paid to whom?');
+    const res = await API.post('/api/ledger', o).catch(e => ({ error: e.message }));
+    if (res.error) return toast(res.error);
+    toast(res.queued ? 'Saved on this phone; will send when online' : 'Saved');
+    location.hash = kind;
+  };
+  if ($('#del'))
+    $('#del').onclick = async () => {
+      if (!confirm('Delete this entry?')) return;
+      await API.del('/api/ledger/' + encodeURIComponent(r.id));
+      location.hash = kind;
+    };
+}
+window.addEventListener('hashchange', () => (($('#view').oninput = null), view()));
+window.addEventListener('kk-flushed', view);
+view();
+recordsSync();
+</script>
+<script src="pv.js" defer></script>
+</body>
+</html>

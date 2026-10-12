@@ -26,7 +26,7 @@ function d1(db) {
 
 export async function run(root, t) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kk-api-'));
-  for (const f of ['worker.js', 'trace-api.js', 'trace-core.js', 'kk-modules.js', 'weather-core.js', ...fs.readdirSync(root).filter(f => /^(weather|fieldlog|team|jobs)-api\.js$/.test(f))]) fs.copyFileSync(path.join(root, f), path.join(tmp, f));
+  for (const f of ['worker.js', 'trace-api.js', 'trace-core.js', 'kk-modules.js', 'weather-core.js', ...fs.readdirSync(root).filter(f => /^(weather|fieldlog|team|jobs|ledger|land)-api\.js$/.test(f))]) fs.copyFileSync(path.join(root, f), path.join(tmp, f));
   fs.writeFileSync(path.join(tmp, 'package.json'), '{"type":"module"}');
   const worker = (await import(path.join(tmp, 'worker.js'))).default;
   const { traceAnchor, traceUpgrade } = await import(path.join(tmp, 'trace-api.js'));

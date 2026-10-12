@@ -242,6 +242,53 @@ function needAccount(box, what) {
     '</b><div class="mini">These records are kept in your account so every phone you sign in on sees the same list. Entries made while offline are sent when the phone is back online.</div><div class="row" style="margin-top:8px"><a class="btn app" href="account.html">Sign in</a></div></div>';
   return true;
 }
+// Form fields from a list of definitions, so apps can add their own fields from app.json.
+// def: { k, l, t: 'text'|'number'|'date'|'select'|'area', opts, ph, full, list }
+function fieldsHtml(defs, rec) {
+  return (defs || [])
+    .map(d => {
+      const v = rec[d.k] ?? '';
+      const cls = d.full || d.t === 'area' ? ' class="full"' : '';
+      const ph = d.ph ? ' placeholder="' + esc(d.ph) + '"' : '';
+      let input;
+      if (d.t === 'select')
+        input =
+          '<select data-k="' +
+          esc(d.k) +
+          '"><option value=""></option>' +
+          (d.opts || [])
+            .map(o => '<option' + (String(o) === String(v) ? ' selected' : '') + '>' + esc(o) + '</option>')
+            .join('') +
+          (v && !(d.opts || []).map(String).includes(String(v))
+            ? '<option selected>' + esc(v) + '</option>'
+            : '') +
+          '</select>';
+      else if (d.t === 'area')
+        input = '<textarea data-k="' + esc(d.k) + '"' + ph + '>' + esc(v) + '</textarea>';
+      else
+        input =
+          '<input data-k="' +
+          esc(d.k) +
+          '" type="' +
+          (d.t === 'number' ? 'number' : d.t === 'date' ? 'date' : 'text') +
+          '"' +
+          (d.t === 'number' ? ' step="any" inputmode="decimal"' : '') +
+          (d.list ? ' list="dl-' + esc(d.k) + '"' : '') +
+          ph +
+          ' value="' +
+          esc(v) +
+          '">' +
+          (d.list
+            ? '<datalist id="dl-' +
+              esc(d.k) +
+              '">' +
+              d.list.map(o => '<option value="' + esc(o) + '">').join('') +
+              '</datalist>'
+            : '');
+      return '<label' + cls + '>' + esc(d.l) + input + '</label>';
+    })
+    .join('');
+}
 const SET = name => (APP.settings && APP.settings[name]) || {};
 const W = k => (APP.words && APP.words[k]) || k;
 document.addEventListener('DOMContentLoaded', () => {

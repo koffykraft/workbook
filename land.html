@@ -1,0 +1,307 @@
+<!doctype html>
+<!-- KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f5ef">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Land and dues</title>
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="kk.css"><script src="app.config.js"></script><script src="tap.js" defer></script><script src="kk-base.js"></script>
+</head>
+<body data-page="land"><main class="app">
+<header id="kh"></header>
+<h1>Land and dues</h1>
+<div class="sub">Land and ownership records, land tax and other dues with the next due date, and licences with their renewal dates. Keep the papers themselves safe; this is the index to them.</div>
+<div id="view"></div>
+<div id="kf"></div>
+</main>
+<script src="app.js"></script><script src="sync.js"></script><script src="origin-db.js"></script><script src="places.js"></script>
+<script>
+// Land and dues: land records, dues paid and next due, licences and renewals, and what is due soon.
+const $ = s => document.querySelector(s);
+const S = SET('land');
+const CUR = S.currency || '₹';
+const SOON = S.soonDays || 60;
+const TABS = [
+  ['soon', 'Due soon'],
+  ['land', 'Land'],
+  ['due', 'Tax and dues'],
+  ['licence', 'Licences'],
+];
+let TAB = 'soon',
+  ROWS = [],
+  PLACES = [];
+const money = v => (v == null || v === '' ? '' : CUR + ' ' + (+v).toLocaleString('en-IN'));
+const daysTo = d => Math.round((new Date(d + 'T00:00') - new Date(today() + 'T00:00')) / 864e5);
+const addYear = d => (d ? String(+d.slice(0, 4) + 1) + d.slice(4) : '');
+const FIELDS = {
+  land: [
+    { k: 'survey', l: 'Survey number', t: 'text', ph: '123/4A' },
+    { k: 'resurvey', l: 'Re-survey or block number', t: 'text' },
+    { k: 'village', l: 'Village', t: 'text' },
+    { k: 'taluk', l: 'Taluk', t: 'text' },
+    { k: 'district', l: 'District', t: 'text' },
+    { k: 'area', l: 'Area', t: 'number' },
+    { k: 'areaUnit', l: 'Unit', t: 'select', opts: S.areaUnits || ['acre', 'ha'] },
+    { k: 'titleKind', l: 'Held as', t: 'select', opts: S.titleKinds || [] },
+    { k: 'owners', l: 'Owner or owners on record', t: 'text', full: 1 },
+    { k: 'deedNo', l: 'Deed or document number', t: 'text' },
+    { k: 'deedDate', l: 'Deed date', t: 'date' },
+    { k: 'holdingNo', l: 'Holding, patta or thandaper number', t: 'text', full: 1 },
+    { k: 'ecDate', l: 'Encumbrance last checked', t: 'date' },
+    { k: 'next_due', l: 'Lease ends (if leased)', t: 'date' },
+    { k: 'keptAt', l: 'Papers kept at', t: 'text', full: 1 },
+    { k: 'notes', l: 'Notes', t: 'area' },
+  ],
+  due: [
+    { k: 'dueKind', l: 'Kind', t: 'select', opts: S.dueKinds || [] },
+    { k: 'period', l: 'For the period', t: 'text', ph: '2026-27' },
+    { k: 'amount', l: 'Amount paid, ' + CUR, t: 'number' },
+    { k: 'paidOn', l: 'Paid on', t: 'date' },
+    { k: 'receiptNo', l: 'Receipt number', t: 'text' },
+    { k: 'paidAt', l: 'Paid at', t: 'text', ph: 'Village office, online' },
+    { k: 'next_due', l: 'Next due', t: 'date' },
+    { k: 'notes', l: 'Notes', t: 'area' },
+  ],
+  licence: [
+    { k: 'licKind', l: 'Kind', t: 'select', opts: S.licenceKinds || [] },
+    { k: 'number', l: 'Number', t: 'text' },
+    { k: 'issuedBy', l: 'Issued by', t: 'text' },
+    { k: 'issuedOn', l: 'Issued on', t: 'date' },
+    { k: 'next_due', l: 'Valid till or renew by', t: 'date' },
+    { k: 'fee', l: 'Fee, ' + CUR, t: 'number' },
+    { k: 'keptAt', l: 'Kept at', t: 'text', full: 1 },
+    { k: 'notes', l: 'Notes', t: 'area' },
+  ],
+};
+async function load() {
+  const [d, pl] = await Promise.all([API.get('/api/land'), KKPLACES.list()]);
+  PLACES = pl;
+  const mine = API.pending('/api/land');
+  ROWS = [...mine, ...(d.items || []).filter(x => !mine.some(m => m.id === x.id))];
+  return d.offline;
+}
+const landName = id => (ROWS.find(r => r.id === id) || {}).title || '';
+function line(r) {
+  if (r.kind === 'land')
+    return [
+      r.survey ? 'Sy. ' + r.survey : '',
+      r.village,
+      r.area ? r.area + ' ' + (r.areaUnit || '') : '',
+      r.titleKind,
+      r.owners,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  if (r.kind === 'due')
+    return [
+      r.dueKind,
+      r.period,
+      money(r.amount),
+      r.paidOn ? 'paid ' + fmtDate(r.paidOn) : '',
+      r.receiptNo ? 'receipt ' + r.receiptNo : '',
+      landName(r.landId),
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  return [r.licKind, r.number, r.issuedBy].filter(Boolean).join(' · ');
+}
+function dueTag(r) {
+  if (!r.next_due) return '';
+  const n = daysTo(r.next_due);
+  const word = r.kind === 'licence' ? 'renew' : r.kind === 'land' ? 'lease ends' : 'due';
+  return (
+    ' <span class="tag ' +
+    (n < 0 ? 'bad' : n <= SOON ? 'wait' : '') +
+    '">' +
+    (n < 0 ? word + ' ' + -n + ' days ago' : n === 0 ? word + ' today' : word + ' ' + fmtDate(r.next_due)) +
+    '</span>'
+  );
+}
+function card(r) {
+  return (
+    '<div class="card"><a class="item" href="#edit/' +
+    r.kind +
+    '/' +
+    encodeURIComponent(r.id) +
+    '"><b>' +
+    esc(r.title) +
+    '</b>' +
+    dueTag(r) +
+    (r.pending ? ' <span class="tag">waiting to send</span>' : '') +
+    '<div class="mini">' +
+    esc(line(r)) +
+    '</div></a></div>'
+  );
+}
+async function view() {
+  if (needAccount($('#view'), 'land and dues')) return;
+  const h = location.hash.slice(1);
+  let m;
+  try {
+    var off = await load();
+  } catch (e) {
+    return ($('#view').innerHTML = '<div class="card">Could not load: ' + esc(e.message) + '</div>');
+  }
+  if ((m = h.match(/^(new|edit)\/(land|due|licence)(?:\/(.+))?$/)))
+    return form(m[2], m[3] ? decodeURIComponent(m[3]) : null);
+  if ((m = h.match(/^renew\/(.+)$/))) return form(null, null, decodeURIComponent(m[1]));
+  TAB = TABS.some(t => t[0] === h) ? h : TAB;
+  let body;
+  if (TAB === 'soon') {
+    // the latest record of each due or licence decides when it is next due
+    const latest = new Map();
+    ROWS.filter(r => r.next_due).forEach(r => {
+      const k = r.kind + '|' + r.title;
+      const was = latest.get(k);
+      if (!was || String(r.next_due) > String(was.next_due)) latest.set(k, r);
+    });
+    const list = [...latest.values()]
+      .filter(r => daysTo(r.next_due) <= SOON)
+      .sort((a, b) => String(a.next_due).localeCompare(String(b.next_due)));
+    body = list.length
+      ? list
+          .map(r =>
+            card(r).replace(
+              '</a></div>',
+              '</a>' +
+                (r.kind !== 'land'
+                  ? '<div class="row" style="margin-top:6px"><a class="btn small app" href="#renew/' +
+                    encodeURIComponent(r.id) +
+                    '">' +
+                    (r.kind === 'due' ? 'Record payment' : 'Record renewal') +
+                    '</a></div>'
+                  : '') +
+                '</div>'
+            )
+          )
+          .join('')
+      : '<div class="card mini">Nothing due in the next ' + SOON + ' days.</div>';
+  } else {
+    const list = ROWS.filter(r => r.kind === TAB);
+    body =
+      '<div class="row" style="margin:10px 0"><a class="btn app" href="#new/' +
+      TAB +
+      '">＋ ' +
+      { land: 'Land record', due: 'Payment of a due', licence: 'Licence' }[TAB] +
+      '</a>' +
+      (list.length ? '<button class="btn" id="csv">Export CSV</button>' : '') +
+      '</div>' +
+      (list.length ? list.map(card).join('') : '<div class="card mini">None yet.</div>');
+  }
+  $('#view').innerHTML =
+    '<div class="tabs row" style="margin:8px 0">' +
+    TABS.map(
+      ([k, l]) => '<a class="btn small' + (k === TAB ? ' primary' : '') + '" href="#' + k + '">' + l + '</a>'
+    ).join('') +
+    '</div>' +
+    (off ? '<div class="card mini">Offline: showing the last copy on this phone.</div>' : '') +
+    body;
+  if ($('#csv'))
+    $('#csv').onclick = () =>
+      saveCsv(
+        { land: 'land-records', due: 'dues-paid', licence: 'licences' }[TAB],
+        ROWS.filter(r => r.kind === TAB),
+        [
+          ['title', 'Name'],
+          [r => (PLACES.find(p => p.id === r.place_id) || {}).label, 'Place'],
+          ...FIELDS[TAB].map(f => [f.k, f.l]),
+        ]
+      );
+}
+function form(kind, id, renewId) {
+  let r;
+  if (renewId) {
+    const o = ROWS.find(x => x.id === renewId) || {};
+    kind = o.kind;
+    // a new record for the next period, with the next due a year on
+    r = {
+      ...o,
+      id: '',
+      paidOn: today(),
+      receiptNo: '',
+      period: '',
+      issuedOn: kind === 'licence' ? today() : o.issuedOn,
+      next_due: addYear(o.next_due),
+      pending: false,
+    };
+  } else r = (id && ROWS.find(x => x.id === id)) || { kind };
+  const lands = ROWS.filter(x => x.kind === 'land');
+  $('#view').innerHTML =
+    '<a href="#' +
+    kind +
+    '">‹ Back</a><h2>' +
+    { land: 'Land record', due: 'Tax or due paid', licence: 'Licence or registration' }[kind] +
+    '</h2><div class="form">' +
+    '<label class="full">Name<input data-k="title" value="' +
+    esc(r.title || '') +
+    '" placeholder="' +
+    esc({ land: 'Home block land', due: 'Land tax, home block', licence: 'Grower registration' }[kind]) +
+    '"></label>' +
+    '<label class="full">Place<select data-k="place_id">' +
+    KKPLACES.options(PLACES, r.place_id) +
+    '</select></label>' +
+    (kind === 'due' && lands.length
+      ? '<label class="full">Land record<select data-k="landId"><option value=""></option>' +
+        lands
+          .map(
+            l =>
+              '<option value="' +
+              esc(l.id) +
+              '"' +
+              (l.id === r.landId ? ' selected' : '') +
+              '>' +
+              esc(l.title) +
+              '</option>'
+          )
+          .join('') +
+        '</select></label>'
+      : '') +
+    fieldsHtml(FIELDS[kind], r) +
+    (kind === 'due' && (APP.modules || []).includes('ledger') && !id
+      ? '<label class="full" style="display:flex;flex-direction:row;gap:8px;align-items:center"><input type="checkbox" id="toLedger" checked style="width:22px;height:22px"> Also add to payments</label>'
+      : '') +
+    '</div><div class="row sticky"><button class="btn app" id="save">Save</button><a class="btn" href="#' +
+    kind +
+    '">Cancel</a>' +
+    (id ? '<button class="btn danger" id="del" style="margin-left:auto">Delete</button>' : '') +
+    '</div>';
+  $('#save').onclick = async () => {
+    const o = { ...r, kind };
+    delete o.pending;
+    document.querySelectorAll('[data-k]').forEach(el => (o[el.dataset.k] = el.value.trim()));
+    if (!o.title) return toast('Give it a name');
+    o.id = o.id || uid(kind);
+    const res = await API.post('/api/land', o).catch(e => ({ error: e.message }));
+    if (res.error) return toast(res.error);
+    if ($('#toLedger') && $('#toLedger').checked && num(o.amount))
+      await API.post('/api/ledger', {
+        id: 'land-' + o.id,
+        kind: 'payment',
+        day: o.paidOn || today(),
+        party: o.paidAt || o.title,
+        category: o.dueKind || 'Other',
+        amount: num(o.amount),
+        ref: o.receiptNo,
+        notes: o.title + (o.period ? ', ' + o.period : ''),
+      });
+    toast(res.queued ? 'Saved on this phone; will send when online' : 'Saved');
+    location.hash = kind;
+  };
+  if ($('#del'))
+    $('#del').onclick = async () => {
+      if (!confirm('Delete ' + r.title + '?')) return;
+      await API.del('/api/land/' + encodeURIComponent(r.id));
+      location.hash = kind;
+    };
+}
+window.addEventListener('hashchange', view);
+window.addEventListener('kk-flushed', view);
+view();
+recordsSync();
+</script>
+<script src="pv.js" defer></script>
+</body>
+</html>
