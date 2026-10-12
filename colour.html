@@ -960,9 +960,42 @@ function result() {
       );
     } else
       out.push(
-        '<div class="cc-box"><b>Agtron from a photo</b><div class="mini" style="margin-top:4px">A phone camera sees colour, while Agtron meters read near-infrared, so a photo cannot be turned into Agtron by a formula. KoffyKraft learns it from you: on 3 or more readings, put the meter numbers (Agtron Gourmet, and the others on its screen) and a photo of the same ground sample. From then on a photo alone shows Agtron Gourmet, Commercial, SCA tile, Tonino, ColorTrack and Colorette, with how close the estimate is (' +
-          C.n +
-          ' of 3 so far).</div></div>'
+        (() => {
+          const photos = all.filter(r => r.photo),
+            need = photos.filter(r => gourmet(r) == null);
+          return (
+            '<div class="cc-box"><b>Agtron from a photo: ' +
+            C.n +
+            ' of 3 readings ready</b><div class="mini" style="margin-top:4px">' +
+            (photos.length
+              ? 'You have ' +
+                photos.length +
+                ' other reading' +
+                (photos.length > 1 ? 's' : '') +
+                ' with a photo; ' +
+                C.n +
+                ' of them also ' +
+                (C.n === 1 ? 'has' : 'have') +
+                ' an Agtron number. A photo counts only when the same reading also has the meter number for that sample.' +
+                (need.length
+                  ? ' Open these and type the Agtron Gourmet from your meter: ' +
+                    need
+                      .slice(0, 6)
+                      .map(
+                        r =>
+                          '<a href="#edit/' +
+                          encodeURIComponent(r.id) +
+                          '">' +
+                          esc(r.name || fmtDay(r.at)) +
+                          '</a>'
+                      )
+                      .join(', ') +
+                    '.'
+                  : '')
+              : 'No other readings have a photo yet.') +
+            ' This reading counts too once it is saved with both.</div><div class="mini" style="margin-top:4px">Why: a phone camera sees colour, while Agtron meters read near-infrared, so there is no formula from a photo to Agtron. With 3 pairs from your own meter and phone, a photo alone shows Agtron Gourmet, Commercial, SCA tile, Tonino, ColorTrack and Colorette.</div></div>'
+          );
+        })()
       );
   }
   const ref = getRef(),
