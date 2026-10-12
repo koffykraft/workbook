@@ -177,6 +177,20 @@ export async function run(root, t) {
       await q.selectOption('#scheme', 'mc'); if (!(await q.$eval('#view', e => e.innerText)).includes('Medium')) throw new Error('scheme switch');
       await q.selectOption('#scheme', 'cr');
     });
+    await t.acheck('Colour check learns ColorTrack and Colorette from the meter screen and estimates from L*', async () => {
+      await q.goto(base + 'colour.html'); await q.waitForSelector('#view');
+      await q.evaluate(async () => {
+        const rows = [[86, 32.7, 41, 125], [70, 28.6, 52, 108], [55, 24.9, 63, 92]];
+        for (const [g, L, ct, co] of rows)
+          await ORIGIN.put({ type: 'colour', name: 'Meter ' + g, meter: 'agtron-g', mGround: g, agGround: g, L, a: 9, b: 15, space: 'cielab', xColortrack: ct, xColorette: co, at: '2026-10-01' });
+      });
+      await q.goto(base + 'colour.html#new'); await q.waitForSelector('#fName');
+      await q.fill('#fName', 'L only'); await q.fill('#fL', '28.6'); await q.fill('#fA', '9'); await q.fill('#fB', '15');
+      const res = await q.$eval('#result', e => e.innerText);
+      if (!/From the meter L\*: about Agtron 7\d/.test(res)) throw new Error('L* estimate: ' + res.slice(0, 300));
+      if (!/Your ColorTrack, about\s+5\d/.test(res) || !/Your Probat Colorette, about\s+1\d\d/.test(res)) throw new Error('learned scales: ' + res.slice(0, 600));
+      await q.click('summary.mini'); if (!(await q.$('#fXT'))) throw new Error('extra fields missing');
+    });
     await t.acheck('Colour check converts other meters and colour spaces', async () => {
       await q.goto(base + 'colour.html#new'); await q.waitForSelector('#fName');
       await q.fill('#fName', 'Tonino test'); await q.selectOption('#fMeter', 'tonino'); await q.fill('#fMG', '105');

@@ -272,11 +272,30 @@ const meterOf = r => r.meter || (r.scale === 'commercial' ? 'agtron-c' : 'agtron
 const meterInfo = r => K.METERS[meterOf(r)] || K.METERS.other;
 // Pairs from your own readings (this meter's number and the Agtron Gourmet of the same sample)
 // teach KoffyKraft a meter that has no published conversion.
+// the other numbers a multi-scale meter shows next to Agtron Gourmet (as on many colorimeter screens)
+const EXTRA = { colortrack: 'xColortrack', colorette: 'xColorette', neotec: 'xNeotec' };
 function learned(meter, exceptId) {
+  const pts = ALL.filter(
+    r => r.id !== exceptId && meterOf(r) === meter && num(r.mGround) != null && num(r.agKnown) != null
+  ).map(r => [+r.mGround, +r.agKnown]);
+  const x = EXTRA[meter];
+  if (x)
+    ALL.forEach(r => {
+      if (r.id === exceptId || num(r[x]) == null) return;
+      const g = num(r.agKnown) ?? (meterInfo(r).toG ? convG(r, num(r.mGround)) : null);
+      if (g != null) pts.push([+r[x], g]);
+    });
+  return K.calib2(pts);
+}
+// meter L* to Agtron Gourmet, learned from readings that have both (for a reading with L*a*b* only)
+function labCalib(exceptId) {
   return K.calib2(
-    ALL.filter(
-      r => r.id !== exceptId && meterOf(r) === meter && num(r.mGround) != null && num(r.agKnown) != null
-    ).map(r => [+r.mGround, +r.agKnown])
+    ALL.filter(r => r.id !== exceptId && num(r.L) != null && r.space !== 'hunter')
+      .map(r => {
+        const g = num(r.agKnown) ?? (meterInfo(r).toG ? convG(r, num(r.mGround)) : null);
+        return g != null && g >= 15 && g <= 130 ? [+r.L, g] : null;
+      })
+      .filter(Boolean)
   );
 }
 function convG(r, v) {
@@ -324,6 +343,34 @@ function photoCalib(all) {
         return r.photo && g != null && g >= 15 && g <= 110 ? [r.photo.L, g] : null;
       })
       .filter(Boolean)
+  );
+}
+// the same roast on the other scales; approx for estimates from a photo or from L*
+function scalesHtml(g, approx, c) {
+  const rows = [
+    ['Agtron Gourmet', r1(g)],
+    ['Agtron Commercial', r1(K.toCommercial(g))],
+    ['SCA tile, nearest', '#' + K.METERS['sca-tile'].fromG(g)],
+  ];
+  const t = K.METERS.tonino.fromG(g);
+  if (t != null) rows.push(['Tonino, about', Math.round(t)]);
+  const typed = { colortrack: c && c.xColortrack, colorette: c && c.xColorette };
+  for (const k of ['colortrack', 'colorette', 'neotec', 'other']) {
+    if (typed[k] != null) {
+      rows.push([K.METERS[k].name + ', from your meter', typed[k]]);
+      continue;
+    }
+    const C = learned(k, c && c.id);
+    if (C.k != null && C.k) rows.push(['Your ' + K.METERS[k].name + ', about', Math.round((g - C.c0) / C.k)]);
+    else if (k === 'colortrack' || k === 'colorette')
+      rows.push([K.METERS[k].name, 'add 3 readings from your meter']);
+  }
+  return (
+    '<div class="cc-box"><b>On other scales' +
+    (approx ? ' (estimate)' : '') +
+    '</b><div class="kv" style="margin-top:6px">' +
+    rows.map(x => '<span>' + esc(x[0]) + '</span><div>' + esc(String(x[1])) + '</div>').join('') +
+    '</div><div class="mini" style="margin-top:6px">Commercial from the Agtron E20CP manual; Tonino from its published table; tiles are numbered on the Gourmet scale. ColorTrack and Colorette have no published conversion, so they are learned from readings where you typed them from your meter. Meters differ by a point or two even when calibrated, and grind size moves readings: compare like with like.</div></div>'
   );
 }
 function namesHtml(g) {
@@ -558,10 +605,26 @@ function draw(saved) {
     '<label class="l full" id="fKnownWrap">Agtron Gourmet of the same sample, if you know it<input id="fKnown" type="number" inputmode="decimal" step="any" value="' +
     v('agKnown') +
     '"></label>' +
+    '<details class="full"' +
+    (c.xCommercial != null || c.xColortrack != null || c.xColorette != null || c.xName ? ' open' : '') +
+    '><summary class="mini">More numbers on your meter screen (Agtron Commercial, Colorette, ColorTrack, roast name)</summary><div class="f" style="margin-top:6px">' +
+    '<label class="l">Agtron Commercial<input id="fXC" type="number" inputmode="decimal" step="any" value="' +
+    v('xCommercial') +
+    '"></label>' +
+    '<label class="l">Probat Colorette<input id="fXP" type="number" inputmode="decimal" step="any" value="' +
+    v('xColorette') +
+    '"></label>' +
+    '<label class="l">ColorTrack<input id="fXT" type="number" inputmode="decimal" step="any" value="' +
+    v('xColortrack') +
+    '"></label>' +
+    '<label class="l">Roast name shown<input id="fXN" value="' +
+    v('xName') +
+    '" placeholder="Cinnamon roast"></label>' +
+    '<div class="full mini">Type them as the meter shows them. Each one teaches KoffyKraft how your meter\'s scales line up, so later readings and photos show them too.</div></div></details>' +
     '<label class="l full">Meter model (optional)<input id="fDev" value="' +
     v('device') +
     '" placeholder="E20CP, CM-100 Plus, Tonino v2…"></label>' +
-    '<label class="l full">Colour values (optional)<select id="fSpace"><option value="cielab"' +
+    '<label class="l full">Colour values (optional; D65/10° from most meters is fine)<select id="fSpace"><option value="cielab"' +
     (c.space !== 'hunter' ? ' selected' : '') +
     '>CIELAB L*a*b*</option><option value="hunter"' +
     (c.space === 'hunter' ? ' selected' : '') +
@@ -629,6 +692,13 @@ function draw(saved) {
     c.a = g('#fA');
     c.b = g('#fB');
     c.device = $('#fDev').value.trim();
+    c.xCommercial = g('#fXC');
+    c.xColorette = g('#fXP');
+    c.xColortrack = g('#fXT');
+    c.xName = $('#fXN').value.trim();
+    // a Commercial number with no Gourmet still gives the Gourmet (Agtron E20CP manual)
+    if (c.agKnown == null && c.mGround == null && c.xCommercial != null && meterOf(c) === 'agtron-g')
+      c.agKnown = Math.round(K.toGourmet(c.xCommercial) * 10) / 10;
     // keep Agtron Gourmet equivalents on the record for lists, sharing and older pages
     const [gg, gw] = gourmetPair(c);
     c.agGround = gg == null ? null : Math.round(gg * 10) / 10;
@@ -738,23 +808,26 @@ function result() {
   }
   if (g != null) {
     out.push(namesHtml(g));
-    const rows = [
-      ['Agtron Gourmet', r1(g)],
-      ['Agtron Commercial', r1(K.toCommercial(g))],
-      ['SCA tile, nearest', '#' + K.METERS['sca-tile'].fromG(g)],
-    ];
-    const t = K.METERS.tonino.fromG(g);
-    if (t != null) rows.push(['Tonino, about', Math.round(t)]);
-    for (const k of ['colortrack', 'colorette', 'neotec', 'other']) {
-      const C = learned(k, null);
-      if (C.k != null && C.k)
-        rows.push(['Your ' + K.METERS[k].name + ', about', Math.round((g - C.c0) / C.k)]);
+    out.push(scalesHtml(g, false, c));
+  }
+  // no Agtron number, but L*a*b* from a meter: estimate from your own readings that have both
+  if (g == null && num(c.L) != null && c.space !== 'hunter') {
+    const C = labCalib(c.id);
+    if (C.k != null) {
+      const est = C.c0 + C.k * c.L,
+        n = K.roastName(est);
+      out.push(
+        '<div class="cc-box">From the meter L*: about <b>Agtron ' +
+          Math.round(est) +
+          '</b> ±' +
+          Math.max(2, Math.round(C.res * 2)) +
+          (n ? ', ' + n[0] : '') +
+          '.<div class="mini" style="margin-top:4px">Learned from ' +
+          C.n +
+          ' of your readings with both L* and an Agtron number.</div></div>' +
+          scalesHtml(est, true)
+      );
     }
-    out.push(
-      '<div class="cc-box"><b>On other scales</b><div class="kv" style="margin-top:6px">' +
-        rows.map(x => '<span>' + esc(x[0]) + '</span><div>' + esc(String(x[1])) + '</div>').join('') +
-        '</div><div class="mini" style="margin-top:6px">Commercial from the Agtron E20CP manual; Tonino from its published table; tiles are numbered on the Gourmet scale. Meters differ by a point or two even when calibrated, and grind size moves readings: compare like with like.</div></div>'
-    );
   }
   const lab = labOf(c, 'meter') || labOf(c, 'photo');
   if (lab) {
@@ -834,13 +907,14 @@ function result() {
           (n ? ', ' + n[0] : '') +
           '.<div class="mini" style="margin-top:4px">Learned from ' +
           C.n +
-          ' of your readings that have both a photo and an Agtron number.</div></div>'
+          ' of your readings that have both a photo and an Agtron number.</div></div>' +
+          scalesHtml(est, true)
       );
     } else
       out.push(
-        '<div class="mini">A photo-to-Agtron estimate starts once 3 readings have both a photo and an Agtron number (' +
+        '<div class="cc-box"><b>Agtron from a photo</b><div class="mini" style="margin-top:4px">A phone camera sees colour, while Agtron meters read near-infrared, so a photo cannot be turned into Agtron by a formula. KoffyKraft learns it from you: on 3 or more readings, put the meter numbers (Agtron Gourmet, and the others on its screen) and a photo of the same ground sample. From then on a photo alone shows Agtron Gourmet, Commercial, SCA tile, Tonino, ColorTrack and Colorette, with how close the estimate is (' +
           C.n +
-          ' so far).</div>'
+          ' of 3 so far).</div></div>'
       );
   }
   const ref = getRef(),
