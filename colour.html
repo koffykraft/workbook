@@ -287,17 +287,6 @@ function learned(meter, exceptId) {
     });
   return K.calib2(pts);
 }
-// meter L* to Agtron Gourmet, learned from readings that have both (for a reading with L*a*b* only)
-function labCalib(exceptId) {
-  return K.calib2(
-    ALL.filter(r => r.id !== exceptId && num(r.L) != null && r.space !== 'hunter')
-      .map(r => {
-        const g = num(r.agKnown) ?? (meterInfo(r).toG ? convG(r, num(r.mGround)) : null);
-        return g != null && g >= 15 && g <= 130 ? [+r.L, g] : null;
-      })
-      .filter(Boolean)
-  );
-}
 function convG(r, v) {
   if (v == null) return null;
   const M = meterInfo(r);
@@ -335,62 +324,131 @@ function labOf(r, src) {
   if ((src || 'photo') === 'photo' && r.photo) return { ...r.photo, src: 'photo' };
   return null;
 }
-function photoCalib(all) {
-  return K.calib2(
-    all
-      .map(r => {
-        const g = gourmet(r);
-        return r.photo && g != null && g >= 15 && g <= 110 ? [r.photo.L, g] : null;
-      })
-      .filter(Boolean)
-  );
-}
 // Ground roasted arabica follows one colour path as it darkens: a* and b* from L* (Scientific
 // Reports 2025, HunterLab ColorFlex, D65 2°, L* about 20 to 60). Shows what this L* usually pairs
 // with; a photo far off the path points to the light or white card, a meter off it to its own setup.
-// A broad roast band from a phone photo, with no meter: the L* of the photo (corrected with the
-// white card) placed on the milestones measured by UC Davis. The band names are KoffyKraft's own
-// plain words for those stretches, not a standard. Phone, light and card differ, so the band is
-// a guide; the ranking against your own photos, taken the same way, is the steadier figure.
-const BANDS = [
-  [45, 'Very light: past colour change, not yet near first crack'],
-  [33, 'Light: coming up to first crack'],
-  [27, 'Light to medium: around first crack'],
-  [23, 'Medium: after first crack'],
-  [20, 'Medium dark: coming up to second crack'],
-  [17.5, 'Dark: around second crack'],
-  [0, 'Very dark: past second crack'],
+// A ballpark readout from L* alone (a phone photo, or a meter's L*a*b*), for when there is no
+// Agtron meter. There is no published conversion from CIELAB to Agtron, so KoffyKraft uses its own
+// starting curve, tied to two measured points and one meter reading:
+//   second crack, median L* 20.0, and first crack, median L* 29.7 (UC Davis, Scientific Reports
+//   2025), placed at Agtron Gourmet 45 and 80, where roast colour charts put those stages;
+//   L* 32.7 at Gourmet 86 from a KoffyKraft colorimeter (D65/10°).
+// Your own readings with both numbers move it: one or two shift the curve, three or more replace it.
+const START = [
+  [14, 22],
+  [17.2, 32],
+  [20.0, 45],
+  [29.7, 80],
+  [32.7, 86],
+  [40, 96],
+  [50, 104],
 ];
-function photoScaleHtml(c, all) {
-  const L = c.photo.L;
-  const band = (BANDS.find(b => L >= b[0]) || BANDS[BANDS.length - 1])[1];
-  const mine = all.filter(r => r.photo && r.photo.L != null);
+function startCurve(L) {
+  if (L <= START[0][0]) return START[0][1];
+  for (let i = 1; i < START.length; i++)
+    if (L <= START[i][0]) {
+      const [x0, y0] = START[i - 1],
+        [x1, y1] = START[i];
+      return y0 + ((L - x0) * (y1 - y0)) / (x1 - x0);
+    }
+  return START[START.length - 1][1];
+}
+function pairsFor(kind, exceptId) {
+  return ALL.filter(r => r.id !== exceptId)
+    .map(r => {
+      const g = gourmet(r);
+      if (g == null || g < 15 || g > 130) return null;
+      if (kind === 'photo') return r.photo ? [r.photo.L, g] : null;
+      return num(r.L) != null && r.space !== 'hunter' ? [+r.L, g] : null;
+    })
+    .filter(Boolean);
+}
+function ballpark(L, kind, exceptId) {
+  const P = pairsFor(kind, exceptId);
+  if (P.length >= 3) {
+    const C = K.calib2(P);
+    if (C.k != null)
+      return {
+        g: C.c0 + C.k * L,
+        pm: Math.max(3, Math.round(C.res * 2)),
+        level: 'good',
+        how:
+          'learned from ' +
+          C.n +
+          ' of your readings that have both, so it fits your ' +
+          (kind === 'photo' ? 'phone and light' : 'meter'),
+      };
+  }
+  const base = startCurve(L);
+  if (P.length) {
+    const off = P.reduce((a, [x, y]) => a + (y - startCurve(x)), 0) / P.length;
+    return {
+      g: base + off,
+      pm: 8,
+      level: 'fair',
+      how:
+        'starting curve, shifted by ' + P.length + ' of your readings with both (3 or more make it your own)',
+    };
+  }
+  return {
+    g: base,
+    pm: kind === 'photo' ? 15 : 10,
+    level: 'low',
+    how: 'KoffyKraft starting curve only',
+  };
+}
+// Colorette from two reference points: Gourmet 63 = Colorette 96 (Lighttells SCAA sheet) and
+// Gourmet 86 = Colorette 125 (a KoffyKraft colorimeter). Rough, shown only when not learned.
+const coloretteRough = g => 96 + ((g - 63) * (125 - 96)) / (86 - 63);
+function readoutHtml(L, kind, c, all) {
+  const B = ballpark(L, kind, c.id);
+  const g = Math.max(15, Math.min(110, B.g));
+  const nm = K.roastName(g);
+  const pos = Math.max(0, Math.min(100, ((L - 15) / (62 - 15)) * 100));
+  const conf = { low: 'Low confidence', fair: 'Fair confidence', good: 'Good confidence' }[B.level];
+  const mine = kind === 'photo' ? all.filter(r => r.photo && r.photo.L != null) : [];
   let rank = '';
   if (mine.length) {
     const darker = mine.filter(r => r.photo.L < L).length;
-    const near = mine
-      .slice()
-      .sort((p, q) => Math.abs(p.photo.L - L) - Math.abs(q.photo.L - L))
-      .slice(0, 2)
-      .map(r => esc(r.name || fmtDay(r.at)) + ' (L* ' + r.photo.L.toFixed(1) + ')');
     rank =
-      '<div class="mini" style="margin-top:4px">Among your ' +
+      '<div class="mini" style="margin-top:6px">Among your ' +
       (mine.length + 1) +
       ' photo readings this is number <b>' +
       (mine.length - darker + 1) +
-      '</b> from the lightest. Closest: ' +
-      near.join(', ') +
+      '</b> from the lightest. Nearest: ' +
+      mine
+        .slice()
+        .sort((p, q) => Math.abs(p.photo.L - L) - Math.abs(q.photo.L - L))
+        .slice(0, 2)
+        .map(r => esc(r.name || fmtDay(r.at)) + ' (L* ' + r.photo.L.toFixed(1) + ')')
+        .join(', ') +
       '.</div>';
   }
-  // a simple 0 to 100 bar from very dark (L* 15) to colour change (L* 62)
-  const pos = Math.max(0, Math.min(100, ((L - 15) / (62 - 15)) * 100));
+  const rows = [
+    ['Agtron Gourmet', '~' + Math.round(g) + ' (±' + B.pm + ')'],
+    ['Agtron Commercial', '~' + Math.round(K.toCommercial(g))],
+    ['SCA tile, nearest', '#' + K.METERS['sca-tile'].fromG(g)],
+  ];
+  const t = K.METERS.tonino.fromG(g);
+  if (t != null) rows.push(['Tonino', '~' + Math.round(t)]);
+  const Cc = learned('colorette', c.id);
+  rows.push([
+    'Probat Colorette',
+    '~' + Math.round(Cc.k ? (g - Cc.c0) / Cc.k : coloretteRough(g)) + (Cc.k ? '' : ' (rough)'),
+  ]);
+  const Ct = learned('colortrack', c.id);
+  if (Ct.k) rows.push(['ColorTrack', '~' + Math.round((g - Ct.c0) / Ct.k)]);
   return (
-    '<div class="cc-box"><b>From your photo: ' +
-    esc(band) +
-    '</b>' +
-    '<div style="position:relative;height:12px;border-radius:6px;margin:8px 0 2px;background:linear-gradient(90deg,#2b1d16,#4a3022,#6b4329,#8a5a35,#b07f4f,#d4b083)"><span style="position:absolute;left:calc(' +
+    '<div class="cc-box"><div class="mini" style="text-transform:uppercase;letter-spacing:.08em">Ballpark from ' +
+    (kind === 'photo' ? 'your photo' : 'the meter L*') +
+    '</div><div style="font-size:22px;font-weight:700;margin:2px 0">' +
+    esc(nm ? nm[0] : 'Outside the chart') +
+    ' <span style="font-weight:400;font-size:16px">· Agtron ~' +
+    Math.round(g) +
+    '</span></div>' +
+    '<div style="position:relative;height:14px;border-radius:7px;margin:10px 0 2px;background:linear-gradient(90deg,#24170f,#3d281b,#5c3b25,#7d5233,#a06e45,#c99a6a,#e0c39a)"><span style="position:absolute;left:calc(' +
     pos.toFixed(0) +
-    '% - 6px);top:-3px;width:12px;height:18px;border-radius:3px;background:#fff;border:2px solid #111"></span></div>' +
+    '% - 7px);top:-4px;width:14px;height:22px;border-radius:4px;background:#fff;border:2px solid #111"></span></div>' +
     '<div class="mini" style="position:relative;height:16px">' +
     [
       [0, 'dark', 'left:0'],
@@ -399,22 +457,28 @@ function photoScaleHtml(c, all) {
       [100, 'light', 'right:0'],
     ]
       .map(
-        ([x, t, edge]) =>
+        ([x, tx, edge]) =>
           '<span style="position:absolute;' +
           (edge || 'left:' + x.toFixed(0) + '%;transform:translateX(-50%)') +
           '">' +
-          t +
+          tx +
           '</span>'
       )
       .join('') +
     '</div>' +
-    '<div class="mini" style="margin-top:4px">Photo L* ' +
-    L.toFixed(1) +
-    '. ' +
-    stage(L) +
+    '<div class="kv" style="margin-top:10px">' +
+    rows.map(x => '<span>' + esc(x[0]) + '</span><div>' + esc(x[1]) + '</div>').join('') +
     '</div>' +
     rank +
-    '<div class="mini" style="margin-top:4px">A broad guide from your phone and your light. Take every photo the same way (same dish, same white card, same spot, no flash) and the readings line up with each other even if they differ from a lab meter. Bands: KoffyKraft, on the roast milestones in <a href="https://www.nature.com/articles/s41598-025-06601-w" target="_blank" rel="noopener">A universal color curve for roasted arabica coffee</a> (2025).</div></div>'
+    '<div class="mini" style="margin-top:8px;font-size:11px;line-height:1.45;color:#7a7368"><b>' +
+    conf +
+    '.</b> ' +
+    esc(B.how) +
+    '. L* ' +
+    L.toFixed(1) +
+    '; ' +
+    stage(L) +
+    ' A phone sees colour while Agtron and Colorette read near-infrared, and phones, light and grind all move the number, so treat these as a ballpark, not a meter reading. Take every photo the same way (same dish, white card, spot, no flash) and they compare well with each other. Add the meter number to any reading when you can and the readout tightens. Crack points: <a href="https://www.nature.com/articles/s41598-025-06601-w" target="_blank" rel="noopener">UC Davis, Scientific Reports 2025</a>.</div></div>'
   );
 }
 // where an L* falls between the roast milestones the same study measured (median L* of samples
@@ -925,25 +989,16 @@ function result() {
     out.push(namesHtml(g));
     out.push(scalesHtml(g, false, c));
   }
-  // no Agtron number, but L*a*b* from a meter: estimate from your own readings that have both
-  if (g == null && num(c.L) != null && c.space !== 'hunter') {
-    const C = labCalib(c.id);
-    if (C.k != null) {
-      const est = C.c0 + C.k * c.L,
-        n = K.roastName(est);
-      out.push(
-        '<div class="cc-box">From the meter L*: about <b>Agtron ' +
-          Math.round(est) +
-          '</b> ±' +
-          Math.max(2, Math.round(C.res * 2)) +
-          (n ? ', ' + n[0] : '') +
-          '.<div class="mini" style="margin-top:4px">Learned from ' +
-          C.n +
-          ' of your readings with both L* and an Agtron number.</div></div>' +
-          scalesHtml(est, true)
-      );
-    }
-  }
+  // no Agtron number, but L*a*b* from a meter: a ballpark readout
+  if (g == null && num(c.L) != null && c.space !== 'hunter')
+    out.push(
+      readoutHtml(
+        +c.L,
+        'meter',
+        c,
+        ALL.filter(r => r.id !== c.id)
+      )
+    );
   const lab = labOf(c, 'meter') || labOf(c, 'photo');
   if (lab) {
     const sp = K.spaces(lab),
@@ -1011,63 +1066,8 @@ function result() {
     );
   }
   const all = ALL.filter(r => r.id !== c.id);
-  if (c.photo) out.push(photoScaleHtml(c, all));
-  if (c.photo && g == null) {
-    const C = photoCalib(all);
-    if (C.k != null) {
-      const est = C.c0 + C.k * c.photo.L,
-        n = K.roastName(est);
-      out.push(
-        '<div class="cc-box">From the photo: about <b>Agtron ' +
-          Math.round(est) +
-          '</b> ±' +
-          Math.max(2, Math.round(C.res * 2)) +
-          (n ? ', ' + n[0] : '') +
-          '.<div class="mini" style="margin-top:4px">Learned from ' +
-          C.n +
-          ' of your readings that have both a photo and an Agtron number.</div></div>' +
-          scalesHtml(est, true)
-      );
-    } else
-      out.push(
-        (() => {
-          const photos = all.filter(r => r.photo),
-            need = photos.filter(r => gourmet(r) == null);
-          return (
-            '<div class="cc-box"><b>Agtron from a photo: ' +
-            C.n +
-            ' of 3 readings ready</b><div class="mini" style="margin-top:4px">' +
-            (photos.length
-              ? 'You have ' +
-                photos.length +
-                ' other reading' +
-                (photos.length > 1 ? 's' : '') +
-                ' with a photo; ' +
-                C.n +
-                ' of them also ' +
-                (C.n === 1 ? 'has' : 'have') +
-                ' an Agtron number. A photo counts only when the same reading also has the meter number for that sample.' +
-                (need.length
-                  ? ' Open these and type the Agtron Gourmet from your meter: ' +
-                    need
-                      .slice(0, 6)
-                      .map(
-                        r =>
-                          '<a href="#edit/' +
-                          encodeURIComponent(r.id) +
-                          '">' +
-                          esc(r.name || fmtDay(r.at)) +
-                          '</a>'
-                      )
-                      .join(', ') +
-                    '.'
-                  : '')
-              : 'No other readings have a photo yet.') +
-            ' This reading counts too once it is saved with both.</div><div class="mini" style="margin-top:4px">Why: a phone camera sees colour, while Agtron meters read near-infrared, so there is no formula from a photo to Agtron. With 3 pairs from your own meter and phone, a photo alone shows Agtron Gourmet, Commercial, SCA tile, Tonino, ColorTrack and Colorette.</div></div>'
-          );
-        })()
-      );
-  }
+  if (c.photo && g == null && !(num(c.L) != null && c.space !== 'hunter'))
+    out.push(readoutHtml(c.photo.L, 'photo', c, all));
   const ref = getRef(),
     rr = ref && ref !== c.id ? ALL.find(r => r.id === ref) : null;
   const cmp = o => {

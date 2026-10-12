@@ -187,9 +187,17 @@ export async function run(root, t) {
       await q.goto(base + 'colour.html#new'); await q.waitForSelector('#fName');
       await q.fill('#fName', 'L only'); await q.fill('#fL', '28.6'); await q.fill('#fA', '9'); await q.fill('#fB', '15');
       const res = await q.$eval('#result', e => e.innerText);
-      if (!/From the meter L\*: about Agtron 7\d/.test(res)) throw new Error('L* estimate: ' + res.slice(0, 300));
-      if (!/Your ColorTrack, about\s+5\d/.test(res) || !/Your Probat Colorette, about\s+1\d\d/.test(res)) throw new Error('learned scales: ' + res.slice(0, 600));
+      if (!/Ballpark from the meter L\*/i.test(res) || !/Agtron ~7\d/.test(res) || !/Good confidence/.test(res)) throw new Error('L* estimate: ' + res.slice(0, 300));
+      if (!/ColorTrack\s+~5\d/.test(res) || !/Probat Colorette\s+~1\d\d/.test(res)) throw new Error('learned scales: ' + res.slice(0, 600));
       await q.click('summary.mini'); if (!(await q.$('#fXT'))) throw new Error('extra fields missing');
+      // a photo with nothing else: a ballpark with low confidence, a name and the other scales
+      await q.evaluate(async () => {
+        for (const r of await ORIGIN.all('colour')) await ORIGIN.remove(r.id);
+        await ORIGIN.put({ id: 'ph1', type: 'colour', name: 'Photo only', at: '2026-10-12', photo: { L: 24.9, a: 6, b: 6.5, C: 8.8, h: 47, rgb: [72, 56, 50] } });
+      });
+      await q.goto(base + 'colour.html#edit/ph1'); await q.waitForSelector('#result');
+      const ph = await q.$eval('#result', e => e.innerText);
+      if (!/Ballpark from your photo/i.test(ph) || !/Agtron ~\d\d/.test(ph) || !/Low confidence/.test(ph) || !/Probat Colorette\s+~\d+ \(rough\)/.test(ph)) throw new Error('photo ballpark: ' + ph.slice(0, 500));
     });
     await t.acheck('Colour check converts other meters and colour spaces', async () => {
       await q.goto(base + 'colour.html#new'); await q.waitForSelector('#fName');
