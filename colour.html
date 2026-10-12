@@ -345,6 +345,33 @@ function photoCalib(all) {
       .filter(Boolean)
   );
 }
+// Ground roasted arabica follows one colour path as it darkens: a* and b* from L* (Scientific
+// Reports 2025, HunterLab ColorFlex, D65 2°, L* about 20 to 60). Shows what this L* usually pairs
+// with; a photo far off the path points to the light or white card, a meter off it to its own setup.
+function curveHtml(lab) {
+  if (!lab || lab.L < 18 || lab.L > 62) return '';
+  const L = lab.L,
+    ea = -14.498 + 1.341 * L - 0.015 * L * L,
+    eb = -30.221 + 2.244 * L - 0.02 * L * L,
+    d = Math.hypot(lab.a - ea, lab.b - eb);
+  return (
+    '<div class="mini" style="margin-top:6px">Roasted arabica at L* ' +
+    L.toFixed(1) +
+    ' usually reads about a* ' +
+    ea.toFixed(1) +
+    ', b* ' +
+    eb.toFixed(1) +
+    ' (one colour path for all origins and profiles tested). This reading is ' +
+    d.toFixed(1) +
+    ' away' +
+    (d <= 2
+      ? ', on the path.'
+      : lab.src === 'photo'
+        ? ': for a photo, check the light and that the white card was tapped.'
+        : ': meters differ in light and viewing angle (2° or 10°), and robusta or very old beans sit off this path.') +
+    ' Source: <a href="https://www.nature.com/articles/s41598-025-06601-w" target="_blank" rel="noopener">A universal color curve for roasted arabica coffee</a>, Scientific Reports 2025.</div>'
+  );
+}
 // the same roast on the other scales; approx for estimates from a photo or from L*
 function scalesHtml(g, approx, c) {
   const rows = [
@@ -872,7 +899,9 @@ function result() {
         ' · ' +
         sp.hex +
         '</div>' +
-        '</div></div><div class="mini" style="margin-top:6px">RGB and HEX are for screens and print: they show the colour, they do not measure the roast. Agtron meters read near-infrared, which a colour space cannot convert to.</div></div>'
+        '</div></div><div class="mini" style="margin-top:6px">RGB and HEX are for screens and print: they show the colour, they do not measure the roast. Agtron meters read near-infrared, which a colour space cannot convert to.</div>' +
+        curveHtml(lab) +
+        '</div>'
     );
   }
   const [gw, ww] = gourmetPair(c);
