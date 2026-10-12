@@ -1,0 +1,324 @@
+<!doctype html>
+<!-- KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f5ef">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Jobs</title>
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="kk.css"><script src="app.config.js"></script><script src="tap.js" defer></script><script src="kk-base.js"></script>
+</head>
+<body data-page="jobs"><main class="app">
+<header id="kh"></header>
+<h1>Jobs</h1>
+<div class="sub">Field work by place and day: who did it, how much, and at what rate. Jobs marked done add their piece work to the month's wages under Team.</div>
+<div id="view"></div>
+<div id="kf"></div>
+</main>
+<script src="app.js"></script><script src="sync.js"></script><script src="origin-db.js"></script><script src="places.js"></script>
+<script>
+// Jobs: one kind of work, one place, one day, with a line per worker.
+const $ = s => document.querySelector(s);
+const S = SET('jobs');
+const KINDS = S.kinds || [{ name: 'Other', unit: '', basis: 'fixed' }];
+const CUR = SET('team').currency || '₹';
+let MON = today().slice(0, 7),
+  KIND = '',
+  PLACE = '',
+  PLACES = [],
+  WORKERS = [],
+  JOBS = [];
+const money = v => CUR + ' ' + (Math.round((v || 0) * 100) / 100).toLocaleString('en-IN');
+const kindOf = n => KINDS.find(k => k.name === n) || { name: n, unit: '', basis: 'unit' };
+const lineAmt = (basis, rate, l) =>
+  basis === 'fixed' ? num(l.amount) || 0 : r2((num(l.qty) || 0) * (num(rate) || 0));
+async function load() {
+  const last = new Date(+MON.slice(0, 4), +MON.slice(5), 0).getDate();
+  const [pl, w, j] = await Promise.all([
+    KKPLACES.list(),
+    API.get('/api/team/workers').then(d => d.items || []),
+    API.get('/api/jobs?from=' + MON + '-01&to=' + MON + '-' + last),
+  ]);
+  PLACES = pl;
+  WORKERS = w;
+  const mine = API.pending('/api/jobs').filter(x => String(x.day).startsWith(MON));
+  JOBS = [...mine, ...(j.items || []).filter(x => !mine.some(m => m.id === x.id))].filter(
+    x =>
+      (!KIND || x.kind === KIND) &&
+      (!PLACE || x.place_id === PLACE || (PLACES.find(p => p.id === x.place_id) || {}).farmId === PLACE)
+  );
+  return j.offline;
+}
+async function listView() {
+  if (needAccount($('#view'), 'jobs')) return;
+  let off;
+  try {
+    off = await load();
+  } catch (e) {
+    return ($('#view').innerHTML = '<div class="card">Could not load: ' + esc(e.message) + '</div>');
+  }
+  const by = {};
+  JOBS.forEach(x => {
+    const k = (by[x.kind] ||= { qty: 0, amount: 0, n: 0, unit: x.unit });
+    k.n++;
+    k.qty += x.qty || 0;
+    k.amount += x.amount || 0;
+  });
+  $('#view').innerHTML =
+    '<div class="form"><label>Month<input type="month" id="mon" value="' +
+    MON +
+    '"></label><label>Kind<select id="kd"><option value="">All kinds</option>' +
+    KINDS.map(k => '<option' + (k.name === KIND ? ' selected' : '') + '>' + esc(k.name) + '</option>').join(
+      ''
+    ) +
+    '</select></label><label class="full">Place<select id="pl">' +
+    KKPLACES.options(PLACES, PLACE) +
+    '</select></label></div>' +
+    '<div class="row" style="margin:10px 0"><a class="btn app" href="#new">＋ New job</a>' +
+    (JOBS.length ? '<button class="btn" id="csv">Export CSV</button>' : '') +
+    '</div>' +
+    (off ? '<div class="card mini">Offline: showing the last copy on this phone.</div>' : '') +
+    (JOBS.length
+      ? '<div class="card scroll"><b>This month</b><table class="t" style="margin-top:6px"><tr><th>Kind</th><th class="n">Jobs</th><th class="n">Amount done</th><th class="n">Paid</th></tr>' +
+        Object.entries(by)
+          .map(
+            ([k, v]) =>
+              '<tr><td>' +
+              esc(k) +
+              '</td><td class="n">' +
+              v.n +
+              '</td><td class="n">' +
+              r2(v.qty) +
+              ' ' +
+              esc(v.unit || '') +
+              '</td><td class="n">' +
+              money(v.amount) +
+              '</td></tr>'
+          )
+          .join('') +
+        '</table></div>' +
+        JOBS.map(
+          x =>
+            '<div class="card"><a class="item" href="#edit/' +
+            encodeURIComponent(x.id) +
+            '"><b>' +
+            esc(x.kind) +
+            '</b> <span class="mini">' +
+            esc(fmtDate(x.day) + ' · ' + (x.place_name || '')) +
+            '</span>' +
+            (x.status === 'Planned' ? ' <span class="tag wait">planned</span>' : '') +
+            (x.pending ? ' <span class="tag">waiting to send</span>' : '') +
+            '<div class="mini">' +
+            esc(
+              [
+                (x.lines || []).length + ' workers',
+                x.qty ? r2(x.qty) + ' ' + (x.unit || '') : '',
+                x.amount ? money(x.amount) : '',
+                x.inputs,
+              ]
+                .filter(Boolean)
+                .join(' · ')
+            ) +
+            '</div></a></div>'
+        ).join('')
+      : '<div class="card mini">No jobs this month.</div>');
+  $('#mon').onchange = () => ((MON = $('#mon').value || MON), listView());
+  $('#kd').onchange = () => ((KIND = $('#kd').value), listView());
+  $('#pl').onchange = () => ((PLACE = $('#pl').value), listView());
+  if ($('#csv')) {
+    const wn = id => (WORKERS.find(w => w.id === id) || { name: '?' }).name;
+    $('#csv').onclick = () =>
+      saveCsv(
+        'jobs-' + MON,
+        JOBS.flatMap(x =>
+          (x.lines || []).length
+            ? x.lines.map(l => ({ ...x, worker: wn(l.worker_id), lqty: l.qty, lamt: l.amount }))
+            : [x]
+        ),
+        [
+          ['day', 'Date'],
+          ['kind', 'Kind'],
+          ['place_name', 'Place'],
+          ['status', 'Status'],
+          ['worker', 'Worker'],
+          ['lqty', 'Quantity'],
+          ['unit', 'Unit'],
+          ['rate', 'Rate'],
+          ['lamt', 'Amount'],
+          ['inputs', 'Inputs used'],
+          ['notes', 'Notes'],
+        ]
+      );
+  }
+}
+async function editView(id) {
+  if (needAccount($('#view'), 'jobs')) return;
+  await load().catch(() => {});
+  const k0 = KINDS[0];
+  const x = id
+    ? JOBS.find(j => j.id === id)
+    : {
+        day: today(),
+        kind: k0.name,
+        unit: k0.unit,
+        basis: k0.basis,
+        place_id: PLACE,
+        status: 'Done',
+        lines: [],
+      };
+  if (!x) return ($('#view').innerHTML = '<div class="card">Not found. <a href="#">Back</a></div>');
+  const lines = new Map((x.lines || []).map(l => [l.worker_id, l]));
+  const active = WORKERS.filter(w => w.active || lines.has(w.id));
+  $('#view').innerHTML =
+    '<a href="#">‹ Jobs</a><h2>' +
+    (id ? esc(x.kind) : 'New job') +
+    '</h2><div class="form">' +
+    '<label>Date<input type="date" id="day" value="' +
+    esc(x.day) +
+    '"></label>' +
+    '<label>Kind<select id="kind">' +
+    KINDS.map(k => '<option' + (k.name === x.kind ? ' selected' : '') + '>' + esc(k.name) + '</option>').join(
+      ''
+    ) +
+    (KINDS.some(k => k.name === x.kind) ? '' : '<option selected>' + esc(x.kind) + '</option>') +
+    '</select></label>' +
+    '<label class="full">Place<select id="pl">' +
+    KKPLACES.options(PLACES, x.place_id, false) +
+    '</select></label>' +
+    '<label>Paid by<select id="basis">' +
+    [
+      ['unit', 'Quantity'],
+      ['day', 'Days worked'],
+      ['fixed', 'Fixed sum each'],
+    ]
+      .map(
+        ([k, l]) => '<option value="' + k + '"' + (k === x.basis ? ' selected' : '') + '>' + l + '</option>'
+      )
+      .join('') +
+    '</select></label>' +
+    '<label>Unit<input id="unit" value="' +
+    esc(x.unit || '') +
+    '" placeholder="kg"></label>' +
+    '<label>Rate, ' +
+    CUR +
+    '<input id="rate" type="number" step="any" inputmode="decimal" value="' +
+    esc(x.rate ?? '') +
+    '"></label>' +
+    '<label>Status<select id="status">' +
+    ['Done', 'Planned']
+      .map(s => '<option' + (s === x.status ? ' selected' : '') + '>' + s + '</option>')
+      .join('') +
+    '</select></label>' +
+    '<label class="full">Inputs used<input id="inputs" value="' +
+    esc(x.inputs || '') +
+    '" placeholder="What was sprayed or applied, and how much"></label></div>' +
+    '<div class="card"><div class="row" style="justify-content:space-between"><b>Workers</b><span class="mini" id="tot"></span></div>' +
+    (active.length
+      ? active
+          .map(
+            w =>
+              '<div class="who"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-w="' +
+              esc(w.id) +
+              '" style="width:22px;height:22px"' +
+              (lines.has(w.id) ? ' checked' : '') +
+              '> ' +
+              esc(w.name) +
+              '</label><input data-q="' +
+              esc(w.id) +
+              '" type="number" step="any" inputmode="decimal" style="width:110px" placeholder="qty" value="' +
+              esc((lines.get(w.id) || {}).qty ?? (lines.get(w.id) || {}).amount ?? '') +
+              '"></div>'
+          )
+          .join('')
+      : '<div class="mini">Add workers under <a href="team.html#workers">Team</a> first.</div>') +
+    '</div><div class="form"><label class="full">Notes<textarea id="notes">' +
+    esc(x.notes || '') +
+    '</textarea></label></div>' +
+    '<div class="row sticky"><button class="btn app" id="save">Save</button><a class="btn" href="#">Cancel</a>' +
+    (id ? '<button class="btn danger" id="del" style="margin-left:auto">Delete</button>' : '') +
+    '</div>';
+  const read = () => {
+    const basis = $('#basis').value;
+    const ls = [...document.querySelectorAll('[data-w]:checked')].map(c => {
+      const v = num(document.querySelector('[data-q="' + CSS.escape(c.dataset.w) + '"]').value);
+      return basis === 'fixed'
+        ? { worker_id: c.dataset.w, amount: v }
+        : { worker_id: c.dataset.w, qty: v ?? (basis === 'day' ? 1 : null) };
+    });
+    return {
+      ...x,
+      id: x.id || uid('job'),
+      day: $('#day').value,
+      kind: $('#kind').value,
+      place_id: $('#pl').value,
+      basis,
+      unit: $('#unit').value.trim(),
+      rate: num($('#rate').value),
+      status: $('#status').value,
+      inputs: $('#inputs').value.trim(),
+      notes: $('#notes').value.trim(),
+      lines: ls,
+    };
+  };
+  const total = () => {
+    if (!$('#basis')) return;
+    const o = read();
+    const q = o.lines.reduce((a, l) => a + (l.qty || 0), 0),
+      amt = o.lines.reduce((a, l) => a + lineAmt(o.basis, o.rate, l), 0);
+    $('#tot').textContent =
+      o.lines.length +
+      ' workers' +
+      (q ? ' · ' + r2(q) + ' ' + (o.basis === 'day' ? 'days' : o.unit) : '') +
+      ' · ' +
+      money(amt);
+    document
+      .querySelectorAll('[data-q]')
+      .forEach(
+        i => (i.placeholder = o.basis === 'fixed' ? CUR : o.basis === 'day' ? 'days' : o.unit || 'qty')
+      );
+  };
+  $('#kind').onchange = () => {
+    const k = kindOf($('#kind').value);
+    $('#unit').value = k.unit || '';
+    $('#basis').value = k.basis || 'unit';
+    total();
+  };
+  $('#view').oninput = total;
+  $('#view').onchange = total;
+  total();
+  $('#save').onclick = async () => {
+    const o = read();
+    if (!o.place_id) return toast('Choose a place');
+    o.place_name = (PLACES.find(p => p.id === o.place_id) || {}).label || '';
+    o.qty = o.lines.reduce((a, l) => a + (l.qty || 0), 0);
+    o.amount = o.lines.reduce((a, l) => a + lineAmt(o.basis, o.rate, l), 0);
+    o.lines = o.lines.map(l => ({ ...l, amount: lineAmt(o.basis, o.rate, l) }));
+    const r = await API.post('/api/jobs', o).catch(e => ({ error: e.message }));
+    if (r.error) return toast(r.error);
+    toast(r.queued ? 'Saved on this phone; will send when online' : 'Saved');
+    location.hash = '';
+  };
+  if ($('#del'))
+    $('#del').onclick = async () => {
+      if (!confirm('Delete this job?')) return;
+      await API.del('/api/jobs/' + encodeURIComponent(x.id));
+      location.hash = '';
+    };
+}
+function route() {
+  const h = location.hash.slice(1);
+  let m;
+  if (h === 'new') return editView(null);
+  if ((m = h.match(/^edit\/(.+)$/))) return editView(decodeURIComponent(m[1]));
+  listView();
+}
+window.addEventListener('hashchange', route);
+window.addEventListener('kk-flushed', () => !location.hash && listView());
+route();
+recordsSync();
+</script>
+<script src="pv.js" defer></script>
+</body>
+</html>

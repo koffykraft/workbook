@@ -1,4 +1,5 @@
 // KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
+import { MODULES, MODULE_SETTINGS } from './kk-modules.js';
 import { tracePublic, traceApi, traceAnchor, traceUpgrade } from './trace-api.js';
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 const j = (v, s = 200) => new Response(JSON.stringify(v), { status: s, headers: JSON_HEADERS });
@@ -128,6 +129,17 @@ function recordTypesReady(e) {
     RECORD_TYPES_READY = null;
     throw err;
   }));
+}
+// Plug-in modules from koffykraft/kk-templates: each brings its own tables (IF NOT EXISTS), made
+// on first use, and its own /api/<name>/ routes.
+let MODULES_READY = null;
+function modulesReady(e) {
+  return (MODULES_READY ||= e.DB.batch(MODULES.flatMap(m => m.SQL || []).map(s => e.DB.prepare(s))).catch(
+    err => {
+      MODULES_READY = null;
+      throw err;
+    }
+  ));
 }
 export default {
   async fetch(r, e, ctx) {
@@ -963,9 +975,20 @@ export default {
         readings: JSON.parse(row.readings_json || '{"exhaust":[],"bean":[]}'),
       });
     }
+    for (const m of MODULES) {
+      if (!p.startsWith('/api/' + m.NAME + '/') && p !== '/api/' + m.NAME) continue;
+      await modulesReady(e);
+      const x = await m.api(r, e, p, me, { j, body, url: u, isAdmin, CONFIG: { settings: MODULE_SETTINGS } });
+      if (x) return x;
+    }
     return j({ error: 'not found' }, 404);
   },
   async scheduled(ev, e, ctx) {
+    ctx.waitUntil(
+      modulesReady(e)
+        .then(() => Promise.allSettled(MODULES.filter(m => m.cron).map(m => m.cron(e))))
+        .catch(err => console.error('module cron', err))
+    );
     ctx.waitUntil(Promise.allSettled([recordTypesReady(e), traceAnchor(e).then(() => traceUpgrade(e))]));
   },
 };

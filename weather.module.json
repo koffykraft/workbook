@@ -1,0 +1,12 @@
+{
+  "name": "weather",
+  "page": "weather",
+  "label": "Weather",
+  "blurb": "Daily rain and temperature for each farm from Open-Meteo or NASA POWER, or from your own station's file. Kept in your account and topped up every night.",
+  "files": ["weather.html", "weather-core.js", "weather-api.js"],
+  "settings": {
+    "source": "openmeteo",
+    "rainyDayMm": 2.5,
+    "firstYears": 2
+  }
+}

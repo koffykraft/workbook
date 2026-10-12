@@ -1,0 +1,16 @@
+{
+  "name": "fieldlog",
+  "page": "fieldlog",
+  "label": "Field log",
+  "blurb": "What went on each block: fertiliser, manure and lime with the nutrients they carry, watering, and pests, disease and plant health.",
+  "files": ["fieldlog.html", "fieldlog-api.js"],
+  "settings": {
+    "nutrientKinds": ["Fertiliser", "Manure or compost", "Lime or dolomite", "Foliar spray", "Bio-input", "Other"],
+    "products": ["Urea 46-0-0", "DAP 18-46-0", "MOP 0-0-60", "SSP 0-16-0", "Rock phosphate 0-18-0", "NPK 17-17-17", "NPK 10-26-26", "Factamfos 20-20-0", "Ammonium sulphate 21-0-0", "Farmyard manure", "Compost", "Vermicompost", "Neem cake", "Dolomite", "Agricultural lime"],
+    "units": ["kg", "g", "t", "bag 50 kg", "l", "ml"],
+    "waterKinds": ["Irrigation", "Fertigation", "Other"],
+    "waterMethods": ["Sprinkler", "Drip", "Hose or basin", "Flood", "Other"],
+    "healthIssues": ["Pest", "Disease", "Nutrient deficiency", "Drought stress", "Waterlogging", "Weeds", "Animal damage", "Other"],
+    "severity": ["Low", "Medium", "High"]
+  }
+}

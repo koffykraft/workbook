@@ -17,7 +17,7 @@ const RULES = {
 };
 const SKIP = /^(index_previous)/;
 const NOLINT = new Set(['qrcode.js']); // third-party, unchanged
-const MODULES = new Set(['worker.js', 'trace-api.js']);
+const MODULES = { has: f => /^(worker|schema|kk-modules)\.js$|-api\.js$/.test(f) };
 
 // Names a classic script makes global: top-level declarations and window.X assignments.
 function provides(src) {

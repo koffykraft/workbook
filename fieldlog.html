@@ -1,0 +1,418 @@
+<!doctype html>
+<!-- KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f5ef">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Field log</title>
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="kk.css"><script src="app.config.js"></script><script src="tap.js" defer></script><script src="kk-base.js"></script>
+</head>
+<body data-page="fieldlog"><main class="app">
+<header id="kh"></header>
+<h1>Field log</h1>
+<div class="sub">What went on each place and when: fertiliser, manure and lime with the nutrients they carry, watering, and plant health. Works offline; entries are sent when the phone is online.</div>
+<div id="view"></div>
+<div id="kf"></div>
+</main>
+<script src="app.js"></script><script src="sync.js"></script><script src="origin-db.js"></script><script src="places.js"></script>
+<script>
+// Field log: nutrients, water and plant health, one dated entry at a time, per place.
+const $ = s => document.querySelector(s);
+const S = SET('fieldlog');
+const TABS = [
+  ['nutrient', 'Nutrients'],
+  ['water', 'Water'],
+  ['health', 'Plant health'],
+];
+let TAB = 'nutrient',
+  PLACE = '',
+  YEAR = String(new Date().getFullYear()),
+  PLACES = [],
+  ROWS = [];
+const r1x = v => (v == null ? '' : String(Math.round(v * 10) / 10));
+const opts = (list, sel) =>
+  list.map(o => '<option' + (o === sel ? ' selected' : '') + '>' + esc(o) + '</option>').join('');
+// "17-17-17", or a grade inside a product name ("NPK 17-17-17") -> {n, p, k} in percent
+function grade(r) {
+  const m = String(r.grade || r.product || '').match(
+    /(\d+(?:\.\d+)?)\s*[-:]\s*(\d+(?:\.\d+)?)\s*[-:]\s*(\d+(?:\.\d+)?)/
+  );
+  return m ? { n: +m[1], p: +m[2], k: +m[3] } : null;
+}
+const KG = { kg: 1, g: 0.001, t: 1000, 'bag 50 kg': 50 };
+// kg of product put on the place: qty in its unit, times plants when the amount was per plant
+function productKg(r) {
+  const q = num(r.qty),
+    f = KG[r.unit || 'kg'];
+  if (q == null || !f) return null;
+  return q * f * (r.per === 'plant' ? num(r.plants) || 0 : 1);
+}
+function nutrients(r) {
+  const g = grade(r),
+    kg = productKg(r);
+  if (!g || kg == null) return null;
+  return { n: (kg * g.n) / 100, p: (kg * g.p) / 100, k: (kg * g.k) / 100 };
+}
+const placeOf = id => PLACES.find(p => p.id === id);
+async function load() {
+  PLACES = await KKPLACES.list();
+  const d = await API.get(
+    '/api/fieldlog?kind=' + TAB + (YEAR ? '&from=' + YEAR + '-01-01&to=' + YEAR + '-12-31' : '')
+  );
+  const mine = API.pending('/api/fieldlog').filter(
+    r => r.kind === TAB && (!YEAR || String(r.day).startsWith(YEAR))
+  );
+  const ids = new Set(mine.map(r => r.id));
+  ROWS = [...mine, ...(d.items || []).filter(r => !ids.has(r.id))].filter(
+    r => !PLACE || r.place_id === PLACE || (placeOf(r.place_id) || {}).farmId === PLACE
+  );
+  return d.offline;
+}
+function line(r) {
+  if (r.kind === 'nutrient') {
+    const n = nutrients(r);
+    return [
+      r.kind2,
+      r.product,
+      r.qty ? r.qty + ' ' + (r.unit || 'kg') + (r.per === 'plant' ? ' per plant' : '') : '',
+      n ? 'N ' + r1x(n.n) + ', P₂O₅ ' + r1x(n.p) + ', K₂O ' + r1x(n.k) + ' kg' : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  }
+  if (r.kind === 'water')
+    return [
+      r.kind2,
+      r.method,
+      r.hours ? r.hours + ' h' : '',
+      r.mm ? r.mm + ' mm' : '',
+      r.litres ? r.litres + ' l' : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  return [r.issue, r.what, r.severity, r.pct ? r.pct + '% affected' : '', r.status]
+    .filter(Boolean)
+    .join(' · ');
+}
+function summary() {
+  if (!ROWS.length) return '';
+  const by = {};
+  ROWS.forEach(r => (by[r.place_id] ||= []).push(r));
+  if (TAB === 'nutrient') {
+    const rows = Object.entries(by).map(([id, rs]) => {
+      const t = rs
+        .map(nutrients)
+        .filter(Boolean)
+        .reduce((a, b) => ({ n: a.n + b.n, p: a.p + b.p, k: a.k + b.k }), { n: 0, p: 0, k: 0 });
+      const ha = (placeOf(id) || {}).ha;
+      const lime = rs
+        .filter(r => /lime|dolomite/i.test(r.kind2 + ' ' + r.product))
+        .map(r => r.day)
+        .sort()
+        .pop();
+      return (
+        '<tr><td>' +
+        esc(rs[0].place_name) +
+        '</td><td class="n">' +
+        r1x(t.n) +
+        '</td><td class="n">' +
+        r1x(t.p) +
+        '</td><td class="n">' +
+        r1x(t.k) +
+        '</td><td class="n">' +
+        (ha ? r1x(t.n / ha) + ' / ' + r1x(t.p / ha) + ' / ' + r1x(t.k / ha) : '') +
+        '</td><td>' +
+        (lime ? fmtDate(lime) : '') +
+        '</td></tr>'
+      );
+    });
+    return (
+      '<div class="card scroll"><b>Nutrients applied' +
+      (YEAR ? ' in ' + YEAR : '') +
+      ', kg</b><table class="t" style="margin-top:6px"><tr><th>Place</th><th class="n">N</th><th class="n">P₂O₅</th><th class="n">K₂O</th><th class="n">per ha</th><th>Last lime</th></tr>' +
+      rows.join('') +
+      '</table><div class="mini" style="margin-top:6px">Worked out from the grade (N-P-K %) and the amount. Products without a grade, and amounts in litres, are not counted. Compare with your soil test and the recommendation for your ' +
+      esc(W('crop')) +
+      ' and area.</div></div>'
+    );
+  }
+  if (TAB === 'water') {
+    const rows = Object.entries(by).map(([, rs]) => {
+      const s = k =>
+        rs
+          .map(r => num(r[k]))
+          .filter(x => x != null)
+          .reduce((a, b) => a + b, 0);
+      return (
+        '<tr><td>' +
+        esc(rs[0].place_name) +
+        '</td><td class="n">' +
+        rs.length +
+        '</td><td class="n">' +
+        r1x(s('hours')) +
+        '</td><td class="n">' +
+        r1x(s('mm')) +
+        '</td><td>' +
+        fmtDate(
+          rs
+            .map(r => r.day)
+            .sort()
+            .pop()
+        ) +
+        '</td></tr>'
+      );
+    });
+    return (
+      '<div class="card scroll"><b>Watering' +
+      (YEAR ? ' in ' + YEAR : '') +
+      '</b><table class="t" style="margin-top:6px"><tr><th>Place</th><th class="n">Times</th><th class="n">Hours</th><th class="n">mm</th><th>Last</th></tr>' +
+      rows.join('') +
+      '</table>' +
+      ((APP.modules || []).includes('weather')
+        ? '<div class="mini" style="margin-top:6px">See the rain for the same weeks on <a href="weather.html">Weather</a>.</div>'
+        : '') +
+      '</div>'
+    );
+  }
+  const open = ROWS.filter(r => r.status !== 'Resolved');
+  return open.length
+    ? '<div class="card"><b>Still open</b>' +
+        open
+          .map(
+            r =>
+              '<div class="mini" style="margin-top:4px">' +
+              esc(fmtDate(r.day) + ' · ' + r.place_name + ' · ' + line(r)) +
+              (r.follow ? ' · check again ' + esc(fmtDate(r.follow)) : '') +
+              '</div>'
+          )
+          .join('') +
+        '</div>'
+    : '';
+}
+async function listView() {
+  if (needAccount($('#view'), 'the field log')) return;
+  let off = false;
+  try {
+    off = await load();
+  } catch (e) {
+    $('#view').innerHTML = '<div class="card">Could not load: ' + esc(e.message) + '</div>';
+    return;
+  }
+  const years = [];
+  for (let y = new Date().getFullYear(); y >= new Date().getFullYear() - 6; y--) years.push(String(y));
+  $('#view').innerHTML =
+    '<div class="tabs row" style="margin:8px 0">' +
+    TABS.map(
+      ([k, l]) => '<button data-tab="' + k + '"' + (k === TAB ? ' class="on"' : '') + '>' + l + '</button>'
+    ).join('') +
+    '</div>' +
+    '<div class="form"><label>Place<select id="pl">' +
+    KKPLACES.options(PLACES, PLACE) +
+    '</select></label><label>Year<select id="yr"><option value="">All</option>' +
+    opts(years, YEAR) +
+    '</select></label></div>' +
+    '<div class="row" style="margin:10px 0"><a class="btn app" href="#new">＋ New entry</a>' +
+    (ROWS.length ? '<button class="btn" id="csv">Export CSV</button>' : '') +
+    '</div>' +
+    (off ? '<div class="card mini">Offline: showing the last copy on this phone.</div>' : '') +
+    summary() +
+    (ROWS.length
+      ? ROWS.map(
+          r =>
+            '<div class="card"><a class="item" href="#edit/' +
+            encodeURIComponent(r.id) +
+            '"><b>' +
+            esc(r.place_name || 'No place') +
+            '</b> <span class="mini">' +
+            esc(fmtDate(r.day)) +
+            (r.pending ? ' · waiting to send' : '') +
+            '</span><div class="mini">' +
+            esc(line(r)) +
+            '</div>' +
+            (r.notes ? '<div class="mini">' + esc(r.notes) + '</div>' : '') +
+            '</a></div>'
+        ).join('')
+      : '<div class="card mini">Nothing logged here yet.</div>');
+  document
+    .querySelectorAll('[data-tab]')
+    .forEach(b => (b.onclick = () => ((TAB = b.dataset.tab), listView())));
+  $('#pl').onchange = () => ((PLACE = $('#pl').value), listView());
+  $('#yr').onchange = () => ((YEAR = $('#yr').value), listView());
+  if ($('#csv'))
+    $('#csv').onclick = () => {
+      const base = [
+        ['day', 'Date'],
+        ['place_name', 'Place'],
+      ];
+      const cols = {
+        nutrient: [
+          ['kind2', 'Kind'],
+          ['product', 'Product'],
+          ['grade', 'Grade N-P-K'],
+          ['qty', 'Amount'],
+          ['unit', 'Unit'],
+          ['per', 'Per'],
+          ['plants', 'Plants'],
+          [r => r1x((nutrients(r) || {}).n), 'N kg'],
+          [r => r1x((nutrients(r) || {}).p), 'P2O5 kg'],
+          [r => r1x((nutrients(r) || {}).k), 'K2O kg'],
+          ['cost', 'Cost'],
+        ],
+        water: [
+          ['kind2', 'Kind'],
+          ['method', 'Method'],
+          ['hours', 'Hours'],
+          ['mm', 'mm'],
+          ['litres', 'Litres'],
+        ],
+        health: [
+          ['issue', 'Issue'],
+          ['what', 'What exactly'],
+          ['severity', 'Severity'],
+          ['pct', '% affected'],
+          ['action', 'Action taken'],
+          ['status', 'Status'],
+          ['follow', 'Check again'],
+        ],
+      }[TAB];
+      saveCsv('field-log-' + TAB, ROWS, [...base, ...cols, ['notes', 'Notes']]);
+    };
+}
+function fields(r) {
+  const L = (l, html, full) => '<label' + (full ? ' class="full"' : '') + '>' + l + html + '</label>';
+  const inp = (k, type, extra) =>
+    '<input data-k="' +
+    k +
+    '" type="' +
+    (type || 'text') +
+    '"' +
+    (type === 'number' ? ' step="any" inputmode="decimal"' : '') +
+    (extra || '') +
+    ' value="' +
+    esc(r[k] ?? '') +
+    '">';
+  const sel = (k, list) =>
+    '<select data-k="' + k + '"><option value=""></option>' + opts(list, r[k]) + '</select>';
+  if (r.kind === 'nutrient')
+    return (
+      L('Kind', sel('kind2', S.nutrientKinds || [])) +
+      L('Product', inp('product', 'text', ' list="prods"'), 0) +
+      '<datalist id="prods">' +
+      (S.products || []).map(p => '<option value="' + esc(p) + '">').join('') +
+      '</datalist>' +
+      L('Grade N-P-K %', inp('grade', 'text', ' placeholder="17-17-17"')) +
+      L('Cost', inp('cost', 'number')) +
+      L('Amount', inp('qty', 'number')) +
+      L('Unit', sel('unit', S.units || ['kg'])) +
+      L(
+        'Amount is',
+        '<select data-k="per">' + opts(['whole place', 'plant'], r.per || 'whole place') + '</select>'
+      ) +
+      L('Plants', inp('plants', 'number', ' placeholder="if per plant"')) +
+      '<div class="full mini" id="calc"></div>'
+    );
+  if (r.kind === 'water')
+    return (
+      L('Kind', sel('kind2', S.waterKinds || [])) +
+      L('Method', sel('method', S.waterMethods || [])) +
+      L('Hours', inp('hours', 'number')) +
+      L('mm applied', inp('mm', 'number')) +
+      L('Litres', inp('litres', 'number'))
+    );
+  return (
+    L('Issue', sel('issue', S.healthIssues || [])) +
+    L('Severity', sel('severity', S.severity || [])) +
+    L('What exactly', inp('what', 'text', ' placeholder="Name of the pest or disease, or what you see"'), 1) +
+    L('% of plants affected', inp('pct', 'number')) +
+    L('Status', sel('status', ['Open', 'Treated', 'Resolved'])) +
+    L('Action taken', inp('action'), 1) +
+    L('Check again on', inp('follow', 'date'))
+  );
+}
+async function editView(id) {
+  if (needAccount($('#view'), 'the field log')) return;
+  await load().catch(() => {});
+  const r = id
+    ? ROWS.find(x => x.id === id)
+    : { kind: TAB, day: today(), place_id: PLACE, unit: 'kg', status: TAB === 'health' ? 'Open' : '' };
+  if (!r) return ($('#view').innerHTML = '<div class="card">Not found. <a href="#">Back</a></div>');
+  $('#view').innerHTML =
+    '<a href="#">‹ Field log</a><h2>' +
+    esc((TABS.find(t => t[0] === r.kind) || [])[1]) +
+    '</h2><div class="form">' +
+    '<label class="full">Place<select data-k="place_id">' +
+    KKPLACES.options(PLACES, r.place_id, false) +
+    '</select></label>' +
+    '<label>Date<input data-k="day" type="date" value="' +
+    esc(r.day) +
+    '"></label><div></div>' +
+    fields(r) +
+    '<label class="full">Notes<textarea data-k="notes">' +
+    esc(r.notes || '') +
+    '</textarea></label></div>' +
+    '<div class="row sticky"><button class="btn app" id="save">Save</button><a class="btn" href="#">Cancel</a>' +
+    (id ? '<button class="btn danger" id="del" style="margin-left:auto">Delete</button>' : '') +
+    '</div>';
+  const read = () => {
+    const o = { ...r };
+    document.querySelectorAll('[data-k]').forEach(el => (o[el.dataset.k] = el.value.trim()));
+    return o;
+  };
+  const calc = () => {
+    const c = $('#calc');
+    if (!c) return;
+    const o = read(),
+      n = nutrients(o),
+      p = placeOf(o.place_id);
+    c.innerHTML = n
+      ? 'Carries <b>N ' +
+        r1x(n.n) +
+        ' kg, P₂O₅ ' +
+        r1x(n.p) +
+        ' kg, K₂O ' +
+        r1x(n.k) +
+        ' kg</b>' +
+        (p && p.ha
+          ? ' (per ha: ' + r1x(n.n / p.ha) + ' / ' + r1x(n.p / p.ha) + ' / ' + r1x(n.k / p.ha) + ')'
+          : '') +
+        '.'
+      : grade(o)
+        ? 'Enter the amount in kg, g, t or bags to see the nutrients.'
+        : '';
+  };
+  document.querySelectorAll('[data-k]').forEach(el => el.addEventListener('input', calc));
+  calc();
+  $('#save').onclick = async () => {
+    const o = read();
+    if (!o.place_id) return toast('Choose a place');
+    o.place_name = (placeOf(o.place_id) || {}).label || '';
+    o.id = o.id || uid('fl');
+    const res = await API.post('/api/fieldlog', o);
+    toast(res.queued ? 'Saved on this phone; will send when online' : 'Saved');
+    location.hash = '';
+  };
+  if ($('#del'))
+    $('#del').onclick = async () => {
+      if (!confirm('Delete this entry?')) return;
+      await API.del('/api/fieldlog/' + encodeURIComponent(r.id));
+      location.hash = '';
+    };
+}
+function route() {
+  const h = location.hash.slice(1);
+  let m;
+  if (h === 'new') return editView(null);
+  if ((m = h.match(/^edit\/(.+)$/))) return editView(decodeURIComponent(m[1]));
+  listView();
+}
+window.addEventListener('hashchange', route);
+window.addEventListener('kk-flushed', () => !location.hash && listView());
+route();
+recordsSync();
+</script>
+<script src="pv.js" defer></script>
+</body>
+</html>

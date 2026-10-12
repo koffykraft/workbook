@@ -1,0 +1,18 @@
+{
+  "name": "team",
+  "page": "team",
+  "label": "Team",
+  "blurb": "Workers, the daily muster with a GPS check, leave and holidays, advances, and the monthly register with wages.",
+  "files": ["team.html", "team-api.js"],
+  "settings": {
+    "currency": "₹",
+    "roles": ["Worker", "Supervisor", "Driver", "Watchman", "Other"],
+    "weeklyOff": [0],
+    "halfDay": 0.5,
+    "leaveKinds": [
+      { "name": "Paid leave", "pay": 1 },
+      { "name": "Sick leave", "pay": 1 },
+      { "name": "Unpaid leave", "pay": 0 }
+    ]
+  }
+}

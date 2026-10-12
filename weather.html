@@ -1,0 +1,352 @@
+<!doctype html>
+<!-- KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f5ef">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Weather</title>
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="kk.css"><script src="app.config.js"></script><script src="tap.js" defer></script><script src="kk-base.js"></script>
+</head>
+<body data-page="weather"><main class="app">
+<header id="kh"></header>
+<h1>Weather</h1>
+<div class="sub">Daily rain and temperature for each place, kept in your account. Fetched on this phone from a free weather service, or brought in from your own station's file, and topped up every night.</div>
+<div id="view"></div>
+<div id="kf"></div>
+</main>
+<script src="app.js"></script><script src="sync.js"></script><script src="origin-db.js"></script><script src="places.js"></script><script src="weather-core.js"></script>
+<script>
+// Weather: pick a place, get its days (from the phone, then saved to the account), see the season.
+const $ = s => document.querySelector(s);
+const S = SET('weather');
+let PLACES = [],
+  SITES = [],
+  CUR = null,
+  DAYS = [],
+  YEAR = new Date().getFullYear();
+const yest = () => addDays(today(), -1);
+const sum = a => a.reduce((x, y) => x + y, 0);
+const avg = a => (a.length ? sum(a) / a.length : null);
+const f1 = v => (v == null ? '' : (Math.round(v * 10) / 10).toFixed(1));
+async function load() {
+  [PLACES, SITES] = await Promise.all([
+    KKPLACES.list(),
+    API.get('/api/weather/sites').then(d => d.items || []),
+  ]);
+}
+function siteOf(id) {
+  return SITES.find(s => s.id === id);
+}
+async function draw() {
+  if (needAccount($('#view'), 'weather')) return;
+  try {
+    await load();
+  } catch (e) {
+    $('#view').innerHTML = '<div class="card">Could not load: ' + esc(e.message) + '</div>';
+    return;
+  }
+  const withGps = PLACES.filter(p => p.lat != null);
+  const known = new Set(SITES.map(s => s.id));
+  const pick = sel =>
+    '<option value="">Choose a place</option>' +
+    SITES.map(
+      s =>
+        '<option value="' +
+        esc(s.id) +
+        '"' +
+        (s.id === sel ? ' selected' : '') +
+        '>' +
+        esc(s.name) +
+        '</option>'
+    ).join('') +
+    withGps
+      .filter(p => !known.has(p.id))
+      .map(
+        p =>
+          '<option value="' +
+          esc(p.id) +
+          '"' +
+          (p.id === sel ? ' selected' : '') +
+          '>＋ ' +
+          esc(p.label) +
+          '</option>'
+      )
+      .join('');
+  if (!CUR) CUR = (SITES[0] && SITES[0].id) || '';
+  $('#view').innerHTML =
+    '<div class="card"><div class="form"><label class="full">Place<select id="site">' +
+    pick(CUR) +
+    '</select></label></div>' +
+    (withGps.length || SITES.length
+      ? ''
+      : '<div class="mini" style="margin-top:6px">No place has a GPS point yet. Add one on the <a href="' +
+        esc(APP.placesPage || 'places') +
+        '.html">' +
+        esc(W('farms')) +
+        '</a> page, or bring in a file below.</div>') +
+    '<details style="margin-top:8px"><summary class="mini">A place without GPS on its record</summary><div class="form" style="margin-top:6px"><label class="full">Name<input id="nName" placeholder="Rain gauge at the store"></label><label>Latitude<input id="nLat" type="number" step="any" inputmode="decimal"></label><label>Longitude<input id="nLng" type="number" step="any" inputmode="decimal"></label><div class="full row"><button class="btn small" id="nGps">Use my location</button><button class="btn small app" id="nAdd">Add place</button></div></div></details></div>' +
+    '<div id="site-box"></div>';
+  $('#site').onchange = () => openSite($('#site').value);
+  $('#nGps').onclick = async () => {
+    const g = await gpsNow();
+    if (!g) return toast('No GPS');
+    $('#nLat').value = g.lat;
+    $('#nLng').value = g.lng;
+  };
+  $('#nAdd').onclick = async () => {
+    const name = $('#nName').value.trim(),
+      lat = num($('#nLat').value),
+      lng = num($('#nLng').value);
+    if (!name) return toast('Give it a name');
+    const id = uid('wx');
+    await API.post('/api/weather/sites', {
+      id,
+      name,
+      lat,
+      lng,
+      source: lat == null ? 'file' : S.source || 'openmeteo',
+      auto: lat != null,
+    });
+    CUR = id;
+    draw();
+  };
+  if (CUR) openSite(CUR);
+}
+async function openSite(id) {
+  CUR = id;
+  const box = $('#site-box');
+  if (!id) return (box.innerHTML = '');
+  let s = siteOf(id);
+  if (!s) {
+    // first time for a farm or block: register it, then fetch its history
+    const p = PLACES.find(x => x.id === id);
+    if (!p) return;
+    s = { id, name: p.label, lat: p.lat, lng: p.lng, source: S.source || 'openmeteo', auto: 1, days: 0 };
+    const r = await API.post('/api/weather/sites', s);
+    if (r.queued) return toast('Offline. Try again when online');
+    SITES.push(s);
+  }
+  box.innerHTML =
+    '<div class="card"><div class="form"><label class="full">Source<select id="src">' +
+    Object.entries(WXCORE.SOURCES)
+      .map(
+        ([k, v]) =>
+          '<option value="' + k + '"' + (k === s.source ? ' selected' : '') + '>' + esc(v.label) + '</option>'
+      )
+      .join('') +
+    '</select></label>' +
+    '<label class="full" style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="auto" style="width:22px;height:22px"' +
+    (s.auto ? ' checked' : '') +
+    (s.source === 'file' ? ' disabled' : '') +
+    '> Keep up to date every night</label>' +
+    '<label>Get<select id="span"><option value="90">Last 3 months</option><option value="ytd">This year</option><option value="1">Last 12 months</option><option value="2">Last 2 years</option><option value="5">Last 5 years</option><option value="10">Last 10 years</option></select></label>' +
+    '<div style="align-self:end"><button class="btn app" id="get"' +
+    (s.source === 'file' ? ' disabled' : '') +
+    '>Get weather</button></div></div>' +
+    '<div class="row" style="margin-top:8px"><label class="btn small" style="cursor:pointer">Bring in a file (CSV)<input id="file" type="file" accept=".csv,.txt,text/csv" hidden></label><button class="btn small" id="csv">Export CSV</button><button class="btn small danger" id="rm" style="margin-left:auto">Remove place</button></div>' +
+    '<div class="mini" id="info" style="margin-top:6px"></div></div><div id="out"></div>';
+  const info = () => {
+    const t = siteOf(id) || s;
+    $('#info').innerHTML =
+      (t.days
+        ? t.days + ' days stored, ' + fmtDate(t.first_day) + ' to ' + fmtDate(t.last_day) + '. '
+        : 'No days stored yet. ') +
+      (t.last_error
+        ? '<span style="color:var(--bad)">Last nightly update failed: ' + esc(t.last_error) + '</span> '
+        : '') +
+      (WXCORE.SOURCES[t.source] || {}).credit;
+  };
+  info();
+  const saveSite = async () => {
+    s.source = $('#src').value;
+    s.auto = s.source !== 'file' && $('#auto').checked;
+    await API.post('/api/weather/sites', s);
+    openSite(id);
+  };
+  $('#src').onchange = saveSite;
+  $('#auto').onchange = saveSite;
+  $('#get').onclick = async () => {
+    const v = $('#span').value;
+    const from =
+      v === 'ytd'
+        ? new Date().getFullYear() + '-01-01'
+        : v === '90'
+          ? addDays(today(), -90)
+          : addDays(today(), -365 * +v);
+    await fetchRange(s, from, yest());
+  };
+  $('#file').onchange = async e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const { rows, cols } = WXCORE.fromTable(parseCsv(await f.text()));
+    if (!rows.length) return toast('No dated rows found. The file needs a Date column');
+    const found = Object.entries(cols)
+      .filter(([, h]) => h)
+      .map(([k, h]) => k + ' ← "' + h + '"');
+    if (
+      !confirm(
+        'Bring in ' +
+          rows.length +
+          ' days (' +
+          rows[0].day +
+          ' to ' +
+          rows[rows.length - 1].day +
+          ')?\n\nColumns found: ' +
+          found.join(', ')
+      )
+    )
+      return;
+    for (let i = 0; i < rows.length; i += 2000)
+      await API.post('/api/weather/days', { site: id, rows: rows.slice(i, i + 2000), source: 'file' });
+    toast('Brought in ' + rows.length + ' days');
+    await refresh();
+  };
+  $('#csv').onclick = () =>
+    saveCsv('weather-' + (s.name || 'place').replace(/\W+/g, '-').toLowerCase(), DAYS, [
+      ['day', 'Date'],
+      ['rain', 'Rain mm'],
+      ['tmin', 'Min °C'],
+      ['tmax', 'Max °C'],
+      ['rh', 'Humidity %'],
+      ['et0', 'ET0 mm'],
+      ['source', 'Source'],
+    ]);
+  $('#rm').onclick = async () => {
+    if (!confirm('Remove ' + s.name + ' and its stored weather?')) return;
+    await API.del('/api/weather/sites/' + encodeURIComponent(id));
+    CUR = '';
+    draw();
+  };
+  await refresh();
+  // catch up from the phone when the stored days stop short of yesterday
+  const t = siteOf(id) || s;
+  if (t.source !== 'file' && t.lat != null && navigator.onLine) {
+    const first = !t.last_day;
+    const from = first ? addDays(today(), -365 * (S.firstYears || 2)) : addDays(t.last_day, 1);
+    if (from <= addDays(today(), -2)) await fetchRange(t, from, yest(), !first);
+  }
+  async function refresh() {
+    const d = await API.get('/api/weather/days?site=' + encodeURIComponent(id));
+    DAYS = d.items || [];
+    const fresh = await API.get('/api/weather/sites').catch(() => null);
+    if (fresh) SITES = fresh.items || SITES;
+    info();
+    show();
+  }
+  async function fetchRange(t, from, to, quiet) {
+    if (!quiet) toast('Fetching…');
+    try {
+      const rows = await WXCORE.fetchDays(t.source, t.lat, t.lng, from, to);
+      for (let i = 0; i < rows.length; i += 2000)
+        await API.post('/api/weather/days', { site: t.id, rows: rows.slice(i, i + 2000), source: t.source });
+      if (!quiet || rows.length) toast(rows.length + ' days saved');
+    } catch (e) {
+      // the phone could not reach the service: ask the server to try
+      const r = await API.post('/api/weather/fetch', { site: t.id, from, to }).catch(x => ({
+        error: x.message,
+      }));
+      if (r.error || r.queued) return toast('Could not get weather: ' + (r.error || 'offline'));
+      toast((r.saved || 0) + ' days saved');
+    }
+    await refresh();
+  }
+}
+function show() {
+  const out = $('#out');
+  if (!DAYS.length) return (out.innerHTML = '');
+  const rainy = S.rainyDayMm || 2.5;
+  const last = DAYS[DAYS.length - 1].day;
+  const since = d => DAYS.filter(x => x.day > d && x.rain != null).map(x => x.rain);
+  const years = [...new Set(DAYS.map(d => +d.day.slice(0, 4)))].sort((a, b) => b - a);
+  if (!years.includes(YEAR)) YEAR = years[0];
+  const ytd = since(YEAR + '-00'),
+    md = last.slice(5),
+    prev = DAYS.filter(
+      x => x.day >= YEAR - 1 + '-01-01' && x.day <= YEAR - 1 + '-' + md && x.rain != null
+    ).map(x => x.rain);
+  const months = [...Array(12)].map((_, i) => {
+    const k = YEAR + '-' + String(i + 1).padStart(2, '0');
+    const m = DAYS.filter(d => d.day.startsWith(k));
+    const v = key => m.map(d => d[key]).filter(x => x != null);
+    return {
+      k,
+      n: m.length,
+      rain: sum(v('rain')),
+      wet: v('rain').filter(x => x >= rainy).length,
+      tmax: avg(v('tmax')),
+      tmin: avg(v('tmin')),
+      et0: v('et0').length ? sum(v('et0')) : null,
+    };
+  });
+  const sixty = DAYS.slice(-60);
+  const maxR = Math.max(1, ...sixty.map(d => d.rain || 0));
+  out.innerHTML =
+    '<div class="card"><div class="stats">' +
+    [
+      ['Last 7 days', f1(sum(since(addDays(last, -7)))) + ' mm'],
+      ['Last 30 days', f1(sum(since(addDays(last, -30)))) + ' mm'],
+      [YEAR + ' so far', f1(sum(ytd)) + ' mm'],
+      prev.length ? [YEAR - 1 + ' same days', f1(sum(prev)) + ' mm'] : null,
+    ]
+      .filter(Boolean)
+      .map(([l, v]) => '<div><b>' + v + '</b><span class="mini">' + l + '</span></div>')
+      .join('') +
+    '</div><div class="mini" style="margin-top:6px">Up to ' +
+    fmtDate(last) +
+    '.</div></div>' +
+    '<div class="card"><b>Rain, last 60 days</b><div class="bars">' +
+    sixty
+      .map(
+        d =>
+          '<i title="' +
+          esc(d.day + ': ' + f1(d.rain) + ' mm') +
+          '" style="height:' +
+          Math.max(1, Math.round(((d.rain || 0) / maxR) * 100)) +
+          '%"></i>'
+      )
+      .join('') +
+    '</div><div class="mini">Tallest bar ' +
+    f1(maxR) +
+    ' mm.</div></div>' +
+    '<div class="card scroll"><div class="row" style="justify-content:space-between"><b>By month</b><select id="yr" style="width:auto">' +
+    years.map(y => '<option' + (y === YEAR ? ' selected' : '') + '>' + y + '</option>').join('') +
+    '</select></div><table class="t" style="margin-top:6px"><tr><th>Month</th><th class="n">Rain mm</th><th class="n">Rainy days</th><th class="n">Max °C</th><th class="n">Min °C</th><th class="n">ET0 mm</th><th class="n">Rain − ET0</th></tr>' +
+    months
+      .filter(m => m.n)
+      .map(
+        m =>
+          '<tr><td>' +
+          new Date(m.k + '-01T00:00').toLocaleDateString('en-IN', { month: 'short' }) +
+          (m.n < 28 ? ' <span class="mini">(' + m.n + ' d)</span>' : '') +
+          '</td><td class="n">' +
+          f1(m.rain) +
+          '</td><td class="n">' +
+          m.wet +
+          '</td><td class="n">' +
+          f1(m.tmax) +
+          '</td><td class="n">' +
+          f1(m.tmin) +
+          '</td><td class="n">' +
+          f1(m.et0) +
+          '</td><td class="n">' +
+          (m.et0 == null ? '' : f1(m.rain - m.et0)) +
+          '</td></tr>'
+      )
+      .join('') +
+    '</table><div class="mini" style="margin-top:6px">A rainy day has ' +
+    rainy +
+    ' mm or more (the IMD convention). ET0 is the water a well-watered reference crop would use; when rain minus ET0 stays below zero for weeks, the soil is drying.</div></div>';
+  $('#yr').onchange = () => {
+    YEAR = +$('#yr').value;
+    show();
+  };
+}
+draw();
+recordsSync().then(n => n && draw());
+</script>
+<script src="pv.js" defer></script>
+</body>
+</html>

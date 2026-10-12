@@ -14,3 +14,10 @@ package.json
 package-lock.json
 .assetsignore
 trace-api.js
+kk-modules.js
+weather-api.js
+fieldlog-api.js
+team-api.js
+jobs-api.js
+*.module.json
+kk-app.json

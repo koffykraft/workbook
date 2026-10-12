@@ -1,0 +1,709 @@
+<!doctype html>
+<!-- KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f5ef">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Team</title>
+<link rel="stylesheet" href="app.css">
+<style>
+.grid-reg {
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+.grid-reg td,
+.grid-reg th {
+  border: 1px solid var(--line);
+  padding: 2px 3px;
+  text-align: center;
+  min-width: 18px;
+}
+.grid-reg td:first-child,
+.grid-reg th:first-child {
+  text-align: left;
+  white-space: nowrap;
+  position: sticky;
+  left: 0;
+  background: #fff;
+}
+.st-P {
+  background: #e3eee8;
+}
+.st-H {
+  background: #f3ecd9;
+}
+.st-A {
+  background: #f6e1dc;
+}
+.st-L {
+  background: #e4e8f3;
+}
+.st-O,
+.off {
+  background: #f2f0ec;
+  color: var(--muted);
+}
+</style>
+<link rel="stylesheet" href="kk.css"><script src="app.config.js"></script><script src="tap.js" defer></script><script src="kk-base.js"></script>
+</head>
+<body data-page="team"><main class="app">
+<header id="kh"></header>
+<h1>Team</h1>
+<div id="view"></div>
+<div id="kf"></div>
+</main>
+<script src="app.js"></script><script src="sync.js"></script><script src="origin-db.js"></script><script src="places.js"></script>
+<script>
+// Team: muster, workers, leave and holidays, and the month with wages.
+const $ = s => document.querySelector(s);
+const S = SET('team');
+const CUR = S.currency || '₹';
+const ST = [
+  ['P', 'Present'],
+  ['H', 'Half day'],
+  ['A', 'Absent'],
+  ['L', 'Leave'],
+  ['O', 'Off'],
+];
+const TABS = [
+  ['muster', 'Muster'],
+  ['workers', 'Workers'],
+  ['leave', 'Leave and holidays'],
+  ['month', 'Month and wages'],
+];
+let TAB = 'muster',
+  DAY = today(),
+  MON = today().slice(0, 7),
+  PLACE = localStorage.getItem('kk_team_place') || '',
+  PLACES = [],
+  WORKERS = [];
+const money = v => CUR + ' ' + (Math.round((v || 0) * 100) / 100).toLocaleString('en-IN');
+const opts = (list, sel) =>
+  list.map(o => '<option' + (o === sel ? ' selected' : '') + '>' + esc(o) + '</option>').join('');
+const wName = id => (WORKERS.find(w => w.id === id) || { name: '?' }).name;
+async function loadBase() {
+  [PLACES, WORKERS] = await Promise.all([
+    KKPLACES.list(),
+    API.get('/api/team/workers').then(d => d.items || []),
+  ]);
+  // the first farm until a place is chosen, so the muster has a point to check against
+  if (!PLACE && PLACES.length) PLACE = PLACES[0].id;
+  const mine = API.pending('/api/team/workers');
+  WORKERS = [...mine, ...WORKERS.filter(w => !mine.some(m => m.id === w.id))];
+}
+function tabs() {
+  return (
+    '<div class="tabs row" style="margin:8px 0">' +
+    TABS.map(
+      ([k, l]) => '<a class="btn small' + (k === TAB ? ' primary' : '') + '" href="#' + k + '">' + l + '</a>'
+    ).join('') +
+    '</div>'
+  );
+}
+async function view() {
+  if (needAccount($('#view'), 'the team register')) return;
+  try {
+    await loadBase();
+  } catch (e) {
+    return ($('#view').innerHTML = '<div class="card">Could not load: ' + esc(e.message) + '</div>');
+  }
+  const h = location.hash.slice(1);
+  let m;
+  if ((m = h.match(/^worker\/(.*)$/))) return workerForm(decodeURIComponent(m[1]));
+  TAB = TABS.some(t => t[0] === h) ? h : TAB;
+  ({ muster, workers, leave, month: monthView })[TAB]();
+}
+// ---------------- muster ----------------
+async function muster() {
+  const box = $('#view');
+  box.innerHTML = tabs() + '<div class="card mini">Loading…</div>';
+  let d;
+  try {
+    d = await API.get('/api/team/day?day=' + DAY);
+  } catch (e) {
+    d = { marks: [], leave: [] };
+  }
+  const pend = API.pending('/api/team/day').filter(x => x.day === DAY);
+  const marks = new Map((d.marks || []).map(x => [x.worker_id, x]));
+  pend.forEach(p => (p.marks || []).forEach(x => marks.set(x.worker_id, { ...x, pending: true })));
+  const onLeave = new Set((d.leave || []).map(l => l.worker_id));
+  const list = WORKERS.filter(
+    w => w.active && (!w.joined || w.joined <= DAY) && (!w.left_on || w.left_on >= DAY)
+  );
+  const here = PLACE
+    ? list.filter(
+        w =>
+          !w.place_id ||
+          w.place_id === PLACE ||
+          (PLACES.find(p => p.id === w.place_id) || {}).farmId === PLACE
+      )
+    : list;
+  const st = {};
+  here.forEach(w => (st[w.id] = (marks.get(w.id) || {}).status || (onLeave.has(w.id) ? 'L' : '')));
+  const done = here.filter(w => marks.has(w.id)).length;
+  box.innerHTML =
+    tabs() +
+    '<div class="form"><label>Date<input type="date" id="day" value="' +
+    DAY +
+    '"></label><label>Place<select id="pl">' +
+    KKPLACES.options(PLACES, PLACE) +
+    '</select></label></div>' +
+    (d.holiday
+      ? '<div class="card mini">Holiday: <b>' +
+        esc(d.holiday.name || '') +
+        '</b>' +
+        (d.holiday.paid ? ' (paid)' : '') +
+        '</div>'
+      : '') +
+    (d.offline ? '<div class="card mini">Offline: showing the last copy on this phone.</div>' : '') +
+    (here.length
+      ? '<div class="card"><div class="row" style="justify-content:space-between"><b>' +
+        here.length +
+        ' workers</b><span class="mini">' +
+        done +
+        ' marked</span></div><div class="row" style="margin:6px 0"><button class="btn small" id="allP">Everyone not marked: present</button></div>' +
+        here
+          .map(
+            w =>
+              '<div class="who"><div><b>' +
+              esc(w.name) +
+              '</b> <span class="mini">' +
+              esc([w.code, w.role].filter(Boolean).join(' · ')) +
+              (marks.get(w.id) && marks.get(w.id).pending ? ' · waiting to send' : '') +
+              '</span></div><div class="seg" data-w="' +
+              esc(w.id) +
+              '">' +
+              ST.map(
+                ([k, l]) =>
+                  '<button title="' +
+                  l +
+                  '" data-s="' +
+                  k +
+                  '"' +
+                  (st[w.id] === k ? ' class="on"' : '') +
+                  '>' +
+                  k +
+                  '</button>'
+              ).join('') +
+              '</div></div>'
+          )
+          .join('') +
+        '</div><details class="card"><summary class="mini">Overtime and notes</summary>' +
+        here
+          .map(
+            w =>
+              '<div class="form" style="margin-top:6px"><label>' +
+              esc(w.name) +
+              ' OT hours<input data-ot="' +
+              esc(w.id) +
+              '" type="number" step="0.5" inputmode="decimal" value="' +
+              esc((marks.get(w.id) || {}).ot_hours ?? '') +
+              '"></label><label>Note<input data-note="' +
+              esc(w.id) +
+              '" value="' +
+              esc((marks.get(w.id) || {}).note || '') +
+              '"></label></div>'
+          )
+          .join('') +
+        '</details><div class="mini">P present · H half day · A absent · L leave · O weekly off. Saving takes one GPS reading from this phone and checks it against the place.</div>' +
+        '<div class="row sticky"><button class="btn app" id="save">Save muster</button><span class="mini" id="res"></span></div>'
+      : '<div class="card mini">No active workers' +
+        (PLACE ? ' for this place' : '') +
+        '. Add them under <a href="#workers">Workers</a>.</div>');
+  $('#day').onchange = () => ((DAY = $('#day').value || today()), muster());
+  $('#pl').onchange = () => {
+    PLACE = $('#pl').value;
+    try {
+      localStorage.setItem('kk_team_place', PLACE);
+    } catch (e) {}
+    muster();
+  };
+  if (!here.length) return;
+  box.querySelectorAll('.seg').forEach(g =>
+    g.querySelectorAll('button').forEach(
+      b =>
+        (b.onclick = () => {
+          st[g.dataset.w] = b.dataset.s;
+          g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+        })
+    )
+  );
+  $('#allP').onclick = () =>
+    here.forEach(w => {
+      if (st[w.id]) return;
+      st[w.id] = 'P';
+      box.querySelector('[data-w="' + CSS.escape(w.id) + '"] [data-s="P"]').classList.add('on');
+    });
+  $('#save').onclick = async () => {
+    const ms = here
+      .filter(w => st[w.id])
+      .map(w => ({
+        worker_id: w.id,
+        status: st[w.id],
+        ot_hours: num(box.querySelector('[data-ot="' + CSS.escape(w.id) + '"]').value),
+        note: box.querySelector('[data-note="' + CSS.escape(w.id) + '"]').value.trim(),
+      }));
+    if (!ms.length) return toast('Mark someone first');
+    const changed = ms.some(
+      x =>
+        marks.has(x.worker_id) &&
+        !marks.get(x.worker_id).pending &&
+        marks.get(x.worker_id).status !== x.status
+    );
+    let reason = '';
+    if (changed && (reason = prompt('Some marks are being changed. Reason (kept in the log):')) === null)
+      return;
+    $('#res').textContent = 'Taking GPS…';
+    const g = await gpsNow(10000);
+    const pl = PLACES.find(p => p.id === PLACE);
+    const r = await API.post('/api/team/day', {
+      day: DAY,
+      place_id: PLACE,
+      place_name: pl ? pl.label : '',
+      gps: g,
+      place_pt: pl && pl.lat != null ? { lat: pl.lat, lng: pl.lng, radius: pl.radius } : null,
+      marks: ms,
+      reason,
+    });
+    toast(r.queued ? 'Saved on this phone; will send when online' : 'Muster saved');
+    await muster();
+    $('#res').textContent = r.queued
+      ? 'Waiting to send.'
+      : r.dist_m == null
+        ? g
+          ? 'No GPS point on the place to compare.'
+          : 'No GPS reading.'
+        : (r.inside ? 'On site' : 'Away from the place') + ', ' + r.dist_m + ' m from its point.';
+  };
+}
+// ---------------- workers ----------------
+function workers() {
+  $('#view').innerHTML =
+    tabs() +
+    '<div class="row" style="margin:8px 0"><a class="btn app" href="#worker/">＋ Worker</a>' +
+    (WORKERS.length ? '<button class="btn" id="csv">Export CSV</button>' : '') +
+    '</div>' +
+    (WORKERS.length
+      ? WORKERS.map(
+          w =>
+            '<div class="card"><a class="item" href="#worker/' +
+            encodeURIComponent(w.id) +
+            '"><b>' +
+            esc(w.name) +
+            '</b>' +
+            (w.active ? '' : ' <span class="tag">left</span>') +
+            '<div class="mini">' +
+            esc(
+              [
+                w.code,
+                w.role,
+                w.phone,
+                w.pay_type === 'piece'
+                  ? 'piece rate'
+                  : w.rate
+                    ? money(w.rate) + (w.pay_type === 'monthly' ? ' a month' : ' a day')
+                    : '',
+                (PLACES.find(p => p.id === w.place_id) || {}).label,
+              ]
+                .filter(Boolean)
+                .join(' · ')
+            ) +
+            '</div></a></div>'
+        ).join('')
+      : '<div class="card mini">No workers yet.</div>');
+  if ($('#csv'))
+    $('#csv').onclick = () =>
+      saveCsv('workers', WORKERS, [
+        ['name', 'Name'],
+        ['code', 'Code'],
+        ['phone', 'Phone'],
+        ['role', 'Role'],
+        [w => (PLACES.find(p => p.id === w.place_id) || {}).label, 'Place'],
+        ['pay_type', 'Pay'],
+        ['rate', 'Rate'],
+        ['ot_rate', 'OT rate'],
+        ['joined', 'Joined'],
+        ['left_on', 'Left'],
+        [w => (w.active ? 'yes' : 'no'), 'Active'],
+      ]);
+}
+function workerForm(id) {
+  const w = (id && WORKERS.find(x => x.id === id)) || {
+    id: '',
+    pay_type: 'daily',
+    active: 1,
+    joined: today(),
+    role: (S.roles || [])[0],
+  };
+  const inp = (k, l, type, extra) =>
+    '<label>' +
+    l +
+    '<input data-k="' +
+    k +
+    '" type="' +
+    (type || 'text') +
+    '"' +
+    (extra || '') +
+    ' value="' +
+    esc(w[k] ?? '') +
+    '"></label>';
+  $('#view').innerHTML =
+    '<a href="#workers">‹ Workers</a><h2>' +
+    esc(w.name || 'New worker') +
+    '</h2><div class="form">' +
+    '<label class="full">Name<input data-k="name" value="' +
+    esc(w.name || '') +
+    '"></label>' +
+    inp('code', 'Code or number') +
+    inp('phone', 'Phone', 'tel') +
+    '<label>Role<select data-k="role">' +
+    opts(S.roles || [], w.role) +
+    '</select></label>' +
+    '<label>Usual place<select data-k="place_id">' +
+    KKPLACES.options(PLACES, w.place_id) +
+    '</select></label>' +
+    '<label>Pay<select data-k="pay_type">' +
+    [
+      ['daily', 'By the day'],
+      ['monthly', 'Monthly salary'],
+      ['piece', 'Piece rate only'],
+    ]
+      .map(
+        ([k, l]) =>
+          '<option value="' + k + '"' + (k === w.pay_type ? ' selected' : '') + '>' + l + '</option>'
+      )
+      .join('') +
+    '</select></label>' +
+    inp('rate', 'Rate, ' + CUR, 'number', ' step="any" inputmode="decimal"') +
+    inp('ot_rate', 'Overtime, ' + CUR + ' an hour', 'number', ' step="any" inputmode="decimal"') +
+    '<div></div>' +
+    inp('joined', 'Joined', 'date') +
+    inp('left_on', 'Left', 'date') +
+    '<label class="full" style="display:flex;flex-direction:row;gap:8px;align-items:center"><input type="checkbox" id="act" style="width:22px;height:22px"' +
+    (w.active ? ' checked' : '') +
+    '> Still working</label>' +
+    '<label class="full">Notes<textarea data-k="notes">' +
+    esc(w.notes || '') +
+    '</textarea></label></div>' +
+    '<div class="row sticky"><button class="btn app" id="save">Save</button><a class="btn" href="#workers">Cancel</a></div>';
+  $('#save').onclick = async () => {
+    const o = { ...w, id: w.id || uid('wk') };
+    document.querySelectorAll('[data-k]').forEach(el => (o[el.dataset.k] = el.value.trim()));
+    o.active = $('#act').checked;
+    if (!o.name) return toast('Name needed');
+    if (w.id && (String(w.rate ?? '') !== String(o.rate) || w.pay_type !== o.pay_type)) {
+      const why = prompt('Pay is changing. Reason (kept in the log):');
+      if (why === null) return;
+      o.reason = why;
+    }
+    const r = await API.post('/api/team/workers', o);
+    toast(r.queued ? 'Saved on this phone; will send when online' : 'Saved');
+    location.hash = 'workers';
+  };
+}
+// ---------------- leave and holidays ----------------
+async function leave() {
+  const [L, H] = await Promise.all([
+    API.get('/api/team/leave').catch(() => ({ items: [] })),
+    API.get('/api/team/holidays').catch(() => ({ items: [] })),
+  ]);
+  const kinds = S.leaveKinds || [{ name: 'Leave', pay: 1 }];
+  $('#view').innerHTML =
+    tabs() +
+    '<h2>Leave</h2><div class="card"><div class="form"><label class="full">Worker<select id="lw">' +
+    WORKERS.filter(w => w.active)
+      .map(w => '<option value="' + esc(w.id) + '">' + esc(w.name) + '</option>')
+      .join('') +
+    '</select></label>' +
+    '<label>From<input type="date" id="lf" value="' +
+    today() +
+    '"></label><label>To<input type="date" id="lt" value="' +
+    today() +
+    '"></label>' +
+    '<label class="full">Kind<select id="lk">' +
+    kinds
+      .map(
+        (k, i) =>
+          '<option value="' +
+          i +
+          '">' +
+          esc(k.name) +
+          (k.pay < 1 ? ' (' + (k.pay ? Math.round(k.pay * 100) + '% pay' : 'no pay') + ')' : '') +
+          '</option>'
+      )
+      .join('') +
+    '</select></label>' +
+    '<label class="full">Note<input id="ln"></label></div><div class="row" style="margin-top:8px"><button class="btn app" id="ladd">Add leave</button></div></div>' +
+    (L.items || [])
+      .slice(0, 100)
+      .map(
+        l =>
+          '<div class="card row" style="justify-content:space-between"><div><b>' +
+          esc(wName(l.worker_id)) +
+          '</b><div class="mini">' +
+          esc(
+            fmtDate(l.from_day) +
+              (l.to_day !== l.from_day ? ' to ' + fmtDate(l.to_day) : '') +
+              ' · ' +
+              l.kind +
+              (l.note ? ' · ' + l.note : '')
+          ) +
+          '</div></div><button class="btn small danger" data-dl="' +
+          esc(l.id) +
+          '">Remove</button></div>'
+      )
+      .join('') +
+    '<h2>Holidays</h2><div class="card"><div class="form"><label>Date<input type="date" id="hd"></label><label>Name<input id="hn" placeholder="Onam"></label><label class="full" style="display:flex;flex-direction:row;gap:8px;align-items:center"><input type="checkbox" id="hp" checked style="width:22px;height:22px"> Paid</label></div><div class="row" style="margin-top:8px"><button class="btn app" id="hadd">Add holiday</button></div></div>' +
+    (H.items || [])
+      .map(
+        h =>
+          '<div class="card row" style="justify-content:space-between"><div><b>' +
+          esc(h.name || 'Holiday') +
+          '</b><div class="mini">' +
+          esc(fmtDate(h.day)) +
+          (h.paid ? ' · paid' : ' · unpaid') +
+          '</div></div><button class="btn small danger" data-dh="' +
+          esc(h.day) +
+          '">Remove</button></div>'
+      )
+      .join('');
+  $('#ladd').onclick = async () => {
+    const k = kinds[+$('#lk').value] || kinds[0];
+    const r = await API.post('/api/team/leave', {
+      id: uid('lv'),
+      worker_id: $('#lw').value,
+      from_day: $('#lf').value,
+      to_day: $('#lt').value,
+      kind: k.name,
+      pay: k.pay,
+      note: $('#ln').value.trim(),
+    }).catch(e => ({ error: e.message }));
+    if (r.error) return toast(r.error);
+    toast('Leave added');
+    leave();
+  };
+  $('#hadd').onclick = async () => {
+    if (!$('#hd').value) return toast('Pick the date');
+    await API.post('/api/team/holidays', {
+      day: $('#hd').value,
+      name: $('#hn').value.trim(),
+      paid: $('#hp').checked,
+    });
+    leave();
+  };
+  document
+    .querySelectorAll('[data-dl]')
+    .forEach(
+      b =>
+        (b.onclick = async () => (
+          await API.del('/api/team/leave/' + encodeURIComponent(b.dataset.dl)), leave()
+        ))
+    );
+  document
+    .querySelectorAll('[data-dh]')
+    .forEach(b => (b.onclick = async () => (await API.del('/api/team/holidays/' + b.dataset.dh), leave())));
+}
+// ---------------- month and wages ----------------
+async function monthView() {
+  $('#view').innerHTML = tabs() + '<div class="card mini">Working out the month…</div>';
+  let M, I;
+  try {
+    [M, I] = await Promise.all([
+      API.get('/api/team/month?month=' + MON),
+      API.get('/api/team/items?month=' + MON),
+    ]);
+  } catch (e) {
+    return ($('#view').innerHTML = tabs() + '<div class="card">Could not load: ' + esc(e.message) + '</div>');
+  }
+  const off = new Set(S.weeklyOff || [0]);
+  const hol = new Set((M.holidays || []).map(h => h.day));
+  const tot = k => M.rows.reduce((a, r) => a + (r[k] || 0), 0);
+  $('#view').innerHTML =
+    tabs() +
+    '<div class="form"><label>Month<input type="month" id="mon" value="' +
+    MON +
+    '"></label><div style="align-self:end" class="row"><button class="btn small" id="wcsv">Wages CSV</button><button class="btn small" id="rcsv">Register CSV</button></div></div>' +
+    (M.offline ? '<div class="card mini">Offline: showing the last copy on this phone.</div>' : '') +
+    '<div class="card"><div class="stats"><div><b>' +
+    M.rows.length +
+    '</b><span class="mini">workers</span></div><div><b>' +
+    M.scheduled +
+    '</b><span class="mini">working days</span></div><div><b>' +
+    money(tot('net')) +
+    '</b><span class="mini">to pay</span></div></div></div>' +
+    '<div class="card scroll"><b>Wages</b><table class="t" style="margin-top:6px"><tr><th>Worker</th><th class="n">P</th><th class="n">H</th><th class="n">A</th><th class="n">Leave</th><th class="n">Payable days</th><th class="n">Base</th><th class="n">OT</th><th class="n">Piece</th><th class="n">+</th><th class="n">−</th><th class="n">Net</th></tr>' +
+    M.rows
+      .map(
+        r =>
+          '<tr><td>' +
+          esc(r.name) +
+          (r.outside
+            ? ' <span class="mini" title="marks taken away from the place">(' + r.outside + ' away)</span>'
+            : '') +
+          '</td><td class="n">' +
+          r.P +
+          '</td><td class="n">' +
+          r.H +
+          '</td><td class="n">' +
+          r.A +
+          '</td><td class="n">' +
+          r.L +
+          '</td><td class="n">' +
+          r.payable +
+          '</td><td class="n">' +
+          money(r.base) +
+          '</td><td class="n">' +
+          money(r.ot_pay) +
+          '</td><td class="n">' +
+          money(r.piece) +
+          '</td><td class="n">' +
+          money(r.plus) +
+          '</td><td class="n">' +
+          money(r.minus) +
+          '</td><td class="n"><b>' +
+          money(r.net) +
+          '</b></td></tr>'
+      )
+      .join('') +
+    '</table><div class="mini" style="margin-top:6px">Payable days = present + half days × ' +
+    (S.halfDay ?? 0.5) +
+    ' + paid leave + paid holidays. By the day: rate × payable days. Monthly: salary × payable days ÷ working days. Piece work comes from Jobs marked done. Check against your own wage rules and the law before paying.</div></div>' +
+    '<div class="card"><b>Advances, deductions and bonuses</b><div class="form" style="margin-top:6px"><label class="full">Worker<select id="iw">' +
+    M.rows.map(r => '<option value="' + esc(r.id) + '">' + esc(r.name) + '</option>').join('') +
+    '</select></label><label>Kind<select id="ik">' +
+    opts(['Advance', 'Deduction', 'Bonus', 'Other'], 'Advance') +
+    '</select></label><label>Amount, ' +
+    CUR +
+    '<input id="ia" type="number" step="any" inputmode="decimal"></label><label class="full">Note<input id="in"></label></div><div class="row" style="margin-top:8px"><button class="btn app" id="iadd">Add</button></div>' +
+    (I.items || [])
+      .map(
+        i =>
+          '<div class="row mini" style="justify-content:space-between;margin-top:6px"><span>' +
+          esc(
+            wName(i.worker_id) + ' · ' + i.kind + ' · ' + money(i.amount) + (i.note ? ' · ' + i.note : '')
+          ) +
+          '</span><button class="btn small danger" data-di="' +
+          esc(i.id) +
+          '">Remove</button></div>'
+      )
+      .join('') +
+    '</div>' +
+    '<div class="card scroll"><b>Register</b><table class="grid-reg" style="margin-top:6px"><tr><th>Worker</th>' +
+    M.days
+      .map(
+        d =>
+          '<th class="' +
+          (off.has(new Date(d + 'T00:00').getDay()) || hol.has(d) ? 'off' : '') +
+          '">' +
+          +d.slice(8) +
+          '</th>'
+      )
+      .join('') +
+    '</tr>' +
+    M.rows
+      .map(
+        r =>
+          '<tr><td>' +
+          esc(r.name) +
+          '</td>' +
+          M.days
+            .map(
+              d =>
+                '<td class="' +
+                (r.grid[d]
+                  ? 'st-' + r.grid[d]
+                  : off.has(new Date(d + 'T00:00').getDay()) || hol.has(d)
+                    ? 'off'
+                    : '') +
+                '">' +
+                (r.grid[d] || '') +
+                '</td>'
+            )
+            .join('') +
+          '</tr>'
+      )
+      .join('') +
+    '</table></div><details class="card"><summary class="mini">Changes log</summary><div id="aud" class="mini">Loading…</div></details>';
+  $('#mon').onchange = () => ((MON = $('#mon').value || MON), monthView());
+  $('#wcsv').onclick = () =>
+    saveCsv('wages-' + MON, M.rows, [
+      ['name', 'Worker'],
+      ['code', 'Code'],
+      ['pay_type', 'Pay'],
+      ['rate', 'Rate'],
+      ['P', 'Present'],
+      ['H', 'Half days'],
+      ['A', 'Absent'],
+      ['L', 'Leave'],
+      ['paidHol', 'Paid holidays'],
+      ['payable', 'Payable days'],
+      ['ot', 'OT hours'],
+      ['base', 'Base'],
+      ['ot_pay', 'OT pay'],
+      ['piece', 'Piece work'],
+      ['plus', 'Bonus and other'],
+      ['minus', 'Advances and deductions'],
+      ['net', 'Net'],
+    ]);
+  $('#rcsv').onclick = () =>
+    saveCsv('register-' + MON, M.rows, [
+      ['name', 'Worker'],
+      ...M.days.map(d => [r => r.grid[d] || '', d.slice(8)]),
+    ]);
+  $('#iadd').onclick = async () => {
+    const r = await API.post('/api/team/items', {
+      id: uid('it'),
+      worker_id: $('#iw').value,
+      month: MON,
+      kind: $('#ik').value,
+      amount: num($('#ia').value),
+      note: $('#in').value.trim(),
+    }).catch(e => ({ error: e.message }));
+    if (r.error) return toast(r.error);
+    monthView();
+  };
+  document
+    .querySelectorAll('[data-di]')
+    .forEach(
+      b =>
+        (b.onclick = async () => (
+          await API.del('/api/team/items/' + encodeURIComponent(b.dataset.di)), monthView()
+        ))
+    );
+  document.querySelector('details.card').addEventListener(
+    'toggle',
+    async () => {
+      const a = await API.get('/api/team/audit').catch(() => ({ items: [] }));
+      $('#aud').innerHTML = (a.items || []).length
+        ? a.items
+            .map(
+              x =>
+                '<div style="margin-top:4px">' +
+                esc(
+                  new Date(x.at).toLocaleString('en-IN') +
+                    ' · ' +
+                    x.what +
+                    ' · ' +
+                    (x.before_json || '') +
+                    ' → ' +
+                    (x.after_json || '') +
+                    (x.reason ? ' · ' + x.reason : '')
+                ) +
+                '</div>'
+            )
+            .join('')
+        : 'No changes yet.';
+    },
+    { once: true }
+  );
+}
+window.addEventListener('hashchange', view);
+window.addEventListener('kk-flushed', view);
+view();
+recordsSync();
+</script>
+<script src="pv.js" defer></script>
+</body>
+</html>

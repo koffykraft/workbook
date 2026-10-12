@@ -26,7 +26,7 @@ function d1(db) {
 
 export async function run(root, t) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kk-api-'));
-  for (const f of ['worker.js', 'trace-api.js', 'trace-core.js']) fs.copyFileSync(path.join(root, f), path.join(tmp, f));
+  for (const f of ['worker.js', 'trace-api.js', 'trace-core.js', 'kk-modules.js', 'weather-core.js', ...fs.readdirSync(root).filter(f => /^(weather|fieldlog|team|jobs)-api\.js$/.test(f))]) fs.copyFileSync(path.join(root, f), path.join(tmp, f));
   fs.writeFileSync(path.join(tmp, 'package.json'), '{"type":"module"}');
   const worker = (await import(path.join(tmp, 'worker.js'))).default;
   const { traceAnchor, traceUpgrade } = await import(path.join(tmp, 'trace-api.js'));
@@ -164,6 +164,25 @@ export async function run(root, t) {
     await t.acheck('passport: the day is stamped through OpenTimestamps', async () => { const tomorrow = new Date(Date.now() + 864e5); const r = await traceAnchor(env, tomorrow); eq(r.anchored.length, 1, 'days'); eq(r.anchored[0].status, 'ok', 'status'); eq(stamps.length, 2, 'calendars'); const v = await pub(); const d = v.events[0].day; digest = v.anchors[d].digest; eq(v.anchors[d].count, v.events.length, 'count') });
     await t.acheck('passport: manifest and proof files check out', async () => { const d = (await pub()).events[0].day; const m = await worker.fetch(new Request('https://test.local/api/public/trace-day/' + d + '/manifest'), env, ctx); const txt = await m.text(); eq(sha(txt), digest, 'manifest digest'); const o = new Uint8Array(await (await worker.fetch(new Request('https://test.local/api/public/trace-day/' + d + '/ots'), env, ctx)).arrayBuffer()); eq(Buffer.from(o.slice(1, 15)).toString(), 'OpenTimestamps', 'magic'); eq(Buffer.from(o.slice(33, 65)).toString('hex'), digest, 'digest in proof') });
     await t.acheck('passport: proofs are upgraded to the Bitcoin block', async () => { const later = new Date(Date.now() + 2 * 864e5); const r = await traceUpgrade(env, fetch, later); eq(r.upgraded.length, 1, 'days'); eq(r.upgraded[0].bitcoin, true, 'bitcoin'); eq(upg.length, 2, 'calendars asked'); const v = await pub(); const d = v.events[0].day; eq(v.anchors[d].bitcoin[0], 880688, 'block'); const o = new Uint8Array(await (await worker.fetch(new Request('https://test.local/api/public/trace-day/' + d + '/ots'), env, ctx)).arrayBuffer()); const info = T.otsInfo(o); eq(info.pending.length, 0, 'pending left'); eq(info.bitcoin.length, 2, 'bitcoin notes'); eq(Buffer.from(o.slice(33, 65)).toString('hex'), digest, 'digest kept'); eq((await traceUpgrade(env, fetch, later)).upgraded.length, 0, 'done once') });
+    // plug-in modules from kk-templates
+    await t.acheck('modules: field log entry saved and private', async () => {
+      eq((await call('POST', '/api/fieldlog', { id: 'fl1', kind: 'water', day: '2026-02-20', place_id: 'p1', kind2: 'Blossom irrigation', mm: 25 }, owner)).s, 200, 'save');
+      eq((await call('GET', '/api/fieldlog?kind=water', null, owner)).j.items[0].mm, 25, 'listed');
+      eq((await call('GET', '/api/fieldlog', null, stranger)).j.items.length, 0, 'private');
+    });
+    await t.acheck('modules: worker, muster, picking job and the month wages', async () => {
+      await call('POST', '/api/team/workers', { id: 'wk1', name: 'Lakshmi', role: 'Picker', pay_type: 'daily', rate: 450 }, owner);
+      await call('POST', '/api/team/day', { day: '2026-01-05', marks: [{ worker_id: 'wk1', status: 'P' }] }, owner);
+      await call('POST', '/api/jobs', { id: 'jb1', day: '2026-01-05', kind: 'Picking', basis: 'unit', unit: 'kg', rate: 5, status: 'Done', lines: [{ worker_id: 'wk1', qty: 40 }] }, owner);
+      const m = await call('GET', '/api/team/month?month=2026-01', null, owner);
+      const r = m.j.rows[0];
+      eq(JSON.stringify([r.name, r.base, r.piece, r.net]), JSON.stringify(['Lakshmi', 450, 200, 650]), 'wages');
+    });
+    await t.acheck('modules: weather place and days', async () => {
+      eq((await call('POST', '/api/weather/sites', { id: 'p1', name: 'Hill', lat: 9, lng: 77 }, owner)).s, 200, 'site');
+      eq((await call('POST', '/api/weather/days', { site: 'p1', rows: [{ day: '2026-03-01', rain: 18 }] }, owner)).j.saved, 1, 'days');
+      eq((await call('POST', '/api/weather/days', { site: 'p1', rows: [{ day: '2026-03-01', rain: 1 }] }, stranger)).s, 404, 'not theirs');
+    });
     await t.acheck('passport: stamping runs daily and is admin-only by hand', async () => { if (typeof worker.scheduled !== 'function') throw new Error('no scheduled handler'); eq((await call('POST', '/api/trace/anchor', null, owner)).s, 403, 'owner'); eq((await call('POST', '/api/trace/anchor', null, admin)).s, 200, 'admin') });
     await t.acheck('passport: only the owner withdraws; data goes, hashes stay', async () => { eq((await call('DELETE', '/api/trace/lots/' + lot, null, member)).s, 403, 'buyer'); eq((await call('DELETE', '/api/trace/lots/' + lot, null, owner)).s, 200, 'owner'); const v = await pub(); if (!v.lot.withdrawn || v.events.some(e => e.body)) throw new Error('data still public'); eq(v.events.length, 8, 'hashes kept') });
   } finally {

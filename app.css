@@ -1,0 +1,358 @@
+/* App shell: base look for every page. The brand colour (--app) and background (--bg) come from app.json. kk.css loads after it. */
+:root {
+  --bg: #f6f5ef;
+  --ink: #1d1512;
+  --muted: #76695f;
+  --line: #ded4ca;
+  --app: #3f6b4a;
+  --accent: #b5651d;
+  --soft: #fbf8f4;
+  --ok: #3f6b4a;
+  --bad: #b4432f;
+  --wait: #a06a12;
+  --kk-coffee: var(--app);
+  --kk-bg: var(--bg);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+.app {
+  max-width: 760px;
+  margin: auto;
+  padding: 18px 16px 70px;
+}
+h1 {
+  font-size: 30px;
+  letter-spacing: -0.03em;
+  margin: 6px 0 4px;
+}
+h2 {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app);
+  margin: 22px 0 8px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+a {
+  color: var(--app);
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin: 8px 0;
+}
+.mini {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+.btn.primary {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.btn.app {
+  background: var(--app);
+  color: #fff;
+  border-color: var(--app);
+}
+.btn.danger {
+  color: var(--bad);
+}
+label.f {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+input,
+select,
+textarea {
+  font: inherit;
+  font-size: 16px;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+}
+textarea {
+  min-height: 76px;
+}
+.grid {
+  display: grid;
+  gap: 10px;
+}
+.tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin: 6px 0 4px;
+  scrollbar-width: none;
+}
+.tabs a {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+.tabs a.on {
+  background: var(--app);
+  border-color: var(--app);
+  color: #fff;
+}
+.item {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.item b {
+  font-size: 15.5px;
+}
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f1e8df;
+  color: var(--app);
+}
+.tag.ok {
+  background: #e3efe6;
+  color: var(--ok);
+}
+.tag.bad {
+  background: #f7e3de;
+  color: var(--bad);
+}
+.tag.wait {
+  background: #f8edd8;
+  color: var(--wait);
+}
+.kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  font-size: 14px;
+}
+.kv span {
+  color: var(--muted);
+}
+.guide {
+  border-left: 3px solid var(--accent);
+  background: var(--soft);
+  padding: 8px 10px;
+  border-radius: 0 10px 10px 0;
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.5;
+  margin: 6px 0;
+}
+.guide small {
+  color: var(--muted);
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  z-index: 3000;
+  max-width: 90vw;
+}
+.toast.show {
+  opacity: 1;
+}
+.foot {
+  margin: 30px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.6;
+}
+table.t {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+table.t td,
+table.t th {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+table.t th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+}
+.kkh-brand small {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+.kkh-nav a[aria-current='page'] {
+  background: var(--app) !important;
+}
+/* shared pieces for module pages */
+.tabs button {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 14px;
+  min-height: 38px;
+}
+.tabs button.on {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.form > label {
+  display: grid;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-weight: 600;
+  min-width: 0;
+}
+.form .full {
+  grid-column: 1 / -1;
+}
+table.t {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+table.t th,
+table.t td {
+  text-align: left;
+  padding: 6px 6px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+table.t th {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+table.t td.n,
+table.t th.n {
+  text-align: right;
+  white-space: nowrap;
+}
+.scroll {
+  overflow-x: auto;
+}
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.stats b {
+  display: block;
+  font-size: 22px;
+}
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 90px;
+  margin-top: 8px;
+}
+.bars i {
+  flex: 1;
+  background: var(--app);
+  border-radius: 2px 2px 0 0;
+  min-height: 1px;
+}
+.sticky {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg);
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  margin-top: 14px;
+}
+.who {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  background: #fff;
+}
+.seg button {
+  border: 0;
+  background: none;
+  padding: 8px 11px;
+  font: inherit;
+  font-size: 13px;
+  min-height: 36px;
+}
+.seg button.on {
+  background: var(--app);
+  color: #fff;
+}
+.kkh-subnav {
+  border-top: 1px dashed var(--line);
+  padding-top: 6px;
+  justify-content: flex-start;
+  gap: 6px;
+}
