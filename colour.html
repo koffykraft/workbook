@@ -348,6 +348,23 @@ function photoCalib(all) {
 // Ground roasted arabica follows one colour path as it darkens: a* and b* from L* (Scientific
 // Reports 2025, HunterLab ColorFlex, D65 2°, L* about 20 to 60). Shows what this L* usually pairs
 // with; a photo far off the path points to the light or white card, a meter off it to its own setup.
+// where an L* falls between the roast milestones the same study measured (median L* of samples
+// pulled at that moment: colour change 62.4, first crack 29.7, second crack 20.0, end 17.2)
+function stage(L) {
+  const M = [
+    [62.4, 'colour change'],
+    [29.7, 'first crack'],
+    [20.0, 'second crack'],
+    [17.2, 'the darkest roasts in the study'],
+  ];
+  if (L >= 62.4) return 'Lighter than the colour change point.';
+  for (let i = 1; i < M.length; i++)
+    if (L >= M[i][0])
+      return Math.abs(L - M[i][0]) <= 2
+        ? 'About the colour at ' + M[i][1] + ' (L* ' + M[i][0] + ').'
+        : 'Between ' + M[i - 1][1] + ' (L* ' + M[i - 1][0] + ') and ' + M[i][1] + ' (L* ' + M[i][0] + ').';
+  return 'Darker than the darkest roasts in the study.';
+}
 function curveHtml(lab) {
   if (!lab || lab.L < 18 || lab.L > 62) return '';
   const L = lab.L,
@@ -369,7 +386,9 @@ function curveHtml(lab) {
       : lab.src === 'photo'
         ? ': for a photo, check the light and that the white card was tapped.'
         : ': meters differ in light and viewing angle (2° or 10°), and robusta or very old beans sit off this path.') +
-    ' Source: <a href="https://www.nature.com/articles/s41598-025-06601-w" target="_blank" rel="noopener">A universal color curve for roasted arabica coffee</a>, Scientific Reports 2025.</div>'
+    ' ' +
+    stage(L) +
+    ' Source: <a href="https://www.nature.com/articles/s41598-025-06601-w" target="_blank" rel="noopener">A universal color curve for roasted arabica coffee</a>, Scientific Reports 2025 (corrected October 2025).</div>'
   );
 }
 // the same roast on the other scales; approx for estimates from a photo or from L*
