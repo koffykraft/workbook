@@ -8,7 +8,35 @@
     ['koko', 'Koko', 'https://koko.koffykraft.coffee/'],
     ['rabr', 'Rabr', 'https://rabr.koffykraft.coffee/'],
   ];
+  // a ? beside the account button on every page, opening this page's part of the guide
+  function help() {
+    if (document.querySelector('.kkh-help')) return true;
+    var acct = document.querySelector('.kkh-acct');
+    if (!acct) return false;
+    var page =
+      (document.body && document.body.dataset.page) ||
+      (location.pathname.split('/').pop() || 'home').replace(/\.html$/, '');
+    if (page === 'guide') return true;
+    var a = document.createElement('a');
+    a.className = 'kkh-help';
+    a.href = 'guide.html#' + encodeURIComponent(page);
+    a.setAttribute('aria-label', 'Guide to this page');
+    a.textContent = '?';
+    a.style.cssText =
+      'display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;border:1px solid rgba(0,0,0,.15);margin-left:auto;margin-right:8px;flex-shrink:0;font-weight:700;text-decoration:none;color:inherit;background:#fff';
+    acct.parentNode.insertBefore(a, acct);
+    var wrap = acct.parentNode;
+    if (getComputedStyle(wrap).display !== 'flex') wrap.style.display = 'flex';
+    return true;
+  }
   function draw() {
+    // the header may be drawn after this runs, so try again for a moment
+    if (!help()) {
+      var n = 0,
+        t = setInterval(function () {
+          if (help() || ++n > 20) clearInterval(t);
+        }, 150);
+    }
     if (document.querySelector('.kk-family')) return;
     var here = location.hostname.split('.')[0];
     var el = document.createElement('nav');

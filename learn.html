@@ -1,0 +1,160 @@
+<!doctype html>
+<!-- KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f5ef">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Learn coffee</title>
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="kk.css"><script src="app.config.js"></script><script src="tap.js" defer></script><script src="kk-base.js"></script>
+<style>
+details.sec {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  margin: 10px 0;
+  padding: 0 14px;
+}
+details.sec > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 13px 0;
+  font-weight: 700;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+details.sec > summary::-webkit-details-marker {
+  display: none;
+}
+details.sec > summary .n {
+  background: var(--app);
+  color: #fff;
+  border-radius: 999px;
+  min-width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+details.sec[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+.body {
+  padding: 8px 0 14px;
+  line-height: 1.55;
+}
+.body ul {
+  padding-left: 20px;
+  margin: 6px 0;
+}
+.body li {
+  margin: 4px 0;
+}
+.go {
+  font-size: 13px;
+  margin-top: 8px;
+}
+@media print {
+  #kh,
+  #kf,
+  .no-print,
+  .kk-family {
+    display: none !important;
+  }
+}
+</style>
+</head>
+<body data-page="learn"><main class="app">
+<header id="kh"></header>
+<div id="view">
+<h1>Learn coffee</h1>
+<div class="sub">From the plant to the cup, in order: short notes here, the app page that helps with each step, and the full KoffyKraft courses for going deeper. Figures are common ranges; your beans, roaster and water come first.</div>
+<div class="row no-print" style="margin:8px 0;flex-wrap:wrap"><button class="btn small" id="all">Open all</button><a class="btn small" href="guide.html">How to use the app</a></div>
+
+<details class="sec" id="grow"><summary><span class="n">1</span> Grow</summary><div class="body">
+<ul>
+<li>Arabica and Robusta want different heights, shade and care; the variety you plant sets much of the cup.</li>
+<li>Living soil, shade trees and timely rain (blossom and backing showers) decide the crop more than any single input.</li>
+</ul>
+<div class="go">In the app: <a href="crop.html">Crop care</a> · <a href="origin.html">Origin › varieties and words</a> · <a href="fieldlog.html">Field log</a> · <a href="weather.html">Weather</a>. Course: <a href="https://koffykraft.coffee/training/lrn/">Living Root Network natural farming handbook</a>.</div>
+</div></details>
+
+<details class="sec" id="harvest"><summary><span class="n">2</span> Pick and process</summary><div class="body">
+<ul>
+<li>Pick ripe cherry only; under-ripe and over-ripe fruit show up in the cup as harsh or fermented notes.</li>
+<li>Washed, natural and honey are three ways of removing the fruit; each changes sweetness, body and acidity.</li>
+<li>Dry slowly and evenly to a stable moisture, then rest the parchment or cherry before hulling.</li>
+</ul>
+<div class="go">In the app: <a href="journey.html">Journey of the bean</a> · <a href="process.html">Processing runs</a> · <a href="origin.html">Harvests and green lots</a>.</div>
+</div></details>
+
+<details class="sec" id="roast"><summary><span class="n">3</span> Roast</summary><div class="body">
+<ul>
+<li><b>Drying:</b> the green bean loses water and turns from green to yellow. Even heat here sets up an even roast.</li>
+<li><b>Browning:</b> sugars and amino acids react (the Maillard reactions) and the bean turns tan to brown; most aroma starts here.</li>
+<li><b>First crack:</b> steam and gas split the bean with an audible crack. Ground colour at first crack sits around L* 30 on a colour meter, much the same for every arabica studied.</li>
+<li><b>Development:</b> the time from first crack to the end of the roast. Longer brings more sweetness and body and less acidity; too long and the coffee turns flat or bitter.</li>
+<li><b>Second crack</b> (around L* 20) marks dark roasts: oil comes to the surface and roast flavour takes over from origin flavour.</li>
+<li>Cool fast to stop the roast, then judge the colour on ground coffee.</li>
+</ul>
+<div class="go">In the app: <a href="roast-timer-v14.html">Timer</a> · <a href="roast-graph.html">Graph</a> · <a href="roasts.html">Roastbook</a> · <a href="colour.html">Colour check</a>.</div>
+<div class="go">Course: <a href="https://koffykraft.coffee/training/roasting/lessons/lesson-1-1-what-changes-during-coffee-roasting.html">What changes during roasting</a> · <a href="https://koffykraft.coffee/training/roasting/lessons/lesson-1-4-understanding-first-crack-and-managing-development-phase.html">First crack and development</a> · <a href="https://koffykraft.coffee/training/roasting/lessons/lesson-1-5-roast-profiles-understanding-and-guiding-the-curve.html">Roast profiles</a> · <a href="https://koffykraft.coffee/training/roasting/lessons/lesson-1-6-recognizing-and-understanding-roast-defects.html">Roast defects</a> · <a href="https://koffykraft.coffee/training/roasting/lessons/lesson-1-7-light-medium-and-dark-understanding-roast-levels-in-the-real-world.html">Light, medium and dark</a> · <a href="https://koffykraft.coffee/training/roasting/">all 25 lessons</a>.</div>
+<div class="go">Colour points: <a href="https://www.nature.com/articles/s41598-025-06601-w">UC Davis, A universal color curve for roasted arabica coffee</a> (Scientific Reports, 2025).</div>
+</div></details>
+
+<details class="sec" id="rest"><summary><span class="n">4</span> Rest and store</summary><div class="body">
+<ul>
+<li>Fresh roast gives off gas for days; most filter coffee tastes best after a few days of rest, espresso often a little longer.</li>
+<li>Keep beans away from air, light, heat and damp: a valve bag or airtight jar, whole bean, ground just before brewing.</li>
+</ul>
+<div class="go">Course: <a href="https://koffykraft.coffee/training/roasting/lessons/lesson-2-1-understanding-post-roast-aging-and-rest.html">Post-roast rest</a> · <a href="https://koffykraft.coffee/training/roasting/lessons/lesson-2-5-storage-and-packaging-best-practices.html">Storage and packaging</a>.</div>
+</div></details>
+
+<details class="sec" id="cup"><summary><span class="n">5</span> Cup and taste</summary><div class="body">
+<ul>
+<li>Cupping is the same recipe for every coffee, so differences come from the coffee, not the brew.</li>
+<li>Smell the dry grounds, break the crust, then taste as it cools: sweetness, acidity, body, aftertaste and any defect.</li>
+<li>Cup each roast of the same lot side by side to see what a change in the roast did.</li>
+</ul>
+<div class="go">In the app: <a href="cup.html">Cup</a>. Course: <a href="https://koffykraft.coffee/training/cupping/">Cupping and sensory foundations</a>.</div>
+</div></details>
+
+<details class="sec" id="brew"><summary><span class="n">6</span> Brew</summary><div class="body">
+<ul>
+<li>Ratio, grind and water temperature are the three dials; change one at a time.</li>
+<li>Water is most of the cup: clean, not too hard and not too soft.</li>
+</ul>
+<div class="go">In the app: <a href="methods.html">Brew guide</a> · <a href="brew.html">Brew log</a> · <a href="water.html">Water</a>. Course: <a href="https://koffykraft.coffee/training/brewing/">Coffee brewing foundations</a>.</div>
+</div></details>
+
+<details class="sec"><summary><span class="n">i</span> Sources</summary><div class="body mini">
+<p>Short notes in our own words, drawn from the KoffyKraft courses linked above (each with its own references) and, for the crack colours, Anokye-Bempah et al., <a href="https://www.nature.com/articles/s41598-025-06601-w">A universal color curve for roasted arabica coffee</a>, Scientific Reports 2025 (corrected October 2025). The app pages name their own sources.</p>
+</div></details>
+</div>
+<div id="kf"></div>
+</main>
+<script src="app.js"></script>
+<script>
+// Learn: plant to cup, in order, with the app page and the KoffyKraft course for each step.
+(function () {
+  const open = () => {
+    const d = document.getElementById(location.hash.slice(1));
+    if (d && d.tagName === 'DETAILS') {
+      d.open = true;
+      d.scrollIntoView();
+    }
+  };
+  window.addEventListener('hashchange', open);
+  open();
+  document.getElementById('all').onclick = () =>
+    document.querySelectorAll('details.sec').forEach(d => (d.open = true));
+})();
+</script>
+<script src="pv.js" defer></script>
+<script src="kk-family.js" defer></script>
+</body>
+</html>

@@ -252,6 +252,8 @@ window.KK_CONTENTS = [
       ],
       ['Brew guide', 'How brewers work.', '', 'methods.html'],
       ['Crop care', 'How to grow and pick.', '', 'crop.html'],
+      ['Learn coffee', 'Plant to cup in six steps, with the KoffyKraft courses.', '', 'learn.html'],
+      ['Guide', 'How to use the app, part by part.', '', 'guide.html'],
     ],
   ],
 ];
