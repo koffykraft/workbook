@@ -1,12 +1,12 @@
 // KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // Field log module, server side: one table of dated entries per place. kind is 'nutrient', 'water'
-// or 'health'; the details of each kind live in data_json, so new fields need no schema change.
+// 'health' or 'work'; the details of each kind live in data_json, so new fields need no schema change.
 export const NAME = 'fieldlog';
 export const SQL = [
   'CREATE TABLE IF NOT EXISTS fieldlog (id TEXT PRIMARY KEY, owner_user_id TEXT NOT NULL, place_id TEXT, place_name TEXT, kind TEXT NOT NULL, day TEXT NOT NULL, data_json TEXT NOT NULL, updated_at TEXT NOT NULL, deleted INTEGER NOT NULL DEFAULT 0)',
   'CREATE INDEX IF NOT EXISTS idx_fieldlog_owner ON fieldlog(owner_user_id, kind, day)',
 ];
-const KINDS = ['nutrient', 'water', 'health'];
+const KINDS = ['nutrient', 'water', 'health', 'work'];
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 export async function api(r, e, p, me, H) {
   const { j, body, url } = H;
@@ -74,6 +74,11 @@ export async function stats(e) {
   const q = await e.DB.prepare(
     'SELECT kind, COUNT(*) AS n FROM fieldlog WHERE deleted=0 GROUP BY kind'
   ).all();
-  const o = { nutrient: 'Nutrient entries', water: 'Watering entries', health: 'Plant health entries' };
+  const o = {
+    nutrient: 'Nutrient entries',
+    water: 'Watering entries',
+    health: 'Plant health entries',
+    work: 'Work done entries',
+  };
   return Object.fromEntries((q.results || []).map(x => [o[x.kind] || x.kind, x.n]));
 }

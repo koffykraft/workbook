@@ -13,19 +13,22 @@
 <body data-page="fieldlog"><main class="app">
 <header id="kh"></header>
 <h1>Field log</h1>
-<div class="sub">What went on each place and when: fertiliser, manure and lime with the nutrients they carry, watering, and plant health. Works offline; entries are sent when the phone is online.</div>
+<div class="sub">What went on each place and when: fertiliser, manure and lime with the nutrients they carry, watering, plant health and work done. Works offline; entries are sent when the phone is online.</div>
 <div id="view"></div>
 <div id="kf"></div>
 </main>
 <script src="app.js"></script><script src="sync.js"></script><script src="origin-db.js"></script><script src="places.js"></script>
 <script>
-// Field log: nutrients, water and plant health, one dated entry at a time, per place.
+// Field log: nutrients, water, plant health and work done, one dated entry at a time, per place.
+// Plant health and work entries can carry the GPS point where they were seen or done, which the
+// Map draws as a disease and work map.
 const $ = s => document.querySelector(s);
 const S = SET('fieldlog');
 const TABS = [
   ['nutrient', 'Nutrients'],
   ['water', 'Water'],
   ['health', 'Plant health'],
+  ['work', 'Work done'],
 ];
 let TAB = 'nutrient',
   PLACE = '',
@@ -93,9 +96,51 @@ function line(r) {
     ]
       .filter(Boolean)
       .join(' · ');
-  return [r.issue, r.what, r.severity, r.pct ? r.pct + '% affected' : '', r.status]
+  if (r.kind === 'work')
+    return [
+      r.kind2,
+      r.product,
+      r.qty ? r.qty + ' ' + (r.unit || '') : '',
+      r.trees ? r.trees + ' ' + (S.treeWord || 'plants') : '',
+      r.mandays ? r.mandays + ' man-days' : '',
+      r.cost ? 'cost ' + r.cost : '',
+      r.lat ? '📍' : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  return [
+    r.issue,
+    r.what,
+    r.severity,
+    r.pct ? r.pct + '% affected' : '',
+    r.trees ? r.trees + ' ' + (S.treeWord || 'plants') + ' affected' : '',
+    r.treesLost ? r.treesLost + ' lost' : '',
+    r.status,
+    r.lat ? '📍' : '',
+  ]
     .filter(Boolean)
     .join(' · ');
+}
+function workSummary(by) {
+  const kinds = [...new Set(ROWS.map(r => r.kind2).filter(Boolean))];
+  return (
+    '<div class="card scroll"><b>Work done' +
+    (YEAR ? ' in ' + YEAR : '') +
+    '</b><table class="t" style="margin-top:6px"><tr><th>Place</th>' +
+    kinds.map(k => '<th class="n">' + esc(k) + '</th>').join('') +
+    '</tr>' +
+    Object.values(by)
+      .map(
+        rs =>
+          '<tr><td>' +
+          esc(rs[0].place_name) +
+          '</td>' +
+          kinds.map(k => '<td class="n">' + (rs.filter(r => r.kind2 === k).length || '') + '</td>').join('') +
+          '</tr>'
+      )
+      .join('') +
+    '</table><div class="mini" style="margin-top:6px">Times each job was done.</div></div>'
+  );
 }
 function summary() {
   if (!ROWS.length) return '';
@@ -177,9 +222,24 @@ function summary() {
       '</div>'
     );
   }
+  if (TAB === 'work') return workSummary(by);
+  const lost = Object.values(by)
+    .map(rs => [rs[0].place_name, rs.reduce((a, r) => a + (num(r.treesLost) || 0), 0)])
+    .filter(x => x[1]);
+  const lostCard = lost.length
+    ? '<div class="card scroll"><b>' +
+      esc(S.treeWord ? S.treeWord[0].toUpperCase() + S.treeWord.slice(1) : 'Plants') +
+      ' lost' +
+      (YEAR ? ' in ' + YEAR : '') +
+      '</b><table class="t" style="margin-top:6px"><tr><th>Place</th><th class="n">Lost</th></tr>' +
+      lost.map(x => '<tr><td>' + esc(x[0]) + '</td><td class="n">' + x[1] + '</td></tr>').join('') +
+      '</table></div>'
+    : '';
   const open = ROWS.filter(r => r.status !== 'Resolved');
-  return open.length
-    ? '<div class="card"><b>Still open</b>' +
+  return (
+    lostCard +
+    (open.length
+      ? '<div class="card"><b>Still open</b>' +
         open
           .map(
             r =>
@@ -190,7 +250,8 @@ function summary() {
           )
           .join('') +
         '</div>'
-    : '';
+      : '')
+  );
 }
 async function listView() {
   if (needAccount($('#view'), 'the field log')) return;
@@ -274,8 +335,23 @@ async function listView() {
           ['severity', 'Severity'],
           ['pct', '% affected'],
           ['action', 'Action taken'],
+          ['trees', 'Affected count'],
+          ['treesLost', 'Lost'],
           ['status', 'Status'],
           ['follow', 'Check again'],
+          ['lat', 'Latitude'],
+          ['lng', 'Longitude'],
+        ],
+        work: [
+          ['kind2', 'Work'],
+          ['product', 'Product'],
+          ['qty', 'Amount'],
+          ['unit', 'Unit'],
+          ['trees', 'Count'],
+          ['mandays', 'Man-days'],
+          ['cost', 'Cost'],
+          ['lat', 'Latitude'],
+          ['lng', 'Longitude'],
         ],
       }[TAB];
       saveCsv('field-log-' + TAB, ROWS, [...base, ...cols, ['notes', 'Notes']]);
@@ -322,14 +398,34 @@ function fields(r) {
       L('mm applied', inp('mm', 'number')) +
       L('Litres', inp('litres', 'number'))
     );
+  const gps =
+    L('Latitude', inp('lat', 'number')) +
+    L('Longitude', inp('lng', 'number')) +
+    '<div class="full"><button class="btn" type="button" id="gps">📍 Use my location</button> <span class="mini">so it shows on the map</span></div>';
+  const tw = S.treeWord || 'plants';
+  if (r.kind === 'work')
+    return (
+      L('Work', sel('kind2', S.workKinds || [])) +
+      L('Product or material', inp('product'), 0) +
+      L('Amount', inp('qty', 'number')) +
+      L('Unit', sel('unit', S.units || ['kg'])) +
+      L('Number of ' + tw, inp('trees', 'number')) +
+      L('Man-days', inp('mandays', 'number')) +
+      L('Cost', inp('cost', 'number')) +
+      '<div></div>' +
+      gps
+    );
   return (
     L('Issue', sel('issue', S.healthIssues || [])) +
     L('Severity', sel('severity', S.severity || [])) +
     L('What exactly', inp('what', 'text', ' placeholder="Name of the pest or disease, or what you see"'), 1) +
-    L('% of plants affected', inp('pct', 'number')) +
+    L('% of ' + tw + ' affected', inp('pct', 'number')) +
+    L('Number of ' + tw + ' affected', inp('trees', 'number')) +
+    L(tw[0].toUpperCase() + tw.slice(1) + ' lost', inp('treesLost', 'number')) +
     L('Status', sel('status', ['Open', 'Treated', 'Resolved'])) +
     L('Action taken', inp('action'), 1) +
-    L('Check again on', inp('follow', 'date'))
+    L('Check again on', inp('follow', 'date')) +
+    gps
   );
 }
 async function editView(id) {
@@ -385,6 +481,15 @@ async function editView(id) {
   };
   document.querySelectorAll('[data-k]').forEach(el => el.addEventListener('input', calc));
   calc();
+  if ($('#gps'))
+    $('#gps').onclick = async () => {
+      toast('Finding you…');
+      const g = await gpsNow();
+      if (!g) return toast('Could not get the location; turn on GPS and try again');
+      document.querySelector('[data-k="lat"]').value = g.lat;
+      document.querySelector('[data-k="lng"]').value = g.lng;
+      toast('Location added (within ' + g.acc + ' m)');
+    };
   $('#save').onclick = async () => {
     const o = read();
     if (!o.place_id) return toast('Choose a place');
