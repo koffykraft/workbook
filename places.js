@@ -65,22 +65,37 @@ const KKPLACES = (() => {
     return out;
   }
   // <option> list for a <select>; blank first entry unless required
+  // <option> list for a <select>, grouped by farm: the whole farm first, then its blocks by
+  // their own names, so a block never reads like a farm of its own
   function options(places, sel, blank = true) {
+    const opt = (p, text) =>
+      '<option value="' + esc(p.id) + '"' + (p.id === sel ? ' selected' : '') + '>' + esc(text) + '</option>';
+    const farms = places.filter(p => p.kind === 'farm');
+    const loose = places.filter(p => p.kind === 'block' && !farms.some(f => f.id === p.farmId));
     return (
       (blank ? '<option value="">' + esc('All ' + W('farms').toLowerCase()) + '</option>' : '') +
-      places
-        .map(
-          p =>
-            '<option value="' +
-            esc(p.id) +
-            '"' +
-            (p.id === sel ? ' selected' : '') +
-            '>' +
-            (p.kind === 'block' ? '  ' : '') +
-            esc(p.label) +
-            '</option>'
-        )
-        .join('')
+      farms
+        .map(f => {
+          const kids = places.filter(p => p.kind === 'block' && p.farmId === f.id);
+          return (
+            '<optgroup label="' +
+            esc(f.name) +
+            '">' +
+            opt(f, kids.length ? 'Whole ' + f.name : f.name) +
+            kids.map(b => opt(b, W('block') + ': ' + b.name)).join('') +
+            '</optgroup>'
+          );
+        })
+        .join('') +
+      (loose.length
+        ? '<optgroup label="' +
+          esc(W('blocks')) +
+          ' without a ' +
+          esc(W('farm').toLowerCase()) +
+          '">' +
+          loose.map(b => opt(b, b.name)).join('') +
+          '</optgroup>'
+        : '')
     );
   }
   return { list, options };
