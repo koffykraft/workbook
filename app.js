@@ -265,27 +265,14 @@ function fieldsHtml(defs, rec) {
           '</select>';
       else if (d.t === 'area')
         input = '<textarea data-k="' + esc(d.k) + '"' + ph + '>' + esc(v) + '</textarea>';
-      else if (d.list && d.list.length && d.t !== 'number' && d.t !== 'date' && d.pick !== false) {
+      else if (
+        (d.lib || (d.list && d.list.length)) &&
+        d.t !== 'number' &&
+        d.t !== 'date' &&
+        d.pick !== false
+      ) {
         // a pick list that phones show as a proper list, with "Other" for anything not on it
-        const known = d.list.map(String).includes(String(v));
-        const other = v !== '' && !known;
-        input =
-          '<select data-pick="' +
-          esc(d.k) +
-          '"><option value=""></option>' +
-          d.list
-            .map(o => '<option' + (String(o) === String(v) ? ' selected' : '') + '>' + esc(o) + '</option>')
-            .join('') +
-          '<option value="__other"' +
-          (other ? ' selected' : '') +
-          '>Other (type it)</option></select>' +
-          '<input data-k="' +
-          esc(d.k) +
-          '" type="text" placeholder="Type it" style="margin-top:6px' +
-          (other ? '' : ';display:none') +
-          '" value="' +
-          esc(v) +
-          '">';
+        input = pickHtml(d.k, d.lib ? LIB.get(d.lib, d.list || []) : d.list, v, d.lib);
       } else
         input =
           '<input data-k="' +
@@ -306,16 +293,150 @@ function fieldsHtml(defs, rec) {
               d.list.map(o => '<option value="' + esc(o) + '">').join('') +
               '</datalist>'
             : '');
-      return '<label' + cls + '>' + esc(d.l) + input + '</label>';
+      return (
+        '<label' +
+        cls +
+        '>' +
+        esc(d.l) +
+        (d.req ? ' <em style="color:var(--bad)">*</em>' : '') +
+        input +
+        '</label>'
+      );
     })
     .join('');
 }
-// pick lists from fieldsHtml: the choice goes into the text box beside it, which holds the value
+// A drop-down for a list, with "Other (type it)" and, for library lists, a way to the list itself.
+// The value lives in the text box after the select (data-k), so forms read it like any input.
+function pickHtml(k, list, v, lib) {
+  v = v ?? '';
+  const known = list.map(String).includes(String(v));
+  const other = v !== '' && !known;
+  return (
+    '<select data-pick="' +
+    esc(k) +
+    '"' +
+    (lib ? ' data-lib="' + esc(lib) + '"' : '') +
+    '><option value=""></option>' +
+    list
+      .map(o => '<option' + (String(o) === String(v) ? ' selected' : '') + '>' + esc(o) + '</option>')
+      .join('') +
+    '<option value="__other"' +
+    (other ? ' selected' : '') +
+    '>Other (type it)</option>' +
+    (lib ? '<option value="__lib">Edit this list…</option>' : '') +
+    '</select>' +
+    '<input data-k="' +
+    esc(k) +
+    '" type="text" placeholder="Type it' +
+    (lib ? '; it joins the list' : '') +
+    '" style="margin-top:6px' +
+    (other ? '' : ';display:none') +
+    '" value="' +
+    esc(v) +
+    '">'
+  );
+}
+// set a pick list from code (a lot filling a sale, say): the box gets the value, the list follows
+function setPick(k, v) {
+  const box = document.querySelector('[data-k="' + k + '"]');
+  if (!box) return;
+  box.value = v;
+  const sel = box.previousElementSibling;
+  if (sel && sel.dataset && sel.dataset.pick != null) {
+    const has = [...sel.options].some(o => o.value === v || o.text === v);
+    sel.value = has ? v : v ? '__other' : '';
+    box.style.display = has || !v ? 'none' : '';
+  }
+}
+// The library: named lists (products, buyers, suppliers, units and so on) that every page offers as
+// drop-downs, so staff pick the same name each time instead of typing it their own way. The app's
+// lists come from app.json (settings.library and the module settings); the owner adds, hides and
+// renames on library.html, and anything typed under "Other" joins the list. Kept as records of type
+// 'lib', so the lists follow the account to every phone.
+const LIB = (() => {
+  let own = [];
+  const lower = x => String(x).trim().toLowerCase();
+  const settings = () => (APP.settings && APP.settings.library) || {};
+  // where each list starts when the app does not set it
+  const FALLBACK = {
+    products: () => SET('ledger').products || SET('rubber').products || [],
+    units: () => SET('ledger').units || [],
+  };
+  const LABELS = {
+    products: 'Products',
+    buyers: 'Buyers',
+    suppliers: 'Suppliers and payees',
+    units: 'Units',
+  };
+  function names() {
+    const n = new Set([...Object.keys(LABELS), ...Object.keys(settings())]);
+    own.forEach(o => n.add(o.list));
+    return [...n];
+  }
+  const label = n => (settings()._labels || {})[n] || LABELS[n] || n.charAt(0).toUpperCase() + n.slice(1);
+  function base(n) {
+    const b = settings()[n];
+    return Array.isArray(b) ? b : FALLBACK[n] ? FALLBACK[n]() : [];
+  }
+  // the list as offered: the app's, then the owner's own, then extra (such as names used before)
+  function get(n, extra) {
+    const off = new Set(own.filter(o => o.list === n && o.off).map(o => lower(o.name)));
+    const out = [],
+      seen = new Set();
+    const add = x => {
+      if (x == null || String(x).trim() === '') return;
+      const k = lower(x);
+      if (seen.has(k) || off.has(k)) return;
+      seen.add(k);
+      out.push(String(x).trim());
+    };
+    base(n).forEach(add);
+    own.filter(o => o.list === n && !o.off).forEach(o => add(o.name));
+    (extra || []).slice().sort().forEach(add);
+    return out;
+  }
+  async function load() {
+    if (typeof ORIGIN === 'undefined' || !(ORIGIN.TYPES || APP.types || []).includes('lib')) return own;
+    try {
+      own = (await ORIGIN.all('lib')).filter(o => o.list && o.name);
+    } catch (e) {}
+    return own;
+  }
+  async function learn(n, name) {
+    name = String(name || '').trim();
+    if (!name || typeof ORIGIN === 'undefined' || !(ORIGIN.TYPES || APP.types || []).includes('lib')) return;
+    const k = lower(name);
+    const had = own.find(o => o.list === n && lower(o.name) === k);
+    if (had && !had.off) return;
+    if (!had && base(n).some(x => lower(x) === k)) return;
+    const r = await ORIGIN.put(had ? { ...had, off: false } : { type: 'lib', list: n, name });
+    own = own.filter(o => o.id !== r.id).concat(r);
+  }
+  async function hide(n, name, off) {
+    const k = lower(name);
+    const had = own.find(o => o.list === n && lower(o.name) === k);
+    const r = await ORIGIN.put(had ? { ...had, off } : { type: 'lib', list: n, name, off });
+    own = own.filter(o => o.id !== r.id).concat(r);
+  }
+  const pick = (k, n, v, extra) => pickHtml(k, get(n, extra), v, n);
+  return { load, get, learn, hide, pick, names, label, base, own: () => own };
+})();
+// pick lists: the choice goes into the text box beside it, which holds the value
 document.addEventListener('change', e => {
-  const sel = e.target;
+  const t = e.target;
+  // a name typed under "Other" in a library list joins the list
+  if (t && t.dataset && t.dataset.k && t.previousElementSibling && t.previousElementSibling.dataset) {
+    const lib = t.previousElementSibling.dataset.lib;
+    if (lib && t.value.trim()) LIB.learn(lib, t.value);
+  }
+  const sel = t;
   if (!sel || !sel.dataset || sel.dataset.pick == null) return;
   const box = sel.nextElementSibling;
   if (!box) return;
+  if (sel.value === '__lib') {
+    location.href = 'library.html#' + encodeURIComponent(sel.dataset.lib);
+    return;
+  }
   if (sel.value === '__other') {
     box.style.display = '';
     box.value = '';

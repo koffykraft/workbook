@@ -4,7 +4,18 @@
 const ORIGIN = (() => {
   const NAME = 'KoffyKraftOrigin',
     STORE = 'records';
-  const TYPES = ['estate', 'plot', 'harvest', 'process', 'green', 'brew', 'cupping', 'tasting', 'colour'];
+  const TYPES = [
+    'estate',
+    'plot',
+    'harvest',
+    'process',
+    'green',
+    'brew',
+    'cupping',
+    'tasting',
+    'colour',
+    'lib',
+  ];
   let DBP = null;
   function open() {
     if (DBP) return DBP;

@@ -340,6 +340,7 @@ async function addWages() {
 }
 async function form(kind, id) {
   if (!ROWS.length) await load().catch(() => {});
+  await LIB.load();
   const r = (id && ROWS.find(x => x.id === id)) || {
     kind,
     day: today(),
@@ -365,13 +366,10 @@ async function form(kind, id) {
     opts(list, r[k]) +
     (r[k] && !list.includes(r[k]) ? '<option selected>' + esc(r[k]) + '</option>' : '') +
     '</select>';
-  const dl = (idn, list) =>
-    '<datalist id="' + idn + '">' + list.map(x => '<option value="' + esc(x) + '">').join('') + '</datalist>';
   let f = L('Date', inp('day', 'date'));
   if (kind === 'sale')
     f +=
-      L('Buyer', inp('party', 'text', ' list="pp"')) +
-      dl('pp', parties('sale')) +
+      L('Buyer', LIB.pick('party', 'buyers', r.party, parties('sale'))) +
       (LOTS.length
         ? L(
             'From a lot',
@@ -390,8 +388,7 @@ async function form(kind, id) {
             1
           )
         : '') +
-      L('Product', inp('product', 'text', ' list="pr"')) +
-      dl('pr', S.products || []) +
+      L('Product', LIB.pick('product', 'products', r.product)) +
       L('Quantity', inp('qty', 'number')) +
       L('Unit', sel('unit', S.units || ['kg'])) +
       L('Rate, ' + CUR, inp('rate', 'number')) +
@@ -400,16 +397,14 @@ async function form(kind, id) {
       '<div class="full mini" id="calc"></div>';
   if (kind === 'receipt')
     f +=
-      L('From', inp('party', 'text', ' list="pp"')) +
-      dl('pp', parties('sale')) +
+      L('From', LIB.pick('party', 'buyers', r.party, parties('sale'))) +
       L('Kind', sel('category', S.receiptKinds || [])) +
       L('Amount, ' + CUR, inp('amount', 'number')) +
       L('Mode', sel('mode', S.modes || [])) +
       L('Reference', inp('ref'));
   if (kind === 'payment')
     f +=
-      L('Paid to', inp('party', 'text', ' list="pp"')) +
-      dl('pp', parties('payment')) +
+      L('Paid to', LIB.pick('party', 'suppliers', r.party, parties('payment'))) +
       L('For', sel('category', S.paymentCategories || [])) +
       L('Amount, ' + CUR, inp('amount', 'number')) +
       L('Mode', sel('mode', S.modes || [])) +
@@ -444,7 +439,7 @@ async function form(kind, id) {
     $('#lot').onchange = () => {
       const l = LOTS.find(x => x.id === $('#lot').value);
       if (!l) return;
-      document.querySelector('[data-k="product"]').value = l.grade || l.product || '';
+      setPick('product', l.grade || l.product || '');
       document.querySelector('[data-k="qty"]').value = l.dryKg || l.wetKg || '';
       document.querySelector('[data-k="ref"]').value = l.code || '';
       calc();

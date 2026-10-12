@@ -1,0 +1,130 @@
+<!doctype html>
+<!-- KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f5ef">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Library</title>
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="kk.css"><script src="app.config.js"></script><script src="tap.js" defer></script><script src="kk-base.js"></script>
+<style>
+.li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+.li:first-child {
+  border-top: 0;
+}
+.li.off span {
+  color: #9a948a;
+  text-decoration: line-through;
+}
+</style>
+</head>
+<body data-page="library"><main class="app">
+<header id="kh"></header>
+<div id="view"></div>
+<div id="kf"></div>
+</main>
+<script src="app.js"></script><script src="sync.js"></script><script src="origin-db.js"></script>
+<script>
+// Library: the lists every page offers as drop-downs (products, buyers, suppliers, units and the
+// app's own). Add a name once and staff pick it everywhere; hide one that is no longer used. The
+// app's own names can be hidden but not deleted, so a new phone always starts with them.
+const $ = s => document.querySelector(s);
+let LIST = '';
+async function view() {
+  await LIB.load();
+  const names = LIB.names();
+  LIST = decodeURIComponent(location.hash.slice(1)) || LIST || names[0];
+  if (!names.includes(LIST)) names.push(LIST);
+  const base = new Set(LIB.base(LIST).map(x => String(x).toLowerCase()));
+  const own = LIB.own().filter(o => o.list === LIST);
+  const off = own.filter(o => o.off);
+  const on = LIB.get(LIST);
+  $('#view').innerHTML =
+    '<h1>Library</h1><div class="sub">The names every page offers in its drop-downs, so everyone picks the same one instead of typing it their own way. Anything typed under "Other" is added here too.</div>' +
+    '<div class="tabs row" style="margin:8px 0;flex-wrap:wrap">' +
+    names
+      .map(
+        n =>
+          '<a class="btn small' +
+          (n === LIST ? ' primary' : '') +
+          '" href="#' +
+          encodeURIComponent(n) +
+          '">' +
+          esc(LIB.label(n)) +
+          '</a>'
+      )
+      .join('') +
+    '</div>' +
+    '<div class="card"><b>' +
+    esc(LIB.label(LIST)) +
+    '</b> <span class="mini">' +
+    on.length +
+    ' in use</span>' +
+    '<div class="row" style="margin:8px 0"><input id="nm" placeholder="Add a name" style="flex:1"><button class="btn app" id="add">Add</button></div>' +
+    (on.length
+      ? on
+          .map(
+            x =>
+              '<div class="li"><span>' +
+              esc(x) +
+              (base.has(x.toLowerCase()) ? ' <span class="tag">app</span>' : '') +
+              '</span><button class="btn small" data-hide="' +
+              esc(x) +
+              '">Hide</button></div>'
+          )
+          .join('')
+      : '<div class="mini">Nothing in this list yet.</div>') +
+    '</div>' +
+    (off.length
+      ? '<div class="card"><b>Hidden</b>' +
+        off
+          .map(
+            o =>
+              '<div class="li off"><span>' +
+              esc(o.name) +
+              '</span><button class="btn small" data-show="' +
+              esc(o.name) +
+              '">Show again</button></div>'
+          )
+          .join('') +
+        '</div>'
+      : '') +
+    '<div class="card mini">To rename, add the new name and hide the old one. Records already saved keep the name they were saved with. Lists follow your account to every phone you sign in on.</div>';
+  const add = async () => {
+    const v = $('#nm').value.trim();
+    if (!v) return;
+    await LIB.learn(LIST, v);
+    recordsSync();
+    toast('Added');
+    view();
+  };
+  $('#add').onclick = add;
+  $('#nm').onkeydown = e => e.key === 'Enter' && add();
+  document
+    .querySelectorAll('[data-hide]')
+    .forEach(
+      b => (b.onclick = async () => (await LIB.hide(LIST, b.dataset.hide, true), recordsSync(), view()))
+    );
+  document
+    .querySelectorAll('[data-show]')
+    .forEach(
+      b => (b.onclick = async () => (await LIB.hide(LIST, b.dataset.show, false), recordsSync(), view()))
+    );
+}
+window.addEventListener('hashchange', view);
+view();
+recordsSync().then(n => n && view());
+</script>
+<script src="pv.js" defer></script>
+<script src="kk-family.js" defer></script>
+</body>
+</html>
