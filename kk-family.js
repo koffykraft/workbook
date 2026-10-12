@@ -6,7 +6,7 @@
     ['site', 'KoffyKraft', 'https://koffykraft.coffee/'],
     ['roast', 'Roast', 'https://roast.koffykraft.coffee/'],
     ['koko', 'Koko', 'https://koko.koffykraft.coffee/'],
-    ['rabr', 'RABR', 'https://rabr.koffykraft.coffee/'],
+    ['rabr', 'Rabr', 'https://rabr.koffykraft.coffee/'],
   ];
   function draw() {
     if (document.querySelector('.kk-family')) return;

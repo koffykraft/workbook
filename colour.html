@@ -348,6 +348,75 @@ function photoCalib(all) {
 // Ground roasted arabica follows one colour path as it darkens: a* and b* from L* (Scientific
 // Reports 2025, HunterLab ColorFlex, D65 2°, L* about 20 to 60). Shows what this L* usually pairs
 // with; a photo far off the path points to the light or white card, a meter off it to its own setup.
+// A broad roast band from a phone photo, with no meter: the L* of the photo (corrected with the
+// white card) placed on the milestones measured by UC Davis. The band names are KoffyKraft's own
+// plain words for those stretches, not a standard. Phone, light and card differ, so the band is
+// a guide; the ranking against your own photos, taken the same way, is the steadier figure.
+const BANDS = [
+  [45, 'Very light: past colour change, not yet near first crack'],
+  [33, 'Light: coming up to first crack'],
+  [27, 'Light to medium: around first crack'],
+  [23, 'Medium: after first crack'],
+  [20, 'Medium dark: coming up to second crack'],
+  [17.5, 'Dark: around second crack'],
+  [0, 'Very dark: past second crack'],
+];
+function photoScaleHtml(c, all) {
+  const L = c.photo.L;
+  const band = (BANDS.find(b => L >= b[0]) || BANDS[BANDS.length - 1])[1];
+  const mine = all.filter(r => r.photo && r.photo.L != null);
+  let rank = '';
+  if (mine.length) {
+    const darker = mine.filter(r => r.photo.L < L).length;
+    const near = mine
+      .slice()
+      .sort((p, q) => Math.abs(p.photo.L - L) - Math.abs(q.photo.L - L))
+      .slice(0, 2)
+      .map(r => esc(r.name || fmtDay(r.at)) + ' (L* ' + r.photo.L.toFixed(1) + ')');
+    rank =
+      '<div class="mini" style="margin-top:4px">Among your ' +
+      (mine.length + 1) +
+      ' photo readings this is number <b>' +
+      (mine.length - darker + 1) +
+      '</b> from the lightest. Closest: ' +
+      near.join(', ') +
+      '.</div>';
+  }
+  // a simple 0 to 100 bar from very dark (L* 15) to colour change (L* 62)
+  const pos = Math.max(0, Math.min(100, ((L - 15) / (62 - 15)) * 100));
+  return (
+    '<div class="cc-box"><b>From your photo: ' +
+    esc(band) +
+    '</b>' +
+    '<div style="position:relative;height:12px;border-radius:6px;margin:8px 0 2px;background:linear-gradient(90deg,#2b1d16,#4a3022,#6b4329,#8a5a35,#b07f4f,#d4b083)"><span style="position:absolute;left:calc(' +
+    pos.toFixed(0) +
+    '% - 6px);top:-3px;width:12px;height:18px;border-radius:3px;background:#fff;border:2px solid #111"></span></div>' +
+    '<div class="mini" style="position:relative;height:16px">' +
+    [
+      [0, 'dark', 'left:0'],
+      [((20 - 15) / 47) * 100, '2nd crack', ''],
+      [((29.7 - 15) / 47) * 100, '1st crack', ''],
+      [100, 'light', 'right:0'],
+    ]
+      .map(
+        ([x, t, edge]) =>
+          '<span style="position:absolute;' +
+          (edge || 'left:' + x.toFixed(0) + '%;transform:translateX(-50%)') +
+          '">' +
+          t +
+          '</span>'
+      )
+      .join('') +
+    '</div>' +
+    '<div class="mini" style="margin-top:4px">Photo L* ' +
+    L.toFixed(1) +
+    '. ' +
+    stage(L) +
+    '</div>' +
+    rank +
+    '<div class="mini" style="margin-top:4px">A broad guide from your phone and your light. Take every photo the same way (same dish, same white card, same spot, no flash) and the readings line up with each other even if they differ from a lab meter. Bands: KoffyKraft, on the roast milestones in <a href="https://www.nature.com/articles/s41598-025-06601-w" target="_blank" rel="noopener">A universal color curve for roasted arabica coffee</a> (2025).</div></div>'
+  );
+}
 // where an L* falls between the roast milestones the same study measured (median L* of samples
 // pulled at that moment: colour change 62.4, first crack 29.7, second crack 20.0, end 17.2)
 function stage(L) {
@@ -942,6 +1011,7 @@ function result() {
     );
   }
   const all = ALL.filter(r => r.id !== c.id);
+  if (c.photo) out.push(photoScaleHtml(c, all));
   if (c.photo && g == null) {
     const C = photoCalib(all);
     if (C.k != null) {
