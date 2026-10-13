@@ -11,6 +11,7 @@ export const SQL = [
   'CREATE TABLE IF NOT EXISTS ledger_extra (id TEXT PRIMARY KEY, owner_user_id TEXT NOT NULL, data_json TEXT NOT NULL)',
 ];
 const EXTRA = [
+  'brand',
   'due',
   'transporter',
   'vehicle',

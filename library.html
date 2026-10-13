@@ -44,6 +44,8 @@ const PARTY = {
   buyers: 'party',
   suppliers: 'party',
   transporters: 'transport',
+  products: 'item',
+  inputs: 'item',
 };
 const FIELDS = {
   party: [
@@ -69,6 +71,17 @@ const FIELDS = {
     { k: 'upi', l: 'UPI ID', t: 'text' },
     { k: 'notes', l: 'Notes', t: 'area' },
   ],
+  item: [
+    {
+      k: 'kind',
+      l: 'Kind',
+      t: 'text',
+      list: ['Fertiliser', 'Spray or chemical', 'Tool', 'Packing', 'Fuel', 'Product we sell', 'Other'],
+    },
+    { k: 'unit', l: 'Counted in', t: 'text', list: ['kg', 'l', 'nos', 'bag', 'box', 'm'] },
+    { k: 'pack', l: 'Usual pack', t: 'text', ph: '50 kg bag, 1 l bottle' },
+    { k: 'notes', l: 'Notes', t: 'area' },
+  ],
   me: [
     { k: 'name', l: 'Business name', t: 'text' },
     { k: 'gstin', l: 'GSTIN', t: 'text' },
@@ -83,6 +96,66 @@ const FIELDS = {
     { k: 'payNote', l: 'Line on payment requests', t: 'text', ph: 'Thank you. Please pay within 7 days.' },
   ],
 };
+// who sells this item: supplier, brand, pack, price and when, one row each
+function sourcesHtml(list, name) {
+  const src = LIB.sources(list, name);
+  return (
+    '<div class="card"><b>Who sells it</b><div class="mini">One line for each supplier and brand. Purchases recorded in the app add and update lines here.</div>' +
+    (src.length
+      ? '<table class="t" style="margin-top:6px"><tr><th>Supplier</th><th>Brand</th><th>Pack</th><th class="n">Price</th><th></th></tr>' +
+        src
+          .map(
+            (x, i) =>
+              '<tr><td>' +
+              esc(x.supplier) +
+              '</td><td>' +
+              esc(x.brand || '') +
+              '</td><td>' +
+              esc(x.pack || '') +
+              '</td><td class="n">' +
+              (x.price ? esc(x.price) : '') +
+              (x.last ? '<div class="mini">' + esc(fmtDate(x.last)) + '</div>' : '') +
+              '</td><td><button class="btn small" data-drop="' +
+              i +
+              '">✕</button></td></tr>'
+          )
+          .join('') +
+        '</table>'
+      : '<div class="mini" style="margin-top:6px">No suppliers yet.</div>') +
+    '<div class="form" style="margin-top:8px">' +
+    '<label>Supplier' +
+    LIB.pick('s_supplier', 'suppliers', '') +
+    '</label><label>Brand<input data-s="brand"></label><label>Pack<input data-s="pack" placeholder="50 kg bag"></label><label>Price<input data-s="price" type="number" step="any" inputmode="decimal" placeholder="per pack"></label>' +
+    '</div><div class="row" style="margin-top:6px"><button class="btn small" id="addSrc">Add this supplier and brand</button></div></div>'
+  );
+}
+// what a supplier sells, gathered from every item's suppliers
+function sellsHtml(name) {
+  const rows = [];
+  for (const n of ['inputs', 'products'])
+    for (const item of LIB.get(n))
+      for (const x of LIB.sources(n, item))
+        if (String(x.supplier).toLowerCase() === String(name).toLowerCase()) rows.push([item, x]);
+  return rows.length
+    ? '<div class="card"><b>Sells</b>' +
+        rows
+          .map(
+            ([item, x]) =>
+              '<div class="mini" style="margin-top:4px"><b>' +
+              esc(item) +
+              '</b>' +
+              esc(
+                [x.brand, x.pack, x.price ? 'at ' + x.price : '', x.last ? fmtDate(x.last) : '']
+                  .filter(Boolean)
+                  .map(v => ' · ' + v)
+                  .join('')
+              ) +
+              '</div>'
+          )
+          .join('') +
+        '</div>'
+    : '';
+}
 async function details(list, name) {
   await LIB.load();
   const isMe = list === '_business';
@@ -99,13 +172,43 @@ async function details(list, name) {
       : '<div class="sub">' + esc(LIB.label(list)) + '</div>') +
     '<div class="form">' +
     fieldsHtml(FIELDS[kind], cur) +
-    '</div><div class="card mini">Kept in your account like your other records. Bank details here are only shown to you and put on payment requests you choose to send.</div>' +
+    '</div>' +
+    (kind === 'item' ? sourcesHtml(list, name) : '') +
+    (list === 'suppliers' ? sellsHtml(name) : '') +
+    '<div class="card mini">Kept in your account like your other records. Bank details here are only shown to you and put on payment requests you choose to send.</div>' +
     '<div class="row sticky"><button class="btn app" id="save">Save</button><a class="btn" href="#' +
     (isMe ? '' : encodeURIComponent(list)) +
     '">Cancel</a></div>';
+  if ($('#addSrc'))
+    $('#addSrc').onclick = async () => {
+      const sup = ($('[data-k="s_supplier"]') || {}).value || '';
+      if (!sup.trim()) return toast('Pick the supplier');
+      const v = k => $('[data-s="' + k + '"]').value.trim();
+      await LIB.addSource(list, name, {
+        supplier: sup.trim(),
+        brand: v('brand'),
+        pack: v('pack'),
+        price: v('price'),
+        last: today(),
+      });
+      recordsSync();
+      details(list, name);
+    };
+  document.querySelectorAll('[data-drop]').forEach(
+    b =>
+      (b.onclick = async () => {
+        const src = LIB.sources(list, name);
+        src.splice(+b.dataset.drop, 1);
+        await LIB.setInfo(list, name, { ...LIB.info(list, name), sources: src });
+        recordsSync();
+        details(list, name);
+      })
+  );
   $('#save').onclick = async () => {
-    const o = {};
+    const o = { ...(isMe ? {} : { sources: LIB.info(list, name).sources }) };
+    if (!o.sources) delete o.sources;
     document.querySelectorAll('[data-k]').forEach(el => {
+      if (el.dataset.k === 's_supplier') return;
       const v = el.value.trim();
       if (v) o[el.dataset.k] = v;
     });
@@ -192,7 +295,11 @@ async function view() {
               esc(x) +
               '">Edit</button><button class="btn small" data-hide="' +
               esc(x) +
-              '">Hide</button></span></div>'
+              '">Hide</button>' +
+              (LIB.isBase(LIST, x)
+                ? ''
+                : '<button class="btn small danger" data-del="' + esc(x) + '">Delete</button>') +
+              '</span></div>'
           )
           .join('')
       : '<div class="mini">Nothing in this list yet.</div>') +
@@ -211,7 +318,7 @@ async function view() {
           .join('') +
         '</div>'
       : '') +
-    '<div class="card mini">Edit changes a name in the list. Records already saved keep the name they were saved with. Lists follow your account to every phone you sign in on.</div>';
+    '<div class="card mini">Edit changes a name; Delete removes one you added (names that come with the app can only be hidden). Records already saved keep the name they were saved with. Lists follow your account to every phone you sign in on.</div>';
   const add = async () => {
     const v = $('#nm').value.trim();
     if (!v) return;
@@ -224,6 +331,21 @@ async function view() {
   $('#nm').onkeydown = e => {
     if (e.key === 'Enter') add();
   };
+  document.querySelectorAll('[data-del]').forEach(
+    b =>
+      (b.onclick = async () => {
+        if (
+          !confirm(
+            'Delete ' + b.dataset.del + ' and its details from the list? Records already saved keep the name.'
+          )
+        )
+          return;
+        await LIB.remove(LIST, b.dataset.del);
+        recordsSync();
+        toast('Deleted');
+        view();
+      })
+  );
   document.querySelectorAll('[data-edit]').forEach(
     b =>
       (b.onclick = async () => {

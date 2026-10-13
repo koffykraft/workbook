@@ -361,12 +361,20 @@ const LIB = (() => {
   const FALLBACK = {
     products: () => SET('ledger').products || SET('rubber').products || [],
     units: () => SET('ledger').units || [],
+    // things bought: fertilisers and sprays from the field log, and the app's store items
+    inputs: () => [
+      ...(SET('fieldlog').products || []),
+      ...(SET('rubber').stockItems || [])
+        .map(i => (Array.isArray(i) ? i[0] : i.name))
+        .filter(x => x && x !== 'Other'),
+    ],
   };
   const LABELS = {
     products: 'Products',
     buyers: 'Buyers',
     suppliers: 'Suppliers and payees',
     transporters: 'Transporters',
+    inputs: 'Inputs and tools bought',
     units: 'Units',
   };
   function names() {
@@ -419,6 +427,30 @@ const LIB = (() => {
     const r = await ORIGIN.put(had ? { ...had, off } : { type: 'lib', list: n, name, off });
     own = own.filter(o => o.id !== r.id).concat(r);
   }
+  // remove one of the owner's own entries for good (the app's own can only be hidden)
+  async function remove(n, name) {
+    const k = lower(name);
+    if (base(n).some(x => lower(x) === k)) return hide(n, name, true);
+    for (const o of own.filter(o => o.list === n && lower(o.name) === k)) await ORIGIN.remove(o.id);
+    own = own.filter(o => !(o.list === n && lower(o.name) === k));
+  }
+  const isBase = (n, name) => base(n).some(x => lower(x) === lower(name));
+  // who sells an item: [{ supplier, brand, pack, price, last }], newest first; one row per
+  // supplier and brand, so different suppliers can sell different brands of the same thing
+  function sources(n, item) {
+    return (info(n, item).sources || [])
+      .slice()
+      .sort((a, b) => String(b.last || '').localeCompare(String(a.last || '')));
+  }
+  async function addSource(n, item, src) {
+    if (!item || !src || !src.supplier) return;
+    const cur = info(n, item);
+    const list = (cur.sources || []).filter(
+      x => !(lower(x.supplier) === lower(src.supplier) && lower(x.brand || '') === lower(src.brand || ''))
+    );
+    list.push({ ...src });
+    await setInfo(n, item, { ...cur, sources: list.slice(-30) });
+  }
   // a new name for an entry: the owner's own entry is changed; one of the app's is hidden and the
   // new name added in its place
   async function rename(n, old, name) {
@@ -462,6 +494,10 @@ const LIB = (() => {
     base,
     info,
     setInfo,
+    remove,
+    isBase,
+    sources,
+    addSource,
     me,
     setMe,
     own: () => own,

@@ -459,7 +459,15 @@ async function form(kind, id) {
       L('For', sel('category', S.paymentCategories || [])) +
       L('Amount, ' + CUR, inp('amount', 'number')) +
       L('Mode', sel('mode', S.modes || [])) +
-      L('Bill or reference', inp('ref'));
+      L('Bill or reference', inp('ref')) +
+      '<details class="full"' +
+      (r.product ? ' open' : '') +
+      '><summary><b>What was bought</b> <span class="mini">item, brand, quantity: builds who sells what</span></summary><div class="form" style="margin-top:8px">' +
+      L('Item', LIB.pick('product', 'inputs', r.product)) +
+      L('Brand', inp('brand')) +
+      L('Quantity', inp('qty', 'number')) +
+      L('Unit', sel('unit', S.units || ['kg'])) +
+      '<div class="full mini" id="srcs"></div></div></details>';
   f = '<div class="full mini" id="pinfo"></div>' + f;
   $('#view').innerHTML =
     '<a href="#' +
@@ -516,6 +524,51 @@ async function form(kind, id) {
       $('[data-k="due"]').value = today(d);
     }
     if ($('#calc')) $('#calc').innerHTML = saleAmt(o) ? 'Amount <b>' + money(saleAmt(o)) + '</b>' : '';
+    // what this supplier (or anyone) sold this item for before, as taps that fill the brand
+    if ($('#srcs')) {
+      const all = o.product ? LIB.sources('inputs', o.product) : [];
+      const mine = all.filter(
+        x => !o.party || String(x.supplier).toLowerCase() === String(o.party).toLowerCase()
+      );
+      const show = mine.length ? mine : all;
+      $('#srcs').innerHTML = show.length
+        ? (mine.length ? 'From ' + esc(o.party) + ': ' : 'Bought before from: ') +
+          show
+            .slice(0, 6)
+            .map(
+              (x, i) =>
+                '<button type="button" class="btn small" data-src="' +
+                i +
+                '" style="margin:3px 4px 0 0">' +
+                esc(
+                  [
+                    mine.length ? '' : x.supplier,
+                    x.brand || 'no brand',
+                    x.price ? CUR + ' ' + x.price + ' a ' + (x.pack || 'unit') : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')
+                ) +
+                '</button>'
+            )
+            .join('')
+        : o.product
+          ? 'First purchase of ' +
+            esc(o.product) +
+            ' recorded here; saving remembers who sold it and the brand.'
+          : '';
+      $('#srcs')
+        .querySelectorAll('[data-src]')
+        .forEach(
+          b =>
+            (b.onclick = () => {
+              const x = show[+b.dataset.src];
+              $('[data-k="brand"]').value = x.brand || '';
+              if (!mine.length) setPick('party', x.supplier);
+              calc();
+            })
+        );
+    }
   };
   $('#view').oninput = calc;
   $('#view').onchange = calc;
@@ -593,6 +646,18 @@ async function form(kind, id) {
       return toast(kind === 'sale' ? 'Who bought it?' : kind === 'receipt' ? 'From whom?' : 'Paid to whom?');
     const res = await API.post('/api/ledger', o).catch(e => ({ error: e.message }));
     if (res.error) return toast(res.error);
+    // a purchase with an item remembers who sold it, the brand and the price per unit
+    if (kind === 'payment' && o.product && o.party) {
+      const per = num(o.qty) ? Math.round((num(o.amount) / num(o.qty)) * 100) / 100 : null;
+      await LIB.learn('inputs', o.product);
+      await LIB.addSource('inputs', o.product, {
+        supplier: o.party,
+        brand: o.brand || '',
+        pack: o.unit || '',
+        price: per != null ? String(per) : '',
+        last: o.day,
+      });
+    }
     toast(res.queued ? 'Saved on this phone; will send when online' : 'Saved');
     location.hash = kind;
   };
