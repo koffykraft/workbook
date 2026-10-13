@@ -49,6 +49,10 @@
       t: 'Santanatoglia et al., Food Chemistry (2024): acidity across eight brewers (open access)',
       u: 'https://pubblicazioni.unicam.it/handle/11581/482223',
     },
+    BT: {
+      t: 'Batali, Cotter, Frost, Ristenpart and Guinard, ACS Food Science & Technology (2021): sourness and titratable acidity',
+      u: 'https://sca.coffee/sca-news/25/issue-15/manipulating-and-measuring-a-key-attribute-in-drip-brew-coffee-zwlhz',
+    },
     P: { t: 'Common practice', u: '' },
   };
   // Level: 1 basic, 2 intermediate, 3 advanced. Each tip: [level, text, source]
@@ -576,6 +580,30 @@
     'Strength is not brightness: in a 2024 study the moka pot pulled the most caffeine and chlorogenic acids, not the most fruit acids. Good with robusta and darker roasts.',
     'SA',
   ]);
+  // Sourness and strength: Batali, Cotter, Frost, Ristenpart and Guinard, ACS Food Sci. Technol. (2021), one
+  // washed Honduran arabica across the brew control chart, trained panel and 119 consumers. Our own words.
+  FAM.drip.tips.push(
+    [
+      1,
+      'Too sour? Make it a little weaker or extract a little more. In a UC Davis study, sourness was highest in strong, under-extracted brews and lowest in weaker, well-extracted ones.',
+      'BT',
+    ],
+    [
+      2,
+      'Brew temperature between 87 and 93 °C hardly changed pH, and extraction changed it only a little. Roast level moved pH more.',
+      'BT',
+    ],
+    [
+      3,
+      'Titratable acidity (the amount of acid, not its strength) rose in step with TDS and matched the panel’s sourness far better than pH did. A strong brew stays acidic even at high extraction.',
+      'BT',
+    ],
+    [
+      2,
+      'People differ: about half of black-coffee drinkers wanted more acidity and half wanted less. There is no single right level; brew for the person drinking it.',
+      'BT',
+    ]
+  );
   M.splice(M.length - 1, 0, [
     'boiled',
     'Boiled coffee (village style)',
