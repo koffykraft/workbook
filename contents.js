@@ -307,7 +307,12 @@ window.KK_CONTENTS = [
       ],
       ['Brew guide', 'How brewers work.', '', 'methods.html'],
       ['Crop care', 'How to grow and pick.', '', 'crop.html'],
-      ['Learn coffee', 'Plant to cup in six steps, with the KoffyKraft courses.', '', 'learn.html'],
+      [
+        'Learn coffee',
+        'Plant to cup in seven steps, with the KoffyKraft courses.',
+        'Includes learning to smell, with a kitchen smell kit of Kerala spices and the coffee aromas each one teaches.',
+        'learn.html',
+      ],
       ['Guide', 'How to use the app, part by part.', '', 'guide.html'],
     ],
   ],
