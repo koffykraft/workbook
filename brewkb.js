@@ -45,6 +45,10 @@
       t: 'Moustache Coffee Club: fix bitter coffee',
       u: 'https://www.moustachecoffeeclub.com/blog/fix-bitter-coffee',
     },
+    SA: {
+      t: 'Santanatoglia et al., Food Chemistry (2024): acidity across eight brewers (open access)',
+      u: 'https://pubblicazioni.unicam.it/handle/11581/482223',
+    },
     P: { t: 'Common practice', u: '' },
   };
   // Level: 1 basic, 2 intermediate, 3 advanced. Each tip: [level, text, source]
@@ -553,6 +557,75 @@
     ],
     ['other', 'Other', 'drip', 'unknown', 'Note your recipe and change one thing at a time', []],
   ];
+  // Acidity by brewer: Santanatoglia, Angeloni, Caprioli et al., Food Chemistry 454 (2024) 139717. Three
+  // coffees, eight brewers, a 12-taster panel; correlations, not proof of cause. In our own words.
+  FAM.drip.tips.push(
+    [
+      2,
+      'Filters shape acidity, not only body. In a 2024 study of eight brewers, metal filters (French press, Pure Brew) let more fruit acids into the cup than paper; Chemex, with its thick paper, let through the least.',
+      'SA',
+    ],
+    [
+      3,
+      'A pH meter is a poor guide to how bright a coffee tastes. Tasters followed the fruit acids (citric, malic, lactic, acetic, tartaric, succinic); pH and titratable acidity followed the chlorogenic acids instead.',
+      'SA',
+    ]
+  );
+  FAM.moka.tips.push([
+    2,
+    'Strength is not brightness: in a 2024 study the moka pot pulled the most caffeine and chlorogenic acids, not the most fruit acids. Good with robusta and darker roasts.',
+    'SA',
+  ]);
+  M.splice(M.length - 1, 0, [
+    'boiled',
+    'Boiled coffee (village style)',
+    'trad',
+    'none',
+    '2 to 3 tsp powder per cup, simmer 1 to 2 min, rest 2 min, pour off the top',
+    [
+      [
+        1,
+        'Common in Kerala homes, often with jaggery or karupatti. Simmer gently and let the grounds settle; a hard rolling boil drives off aroma and turns it harsh.',
+        'P',
+      ],
+      [
+        2,
+        'Unfiltered and hot like the ibrik, which gave the most acids and body of eight brewers in a 2024 study. Suits robusta and darker roasts.',
+        'SA',
+      ],
+    ],
+  ]);
+  const ACID = {
+    v60: [
+      2,
+      'For brightness in a light roast: in a 2024 study the V60 kept fruit acids well; a light Ethiopian read as citrus, a medium Kenyan as green apple.',
+    ],
+    chemex: [
+      2,
+      'Thick bonded paper: in a 2024 study of eight brewers it gave the least fruit acid and the lowest perceived acidity. Choose it for clarity, another brewer for brightness.',
+    ],
+    press: [
+      2,
+      'Metal mesh lets fruit acids, oils and fines through: brighter and fuller than paper in a 2024 study.',
+    ],
+    clever: [
+      2,
+      'Steeped, then paper-filtered: a medium Kenyan showed crisp, apple-like acidity in a 2024 study.',
+    ],
+    aeropress: [
+      2,
+      'Strong, but in a 2024 study not richer in fruit acids. More strength does not mean more brightness.',
+    ],
+    turkish: [
+      2,
+      'Unfiltered: in a 2024 study the ibrik gave the most fruit acids, chlorogenic acids and caffeine of eight brewers, and a full body.',
+    ],
+    southindian: [
+      2,
+      'A metal filter with a long drip, so like the metal filters in a 2024 study it lets more acids and body through than paper. Chicory and dark roast usually decide the cup; try a lighter roast without chicory to taste the difference.',
+    ],
+  };
+  M.forEach(m => ACID[m[0]] && (m[5] = m[5].concat([[...ACID[m[0]], 'SA']])));
   const METHODS = M.map(([id, n, f, fl, start, notes]) => ({ id, n, f, fl, start, notes }));
   const byName = {};
   METHODS.forEach(m => (byName[m.n] = m));
