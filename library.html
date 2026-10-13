@@ -39,7 +39,91 @@
 // app's own names can be hidden but not deleted, so a new phone always starts with them.
 const $ = s => document.querySelector(s);
 let LIST = '';
+// details kept with each buyer, supplier or transporter, and with your own business
+const PARTY = {
+  buyers: 'party',
+  suppliers: 'party',
+  transporters: 'transport',
+};
+const FIELDS = {
+  party: [
+    { k: 'contact', l: 'Contact person', t: 'text' },
+    { k: 'phone', l: 'Phone', t: 'text' },
+    { k: 'email', l: 'Email', t: 'text' },
+    { k: 'gstin', l: 'GSTIN', t: 'text', ph: '32ABCDE1234F1Z5' },
+    { k: 'address', l: 'Address', t: 'area' },
+    { k: 'credit', l: 'Credit, days', t: 'number', ph: 'days to pay' },
+    { k: 'upi', l: 'UPI ID', t: 'text', ph: 'name@bank' },
+    { k: 'bank', l: 'Bank and branch', t: 'text' },
+    { k: 'accName', l: 'Account name', t: 'text' },
+    { k: 'accNo', l: 'Account number', t: 'text' },
+    { k: 'ifsc', l: 'IFSC', t: 'text' },
+    { k: 'notes', l: 'Notes', t: 'area' },
+  ],
+  transport: [
+    { k: 'contact', l: 'Contact person', t: 'text' },
+    { k: 'phone', l: 'Phone', t: 'text' },
+    { k: 'gstin', l: 'GSTIN', t: 'text' },
+    { k: 'vehicles', l: 'Vehicles', t: 'text', ph: 'KL 02 AB 1234, …' },
+    { k: 'rate', l: 'Usual rate', t: 'text', ph: '₹ per trip, km or kg' },
+    { k: 'upi', l: 'UPI ID', t: 'text' },
+    { k: 'notes', l: 'Notes', t: 'area' },
+  ],
+  me: [
+    { k: 'name', l: 'Business name', t: 'text' },
+    { k: 'gstin', l: 'GSTIN', t: 'text' },
+    { k: 'phone', l: 'Phone', t: 'text' },
+    { k: 'email', l: 'Email', t: 'text' },
+    { k: 'address', l: 'Address', t: 'area' },
+    { k: 'upi', l: 'UPI ID for payments to you', t: 'text', ph: 'name@bank' },
+    { k: 'bank', l: 'Bank and branch', t: 'text' },
+    { k: 'accName', l: 'Account name', t: 'text' },
+    { k: 'accNo', l: 'Account number', t: 'text' },
+    { k: 'ifsc', l: 'IFSC', t: 'text' },
+    { k: 'payNote', l: 'Line on payment requests', t: 'text', ph: 'Thank you. Please pay within 7 days.' },
+  ],
+};
+async function details(list, name) {
+  await LIB.load();
+  const isMe = list === '_business';
+  const kind = isMe ? 'me' : PARTY[list] || 'party';
+  const cur = isMe ? LIB.me() : LIB.info(list, name);
+  $('#view').innerHTML =
+    '<a href="#' +
+    (isMe ? '' : encodeURIComponent(list)) +
+    '">‹ Library</a><h2>' +
+    esc(isMe ? 'My business' : name) +
+    '</h2>' +
+    (isMe
+      ? '<div class="sub">Used on payment requests and bills: your UPI ID makes a QR the buyer can scan to pay.</div>'
+      : '<div class="sub">' + esc(LIB.label(list)) + '</div>') +
+    '<div class="form">' +
+    fieldsHtml(FIELDS[kind], cur) +
+    '</div><div class="card mini">Kept in your account like your other records. Bank details here are only shown to you and put on payment requests you choose to send.</div>' +
+    '<div class="row sticky"><button class="btn app" id="save">Save</button><a class="btn" href="#' +
+    (isMe ? '' : encodeURIComponent(list)) +
+    '">Cancel</a></div>';
+  $('#save').onclick = async () => {
+    const o = {};
+    document.querySelectorAll('[data-k]').forEach(el => {
+      const v = el.value.trim();
+      if (v) o[el.dataset.k] = v;
+    });
+    if (o.gstin) o.gstin = o.gstin.toUpperCase();
+    if (o.ifsc) o.ifsc = o.ifsc.toUpperCase();
+    if (o.gstin && !/^[0-9]{2}[A-Z0-9]{13}$/.test(o.gstin))
+      return toast('A GSTIN has 15 letters and numbers');
+    if (o.ifsc && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(o.ifsc)) return toast('An IFSC has 11 letters and numbers');
+    isMe ? await LIB.setMe(o) : await LIB.setInfo(list, name, o);
+    recordsSync();
+    toast('Saved');
+    location.hash = isMe ? '' : encodeURIComponent(list);
+  };
+}
 async function view() {
+  const hm = decodeURIComponent(location.hash.slice(1)).match(/^d\/([^/]+)\/(.+)$/);
+  if (hm) return details(hm[1], hm[2]);
+  if (location.hash === '#me') return details('_business', 'me');
   await LIB.load();
   const names = LIB.names();
   LIST = decodeURIComponent(location.hash.slice(1)) || LIST || names[0];
@@ -64,6 +148,12 @@ async function view() {
       )
       .join('') +
     '</div>' +
+    '<div class="card"><a class="item" href="#me"><b>My business</b><div class="mini">' +
+    esc(
+      [LIB.me().name, LIB.me().gstin, LIB.me().upi].filter(Boolean).join(' · ') ||
+        'Your GSTIN, UPI ID and bank, for bills and payment requests'
+    ) +
+    '</div></a></div>' +
     '<div class="card"><b>' +
     esc(LIB.label(LIST)) +
     '</b> <span class="mini">' +
@@ -75,8 +165,29 @@ async function view() {
           .map(
             x =>
               '<div class="li"><span>' +
-              esc(x) +
+              (PARTY[LIST]
+                ? '<a href="#d/' +
+                  encodeURIComponent(LIST) +
+                  '/' +
+                  encodeURIComponent(x) +
+                  '">' +
+                  esc(x) +
+                  '</a>'
+                : esc(x)) +
               (base.has(x.toLowerCase()) ? ' <span class="tag">app</span>' : '') +
+              (PARTY[LIST]
+                ? (() => {
+                    const i = LIB.info(LIST, x);
+                    const line = [i.gstin, i.phone, i.credit ? i.credit + ' days credit' : '']
+                      .filter(Boolean)
+                      .join(' · ');
+                    return (
+                      '<div class="mini">' +
+                      esc(line || 'Tap the name to add GSTIN, address, bank and more') +
+                      '</div>'
+                    );
+                  })()
+                : '') +
               '</span><span class="row" style="gap:6px;flex:none"><button class="btn small" data-edit="' +
               esc(x) +
               '">Edit</button><button class="btn small" data-hide="' +

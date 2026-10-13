@@ -6,6 +6,22 @@ export const NAME = 'ledger';
 export const SQL = [
   'CREATE TABLE IF NOT EXISTS ledger (id TEXT PRIMARY KEY, owner_user_id TEXT NOT NULL, kind TEXT NOT NULL, day TEXT NOT NULL, party TEXT, product TEXT, qty REAL, unit TEXT, rate REAL, tax_pct REAL, amount REAL NOT NULL, mode TEXT, category TEXT, ref TEXT, sale_id TEXT, notes TEXT, updated_at TEXT NOT NULL, deleted INTEGER NOT NULL DEFAULT 0)',
   'CREATE INDEX IF NOT EXISTS idx_ledger_owner ON ledger(owner_user_id, day)',
+  // more about an entry (due date, dispatch: transporter, vehicle, e-way bill, freight), as JSON
+  // beside it so new details need no change to the ledger table
+  'CREATE TABLE IF NOT EXISTS ledger_extra (id TEXT PRIMARY KEY, owner_user_id TEXT NOT NULL, data_json TEXT NOT NULL)',
+];
+const EXTRA = [
+  'due',
+  'transporter',
+  'vehicle',
+  'driver',
+  'ewayBill',
+  'lr',
+  'freight',
+  'freightBy',
+  'dispatched',
+  'delivered',
+  'deliverTo',
 ];
 const KINDS = ['sale', 'receipt', 'payment'];
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -25,11 +41,19 @@ export async function api(r, e, p, me, H) {
     const from = DAY.test(url.searchParams.get('from')) ? url.searchParams.get('from') : '0000-00-00',
       to = DAY.test(url.searchParams.get('to')) ? url.searchParams.get('to') : '9999-12-31';
     const q = await e.DB.prepare(
-      'SELECT * FROM ledger WHERE owner_user_id=? AND deleted=0 AND day>=? AND day<=? ORDER BY day DESC, updated_at DESC LIMIT 5000'
+      'SELECT l.*, x.data_json AS extra_json FROM ledger l LEFT JOIN ledger_extra x ON x.id=l.id AND x.owner_user_id=l.owner_user_id WHERE l.owner_user_id=? AND l.deleted=0 AND l.day>=? AND l.day<=? ORDER BY l.day DESC, l.updated_at DESC LIMIT 5000'
     )
       .bind(me.id, from, to)
       .all();
-    return j({ items: q.results || [] });
+    return j({
+      items: (q.results || []).map(({ extra_json, ...x }) => {
+        let extra = {};
+        try {
+          extra = JSON.parse(extra_json || '{}');
+        } catch {}
+        return { ...extra, ...x };
+      }),
+    });
   }
   // what each buyer owes, over all time
   if (r.method === 'GET' && p === '/api/ledger/owed') {
@@ -75,6 +99,13 @@ export async function api(r, e, p, me, H) {
         s(b.notes, 1000),
         new Date().toISOString()
       )
+      .run();
+    const extra = {};
+    for (const k of EXTRA) if (b[k] != null && b[k] !== '') extra[k] = s(b[k], 120);
+    await e.DB.prepare(
+      'INSERT INTO ledger_extra(id,owner_user_id,data_json) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET data_json=excluded.data_json'
+    )
+      .bind(id, me.id, JSON.stringify(extra))
       .run();
     return j({ ok: true, id, amount });
   }

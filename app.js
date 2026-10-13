@@ -366,6 +366,7 @@ const LIB = (() => {
     products: 'Products',
     buyers: 'Buyers',
     suppliers: 'Suppliers and payees',
+    transporters: 'Transporters',
     units: 'Units',
   };
   function names() {
@@ -433,8 +434,38 @@ const LIB = (() => {
     await hide(n, old, true);
     await learn(n, name);
   }
+  // details kept with a name: GSTIN, address, phone, bank, UPI, credit days for a buyer or supplier
+  function info(n, name) {
+    const k = lower(name || '');
+    const r = own.find(o => o.list === n && lower(o.name) === k);
+    return (r && r.info) || {};
+  }
+  async function setInfo(n, name, data) {
+    const k = lower(name);
+    const had = own.find(o => o.list === n && lower(o.name) === k);
+    const r = await ORIGIN.put(had ? { ...had, info: data } : { type: 'lib', list: n, name, info: data });
+    own = own.filter(o => o.id !== r.id).concat(r);
+  }
+  // the owner's own business details (for bills and payment requests), kept as one library entry
+  const me = () => info('_business', 'me');
+  const setMe = data => setInfo('_business', 'me', data);
   const pick = (k, n, v, extra) => pickHtml(k, get(n, extra), v, n);
-  return { load, get, learn, hide, rename, pick, names, label, base, own: () => own };
+  return {
+    load,
+    get,
+    learn,
+    hide,
+    rename,
+    pick,
+    names: () => names().filter(x => x[0] !== '_'),
+    label,
+    base,
+    info,
+    setInfo,
+    me,
+    setMe,
+    own: () => own,
+  };
 })();
 // pick lists: the choice goes into the text box beside it, which holds the value
 document.addEventListener('change', e => {

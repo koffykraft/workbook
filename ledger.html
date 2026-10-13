@@ -17,8 +17,9 @@
 <div id="view"></div>
 <div id="kf"></div>
 </main>
-<script src="app.js"></script><script src="sync.js"></script><script src="origin-db.js"></script><script src="places.js"></script>
+<script src="app.js"></script><script src="sync.js"></script><script src="origin-db.js"></script><script src="places.js"></script><script src="qrcode.js"></script>
 <script>
+/* global qrcode */
 // Ledger: sales sheet, receipts and payments, with what each buyer owes and the month's cash.
 const $ = s => document.querySelector(s);
 const S = SET('ledger');
@@ -221,6 +222,13 @@ async function view() {
       );
   if ($('#wages')) $('#wages').onclick = addWages;
 }
+// a UPI payment link (upi://pay), which opens any UPI app with the payee and amount filled in
+function upiLink(pa, pn, am, note) {
+  const q = ['pa=' + encodeURIComponent(pa), 'pn=' + encodeURIComponent(pn || pa), 'cu=INR'];
+  if (am) q.push('am=' + (Math.round(am * 100) / 100).toFixed(2));
+  if (note) q.push('tn=' + encodeURIComponent(String(note).slice(0, 60)));
+  return 'upi://pay?' + q.join('&');
+}
 async function summary() {
   const owed = await API.get('/api/ledger/owed').catch(() => ({ items: [] }));
   const months = [...Array(12)]
@@ -236,7 +244,34 @@ async function summary() {
     r => (cats[r.category || 'Other'] = (cats[r.category || 'Other'] || 0) + (r.amount || 0))
   );
   const tot = k => months.reduce((a, m) => a + m[k], 0);
+  // sales with a due date, for buyers who still owe: late first, then due within a week
+  const owes = Object.fromEntries((owed.items || []).map(x => [x.party, x.owed]));
+  const soon = today(new Date(Date.now() + 7 * 864e5));
+  const due = ROWS.filter(r => r.kind === 'sale' && r.due && r.due <= soon && (owes[r.party] || 0) > 0).sort(
+    (a, b) => String(a.due).localeCompare(String(b.due))
+  );
+  const dueCard = due.length
+    ? '<div class="card"><b>Payments due</b>' +
+      due
+        .slice(0, 20)
+        .map(
+          r =>
+            '<div class="mini" style="margin-top:4px"><a href="#edit/sale/' +
+            encodeURIComponent(r.id) +
+            '">' +
+            esc(r.party) +
+            '</a> · ' +
+            money(r.amount) +
+            ' · due ' +
+            esc(fmtDate(r.due)) +
+            (r.due < today() ? ' <b style="color:var(--bad)">late</b>' : '') +
+            '</div>'
+        )
+        .join('') +
+      '<div class="mini" style="margin-top:6px">Open a sale and tap Ask for payment to send a reminder with your UPI QR.</div></div>'
+    : '';
   return (
+    dueCard +
     '<div class="card scroll"><b>' +
     YEAR +
     ' by month</b><table class="t" style="margin-top:6px"><tr><th>Month</th><th class="n">Sales</th><th class="n">Received</th><th class="n">Paid out</th><th class="n">Cash in − out</th></tr>' +
@@ -394,7 +429,23 @@ async function form(kind, id) {
       L('Rate, ' + CUR, inp('rate', 'number')) +
       L('Tax %', inp('tax_pct', 'number', ' placeholder="0"')) +
       L('Bill or lot reference', inp('ref'), 1) +
-      '<div class="full mini" id="calc"></div>';
+      '<div class="full mini" id="calc"></div>' +
+      L('Payment due', inp('due', 'date')) +
+      '<div></div>' +
+      '<details class="full"' +
+      (r.transporter || r.vehicle || r.ewayBill ? ' open' : '') +
+      '><summary><b>Dispatch</b> <span class="mini">transporter, vehicle, e-way bill, freight</span></summary><div class="form" style="margin-top:8px">' +
+      L('Transporter', LIB.pick('transporter', 'transporters', r.transporter)) +
+      L('Vehicle number', inp('vehicle', 'text', ' placeholder="KL 02 AB 1234"')) +
+      L('Driver phone', inp('driver', 'tel')) +
+      L('E-way bill number', inp('ewayBill')) +
+      L('LR or receipt number', inp('lr')) +
+      L('Freight, ' + CUR, inp('freight', 'number')) +
+      L('Freight paid by', sel('freightBy', ['Us', 'Buyer'])) +
+      L('Dispatched on', inp('dispatched', 'date')) +
+      L('Delivered on', inp('delivered', 'date')) +
+      L('Deliver to', inp('deliverTo'), 1) +
+      '</div></details>';
   if (kind === 'receipt')
     f +=
       L('From', LIB.pick('party', 'buyers', r.party, parties('sale'))) +
@@ -409,6 +460,7 @@ async function form(kind, id) {
       L('Amount, ' + CUR, inp('amount', 'number')) +
       L('Mode', sel('mode', S.modes || [])) +
       L('Bill or reference', inp('ref'));
+  f = '<div class="full mini" id="pinfo"></div>' + f;
   $('#view').innerHTML =
     '<a href="#' +
     kind +
@@ -418,6 +470,9 @@ async function form(kind, id) {
     f +
     L('Notes', '<textarea data-k="notes">' + esc(r.notes || '') + '</textarea>', 1) +
     '</div>' +
+    (id && kind === 'sale'
+      ? '<div class="row" style="margin:8px 0"><button class="btn" id="ask">Ask for payment</button></div><div id="askBox"></div>'
+      : '') +
     '<div class="row sticky"><button class="btn app" id="save">Save</button><a class="btn" href="#' +
     kind +
     '">Cancel</a>' +
@@ -428,13 +483,98 @@ async function form(kind, id) {
     document.querySelectorAll('[data-k]').forEach(el => (o[el.dataset.k] = el.value.trim()));
     return o;
   };
+  const listOf = kind === 'payment' ? 'suppliers' : 'buyers';
   const calc = () => {
-    if (!$('#calc')) return;
     const o = read();
-    $('#calc').innerHTML = saleAmt(o) ? 'Amount <b>' + money(saleAmt(o)) + '</b>' : '';
+    // what the library knows about this buyer or payee
+    const i = LIB.info(listOf, o.party);
+    const bits = [
+      i.gstin ? 'GSTIN ' + i.gstin : '',
+      i.phone,
+      i.credit ? i.credit + ' days credit' : '',
+      kind === 'payment' && i.upi ? 'UPI ' + i.upi : '',
+      kind === 'payment' && i.accNo ? (i.bank || 'Bank') + ' ' + i.accNo + (i.ifsc ? ', ' + i.ifsc : '') : '',
+    ].filter(Boolean);
+    $('#pinfo').innerHTML =
+      (bits.length ? esc(bits.join(' · ')) : '') +
+      (o.party && !bits.length
+        ? '<a href="library.html#d/' +
+          listOf +
+          '/' +
+          encodeURIComponent(o.party) +
+          '">Add GSTIN, address and bank for ' +
+          esc(o.party) +
+          '</a>'
+        : '') +
+      (kind === 'payment' && i.upi && num(o.amount)
+        ? ' · <a href="' + upiLink(i.upi, o.party, num(o.amount), o.ref) + '">Pay by UPI</a>'
+        : '');
+    // credit days set the due date when it is empty
+    if (kind === 'sale' && i.credit && $('[data-k="due"]') && !$('[data-k="due"]').value && o.day) {
+      const d = new Date(o.day + 'T00:00');
+      d.setDate(d.getDate() + +i.credit);
+      $('[data-k="due"]').value = today(d);
+    }
+    if ($('#calc')) $('#calc').innerHTML = saleAmt(o) ? 'Amount <b>' + money(saleAmt(o)) + '</b>' : '';
   };
   $('#view').oninput = calc;
+  $('#view').onchange = calc;
   calc();
+  if ($('#ask'))
+    $('#ask').onclick = () => {
+      const o = read(),
+        me = LIB.me(),
+        amt = saleAmt(o) || num(o.amount);
+      const link = me.upi ? upiLink(me.upi, me.name || APP.short, amt, o.ref || o.product) : '';
+      const msg = [
+        'Payment request' + (me.name ? ' from ' + me.name : ''),
+        [o.product, o.qty ? o.qty + ' ' + (o.unit || '') : '', o.ref ? 'bill ' + o.ref : '', fmtDate(o.day)]
+          .filter(Boolean)
+          .join(', '),
+        'Amount: ' + CUR + ' ' + Number(amt || 0).toLocaleString('en-IN'),
+        o.due ? 'Due by ' + fmtDate(o.due) : '',
+        me.upi ? 'UPI: ' + me.upi : '',
+        me.accNo ? 'Bank: ' + [me.accName, me.accNo, me.ifsc, me.bank].filter(Boolean).join(', ') : '',
+        me.gstin ? 'GSTIN ' + me.gstin : '',
+        me.payNote || '',
+      ]
+        .filter(Boolean)
+        .join('\n');
+      let qr = '';
+      try {
+        if (link && typeof qrcode !== 'undefined') {
+          const q = qrcode(0, 'M');
+          q.addData(link);
+          q.make();
+          qr = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true, alt: 'UPI QR' });
+        }
+      } catch (e) {}
+      const phone = String(LIB.info('buyers', o.party).phone || '').replace(/\D/g, '');
+      $('#askBox').innerHTML =
+        '<div class="card">' +
+        (qr
+          ? '<div style="max-width:220px;margin:0 auto">' +
+            qr +
+            '</div><div class="mini" style="text-align:center">Scan with any UPI app to pay ' +
+            CUR +
+            ' ' +
+            Number(amt || 0).toLocaleString('en-IN') +
+            '</div>'
+          : '<div class="mini">Add your UPI ID under <a href="library.html#me">Library › My business</a> for a QR the buyer can scan.</div>') +
+        '<pre style="white-space:pre-wrap;font:inherit;font-size:14px;background:var(--bg);padding:8px 10px;border-radius:10px;margin-top:8px">' +
+        esc(msg) +
+        '</pre><div class="row" style="flex-wrap:wrap"><a class="btn small app" target="_blank" rel="noopener" href="https://wa.me/' +
+        (phone.length === 10 ? '91' + phone : phone) +
+        '?text=' +
+        encodeURIComponent(msg) +
+        '">WhatsApp</a><button class="btn small" id="shareAsk">Share</button><button class="btn small" id="copyAsk">Copy</button></div></div>';
+      $('#shareAsk').onclick = () =>
+        navigator.share
+          ? navigator.share({ text: msg }).catch(() => {})
+          : toast('Sharing is not available here; use Copy');
+      $('#copyAsk').onclick = () =>
+        navigator.clipboard && navigator.clipboard.writeText(msg).then(() => toast('Copied'));
+    };
   if ($('#lot'))
     $('#lot').onchange = () => {
       const l = LOTS.find(x => x.id === $('#lot').value);
