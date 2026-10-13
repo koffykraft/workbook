@@ -1,5 +1,5 @@
 // KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
-const CACHE = 'koffykraft-roastbooks-v114';
+const CACHE = 'koffykraft-roastbooks-v115';
 const CORE = [
   './app.config.js',
   './app.js',
@@ -93,82 +93,87 @@ self.addEventListener('activate', e =>
       .then(() => self.clients.claim())
   )
 );
-// Fast and offline-first: answer from the cache at once, refresh the cache in the background.
-// API calls and other sites are never touched here.
+// Newest first: ask the network, and use the saved copy when offline or when the network takes
+// more than 3 seconds. A slow answer still lands in the cache, and the page is told a newer copy
+// is ready so it can offer to reload. API calls and other sites are never touched here.
 async function clean(r) {
   if (!r || !r.redirected) return r;
   const b = await r.blob();
   return new Response(b, { status: r.status, statusText: r.statusText, headers: r.headers });
 }
-function refresh(req, key) {
-  return fetch(req, { cache: 'no-store' }).then(async r => {
-    if (r && r.ok) {
-      const c = await clean(r.clone());
-      const cache = await caches.open(CACHE);
-      await cache.put(key || req, c);
-    }
-    return r;
-  });
+const WAIT_MS = 3000;
+async function store(key, r) {
+  if (r && r.ok && r.type !== 'opaque') {
+    const c = await clean(r.clone());
+    await (await caches.open(CACHE)).put(key, c);
+  }
+  return r;
+}
+async function tell(id) {
+  for (let i = 0; i < 20; i++) {
+    const c = id && (await self.clients.get(id));
+    if (c) return c.postMessage({ kk: 'updated' });
+    await new Promise(z => setTimeout(z, 250));
+  }
 }
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const u = new URL(req.url);
   if (u.origin !== location.origin || u.pathname.startsWith('/api/')) return;
-  if (req.mode === 'navigate') {
-    const key = new Request(u.origin + u.pathname);
-    e.respondWith(
-      (async () => {
-        const hit =
-          (await caches.match(key, { ignoreSearch: true })) ||
-          (await caches.match(u.pathname.endsWith('.html') ? u.pathname : u.pathname + '.html', {
-            ignoreSearch: true,
-          }));
-        const old = hit
-          ? await hit
-              .clone()
-              .text()
-              .catch(() => '')
-          : '';
-        const net = refresh(u.origin + u.pathname, key).catch(() => null);
-        if (hit) {
+  const nav = req.mode === 'navigate';
+  const key = nav ? new Request(u.origin + u.pathname) : req;
+  e.respondWith(
+    (async () => {
+      const net = fetch(nav ? u.origin + u.pathname : req, { cache: 'no-store' })
+        .then(r => store(key, r))
+        .catch(() => null);
+      let late = false;
+      const first = await Promise.race([
+        net,
+        new Promise(z =>
+          setTimeout(() => {
+            late = true;
+            z(null);
+          }, WAIT_MS)
+        ),
+      ]);
+      if (first && first.ok) return clean(first);
+      const hit =
+        (await caches.match(key, { ignoreSearch: true })) ||
+        (nav
+          ? await caches.match(u.pathname.endsWith('.html') ? u.pathname : u.pathname + '.html', {
+              ignoreSearch: true,
+            })
+          : null);
+      if (hit) {
+        // the network was slow: when it does answer, say a newer copy is ready
+        if (late && nav)
           e.waitUntil(
             net.then(async r => {
               if (!r || !r.ok) return;
-              const t = await r
-                .clone()
-                .text()
-                .catch(() => old);
-              if (t === old) return;
-              const id = e.resultingClientId || e.clientId;
-              for (let i = 0; i < 20; i++) {
-                const c = id && (await self.clients.get(id));
-                if (c) {
-                  c.postMessage({ kk: 'updated' });
-                  return;
-                }
-                await new Promise(z => setTimeout(z, 250));
-              }
+              const [a, b] = await Promise.all([
+                r
+                  .clone()
+                  .text()
+                  .catch(() => ''),
+                hit
+                  .clone()
+                  .text()
+                  .catch(() => ''),
+              ]);
+              if (a && a !== b) await tell(e.resultingClientId || e.clientId);
             })
           );
-          return clean(hit);
-        }
-        const r = await net;
-        return r ? clean(r) : (await caches.match('./roastbooks.html')) || Response.error();
-      })()
-    );
-    return;
-  }
-  e.respondWith(
-    (async () => {
-      const hit = await caches.match(req, { ignoreSearch: true });
-      const net = refresh(req).catch(() => null);
-      if (hit) {
-        e.waitUntil(net);
-        return hit;
+        else e.waitUntil(net);
+        return clean(hit);
       }
-      const r = await net;
-      return r || Response.error();
+      const r = first || (await net);
+      return r
+        ? clean(r)
+        : nav
+          ? (await caches.match('./roastbooks.html')) || Response.error()
+          : Response.error();
     })()
   );
 });

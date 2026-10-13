@@ -58,8 +58,8 @@
     document.addEventListener(ev, release, { capture: true, passive: true })
   );
 })();
-// New version notice: the offline cache shows the saved copy first. When a newer copy
-// arrives it is remembered here, and offered only on the Account page (App version card).
+// New version notice: when a newer copy of the app arrives, a small bar at the bottom of any page
+// offers to reload; the Account page (App version card) offers it too.
 (function () {
   if (!('serviceWorker' in navigator) || window.__kkUpd) return;
   window.__kkUpd = true;
@@ -69,6 +69,26 @@
       localStorage.setItem('kk_update_ready', '1');
     } catch (e) {}
     window.dispatchEvent(new Event('kk-update'));
+    bar();
+  }
+  function bar() {
+    if (document.getElementById('kk-upd-bar') || !document.body) return;
+    const b = document.createElement('div');
+    b.id = 'kk-upd-bar';
+    b.setAttribute('role', 'status');
+    b.style.cssText =
+      'position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:#1d1512;color:#fff;font:15px system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.25)';
+    b.innerHTML =
+      '<span style="flex:1">A new version is ready.</span><button type="button" style="border:0;border-radius:999px;padding:8px 14px;font:inherit;font-weight:600;background:#fff;color:#1d1512">Update</button><button type="button" aria-label="Later" style="border:0;background:none;color:#fff;font-size:20px;padding:0 4px">×</button>';
+    const [go, later] = b.querySelectorAll('button');
+    go.onclick = () => {
+      try {
+        localStorage.removeItem('kk_update_ready');
+      } catch (e) {}
+      location.reload();
+    };
+    later.onclick = () => b.remove();
+    document.body.appendChild(b);
   }
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data && e.data.kk === 'updated') mark();
