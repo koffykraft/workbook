@@ -66,6 +66,16 @@
   border-radius: 3px;
   flex: none;
 }
+.msearch {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 0;
+}
+.msearch input {
+  flex: 1;
+  min-width: 0;
+  border-radius: 999px;
+}
 .chain {
   font-size: 14px;
   color: var(--muted, #666);
@@ -305,6 +315,7 @@ const labelOf = (r, i) => (r.prefix || r.name || 'R') + '-' + (i + 1);
 async function load() {
   await LIB.load().catch(() => {});
   PLACES = await KKPLACES.list();
+  await loadGeo();
   ROWS = (await ORIGIN.all('row')).sort(
     (a, b) =>
       (+a.n || 0) - (+b.n || 0) || String(a.name).localeCompare(String(b.name), undefined, { numeric: true })
@@ -316,27 +327,108 @@ async function load() {
 }
 const blockRows = () => ROWS.filter(r => r.plotId === BLOCK);
 const blockOf = id => PLACES.find(p => p.id === id) || {};
+// the same map as the Map page: satellite or street, a scale, place search, and every farm and
+// block shown for bearings, with this block's outline dashed in the Boundary colour
+let BASE = 'sat',
+  GEO = {};
 function mapIn(el) {
   if (map) map.remove();
+  const old = el.previousElementSibling;
+  if (old && old.classList.contains('msearch')) old.remove();
+  el.insertAdjacentHTML(
+    'beforebegin',
+    '<div class="msearch"><input id="mq" placeholder="Find a place or paste lat, lng" enterkeyhint="search"><button class="btn small" id="mbase">' +
+      (BASE === 'sat' ? 'Street map' : 'Satellite') +
+      '</button></div>'
+  );
   map = L.map(el, { zoomControl: true }).setView([10.3, 76.6], 8);
-  L.tileLayer(
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    {
+  const base = {
+    sat: L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { maxNativeZoom: 18, maxZoom: 21, attribution: 'Esri, Maxar, Earthstar Geographics' }
+    ),
+    street: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxNativeZoom: 19,
-      maxZoom: 22,
-      attribution: 'Esri, Maxar, Earthstar Geographics',
+      maxZoom: 21,
+      attribution: '© OpenStreetMap contributors',
+    }),
+  };
+  base[BASE].addTo(map);
+  L.control.scale({ metric: true, imperial: false }).addTo(map);
+  locateBtn();
+  $('#mbase').onclick = () => {
+    map.removeLayer(base[BASE]);
+    BASE = BASE === 'sat' ? 'street' : 'sat';
+    base[BASE].addTo(map);
+    $('#mbase').textContent = BASE === 'sat' ? 'Street map' : 'Satellite';
+  };
+  $('#mq').addEventListener('keydown', async e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const v = e.target.value.trim();
+    const ll = v.match(/^\s*(-?\d+(\.\d+)?)\s*[, ]\s*(-?\d+(\.\d+)?)\s*$/);
+    if (ll) return map.setView([+ll[1], +ll[3]], 18);
+    const mine = PLACES.find(x => x.name.toLowerCase().includes(v.toLowerCase()));
+    if (mine && (GEO[mine.id] || mine.lat != null))
+      return GEO[mine.id]
+        ? map.fitBounds(GEO[mine.id], { padding: [20, 20] })
+        : map.setView([mine.lat, mine.lng], 18);
+    try {
+      const r = await fetch(
+        'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=in&q=' +
+          encodeURIComponent(v)
+      );
+      const j = await r.json();
+      if (j[0]) map.setView([+j[0].lat, +j[0].lon], 16);
+      else toast('Not found');
+    } catch (x) {
+      toast('Search needs a connection');
     }
-  ).addTo(map);
+  });
+  places();
   layer = L.layerGroup().addTo(map);
   return map;
 }
-async function plotOutline() {
+// outlines (geo) of every farm and block, kept by id
+async function loadGeo() {
+  GEO = {};
   try {
-    const p = await ORIGIN.get(BLOCK);
-    return p || null;
-  } catch (e) {
-    return null;
-  }
+    const M = APP.places || { farm: 'farm', block: 'block' };
+    const D = await ORIGIN.allTypes([M.farm, M.block]);
+    [...(D[M.farm] || []), ...(D[M.block] || [])].forEach(r => {
+      if (Array.isArray(r.geo) && r.geo.length > 2) GEO[r.id] = r.geo;
+    });
+  } catch (e) {}
+}
+function places() {
+  const g = L.layerGroup().addTo(map);
+  PLACES.forEach(p => {
+    const here = p.id === BLOCK;
+    if (GEO[p.id])
+      L.polygon(GEO[p.id], {
+        color: here ? rowColour('Boundary') : p.kind === 'farm' ? '#ffffff' : '#ffffffaa',
+        weight: here ? 3 : p.kind === 'farm' ? 2 : 1,
+        dashArray: here ? '6 4' : null,
+        fillOpacity: here ? 0.06 : 0,
+        interactive: false,
+      })
+        .bindTooltip(esc(p.name), { permanent: here, direction: 'center', className: 'plabel' })
+        .addTo(g);
+    else if (p.lat != null && (p.kind === 'farm' || here))
+      L.circleMarker([p.lat, p.lng], {
+        radius: here ? 7 : 5,
+        color: '#fff',
+        weight: 2,
+        fillColor: here ? rowColour('Boundary') : '#555',
+        fillOpacity: 1,
+        interactive: false,
+      })
+        .bindTooltip(esc(p.name), { permanent: here, direction: 'top', className: 'plabel' })
+        .addTo(g);
+  });
+}
+async function plotOutline() {
+  return GEO[BLOCK] ? { geo: GEO[BLOCK] } : null;
 }
 function draw(rows, opts) {
   layer.clearLayers();
@@ -372,27 +464,23 @@ function draw(rows, opts) {
   });
   return pts;
 }
-// centre an editing map: the rows, else the block outline, else its GPS point, else the farm's
+// centre a map: the rows, else the block outline, else its GPS point (or its farm's), else the
+// farm's outline, else every place there is; false when there is nothing to go on
 async function fitBlock(pts) {
   if (pts.length) return fit(pts);
-  const P = await plotOutline();
-  if (P && Array.isArray(P.geo) && P.geo.length > 2) return map.fitBounds(P.geo, { padding: [20, 20] });
   const b = blockOf(BLOCK);
+  if (GEO[BLOCK]) return map.fitBounds(GEO[BLOCK], { padding: [20, 20] });
   if (b.lat != null) return map.setView([b.lat, b.lng], 18);
+  if (GEO[b.farmId]) return map.fitBounds(GEO[b.farmId], { padding: [20, 20] });
+  const all = [...Object.values(GEO).flat(), ...PLACES.filter(p => p.lat != null).map(p => [p.lat, p.lng])];
+  if (all.length) {
+    map.fitBounds(all, { padding: [20, 20], maxZoom: 17 });
+    return false;
+  }
   return false;
 }
 // the block outline, dashed in the Boundary colour, under everything else
-async function outline() {
-  const P = await plotOutline();
-  if (P && Array.isArray(P.geo) && P.geo.length > 2)
-    L.polygon(P.geo, {
-      color: rowColour('Boundary'),
-      weight: 2,
-      dashArray: '6 4',
-      fillOpacity: 0.05,
-      interactive: false,
-    }).addTo(map);
-}
+async function outline() {}
 // centre on where the phone is (for drawing a row while standing in the block)
 function locateBtn() {
   const b = L.control({ position: 'topright' });
@@ -551,18 +639,7 @@ async function listView() {
   mapIn($('#map'));
   const pts = draw(rows);
   const b = blockOf(BLOCK);
-  fit(pts, b.lat != null ? [b.lat, b.lng] : null);
-  const P = await plotOutline();
-  if (P && Array.isArray(P.geo) && P.geo.length > 2) {
-    L.polygon(P.geo, {
-      color: rowColour('Boundary'),
-      weight: 2,
-      dashArray: '6 4',
-      fillOpacity: 0.05,
-      interactive: false,
-    }).addTo(map);
-    if (!pts.length) map.fitBounds(P.geo, { padding: [20, 20] });
-  }
+  await fitBlock(pts);
   map.on('zoomend', () => draw(blockRows()));
   $('#blk').onchange = () => ((BLOCK = $('#blk').value), listView());
   document.querySelectorAll('[data-kc]').forEach(
@@ -674,7 +751,6 @@ async function drawView() {
     '<div class="tools"><button class="btn" id="undo">Undo</button><button class="btn app" id="done">Save the row</button></div>';
   mapIn($('#map'));
   map.doubleClickZoom.disable();
-  locateBtn();
   await outline();
   if ((await fitBlock(draw(blockRows(), { labels: false, still: true }))) === false)
     $('#dinfo').textContent =
@@ -741,7 +817,6 @@ async function walkView() {
     ' of the row, tap Start, walk to the last one, tap Stop. Keep the phone steady.</div><div id="map"></div>' +
     '<div class="card mini" id="gps">Not started.</div><div class="tools"><button class="btn app" id="go">Start</button><label class="mini" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="str" checked style="width:20px;height:20px"> Straight row</label></div>';
   mapIn($('#map'));
-  locateBtn();
   await outline();
   await fitBlock(draw(blockRows(), { labels: false, still: true }));
   const tmp = L.layerGroup().addTo(map);

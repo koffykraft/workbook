@@ -7,6 +7,7 @@
     ['roast', 'Roast', 'https://roast.koffykraft.coffee/'],
     ['koko', 'Koko', 'https://koko.koffykraft.coffee/'],
     ['rabr', 'Rabr', 'https://rabr.koffykraft.coffee/'],
+    ['buna', 'Buna', 'https://buna.koffykraft.coffee/'],
   ];
   // a ? beside the account button on every page, opening this page's part of the guide
   function help() {
