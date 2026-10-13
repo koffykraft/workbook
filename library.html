@@ -108,7 +108,9 @@ async function view() {
     view();
   };
   $('#add').onclick = add;
-  $('#nm').onkeydown = e => e.key === 'Enter' && add();
+  $('#nm').onkeydown = e => {
+    if (e.key === 'Enter') add();
+  };
   document
     .querySelectorAll('[data-hide]')
     .forEach(
