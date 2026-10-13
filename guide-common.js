@@ -9,6 +9,8 @@
     farms = W('farms'),
     block = W('block'),
     blocks = W('blocks');
+  const plant = W('crop') === 'rubber' ? 'tree' : 'plant',
+    plants = plant + 's';
   const placesPage = (APP.placesPage || 'places') + '.html';
   const accountPage = APP.account || 'account.html';
   window.KK_GUIDE_COMMON = [
@@ -85,17 +87,89 @@
     },
     {
       id: 'map',
-      pages: ['trail'],
-      title: 'Map and trails',
+      pages: ['map'],
+      title: 'Map',
       open: 'map.html',
-      what: 'Outlines and spots on a satellite map, and paths, roads and routes walked with the phone.',
+      what: 'Outlines and spots on a satellite map, with the trails and rows you have recorded.',
       steps: [
         'Map › pick a ' +
           block.toLowerCase() +
           ' › Mark: tap each corner, then Finish. Area and height are worked out.',
         'Add a spot for a store, shed, water source or gate.',
-        'Trails › Record, choose the kind (road, footpath, drain, route), walk it, Stop. Trails show on the map.',
+        'Trails you walk show on the map in the colour of their kind (see Trails below).',
         'Save and share: a map link, KML for Google Earth, GeoJSON, or a printed sheet.',
+      ],
+    },
+    {
+      id: 'trails',
+      pages: ['trail'],
+      title: 'Trails',
+      open: 'trail.html',
+      what:
+        'Walk something with the phone and keep its line: a ' +
+        block.toLowerCase() +
+        ' walk, a footpath, road, drain, fence or boundary, a working route, or the rows of ' +
+        plants +
+        '. Add stops with notes and photos on the way. Trails are kept on this phone only, not in your account, so save a backup now and then.',
+      steps: [
+        'Trails › ● Start a trail. Allow location when the phone asks.',
+        'Pick what the trail is (path, road, drain, fence, route…). The kind sets its colour here and on the Map; you can change it later.',
+        'Tap ● Start and walk. Keep the screen on and the page open: phones stop giving the location to a web page when the screen goes off. ❚❚ Pause for a break, ● Resume to carry on.',
+        'On the way: 📷 Photo here for a picture at that spot, ＋ Stop for a note (a spring, a damaged tree, a gate, a soil pit).',
+        'Finish when you are done. Rename it, change the kind, add stops on the map, or edit a stop’s note and photos.',
+        'Distance, time and climb show for each trail. Rough GPS fixes (worse than about 50 m) are left out.',
+        'Share or save one trail: Trail pack (.zip with photos and a page that opens anywhere), GPX for hiking apps, KML for Google Earth, or GeoJSON.',
+        'Back up all trails (.zip) from the Trails list, and keep the file in Drive or Files. Open a trail file brings a pack or backup back, on this phone or a new one.',
+      ],
+      tips: [
+        'To map ' +
+          plant +
+          ' rows, walk up one row, cross over, walk down the next and so on in one trail; then open Rows › From a trail and give the spacing.',
+        'GPS is best in the open and weaker under thick canopy. Stand still a few seconds at corners and row ends.',
+        'Clearing the browser’s site data, or uninstalling, removes trails that were never saved as a file.',
+      ],
+    },
+    {
+      id: 'rows',
+      pages: ['rows'],
+      title: 'Rows and ' + plants,
+      open: 'rows.html',
+      what:
+        'Each row of a ' +
+        block.toLowerCase() +
+        ' as a line on the map, with its ' +
+        plants +
+        ' placed along it at the spacing you give, numbered and labelled (R3-12), each with its own status and note.',
+      steps: [
+        'Rows › pick the ' + block.toLowerCase() + '. The first time, add one row in any of four ways:',
+        'From a trail: Trails › Record, walk up the first row, turn, down the next, and so on; Stop. Then Rows › From a trail › pick it. Each straight run between the turns is offered as a row: tick the ones that are rows, give the spacing in the row, Make these rows.',
+        'Walk a row: stand at the first ' + plant + ', Start, walk to the last, Stop.',
+        'Draw a row: tap its start and its end on the satellite map (and any bends).',
+        'Copy a row alongside: once one row is right, copy it across the ' +
+          block.toLowerCase() +
+          ' at the spacing between rows.',
+        'Open a row to rename it, give a label prefix, the spacing, where the first ' +
+          plant +
+          ' stands, the variety and the year planted. Reverse direction if the numbers run the wrong way.',
+        'Tap a ' +
+          plant +
+          ' on the map (zoom in close to see the numbers), or open All ' +
+          plants +
+          ' in this row, to mark it Healthy, Weak, Sick, Dead, Gap or Replanted with a note.',
+        'Kind of row: main crop, intercrop, short-term crop, shade, boundary and so on. Each kind has its own colour on the map; tap a colour under Colours to change it, and add or rename kinds in Library › Row kinds. The ' +
+          block.toLowerCase() +
+          ' outline shows dashed in the Boundary colour.',
+        'Export CSV or GeoJSON, or print the map.',
+      ],
+      tips: [
+        'Phone GPS is good to a few metres, so a dot may sit a little off the real ' +
+          plant +
+          '; its number along the row is what counts. Stop for a few seconds at each row end while walking.',
+        'If the first ' +
+          plant +
+          ' is not right at the start of the line, set "First ' +
+          plant +
+          ' from the start".',
       ],
     },
     {

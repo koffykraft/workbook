@@ -947,6 +947,7 @@ export default {
         'tasting',
         'colour',
         'lib',
+        'row',
       ];
       const cnt = await e.DB.prepare('SELECT COUNT(*) AS n FROM origin_records WHERE owner_user_id=?')
         .bind(me.id)

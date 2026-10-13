@@ -278,6 +278,13 @@ async function view() {
                   '</a>'
                 : esc(x)) +
               (base.has(x.toLowerCase()) ? ' <span class="tag">app</span>' : '') +
+              (LIST === 'rowkinds'
+                ? ' <input type="color" title="Colour on the map" data-colour="' +
+                  esc(x) +
+                  '" value="' +
+                  esc(rowColour(x)) +
+                  '" style="width:34px;height:26px;padding:0;border:0;vertical-align:middle">'
+                : '') +
               (PARTY[LIST]
                 ? (() => {
                     const i = LIB.info(LIST, x);
@@ -363,6 +370,15 @@ async function view() {
     .forEach(
       b => (b.onclick = async () => (await LIB.hide(LIST, b.dataset.hide, true), recordsSync(), view()))
     );
+  document.querySelectorAll('[data-colour]').forEach(
+    c =>
+      (c.onchange = async () => {
+        const n = c.dataset.colour;
+        await LIB.setInfo(LIST, n, { ...LIB.info(LIST, n), color: c.value });
+        recordsSync();
+        toast('Colour kept');
+      })
+  );
   document
     .querySelectorAll('[data-show]')
     .forEach(

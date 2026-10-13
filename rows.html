@@ -1,0 +1,1482 @@
+<!doctype html>
+<!-- KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f5ef">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Rows and plants</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="kk.css"><script src="app.config.js"></script><script src="tap.js" defer></script><script src="kk-base.js"></script>
+<style>
+#map {
+  height: 58vh;
+  min-height: 320px;
+  border-radius: 14px;
+  margin: 8px 0;
+  background: #2b3a2b;
+}
+.plabel {
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  padding: 1px 5px;
+  font-size: 11px;
+  box-shadow: none;
+}
+.plabel::before {
+  display: none;
+}
+.bar {
+  position: sticky;
+  bottom: 8px;
+  z-index: 500;
+}
+.pl {
+  display: grid;
+  grid-template-columns: 70px 1fr 120px;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+}
+.pl select,
+.pl input {
+  width: 100%;
+}
+.cand {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+}
+.cand i {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  flex: none;
+}
+.chain {
+  font-size: 14px;
+  color: var(--muted, #666);
+  margin: 6px 0;
+}
+.pp {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.ppqr svg {
+  width: 150px;
+  height: 150px;
+}
+.facts {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.facts td {
+  padding: 4px 6px 4px 0;
+  border-top: 1px solid var(--line);
+  vertical-align: top;
+}
+.facts td:first-child {
+  color: var(--muted, #666);
+  width: 34%;
+}
+@media print {
+  .noprint,
+  #kh,
+  #kf {
+    display: none !important;
+  }
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 6px;
+  align-items: center;
+}
+.legend label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+.legend input[type='color'] {
+  width: 30px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+</style>
+</head>
+<body data-page="rows"><main class="app">
+<header id="kh"></header>
+<div id="view"></div>
+<div id="kf"></div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="app.js"></script><script src="sync.js"></script><script src="origin-db.js"></script><script src="places.js"></script><script src="qrcode.js"></script>
+<script>
+// Rows and plants: the plant rows of a block, each a line on the map with a plant spacing, so every
+// plant gets a number and a label (R3-12) and its own status and notes. A row can be drawn on the
+// map, walked with the phone, taken from a recorded trail (each straight run of the walk becomes a
+// row), or copied alongside an existing row at the row spacing. Positions come from phone GPS, so
+// a plant's point is good to a few metres: the number along the row is what identifies it.
+/* global L, qrcode */
+const $ = s => document.querySelector(s);
+const STATUS = (
+  SET('rows').status || ['Healthy', 'Weak', 'Sick', 'Dead', 'Gap (missing)', 'Replanted']
+).slice();
+const COL = {
+  Healthy: '#52b788',
+  Weak: '#f4a261',
+  Sick: '#e76f51',
+  Dead: '#1b1b1b',
+  'Gap (missing)': '#ffffff',
+  Replanted: '#4cc9f0',
+};
+const TRAIL_DB =
+  { Rabr: 'RABRTrails', Koko: 'KokoTrails', KoffyKraft: 'KoffyKraftTrails' }[APP.short] ||
+  APP.short + 'Trails';
+const plantWord = W('crop') === 'rubber' ? 'tree' : 'plant';
+let PLACES = [],
+  ROWS = [],
+  BLOCK = '',
+  map = null,
+  layer = null,
+  draft = null,
+  watch = null;
+// ---- geometry: metres on a flat patch around a point, good for a block ----
+function proj(o) {
+  const k = Math.cos((o[0] * Math.PI) / 180);
+  return {
+    to: p => [(p[1] - o[1]) * 111320 * k, (p[0] - o[0]) * 110540],
+    back: q => [o[0] + q[1] / 110540, o[1] + q[0] / (111320 * k)],
+  };
+}
+const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+function lengthM(line) {
+  if (!line || line.length < 2) return 0;
+  const P = proj(line[0]),
+    q = line.map(P.to);
+  let s = 0;
+  for (let i = 1; i < q.length; i++) s += dist(q[i - 1], q[i]);
+  return s;
+}
+// plant points along a row: the first at `start` metres, then every `spacing` metres
+function plantsAlong(line, spacing, start) {
+  if (!line || line.length < 2 || !(spacing > 0)) return [];
+  const P = proj(line[0]),
+    q = line.map(P.to),
+    out = [];
+  let want = Math.max(0, start || 0),
+    run = 0;
+  for (let i = 1; i < q.length; i++) {
+    const a = q[i - 1],
+      b = q[i],
+      d = dist(a, b);
+    while (want <= run + d + 1e-6 && out.length < 5000) {
+      const t = d ? (want - run) / d : 0;
+      out.push(P.back([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]));
+      want += spacing;
+    }
+    run += d;
+  }
+  return out;
+}
+// Douglas-Peucker in metres, to take GPS wobble out of a walked line
+function simplify(line, tol) {
+  if (line.length < 3) return line.slice();
+  const P = proj(line[0]),
+    q = line.map(P.to);
+  const keep = new Array(q.length).fill(false);
+  keep[0] = keep[q.length - 1] = true;
+  const st = [[0, q.length - 1]];
+  while (st.length) {
+    const [i, j] = st.pop();
+    let m = -1,
+      md = 0;
+    for (let k = i + 1; k < j; k++) {
+      const [x1, y1] = q[i],
+        [x2, y2] = q[j],
+        [x, y] = q[k];
+      const L2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
+      const t = L2 ? Math.max(0, Math.min(1, ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / L2)) : 0;
+      const d = Math.hypot(x - (x1 + t * (x2 - x1)), y - (y1 + t * (y2 - y1)));
+      if (d > md) (md = d), (m = k);
+    }
+    if (md > tol && m > 0) {
+      keep[m] = true;
+      st.push([i, m], [m, j]);
+    }
+  }
+  return line.filter((_, i) => keep[i]);
+}
+// a walk up and down the rows, split wherever it turns: each long straight run is a row
+function splitRuns(line) {
+  const s = simplify(line, 3);
+  if (s.length < 2) return [];
+  const P = proj(s[0]),
+    q = s.map(P.to);
+  const head = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]);
+  const runs = [];
+  let cur = [s[0]];
+  for (let i = 1; i < s.length; i++) {
+    cur.push(s[i]);
+    if (i < s.length - 1) {
+      let turn = Math.abs(head(q[i - 1], q[i]) - head(q[i], q[i + 1]));
+      if (turn > Math.PI) turn = 2 * Math.PI - turn;
+      if (turn > (60 * Math.PI) / 180) {
+        runs.push(cur);
+        cur = [s[i]];
+      }
+    }
+  }
+  runs.push(cur);
+  // the short cross-overs between rows are dropped: under 8 m, or well short of a typical run
+  const lens = runs.map(lengthM),
+    med = lens.slice().sort((a, b) => a - b)[Math.floor(lens.length / 2)] || 0,
+    longest = Math.max(0, ...lens);
+  return runs.filter((r, i) => lens[i] >= 8 && lens[i] >= 0.3 * Math.max(med, longest / 2));
+}
+// a straight line through a walked run (its main direction), from end to end
+function straighten(line) {
+  if (line.length < 2) return line;
+  const P = proj(line[0]),
+    q = line.map(P.to);
+  const mx = q.reduce((a, p) => a + p[0], 0) / q.length,
+    my = q.reduce((a, p) => a + p[1], 0) / q.length;
+  let sxx = 0,
+    syy = 0,
+    sxy = 0;
+  q.forEach(([x, y]) => {
+    sxx += (x - mx) ** 2;
+    syy += (y - my) ** 2;
+    sxy += (x - mx) * (y - my);
+  });
+  const ang = 0.5 * Math.atan2(2 * sxy, sxx - syy),
+    ux = Math.cos(ang),
+    uy = Math.sin(ang);
+  const ts = q.map(([x, y]) => (x - mx) * ux + (y - my) * uy);
+  const a = ts[0],
+    b = ts[ts.length - 1];
+  return [P.back([mx + a * ux, my + a * uy]), P.back([mx + b * ux, my + b * uy])];
+}
+// the same row moved sideways by `off` metres (positive = to the right, walking start to end)
+function offsetLine(line, off) {
+  const P = proj(line[0]),
+    q = line.map(P.to);
+  const a = q[0],
+    b = q[q.length - 1],
+    d = dist(a, b) || 1;
+  const nx = (b[1] - a[1]) / d,
+    ny = -(b[0] - a[0]) / d;
+  return q.map(([x, y]) => P.back([x + nx * off, y + ny * off]));
+}
+// kinds of row (main crop, intercrop, short-term, boundary…) from Library › Row kinds, each with a colour
+const KINDS = () => LIB.get('rowkinds');
+const kindOf = r => r.kind || KINDS()[0] || 'Main crop';
+const colourOf = r => rowColour(kindOf(r));
+const kindSelect = (id, v) =>
+  '<select id="' +
+  id +
+  '">' +
+  KINDS()
+    .map(k => '<option' + (k === v ? ' selected' : '') + '>' + esc(k) + '</option>')
+    .join('') +
+  '</select>';
+const plantsOf = r => plantsAlong(r.line, +r.spacing, +(r.start || 0));
+const labelOf = (r, i) => (r.prefix || r.name || 'R') + '-' + (i + 1);
+// ---- data ----
+async function load() {
+  await LIB.load().catch(() => {});
+  PLACES = await KKPLACES.list();
+  ROWS = (await ORIGIN.all('row')).sort(
+    (a, b) =>
+      (+a.n || 0) - (+b.n || 0) || String(a.name).localeCompare(String(b.name), undefined, { numeric: true })
+  );
+  if (!BLOCK) {
+    const h = new URLSearchParams(location.search).get('block');
+    BLOCK = h || (PLACES.find(p => p.kind === 'block') || {}).id || '';
+  }
+}
+const blockRows = () => ROWS.filter(r => r.plotId === BLOCK);
+const blockOf = id => PLACES.find(p => p.id === id) || {};
+function mapIn(el) {
+  if (map) map.remove();
+  map = L.map(el, { zoomControl: true }).setView([10.3, 76.6], 8);
+  L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {
+      maxNativeZoom: 18,
+      maxZoom: 22,
+      attribution: 'Esri, Maxar, Earthstar Geographics',
+    }
+  ).addTo(map);
+  layer = L.layerGroup().addTo(map);
+  return map;
+}
+async function plotOutline() {
+  try {
+    const p = await ORIGIN.get(BLOCK);
+    return p || null;
+  } catch (e) {
+    return null;
+  }
+}
+function draw(rows, opts) {
+  layer.clearLayers();
+  const pts = [];
+  rows.forEach(r => {
+    if (!r.line || r.line.length < 2) return;
+    const kc = colourOf(r);
+    L.polyline(r.line, { color: kc, weight: 3, opacity: 0.9 })
+      .bindTooltip(esc(r.name || 'Row'))
+      .on('click', () => (location.hash = 'row/' + encodeURIComponent(r.id)))
+      .addTo(layer);
+    r.line.forEach(p => pts.push(p));
+    const many = map.getZoom() >= 19;
+    plantsOf(r).forEach((p, i) => {
+      const st = ((r.plants || {})[i + 1] || {}).status || 'Healthy';
+      const m = L.circleMarker(p, {
+        radius: 4,
+        color: '#000',
+        weight: 1,
+        fillColor: st === 'Healthy' ? kc : COL[st] || kc,
+        fillOpacity: 1,
+      }).addTo(layer);
+      m.on('click', () => (location.hash = 'plant/' + encodeURIComponent(r.id) + '/' + (i + 1)));
+      if (many && (opts || {}).labels !== false)
+        m.bindTooltip(String(i + 1), {
+          permanent: true,
+          direction: 'top',
+          className: 'plabel',
+          offset: [0, -4],
+        });
+    });
+  });
+  return pts;
+}
+function fit(pts, fallback) {
+  if (pts.length) map.fitBounds(pts, { padding: [30, 30], maxZoom: 20 });
+  else if (fallback) map.setView(fallback, 18);
+}
+// the colour key: each kind of row in use, with a colour box to change it
+function legendHtml(rows) {
+  const used = KINDS().filter(k => rows.some(r => kindOf(r) === k));
+  const show = used.length ? used : KINDS().slice(0, 4);
+  return (
+    '<div class="card"><b>Colours</b> <span class="mini">tap a colour to change it · <a href="library.html#rowkinds">row kinds</a></span><div class="legend">' +
+    show
+      .map(k => {
+        const rs = rows.filter(r => kindOf(r) === k);
+        return (
+          '<label><input type="color" data-kc="' +
+          esc(k) +
+          '" value="' +
+          esc(rowColour(k)) +
+          '"> ' +
+          esc(k) +
+          (rs.length
+            ? ' <span class="mini">' +
+              rs.length +
+              ' rows · ' +
+              rs.reduce((a, r) => a + plantsOf(r).length, 0) +
+              '</span>'
+            : '') +
+          '</label>'
+        );
+      })
+      .join('') +
+    '<span class="mini"><i style="display:inline-block;width:18px;vertical-align:middle;border-top:2px dashed ' +
+    esc(rowColour('Boundary')) +
+    '"></i> ' +
+    esc(W('block').toLowerCase()) +
+    ' outline</span></div></div>'
+  );
+}
+// ---- views ----
+async function listView() {
+  await load();
+  const blocks = PLACES.filter(p => p.kind === 'block');
+  const rows = blockRows();
+  const total = rows.reduce((a, r) => a + plantsOf(r).length, 0);
+  const st = {};
+  rows.forEach(r =>
+    plantsOf(r).forEach((_, i) => {
+      const s = ((r.plants || {})[i + 1] || {}).status || 'Healthy';
+      st[s] = (st[s] || 0) + 1;
+    })
+  );
+  $('#view').innerHTML =
+    '<h1>Rows and ' +
+    plantWord +
+    's</h1><div class="sub">Each row of a ' +
+    esc(W('block').toLowerCase()) +
+    ' as a line, with ' +
+    plantWord +
+    's placed along it at the spacing you give, numbered and labelled. Draw a row, walk it, take rows from a trail, or copy a row alongside.</div>' +
+    '<div class="form"><label class="full">' +
+    esc(W('block')) +
+    '<select id="blk">' +
+    KKPLACES.options(
+      PLACES.filter(p => p.kind === 'block' || p.kind === 'farm'),
+      BLOCK,
+      false
+    ) +
+    '</select></label></div>' +
+    (blocks.length
+      ? ''
+      : '<div class="card">Add a ' +
+        esc(W('block').toLowerCase()) +
+        ' first in <a href="' +
+        esc((APP.placesPage || 'places') + '.html') +
+        '">' +
+        esc(W('farms')) +
+        '</a>.</div>') +
+    '<div id="map"></div>' +
+    '<div class="row" style="flex-wrap:wrap;margin:8px 0">' +
+    '<a class="btn app" href="#draw">✏️ Draw a row</a><a class="btn" href="#walk">🚶 Walk a row</a><a class="btn" href="#trail">〰️ From a trail</a>' +
+    (rows.length ? '<a class="btn" href="#copy">⇉ Copy a row alongside</a>' : '') +
+    '</div>' +
+    legendHtml(rows) +
+    '<div class="card"><b>' +
+    rows.length +
+    ' rows · ' +
+    total +
+    ' ' +
+    plantWord +
+    's</b>' +
+    (Object.keys(st).length
+      ? '<div class="mini">' +
+        esc(
+          Object.entries(st)
+            .map(([k, v]) => v + ' ' + k.toLowerCase())
+            .join(' · ')
+        ) +
+        '</div>'
+      : '') +
+    (rows.length
+      ? rows
+          .map(
+            r =>
+              '<div class="cand"><i style="background:' +
+              esc(colourOf(r)) +
+              '"></i><a href="#row/' +
+              encodeURIComponent(r.id) +
+              '" style="flex:1"><b>' +
+              esc(r.name || 'Row') +
+              '</b> <span class="mini">' +
+              esc(kindOf(r)) +
+              '</span></a><span class="mini">' +
+              plantsOf(r).length +
+              ' ' +
+              plantWord +
+              's · ' +
+              Math.round(lengthM(r.line)) +
+              ' m · every ' +
+              esc(r.spacing) +
+              ' m</span></div>'
+          )
+          .join('')
+      : '<div class="mini" style="margin-top:6px">No rows yet.</div>') +
+    '</div>' +
+    (rows.length
+      ? '<div class="row"><button class="btn" id="csv">Export ' +
+        plantWord +
+        's (CSV)</button><button class="btn" id="gj">GeoJSON</button><button class="btn" onclick="print()">Print</button></div>'
+      : '') +
+    '<div class="card mini">The phone\'s GPS is good to a few metres, so a ' +
+    plantWord +
+    "'s dot can sit a little off; its number along the row is what identifies it. Walk with the phone held steady and stop a moment at each row end.</div>";
+  mapIn($('#map'));
+  const pts = draw(rows);
+  const b = blockOf(BLOCK);
+  fit(pts, b.lat != null ? [b.lat, b.lng] : null);
+  const P = await plotOutline();
+  if (P && Array.isArray(P.geo) && P.geo.length > 2) {
+    L.polygon(P.geo, {
+      color: rowColour('Boundary'),
+      weight: 2,
+      dashArray: '6 4',
+      fillOpacity: 0.05,
+      interactive: false,
+    }).addTo(map);
+    if (!pts.length) map.fitBounds(P.geo, { padding: [20, 20] });
+  }
+  map.on('zoomend', () => draw(blockRows()));
+  $('#blk').onchange = () => ((BLOCK = $('#blk').value), listView());
+  document.querySelectorAll('[data-kc]').forEach(
+    c =>
+      (c.onchange = async () => {
+        await LIB.setInfo('rowkinds', c.dataset.kc, {
+          ...LIB.info('rowkinds', c.dataset.kc),
+          color: c.value,
+        });
+        recordsSync();
+        listView();
+      })
+  );
+  if ($('#csv'))
+    $('#csv').onclick = () => {
+      const out = [];
+      rows.forEach(r =>
+        plantsOf(r).forEach((p, i) => {
+          const d = (r.plants || {})[i + 1] || {};
+          out.push({
+            block: b.label,
+            row: r.name,
+            kind: kindOf(r),
+            number: i + 1,
+            label: labelOf(r, i),
+            lat: p[0].toFixed(7),
+            lng: p[1].toFixed(7),
+            status: d.status || 'Healthy',
+            variety: d.variety || r.variety || '',
+            note: d.note || '',
+          });
+        })
+      );
+      saveCsv(
+        plantWord + 's-' + (b.name || 'block'),
+        out,
+        ['block', 'row', 'kind', 'number', 'label', 'lat', 'lng', 'status', 'variety', 'note'].map(k => [
+          k,
+          k,
+        ])
+      );
+    };
+  if ($('#gj'))
+    $('#gj').onclick = () => {
+      const F = [];
+      rows.forEach(r => {
+        F.push({
+          type: 'Feature',
+          properties: { row: r.name, kind: kindOf(r), stroke: colourOf(r) },
+          geometry: { type: 'LineString', coordinates: r.line.map(p => [p[1], p[0]]) },
+        });
+        plantsOf(r).forEach((p, i) =>
+          F.push({
+            type: 'Feature',
+            properties: {
+              label: labelOf(r, i),
+              row: r.name,
+              kind: kindOf(r),
+              number: i + 1,
+              status: ((r.plants || {})[i + 1] || {}).status || 'Healthy',
+            },
+            geometry: { type: 'Point', coordinates: [+p[1].toFixed(7), +p[0].toFixed(7)] },
+          })
+        );
+      });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(
+        new Blob([JSON.stringify({ type: 'FeatureCollection', features: F })], {
+          type: 'application/geo+json',
+        })
+      );
+      a.download = 'rows-' + (b.name || 'block') + '.geojson';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => a.remove(), 500);
+    };
+}
+function nextName() {
+  const n = blockRows().length + 1;
+  return 'R' + n;
+}
+async function saveRow(line, extra) {
+  const rows = blockRows();
+  const last = rows[rows.length - 1] || {};
+  return ORIGIN.put({
+    type: 'row',
+    plotId: BLOCK,
+    n: rows.length + 1,
+    name: nextName(),
+    spacing: last.spacing || SET('rows').spacing || 3,
+    kind: last.kind || KINDS()[0] || '',
+    start: 0,
+    line,
+    plants: {},
+    ...(extra || {}),
+  });
+}
+// draw: tap the start, any bends, and the end
+async function drawView() {
+  await load();
+  draft = [];
+  $('#view').innerHTML =
+    '<a href="#">‹ Rows</a><h2>Draw a row</h2><div class="sub">Tap where the row starts, any bends, then where it ends. Zoom in close for accuracy.</div><div id="map"></div>' +
+    '<div class="row bar"><button class="btn" id="undo">Undo</button><button class="btn app" id="done">Save the row</button></div>';
+  mapIn($('#map'));
+  fit(
+    draw(blockRows(), { labels: false }),
+    blockOf(BLOCK).lat != null ? [blockOf(BLOCK).lat, blockOf(BLOCK).lng] : null
+  );
+  const tmp = L.layerGroup().addTo(map);
+  const redraw = () => {
+    tmp.clearLayers();
+    if (draft.length) L.polyline(draft, { color: '#ff7a1a', weight: 4 }).addTo(tmp);
+    draft.forEach(p =>
+      L.circleMarker(p, { radius: 5, color: '#fff', fillColor: '#ff7a1a', fillOpacity: 1 }).addTo(tmp)
+    );
+  };
+  map.on('click', e => {
+    draft.push([e.latlng.lat, e.latlng.lng]);
+    redraw();
+  });
+  $('#undo').onclick = () => (draft.pop(), redraw());
+  $('#done').onclick = async () => {
+    if (draft.length < 2) return toast('Tap the start and the end');
+    const r = await saveRow(draft);
+    recordsSync();
+    location.hash = 'row/' + encodeURIComponent(r.id);
+  };
+}
+// walk: the phone records the row as you walk it
+async function walkView() {
+  await load();
+  draft = [];
+  $('#view').innerHTML =
+    '<a href="#">‹ Rows</a><h2>Walk a row</h2><div class="sub">Stand at the first ' +
+    plantWord +
+    ' of the row, tap Start, walk to the last one, tap Stop. Keep the phone steady.</div><div id="map"></div>' +
+    '<div class="card mini" id="gps">Not started.</div><div class="row bar"><button class="btn app" id="go">Start</button><label class="mini" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="str" checked style="width:20px;height:20px"> Straight row</label></div>';
+  mapIn($('#map'));
+  fit(
+    draw(blockRows(), { labels: false }),
+    blockOf(BLOCK).lat != null ? [blockOf(BLOCK).lat, blockOf(BLOCK).lng] : null
+  );
+  const tmp = L.layerGroup().addTo(map);
+  $('#go').onclick = async () => {
+    if (watch == null) {
+      if (!navigator.geolocation) return toast('This phone has no GPS here');
+      draft = [];
+      watch = navigator.geolocation.watchPosition(
+        p => {
+          if (p.coords.accuracy > 25)
+            return ($('#gps').textContent =
+              'Waiting for a better GPS fix (±' + Math.round(p.coords.accuracy) + ' m)…');
+          draft.push([p.coords.latitude, p.coords.longitude]);
+          tmp.clearLayers();
+          L.polyline(draft, { color: '#ff7a1a', weight: 4 }).addTo(tmp);
+          map.setView(draft[draft.length - 1], Math.max(map.getZoom(), 19));
+          $('#gps').textContent =
+            draft.length +
+            ' points · ' +
+            Math.round(lengthM(draft)) +
+            ' m · ±' +
+            Math.round(p.coords.accuracy) +
+            ' m';
+        },
+        () => toast('Could not read the GPS'),
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
+      );
+      $('#go').textContent = 'Stop';
+      return;
+    }
+    navigator.geolocation.clearWatch(watch);
+    watch = null;
+    if (draft.length < 2 || lengthM(draft) < 3) return toast('Too short to be a row');
+    const line = $('#str').checked ? straighten(draft) : simplify(draft, 2);
+    const r = await saveRow(line);
+    recordsSync();
+    location.hash = 'row/' + encodeURIComponent(r.id);
+  };
+}
+// from a trail: each straight run of the walk is offered as a row
+function trails() {
+  return new Promise(ok => {
+    let q;
+    try {
+      q = indexedDB.open(TRAIL_DB, 1);
+    } catch (e) {
+      return ok([]);
+    }
+    q.onupgradeneeded = () => {
+      const d = q.result;
+      if (!d.objectStoreNames.contains('trails')) d.createObjectStore('trails', { keyPath: 'id' });
+      if (!d.objectStoreNames.contains('photos'))
+        d.createObjectStore('photos', { keyPath: 'id' }).createIndex('trail', 'trailId');
+    };
+    q.onerror = () => ok([]);
+    q.onsuccess = () => {
+      const g = q.result.transaction('trails').objectStore('trails').getAll();
+      g.onsuccess = () =>
+        ok(
+          (g.result || [])
+            .filter(t => (t.points || []).length > 1)
+            .sort((a, b) => String(b.started || b.id).localeCompare(String(a.started || a.id)))
+        );
+      g.onerror = () => ok([]);
+    };
+  });
+}
+async function trailView(id) {
+  await load();
+  const T = await trails();
+  if (!id) {
+    $('#view').innerHTML =
+      '<a href="#">‹ Rows</a><h2>Rows from a trail</h2><div class="sub">Record a trail walking up one row and down the next. Each straight run between the turns becomes a row.</div>' +
+      (T.length
+        ? T.map(
+            t =>
+              '<div class="card"><a class="item" href="#trail/' +
+              encodeURIComponent(t.id) +
+              '"><b>' +
+              esc(t.name || 'Trail') +
+              '</b><div class="mini">' +
+              esc(
+                [
+                  t.kind,
+                  Math.round(lengthM((t.points || []).map(p => [p[0], p[1]]))) + ' m',
+                  t.started ? fmtDate(String(t.started).slice(0, 10)) : '',
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+              ) +
+              '</div></a></div>'
+          ).join('')
+        : '<div class="card">No trails on this phone yet. <a href="' +
+          esc((APP.trailPage || 'trail') + '.html#rec') +
+          '">Record one</a>, walking along each row.</div>');
+    return;
+  }
+  const t = T.find(x => x.id === id);
+  if (!t)
+    return ($('#view').innerHTML = '<div class="card">Trail not found. <a href="#trail">Back</a></div>');
+  const runs = splitRuns(t.points.map(p => [p[0], p[1]]));
+  const colors = ['#ff7a1a', '#4cc9f0', '#f72585', '#80ed99', '#ffd166', '#9b5de5', '#e76f51', '#90e0ef'];
+  $('#view').innerHTML =
+    '<a href="#trail">‹ Trails</a><h2>' +
+    esc(t.name || 'Trail') +
+    '</h2><div class="sub">' +
+    runs.length +
+    ' straight runs found. Tick the ones that are rows.</div><div id="map"></div>' +
+    '<div class="card">' +
+    runs
+      .map(
+        (r, i) =>
+          '<label class="cand"><input type="checkbox" data-run="' +
+          i +
+          '" checked style="width:22px;height:22px"><i style="background:' +
+          colors[i % colors.length] +
+          '"></i><span style="flex:1">Run ' +
+          (i + 1) +
+          '</span><span class="mini">' +
+          Math.round(lengthM(r)) +
+          ' m</span></label>'
+      )
+      .join('') +
+    '<div class="form" style="margin-top:8px"><label>' +
+    plantWord[0].toUpperCase() +
+    plantWord.slice(1) +
+    ' spacing in the row, m<input id="sp" type="number" step="any" inputmode="decimal" value="' +
+    esc((blockRows().slice(-1)[0] || {}).spacing || SET('rows').spacing || 3) +
+    '"></label>' +
+    '<label>Kind of row' +
+    kindSelect('kd', (blockRows().slice(-1)[0] || {}).kind) +
+    '</label>' +
+    '<label class="full" style="display:flex;flex-direction:row;gap:8px;align-items:center"><input type="checkbox" id="str" checked style="width:22px;height:22px"> Straight rows (best for planted rows)</label></div>' +
+    '<div class="row"><button class="btn app" id="mk">Make these rows</button></div></div>';
+  mapIn($('#map'));
+  draw(blockRows(), { labels: false });
+  const all = [];
+  runs.forEach((r, i) => {
+    L.polyline(r, { color: colors[i % colors.length], weight: 5 })
+      .bindTooltip('Run ' + (i + 1), { permanent: true })
+      .addTo(layer);
+    r.forEach(p => all.push(p));
+  });
+  fit(all);
+  $('#mk').onclick = async () => {
+    const sp = num($('#sp').value);
+    if (!sp) return toast('Give the spacing');
+    const pick = [...document.querySelectorAll('[data-run]:checked')].map(c => runs[+c.dataset.run]);
+    if (!pick.length) return toast('Tick at least one run');
+    for (const r of pick) {
+      await saveRow($('#str').checked ? straighten(r) : r, {
+        spacing: sp,
+        kind: $('#kd').value,
+        from: 'trail ' + (t.name || t.id),
+      });
+      ROWS = await ORIGIN.all('row');
+    }
+    recordsSync();
+    toast(pick.length + ' rows made');
+    location.hash = '';
+  };
+}
+// copy a row sideways at the row spacing, as many times as needed
+async function copyView() {
+  await load();
+  const rows = blockRows();
+  $('#view').innerHTML =
+    '<a href="#">‹ Rows</a><h2>Copy a row alongside</h2><div class="sub">Walk or draw one row well, then copy it across the ' +
+    esc(W('block').toLowerCase()) +
+    ' at the spacing between rows.</div>' +
+    '<div class="form"><label class="full">From row<select id="src">' +
+    rows.map(r => '<option value="' + esc(r.id) + '">' + esc(r.name) + '</option>').join('') +
+    '</select></label>' +
+    '<label>Spacing between rows, m<input id="gap" type="number" step="any" inputmode="decimal" value="' +
+    esc(SET('rows').rowSpacing || 3) +
+    '"></label>' +
+    '<label>How many new rows<input id="cnt" type="number" inputmode="numeric" value="5"></label>' +
+    '<label>Kind of the new rows' +
+    kindSelect('kd', kindOf(rows[0] || {})) +
+    '</label>' +
+    '<label class="full">Side<select id="side"><option value="1">To the right (facing from start to end)</option><option value="-1">To the left</option></select></label></div><div id="map"></div>' +
+    '<div class="row bar"><button class="btn" id="prev">Preview</button><button class="btn app" id="mk">Make the rows</button></div>';
+  mapIn($('#map'));
+  fit(draw(rows, { labels: false }));
+  const tmp = L.layerGroup().addTo(map);
+  const lines = () => {
+    const r = rows.find(x => x.id === $('#src').value);
+    const g = num($('#gap').value) || 0,
+      c = Math.min(200, num($('#cnt').value) || 0),
+      s = +$('#side').value;
+    return r ? [...Array(c)].map((_, i) => offsetLine(r.line, s * g * (i + 1))) : [];
+  };
+  $('#prev').onclick = () => {
+    tmp.clearLayers();
+    const ls = lines();
+    ls.forEach(l =>
+      L.polyline(l, { color: rowColour($('#kd').value), weight: 3, dashArray: '6 4' }).addTo(tmp)
+    );
+    fit(ls.flat().concat(rows.flatMap(r => r.line)));
+  };
+  $('#mk').onclick = async () => {
+    const r = rows.find(x => x.id === $('#src').value);
+    const ls = lines();
+    if (!ls.length) return toast('Nothing to make');
+    for (const l of ls) {
+      await saveRow(l, {
+        spacing: r.spacing,
+        start: r.start || 0,
+        kind: $('#kd').value,
+        variety: $('#kd').value === kindOf(r) ? r.variety || '' : '',
+        planted: r.planted || '',
+      });
+      ROWS = await ORIGIN.all('row');
+    }
+    recordsSync();
+    toast(ls.length + ' rows made');
+    location.hash = '';
+  };
+}
+// one row: name, spacing, where the first plant is, and its plants
+async function rowView(id) {
+  await load();
+  const r = ROWS.find(x => x.id === id);
+  if (!r) return ($('#view').innerHTML = '<div class="card">Row not found. <a href="#">Back</a></div>');
+  BLOCK = r.plotId;
+  const pl = plantsOf(r);
+  $('#view').innerHTML =
+    '<a href="#">‹ Rows</a><h2>' +
+    esc(r.name || 'Row') +
+    '</h2><div class="sub">' +
+    esc(blockOf(r.plotId).label || '') +
+    ' · ' +
+    Math.round(lengthM(r.line)) +
+    ' m · ' +
+    pl.length +
+    ' ' +
+    plantWord +
+    's</div>' +
+    '<div id="map"></div>' +
+    '<div class="form">' +
+    '<label>Row name or number<input data-k="name" value="' +
+    esc(r.name || '') +
+    '"></label>' +
+    '<label>Label prefix<input data-k="prefix" value="' +
+    esc(r.prefix || '') +
+    '" placeholder="' +
+    esc(r.name || 'R1') +
+    '"></label>' +
+    '<label>' +
+    plantWord[0].toUpperCase() +
+    plantWord.slice(1) +
+    ' spacing, m<input data-k="spacing" type="number" step="any" inputmode="decimal" value="' +
+    esc(r.spacing || '') +
+    '"></label>' +
+    '<label>First ' +
+    plantWord +
+    ' from the start, m<input data-k="start" type="number" step="any" inputmode="decimal" value="' +
+    esc(r.start || 0) +
+    '"></label>' +
+    '<label>Kind of row' +
+    LIB.pick('kind', 'rowkinds', kindOf(r)) +
+    '</label>' +
+    '<label>Variety, clone or crop' +
+    LIB.pick('variety', W('crop') === 'rubber' ? 'clones' : 'varieties', r.variety || '') +
+    '</label>' +
+    '<label>Planted (year)<input data-k="planted" type="number" inputmode="numeric" value="' +
+    esc(r.planted || '') +
+    '"></label>' +
+    '</div><div class="card mini" id="calc"></div>' +
+    '<div class="row" style="flex-wrap:wrap"><button class="btn" id="rev">Reverse direction</button><a class="btn" href="#plants/' +
+    encodeURIComponent(r.id) +
+    '">All ' +
+    plantWord +
+    's in this row</a></div>' +
+    '<div class="row sticky"><button class="btn app" id="save">Save</button><a class="btn" href="#">Cancel</a><button class="btn danger" id="del" style="margin-left:auto">Delete row</button></div>';
+  mapIn($('#map'));
+  fit(draw([r]));
+  const read = () => {
+    const o = { ...r };
+    document.querySelectorAll('[data-k]').forEach(el => (o[el.dataset.k] = el.value.trim()));
+    return o;
+  };
+  const calc = () => {
+    const o = read();
+    const n = plantsOf(o).length;
+    $('#calc').textContent =
+      n +
+      ' ' +
+      plantWord +
+      's at ' +
+      (o.spacing || '?') +
+      ' m along ' +
+      Math.round(lengthM(o.line)) +
+      ' m; labels ' +
+      labelOf(o, 0) +
+      ' to ' +
+      labelOf(o, Math.max(0, n - 1)) +
+      '.';
+    draw([o]);
+  };
+  $('#view').oninput = calc;
+  calc();
+  $('#rev').onclick = async () => {
+    await ORIGIN.put({ ...read(), line: r.line.slice().reverse() });
+    recordsSync();
+    rowView(id);
+  };
+  $('#save').onclick = async () => {
+    const o = read();
+    if (!num(o.spacing)) return toast('Give the spacing');
+    await ORIGIN.put(o);
+    recordsSync();
+    toast('Saved');
+    location.hash = '';
+  };
+  $('#del').onclick = async () => {
+    if (!confirm('Delete this row and its ' + plantWord + ' notes?')) return;
+    await ORIGIN.remove(r.id);
+    recordsSync();
+    location.hash = '';
+  };
+}
+// every plant in a row, with status and note
+async function plantsView(id) {
+  await load();
+  const r = ROWS.find(x => x.id === id);
+  if (!r) return ($('#view').innerHTML = '<div class="card">Row not found. <a href="#">Back</a></div>');
+  const pl = plantsOf(r);
+  $('#view').innerHTML =
+    '<a href="#row/' +
+    encodeURIComponent(id) +
+    '">‹ ' +
+    esc(r.name) +
+    '</a><h2>' +
+    esc(r.name) +
+    ': ' +
+    pl.length +
+    ' ' +
+    plantWord +
+    's</h2>' +
+    '<div class="card">' +
+    pl
+      .map((_, i) => {
+        const d = (r.plants || {})[i + 1] || {};
+        return (
+          '<div class="pl"><b>' +
+          esc(labelOf(r, i)) +
+          '</b><input data-note="' +
+          (i + 1) +
+          '" value="' +
+          esc(d.note || '') +
+          '" placeholder="Note"><select data-st="' +
+          (i + 1) +
+          '">' +
+          STATUS.map(
+            s => '<option' + ((d.status || 'Healthy') === s ? ' selected' : '') + '>' + esc(s) + '</option>'
+          ).join('') +
+          '</select></div>'
+        );
+      })
+      .join('') +
+    '</div><div class="row sticky"><button class="btn app" id="save">Save</button><a class="btn" href="#row/' +
+    encodeURIComponent(id) +
+    '">Cancel</a></div>';
+  $('#save').onclick = async () => {
+    const plants = {};
+    pl.forEach((_, i) => {
+      const n = i + 1,
+        st = $('[data-st="' + n + '"]').value,
+        note = $('[data-note="' + n + '"]').value.trim(),
+        old = (r.plants || {})[n] || {};
+      if (st !== 'Healthy' || note || old.variety || (old.log || []).length)
+        plants[n] = withLog(old, { status: st, note });
+    });
+    await ORIGIN.put({ ...r, plants });
+    recordsSync();
+    toast('Saved');
+    location.hash = 'row/' + encodeURIComponent(id);
+  };
+}
+// a plant's own history: each change of status or note, dated, newest last
+function withLog(old, o) {
+  old = old || {};
+  const log = (old.log || []).slice();
+  if ((o.status || 'Healthy') !== (old.status || 'Healthy') || (o.note || '') !== (old.note || ''))
+    log.push({ day: today(), status: o.status || 'Healthy', note: o.note || '' });
+  return { ...old, ...o, log: log.slice(-60) };
+}
+// the chain a plant belongs to: farm › block › row › plant, with the block's own record
+async function chainOf(r) {
+  const b = blockOf(r.plotId);
+  const f = PLACES.find(x => x.id === b.farmId && x.kind === 'farm') || (b.kind === 'farm' ? b : {});
+  let rec = {};
+  try {
+    rec = (await ORIGIN.get(r.plotId)) || {};
+  } catch (e) {}
+  return { b, f, rec };
+}
+const crumbs = (c, r, n) =>
+  '<div class="chain">' +
+  [
+    c.f.name ? esc(c.f.name) : '',
+    c.b.kind === 'block'
+      ? '<a href="' +
+        esc((APP.placesPage || 'places') + '.html#edit/' + encodeURIComponent(c.b.id)) +
+        '">' +
+        esc(c.b.name) +
+        '</a>'
+      : '',
+    '<a href="#row/' + encodeURIComponent(r.id) + '">' + esc(r.name || 'Row') + '</a>',
+    n ? '<b>' + esc(plantWord) + ' ' + n + '</b>' : '',
+  ]
+    .filter(Boolean)
+    .join(' › ') +
+  '</div>';
+// one plant, from a tap on the map
+async function plantView(id, n) {
+  await load();
+  const r = ROWS.find(x => x.id === id);
+  const p = r && plantsOf(r)[n - 1];
+  if (!p) return ($('#view').innerHTML = '<div class="card">Not found. <a href="#">Back</a></div>');
+  const d = (r.plants || {})[n] || {};
+  const c = await chainOf(r);
+  $('#view').innerHTML =
+    '<a href="#">‹ Rows</a>' +
+    crumbs(c, r, n) +
+    '<h2>' +
+    esc(labelOf(r, n - 1)) +
+    '</h2><div class="sub">' +
+    esc(r.name) +
+    ', ' +
+    plantWord +
+    ' ' +
+    n +
+    ' of ' +
+    plantsOf(r).length +
+    ' · ' +
+    p[0].toFixed(6) +
+    ', ' +
+    p[1].toFixed(6) +
+    '</div>' +
+    '<div class="form"><label>Status<select data-k="status">' +
+    STATUS.map(
+      s => '<option' + ((d.status || 'Healthy') === s ? ' selected' : '') + '>' + esc(s) + '</option>'
+    ).join('') +
+    '</select></label>' +
+    '<label>Variety or clone, if different<input data-k="variety" value="' +
+    esc(d.variety || '') +
+    '" placeholder="' +
+    esc(r.variety || '') +
+    '"></label>' +
+    '<label class="full">Note<textarea data-k="note">' +
+    esc(d.note || '') +
+    '</textarea></label></div>' +
+    '<div class="row" style="flex-wrap:wrap">' +
+    (n > 1
+      ? '<a class="btn" href="#plant/' + encodeURIComponent(id) + '/' + (n - 1) + '">‹ ' + (n - 1) + '</a>'
+      : '') +
+    (n < plantsOf(r).length
+      ? '<a class="btn" href="#plant/' + encodeURIComponent(id) + '/' + (n + 1) + '">' + (n + 1) + ' ›</a>'
+      : '') +
+    '<a class="btn app" href="#passport/' +
+    encodeURIComponent(id) +
+    '/' +
+    n +
+    '">Passport</a>' +
+    ((APP.modules || []).includes('fieldlog')
+      ? '<a class="btn" href="fieldlog.html#new?' +
+        esc(
+          new URLSearchParams({
+            tab: 'health',
+            place: r.plotId,
+            plant: labelOf(r, n - 1),
+            lat: p[0].toFixed(7),
+            lng: p[1].toFixed(7),
+          }).toString()
+        ) +
+        '">Log health for this ' +
+        plantWord +
+        '</a>'
+      : '') +
+    '</div>' +
+    ((d.log || []).length
+      ? '<div class="card"><b>History</b>' +
+        d.log
+          .slice()
+          .reverse()
+          .map(
+            e =>
+              '<div class="mini">' +
+              esc(fmtDate(e.day) + ' · ' + e.status + (e.note ? ' · ' + e.note : '')) +
+              '</div>'
+          )
+          .join('') +
+        '</div>'
+      : '') +
+    '<div class="row sticky"><button class="btn app" id="save">Save</button><a class="btn" href="#">Back</a></div>';
+  $('#save').onclick = async () => {
+    const o = {};
+    document.querySelectorAll('[data-k]').forEach(el => (o[el.dataset.k] = el.value.trim()));
+    const plants = { ...(r.plants || {}) };
+    plants[n] = withLog(plants[n], o);
+    await ORIGIN.put({ ...r, plants });
+    recordsSync();
+    toast('Saved');
+    location.hash = '';
+  };
+}
+// ---- passport: one plant traced to its row, block and farm, and on to what its block produced ----
+const TYPE_WORDS = {
+  harvest: 'Harvests',
+  process: 'Processing',
+  green: 'Green lots',
+  batch: 'Batches',
+  brew: 'Brews',
+  cupping: 'Cuppings',
+  tasting: 'Tastings',
+  colour: 'Colour checks',
+};
+const typeWord = t => (APP.typeNames || {})[t] || TYPE_WORDS[t] || t.charAt(0).toUpperCase() + t.slice(1);
+const SKIP =
+  /^(id|type|areaUnit|owner.*|created.*|updated.*|deleted|geo|lat|lng|gpsAcc|radius|name|plants|line|log|_.*|.*Ids?)$/;
+const words = k => k.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, c => c.toUpperCase());
+const factsOf = o =>
+  Object.entries(o || {})
+    .filter(
+      ([k, v]) => !SKIP.test(k) && v !== '' && v != null && (typeof v === 'string' || typeof v === 'number')
+    )
+    .slice(0, 14)
+    .map(([k, v]) => '<tr><td>' + esc(words(k)) + '</td><td>' + esc(v) + '</td></tr>')
+    .join('');
+// records that point at the block (plotId, blockId, plotIds…), then the ones that point at those, and
+// so on: harvest › processing › lot › roast, or tapping › sheeting › smokehouse › lot
+async function downstream(blockId) {
+  const types = (ORIGIN.TYPES || APP.types || []).filter(
+    t => ![APP.places && APP.places.farm, APP.places && APP.places.block, 'row', 'lib'].includes(t)
+  );
+  let all = [];
+  try {
+    const D = await ORIGIN.allTypes(types);
+    all = types.flatMap(t => (D[t] || []).map(x => ({ ...x, type: x.type || t })));
+  } catch (e) {
+    return [];
+  }
+  const refs = x =>
+    Object.entries(x).flatMap(([k, v]) =>
+      /Ids?$/.test(k) ? (Array.isArray(v) ? v : [v]).filter(y => typeof y === 'string') : []
+    );
+  const found = new Map(),
+    want = new Set([blockId]);
+  for (let hop = 0; hop < 5 && want.size; hop++) {
+    const next = new Set();
+    all.forEach(x => {
+      if (!found.has(x.id) && refs(x).some(y => want.has(y))) {
+        found.set(x.id, { ...x, hop });
+        next.add(x.id);
+      }
+    });
+    want.clear();
+    next.forEach(y => want.add(y));
+  }
+  return [...found.values()].slice(0, 300);
+}
+const signedOut = () => {
+  try {
+    return !localStorage.getItem('kk_auth_token');
+  } catch (e) {
+    return true;
+  }
+};
+async function passportView(id, n) {
+  await load();
+  const r = ROWS.find(x => x.id === id);
+  const p = r && plantsOf(r)[n - 1];
+  if (!p) return ($('#view').innerHTML = '<div class="card">Not found. <a href="#">Back</a></div>');
+  const d = (r.plants || {})[n] || {};
+  const c = await chainOf(r);
+  const lab = labelOf(r, n - 1);
+  const ll = p[0].toFixed(6) + ', ' + p[1].toFixed(6);
+  const variety = d.variety || r.variety || c.rec.clone || c.rec.variety || '';
+  const planted = r.planted || c.rec.planted || c.rec.year || c.rec.plantedYear || '';
+  const tag = [
+    (APP.short || 'KoffyKraft') + ' ' + plantWord + ' ' + lab,
+    [c.f.name, c.b.kind === 'block' ? c.b.name : '', r.name].filter(Boolean).join(' › '),
+    variety ? 'Variety ' + variety : '',
+    planted ? 'Planted ' + planted : '',
+    'GPS ' + ll,
+    'https://maps.google.com/?q=' + p[0].toFixed(6) + ',' + p[1].toFixed(6),
+  ]
+    .filter(Boolean)
+    .join('\n');
+  let qr = '';
+  try {
+    const q = qrcode(0, 'M');
+    q.addData(tag);
+    q.make();
+    qr = q.createSvgTag({ cellSize: 3, margin: 2, scalable: true, alt: 'Plant QR' });
+  } catch (e) {}
+  $('#view').innerHTML =
+    '<a class="noprint" href="#plant/' +
+    encodeURIComponent(id) +
+    '/' +
+    n +
+    '">‹ ' +
+    esc(lab) +
+    '</a>' +
+    '<h1>' +
+    esc(plantWord.charAt(0).toUpperCase() + plantWord.slice(1)) +
+    ' passport: ' +
+    esc(lab) +
+    '</h1>' +
+    crumbs(c, r, n) +
+    '<div class="card pp"><div class="ppqr">' +
+    qr +
+    '</div><table class="facts">' +
+    '<tr><td>' +
+    esc(W('farm')) +
+    '</td><td>' +
+    esc(c.f.name || '') +
+    '</td></tr>' +
+    (c.b.kind === 'block'
+      ? '<tr><td>' +
+        esc(W('block')) +
+        '</td><td>' +
+        esc(c.b.name) +
+        (c.b.ha ? ' · ' + Math.round(c.b.ha * 100) / 100 + ' ha' : '') +
+        '</td></tr>'
+      : '') +
+    '<tr><td>Row</td><td>' +
+    esc(
+      r.name + ' · ' + kindOf(r) + ' · ' + plantsOf(r).length + ' ' + plantWord + 's at ' + r.spacing + ' m'
+    ) +
+    '</td></tr>' +
+    '<tr><td>' +
+    esc(plantWord.charAt(0).toUpperCase() + plantWord.slice(1)) +
+    '</td><td>' +
+    esc('number ' + n + ' along the row, label ' + lab) +
+    '</td></tr>' +
+    '<tr><td>GPS</td><td><a href="https://maps.google.com/?q=' +
+    p[0].toFixed(6) +
+    ',' +
+    p[1].toFixed(6) +
+    '" target="_blank" rel="noopener">' +
+    esc(ll) +
+    '</a> <span class="mini">(phone GPS, a few metres)</span></td></tr>' +
+    (variety ? '<tr><td>Variety</td><td>' + esc(variety) + '</td></tr>' : '') +
+    (planted ? '<tr><td>Planted</td><td>' + esc(planted) + '</td></tr>' : '') +
+    '<tr><td>Status</td><td>' +
+    esc((d.status || 'Healthy') + (d.note ? ' · ' + d.note : '')) +
+    '</td></tr>' +
+    '</table></div>' +
+    (c.rec && Object.keys(c.rec).length
+      ? '<div class="card"><b>The ' +
+        esc(W('block').toLowerCase()) +
+        '</b><table class="facts">' +
+        factsOf(c.rec) +
+        '</table></div>'
+      : '') +
+    ((d.log || []).length
+      ? '<div class="card"><b>History of this ' +
+        plantWord +
+        '</b>' +
+        d.log
+          .map(
+            e =>
+              '<div class="mini">' +
+              esc(fmtDate(e.day) + ' · ' + e.status + (e.note ? ' · ' + e.note : '')) +
+              '</div>'
+          )
+          .join('') +
+        '</div>'
+      : '') +
+    '<div class="card" id="fl"><b>Field log</b><div class="mini">Loading…</div></div>' +
+    '<div class="card" id="ds"><b>What its ' +
+    esc(W('block').toLowerCase()) +
+    ' produced</b><div class="mini">Loading…</div></div>' +
+    '<div class="row noprint" style="flex-wrap:wrap"><button class="btn app" onclick="print()">Print or save as PDF</button><button class="btn" id="gj">GeoJSON</button>' +
+    (navigator.share ? '<button class="btn" id="sh">Share</button>' : '') +
+    '</div>' +
+    '<div class="card mini">The QR holds the details above as plain text (no link to your account), so it can go on a tag on the ' +
+    plantWord +
+    ' and be read by any phone. Records of what the ' +
+    esc(W('block').toLowerCase()) +
+    ' produced come from this app; a lot mixes the produce of the whole ' +
+    esc(W('block').toLowerCase()) +
+    ', not this one ' +
+    plantWord +
+    ' alone.</div>';
+  $('#gj').onclick = () => {
+    const F = {
+      type: 'Feature',
+      properties: {
+        label: lab,
+        number: n,
+        row: r.name,
+        kind: kindOf(r),
+        block: c.b.name || '',
+        farm: c.f.name || '',
+        variety,
+        planted,
+        status: d.status || 'Healthy',
+        note: d.note || '',
+        history: d.log || [],
+      },
+      geometry: { type: 'Point', coordinates: [+p[1].toFixed(7), +p[0].toFixed(7)] },
+    };
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(F)], { type: 'application/geo+json' }));
+    a.download = 'passport-' + lab + '.geojson';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => a.remove(), 500);
+  };
+  if ($('#sh')) $('#sh').onclick = () => navigator.share({ title: lab, text: tag }).catch(() => {});
+  // field log: entries for this plant first, then the block's and the farm's
+  (async () => {
+    const box = $('#fl');
+    if (!(APP.modules || []).includes('fieldlog') || typeof API === 'undefined') return box.remove();
+    let items = [];
+    try {
+      items = ((await API.get('/api/fieldlog')) || {}).items || [];
+    } catch (e) {}
+    items = items.filter(x => x.place_id === r.plotId || (c.f.id && x.place_id === c.f.id));
+    const mine = items.filter(x => x.plant === lab),
+      rest = items.filter(x => x.plant !== lab).slice(0, 15);
+    const li = x =>
+      '<div class="mini">' +
+      esc(
+        fmtDate(x.day) +
+          ' · ' +
+          (x.plant ? x.plant + ' · ' : '') +
+          [x.kind2, x.product, x.issue, x.what, x.qty ? x.qty + ' ' + (x.unit || '') : '', x.status]
+            .filter(Boolean)
+            .join(' · ')
+      ) +
+      '</div>';
+    box.innerHTML =
+      '<b>Field log</b>' +
+      (mine.length ? '<div class="mini"><b>This ' + plantWord + '</b></div>' + mine.map(li).join('') : '') +
+      (rest.length
+        ? '<div class="mini" style="margin-top:4px"><b>The ' +
+          esc(W('block').toLowerCase()) +
+          '</b></div>' +
+          rest.map(li).join('')
+        : '') +
+      (items.length
+        ? ''
+        : '<div class="mini">Nothing logged for this ' +
+          esc(W('block').toLowerCase()) +
+          ' yet' +
+          (signedOut() ? ' (sign in to see the field log)' : '') +
+          '.</div>');
+  })();
+  (async () => {
+    const box = $('#ds');
+    const list = r.plotId ? await downstream(r.plotId) : [];
+    if (!list.length)
+      return (box.innerHTML =
+        '<b>What its ' +
+        esc(W('block').toLowerCase()) +
+        ' produced</b><div class="mini">No harvests or lots linked to this ' +
+        esc(W('block').toLowerCase()) +
+        ' yet.</div>');
+    const by = {};
+    list.forEach(x => (by[x.type] = by[x.type] || []).push(x));
+    box.innerHTML =
+      '<b>What its ' +
+      esc(W('block').toLowerCase()) +
+      ' produced</b>' +
+      Object.entries(by)
+        .sort((a, b) => a[1][0].hop - b[1][0].hop)
+        .map(
+          ([t, xs]) =>
+            '<div class="mini" style="margin-top:4px"><b>' +
+            esc(typeWord(t)) +
+            '</b> (' +
+            xs.length +
+            ')</div>' +
+            xs
+              .slice()
+              .sort((a, b) => String(b.date || b.day || '').localeCompare(String(a.date || a.day || '')))
+              .slice(0, 8)
+              .map(
+                x =>
+                  '<div class="mini">' +
+                  esc(
+                    [x.name || x.code || x.lot || x.lotNo || '', x.date || x.day || '']
+                      .filter(Boolean)
+                      .join(' · ') || x.id
+                  ) +
+                  '</div>'
+              )
+              .join('')
+        )
+        .join('');
+  })();
+}
+function route() {
+  if (watch != null) {
+    navigator.geolocation.clearWatch(watch);
+    watch = null;
+  }
+  $('#view').oninput = null;
+  const h = decodeURIComponent(location.hash.slice(1));
+  let m;
+  if ((m = h.match(/^passport\/(.+)\/(\d+)$/))) return passportView(m[1], +m[2]);
+  if (typeof L === 'undefined')
+    return ($('#view').innerHTML =
+      '<div class="card">The map needs a signal the first time. Open this page again when online.</div>');
+  if (h === 'draw') return drawView();
+  if (h === 'walk') return walkView();
+  if (h === 'copy') return copyView();
+  if ((m = h.match(/^trail\/?(.*)$/))) return trailView(m[1]);
+  if ((m = h.match(/^row\/(.+)$/))) return rowView(m[1]);
+  if ((m = h.match(/^plants\/(.+)$/))) return plantsView(m[1]);
+  if ((m = h.match(/^plant\/(.+)\/(\d+)$/))) return plantView(m[1], +m[2]);
+  listView();
+}
+window.addEventListener('hashchange', route);
+route();
+recordsSync().then(n => n && !location.hash && route());
+</script>
+<script src="pv.js" defer></script>
+<script src="kk-family.js" defer></script>
+</body>
+</html>

@@ -3108,7 +3108,7 @@ function listView() {
   $('#view').innerHTML =
     '<h1>Origin</h1><div class="sub">Farm, harvest, processing and green lots. ' +
     syncBadge() +
-    ' · <a href="#" onclick="openVarieties(null,\'\');return false" style="color:var(--coffee);font-weight:600">Coffee varieties and words</a> · <a href="crop.html" style="color:var(--coffee);font-weight:600">Crop care</a> · <a href="map.html" style="color:var(--coffee);font-weight:600">Map</a> · <a href="trail.html" style="color:var(--coffee);font-weight:600">Trails</a> · <a href="#" onclick="openPicker();return false" style="color:var(--coffee);font-weight:600">Share</a> · <a href="#" onclick="originExport();return false" style="color:var(--coffee);font-weight:600">Export</a></div><div class="tabs">' +
+    ' · <a href="#" onclick="openVarieties(null,\'\');return false" style="color:var(--coffee);font-weight:600">Coffee varieties and words</a> · <a href="crop.html" style="color:var(--coffee);font-weight:600">Crop care</a> · <a href="map.html" style="color:var(--coffee);font-weight:600">Map</a> · <a href="trail.html" style="color:var(--coffee);font-weight:600">Trails</a> · <a href="rows.html" style="color:var(--coffee);font-weight:600">Rows</a> · <a href="#" onclick="openPicker();return false" style="color:var(--coffee);font-weight:600">Share</a> · <a href="#" onclick="originExport();return false" style="color:var(--coffee);font-weight:600">Export</a></div><div class="tabs">' +
     tabs
       .map(
         ([k, l]) =>
@@ -3940,7 +3940,9 @@ function fieldHtml(f) {
             esc(CUR.id) +
             '">' +
             (CUR.geo && CUR.geo.length > 2 ? 'Show outline on map' : 'Mark outline on map') +
-            '</a>'
+            '</a> <a class="btn small" style="margin-top:6px;justify-self:start;text-decoration:none" href="rows.html?block=' +
+            encodeURIComponent(CUR.id) +
+            '">Rows and plants</a>'
           : '') +
         '</div>'
       );

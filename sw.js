@@ -1,5 +1,5 @@
 // KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
-const CACHE = 'koffykraft-roastbooks-v115';
+const CACHE = 'koffykraft-roastbooks-v116';
 const CORE = [
   './app.config.js',
   './app.js',
@@ -51,6 +51,7 @@ const CORE = [
   './crop.html',
   './map.html',
   './trail.html',
+  './rows.html',
   './tap.js',
   './home.html',
   './contents.html',

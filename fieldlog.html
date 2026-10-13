@@ -244,7 +244,9 @@ function summary() {
           .map(
             r =>
               '<div class="mini" style="margin-top:4px">' +
-              esc(fmtDate(r.day) + ' · ' + r.place_name + ' · ' + line(r)) +
+              esc(
+                fmtDate(r.day) + ' · ' + r.place_name + (r.plant ? ' · ' + r.plant : '') + ' · ' + line(r)
+              ) +
               (r.follow ? ' · check again ' + esc(fmtDate(r.follow)) : '') +
               '</div>'
           )
@@ -287,6 +289,7 @@ async function listView() {
             encodeURIComponent(r.id) +
             '"><b>' +
             esc(r.place_name || 'No place') +
+            (r.plant ? ' · ' + esc(r.plant) : '') +
             '</b> <span class="mini">' +
             esc(fmtDate(r.day)) +
             (r.pending ? ' · waiting to send' : '') +
@@ -307,6 +310,7 @@ async function listView() {
       const base = [
         ['day', 'Date'],
         ['place_name', 'Place'],
+        ['plant', 'Plant'],
       ];
       const cols = {
         nutrient: [
@@ -428,12 +432,25 @@ function fields(r) {
     gps
   );
 }
-async function editView(id) {
+// q: what a new entry starts with when opened from another page (a plant on Rows: its place,
+// label and GPS point), as #new?tab=health&place=…&plant=R3-12&lat=…&lng=…
+async function editView(id, q) {
   if (needAccount($('#view'), 'the field log')) return;
+  q = q || new URLSearchParams();
+  if (!id && TABS.some(t => t[0] === q.get('tab'))) TAB = q.get('tab');
   await load().catch(() => {});
   const r = id
     ? ROWS.find(x => x.id === id)
-    : { kind: TAB, day: today(), place_id: PLACE, unit: 'kg', status: TAB === 'health' ? 'Open' : '' };
+    : {
+        kind: TAB,
+        day: today(),
+        place_id: q.get('place') || PLACE,
+        unit: 'kg',
+        status: TAB === 'health' ? 'Open' : '',
+        plant: q.get('plant') || '',
+        lat: q.get('lat') || '',
+        lng: q.get('lng') || '',
+      };
   if (!r) return ($('#view').innerHTML = '<div class="card">Not found. <a href="#">Back</a></div>');
   $('#view').innerHTML =
     '<a href="#">‹ Field log</a><h2>' +
@@ -444,7 +461,12 @@ async function editView(id) {
     '</select></label>' +
     '<label>Date<input data-k="day" type="date" value="' +
     esc(r.day) +
-    '"></label><div></div>' +
+    '"></label>' +
+    '<label>One ' +
+    esc((SET('fieldlog').treeWord || 'plants').replace(/s$/, '')) +
+    ' only (row-number)<input data-k="plant" placeholder="all of the place" value="' +
+    esc(r.plant || '') +
+    '"></label>' +
     fields(r) +
     '<label class="full">Notes<textarea data-k="notes">' +
     esc(r.notes || '') +
@@ -509,7 +531,7 @@ async function editView(id) {
 function route() {
   const h = location.hash.slice(1);
   let m;
-  if (h === 'new') return editView(null);
+  if ((m = h.match(/^new(?:\?(.*))?$/))) return editView(null, new URLSearchParams(m[1] || ''));
   if ((m = h.match(/^edit\/(.+)$/))) return editView(decodeURIComponent(m[1]));
   listView();
 }

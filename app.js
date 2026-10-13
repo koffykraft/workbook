@@ -353,6 +353,14 @@ function setPick(k, v) {
 // lists come from app.json (settings.library and the module settings); the owner adds, hides and
 // renames on library.html, and anything typed under "Other" joins the list. Kept as records of type
 // 'lib', so the lists follow the account to every phone.
+const ROW_KINDS = [
+  ['Main crop', '#ffd166'],
+  ['Intercrop', '#4cc9f0'],
+  ['Short-term crop', '#80ed99'],
+  ['Shade tree', '#9b5de5'],
+  ['Windbreak', '#f4a261'],
+  ['Boundary', '#ff4d6d'],
+];
 const LIB = (() => {
   let own = [];
   const lower = x => String(x).trim().toLowerCase();
@@ -361,6 +369,8 @@ const LIB = (() => {
   const FALLBACK = {
     products: () => SET('ledger').products || SET('rubber').products || [],
     units: () => SET('ledger').units || [],
+    // kinds of row on the Rows page (main crop, intercrop, boundary…), each with its colour there
+    rowkinds: () => (SET('rows').kinds || ROW_KINDS).map(k => (Array.isArray(k) ? k[0] : k.name || k)),
     // things bought: fertilisers and sprays from the field log, and the app's store items
     inputs: () => [
       ...(SET('fieldlog').products || []),
@@ -376,6 +386,7 @@ const LIB = (() => {
     transporters: 'Transporters',
     inputs: 'Inputs and tools bought',
     units: 'Units',
+    rowkinds: 'Row kinds',
   };
   function names() {
     const n = new Set([...Object.keys(LABELS), ...Object.keys(settings())]);
@@ -503,6 +514,21 @@ const LIB = (() => {
     own: () => own,
   };
 })();
+// the colour of a kind of row: the owner's choice (Library › Row kinds), else the app's, else one
+// picked from the name so it stays the same
+function rowColour(kind) {
+  const mine = LIB.info('rowkinds', kind).color;
+  if (mine) return mine;
+  const k = String(kind || '').toLowerCase();
+  const set = (SET('rows').kinds || ROW_KINDS).find(
+    x => Array.isArray(x) && String(x[0]).toLowerCase() === k
+  );
+  if (set) return set[1];
+  const P = ['#ffd166', '#4cc9f0', '#80ed99', '#9b5de5', '#f4a261', '#ff4d6d', '#90e0ef', '#f72585'];
+  let h = 0;
+  for (const c of k) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return P[h % P.length];
+}
 // pick lists: the choice goes into the text box beside it, which holds the value
 document.addEventListener('change', e => {
   const t = e.target;

@@ -15,6 +15,7 @@ const ORIGIN = (() => {
     'tasting',
     'colour',
     'lib',
+    'row',
   ];
   let DBP = null;
   function open() {

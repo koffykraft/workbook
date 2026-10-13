@@ -193,6 +193,36 @@
         "Vehicle papers",
         "Other"
       ]
+    },
+    "rows": {
+      "spacing": 2,
+      "rowSpacing": 2,
+      "kinds": [
+        [
+          "Coffee",
+          "#ffd166"
+        ],
+        [
+          "Shade tree",
+          "#9b5de5"
+        ],
+        [
+          "Pepper standards",
+          "#f4a261"
+        ],
+        [
+          "Intercrop",
+          "#4cc9f0"
+        ],
+        [
+          "Short-term crop",
+          "#80ed99"
+        ],
+        [
+          "Boundary",
+          "#ff4d6d"
+        ]
+      ]
     }
   }
 }

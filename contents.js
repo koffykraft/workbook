@@ -73,6 +73,12 @@ window.KK_CONTENTS = [
         'trail.html',
       ],
       [
+        'Rows and plants',
+        'Each row of a plot on the map, with every plant numbered at the spacing you give.',
+        'Draw a row, walk it with the phone, take rows from a trail walked up and down them, or copy one row across the plot. Labels like R3-12, status and notes for each plant, CSV and GeoJSON.',
+        'rows.html',
+      ],
+      [
         'Crop care',
         'Plant health, flowering, fruit set, berry drop and harvest, from the Coffee Board research institute.',
         'Basic, Intermediate and Advanced levels, Arabica or Robusta, a year calendar, and chemical options hidden unless you ask for them.',
