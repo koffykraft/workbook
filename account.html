@@ -427,13 +427,16 @@ check();
             (x.contact ? ' · ' + esc(x.contact) : '') +
             '</div><div>' +
             esc(x.message) +
-            '</div></div>'
+            '</div>' +
+            (window.kkReplyHtml ? window.kkReplyHtml(x) : '') +
+            '</div>'
         )
         .join('') || '<div class="meta">None yet.</div>') +
       '</div>';
   } catch (e) {}
 })();
 </script>
+<script src="kk-reply.js"></script>
 <script src="pv.js" defer></script>
 <script src="kk-family.js" defer></script>
 </body>

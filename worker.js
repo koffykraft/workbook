@@ -1,6 +1,8 @@
 // KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 import { MODULES, MODULE_SETTINGS } from './kk-modules.js';
 import { tracePublic, traceApi, traceAnchor, traceUpgrade } from './trace-api.js';
+const REPLIES_SQL =
+  'CREATE TABLE IF NOT EXISTS feedback_replies (id TEXT PRIMARY KEY, feedback_id TEXT NOT NULL, at TEXT NOT NULL, text TEXT NOT NULL, by_user TEXT)';
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 const j = (v, s = 200) => new Response(JSON.stringify(v), { status: s, headers: JSON_HEADERS });
 function bearer(r) {
@@ -678,10 +680,42 @@ export default {
     }
     if (r.method === 'GET' && p === '/api/feedback') {
       if (!isAdmin) return j({ error: 'admins only' }, 403);
+      await e.DB.prepare(REPLIES_SQL).run();
       const q = await e.DB.prepare(
-        'SELECT created_at,page,kind,message,contact FROM feedback ORDER BY created_at DESC LIMIT 300'
+        'SELECT f.id,f.created_at,f.page,f.kind,f.message,f.contact,(SELECT MAX(at) FROM feedback_replies x WHERE x.feedback_id=f.id) AS replied_at FROM feedback f ORDER BY f.created_at DESC LIMIT 300'
       ).all();
       return j({ items: q.results || [] });
+    }
+    // an admin answers feedback by email, when the sender left an email address
+    if (r.method === 'POST' && p === '/api/feedback/reply') {
+      if (!isAdmin) return j({ error: 'admins only' }, 403);
+      const b = await body(r);
+      const text = String(b.text || '')
+        .trim()
+        .slice(0, 4000);
+      if (!text) return j({ error: 'write a reply' }, 400);
+      const f = await e.DB.prepare('SELECT * FROM feedback WHERE id=?')
+        .bind(String(b.id || ''))
+        .first();
+      if (!f) return j({ error: 'feedback not found' }, 404);
+      const to = String(f.contact || '').trim();
+      if (!/^\S+@\S+\.\S+$/.test(to)) return j({ error: 'no email address on this feedback' }, 400);
+      const sent = await sendEmail(
+        e,
+        to,
+        'Re: your feedback to KoffyKraft',
+        text +
+          '\n\n--\nYou wrote on ' +
+          String(f.created_at).slice(0, 10) +
+          ':\n' +
+          String(f.message || '').slice(0, 2000)
+      );
+      if (!sent.ok) return j({ error: 'email could not be sent' }, 502);
+      await e.DB.prepare(REPLIES_SQL).run();
+      await e.DB.prepare('INSERT INTO feedback_replies(id,feedback_id,at,text,by_user) VALUES(?,?,?,?,?)')
+        .bind(token().slice(0, 24), f.id, new Date().toISOString(), text, me.id)
+        .run();
+      return j({ ok: true });
     }
     if (r.method === 'GET' && p === '/api/me') return j({ user: me, admin: isAdmin });
     if (r.method === 'GET' && p === '/api/admin/stats') {
