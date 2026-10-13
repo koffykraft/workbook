@@ -30,10 +30,15 @@
 .plabel::before {
   display: none;
 }
-.bar {
-  position: sticky;
-  bottom: 8px;
-  z-index: 500;
+.tools {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+.tools .btn {
+  margin: 0;
 }
 .pl {
   display: grid;
@@ -317,7 +322,7 @@ function mapIn(el) {
   L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     {
-      maxNativeZoom: 18,
+      maxNativeZoom: 19,
       maxZoom: 22,
       attribution: 'Esri, Maxar, Earthstar Geographics',
     }
@@ -341,7 +346,7 @@ function draw(rows, opts) {
     const kc = colourOf(r);
     L.polyline(r.line, { color: kc, weight: 3, opacity: 0.9 })
       .bindTooltip(esc(r.name || 'Row'))
-      .on('click', () => (location.hash = 'row/' + encodeURIComponent(r.id)))
+      .on('click', () => !(opts || {}).still && (location.hash = 'row/' + encodeURIComponent(r.id)))
       .addTo(layer);
     r.line.forEach(p => pts.push(p));
     const many = map.getZoom() >= 19;
@@ -354,7 +359,8 @@ function draw(rows, opts) {
         fillColor: st === 'Healthy' ? kc : COL[st] || kc,
         fillOpacity: 1,
       }).addTo(layer);
-      m.on('click', () => (location.hash = 'plant/' + encodeURIComponent(r.id) + '/' + (i + 1)));
+      if (!(opts || {}).still)
+        m.on('click', () => (location.hash = 'plant/' + encodeURIComponent(r.id) + '/' + (i + 1)));
       if (many && (opts || {}).labels !== false)
         m.bindTooltip(String(i + 1), {
           permanent: true,
@@ -365,6 +371,50 @@ function draw(rows, opts) {
     });
   });
   return pts;
+}
+// centre an editing map: the rows, else the block outline, else its GPS point, else the farm's
+async function fitBlock(pts) {
+  if (pts.length) return fit(pts);
+  const P = await plotOutline();
+  if (P && Array.isArray(P.geo) && P.geo.length > 2) return map.fitBounds(P.geo, { padding: [20, 20] });
+  const b = blockOf(BLOCK);
+  if (b.lat != null) return map.setView([b.lat, b.lng], 18);
+  return false;
+}
+// the block outline, dashed in the Boundary colour, under everything else
+async function outline() {
+  const P = await plotOutline();
+  if (P && Array.isArray(P.geo) && P.geo.length > 2)
+    L.polygon(P.geo, {
+      color: rowColour('Boundary'),
+      weight: 2,
+      dashArray: '6 4',
+      fillOpacity: 0.05,
+      interactive: false,
+    }).addTo(map);
+}
+// centre on where the phone is (for drawing a row while standing in the block)
+function locateBtn() {
+  const b = L.control({ position: 'topright' });
+  b.onAdd = () => {
+    const a = L.DomUtil.create('a', 'leaflet-bar');
+    a.href = '#';
+    a.title = 'Where am I';
+    a.textContent = '📍';
+    a.style.cssText =
+      'display:block;width:34px;height:34px;line-height:34px;text-align:center;background:#fff;font-size:18px';
+    L.DomEvent.on(a, 'click', e => {
+      L.DomEvent.stop(e);
+      if (!navigator.geolocation) return toast('No GPS here');
+      navigator.geolocation.getCurrentPosition(
+        p => map.setView([p.coords.latitude, p.coords.longitude], 19),
+        () => toast('Could not read the GPS'),
+        { enableHighAccuracy: true, timeout: 15000 }
+      );
+    });
+    return a;
+  };
+  b.addTo(map);
 }
 function fit(pts, fallback) {
   if (pts.length) map.fitBounds(pts, { padding: [30, 30], maxZoom: 20 });
@@ -615,20 +665,59 @@ async function drawView() {
   await load();
   draft = [];
   $('#view').innerHTML =
-    '<a href="#">‹ Rows</a><h2>Draw a row</h2><div class="sub">Tap where the row starts, any bends, then where it ends. Zoom in close for accuracy.</div><div id="map"></div>' +
-    '<div class="row bar"><button class="btn" id="undo">Undo</button><button class="btn app" id="done">Save the row</button></div>';
+    '<a href="#">‹ Rows</a><h2>Draw a row</h2><div class="sub">' +
+    esc(blockOf(BLOCK).label || '') +
+    '. Zoom in close, then tap where the row starts, any bends, and where it ends.</div><div id="map"></div>' +
+    '<div class="card mini" id="dinfo">Tap the first ' +
+    plantWord +
+    ' of the row.</div>' +
+    '<div class="tools"><button class="btn" id="undo">Undo</button><button class="btn app" id="done">Save the row</button></div>';
   mapIn($('#map'));
-  fit(
-    draw(blockRows(), { labels: false }),
-    blockOf(BLOCK).lat != null ? [blockOf(BLOCK).lat, blockOf(BLOCK).lng] : null
-  );
+  map.doubleClickZoom.disable();
+  locateBtn();
+  await outline();
+  if ((await fitBlock(draw(blockRows(), { labels: false, still: true }))) === false)
+    $('#dinfo').textContent =
+      'This ' +
+      W('block').toLowerCase() +
+      ' has no outline or GPS point yet: tap 📍 to go to where you are, or zoom to it.';
   const tmp = L.layerGroup().addTo(map);
   const redraw = () => {
     tmp.clearLayers();
     if (draft.length) L.polyline(draft, { color: '#ff7a1a', weight: 4 }).addTo(tmp);
     draft.forEach(p =>
-      L.circleMarker(p, { radius: 5, color: '#fff', fillColor: '#ff7a1a', fillOpacity: 1 }).addTo(tmp)
+      L.circleMarker(p, {
+        radius: 6,
+        color: '#fff',
+        fillColor: '#ff7a1a',
+        fillOpacity: 1,
+        interactive: false,
+      }).addTo(tmp)
     );
+    const sp = +((blockRows().slice(-1)[0] || {}).spacing || SET('rows').spacing || 3);
+    const pl = plantsAlong(draft, sp, 0);
+    pl.forEach(p =>
+      L.circleMarker(p, {
+        radius: 3,
+        color: '#000',
+        weight: 1,
+        fillColor: '#fff',
+        fillOpacity: 1,
+        interactive: false,
+      }).addTo(tmp)
+    );
+    if (draft.length)
+      $('#dinfo').textContent =
+        draft.length < 2
+          ? 'Now tap where the row ends.'
+          : Math.round(lengthM(draft)) +
+            ' m, about ' +
+            pl.length +
+            ' ' +
+            plantWord +
+            's at ' +
+            sp +
+            ' m (change the spacing after saving).';
   };
   map.on('click', e => {
     draft.push([e.latlng.lat, e.latlng.lng]);
@@ -650,12 +739,11 @@ async function walkView() {
     '<a href="#">‹ Rows</a><h2>Walk a row</h2><div class="sub">Stand at the first ' +
     plantWord +
     ' of the row, tap Start, walk to the last one, tap Stop. Keep the phone steady.</div><div id="map"></div>' +
-    '<div class="card mini" id="gps">Not started.</div><div class="row bar"><button class="btn app" id="go">Start</button><label class="mini" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="str" checked style="width:20px;height:20px"> Straight row</label></div>';
+    '<div class="card mini" id="gps">Not started.</div><div class="tools"><button class="btn app" id="go">Start</button><label class="mini" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="str" checked style="width:20px;height:20px"> Straight row</label></div>';
   mapIn($('#map'));
-  fit(
-    draw(blockRows(), { labels: false }),
-    blockOf(BLOCK).lat != null ? [blockOf(BLOCK).lat, blockOf(BLOCK).lng] : null
-  );
+  locateBtn();
+  await outline();
+  await fitBlock(draw(blockRows(), { labels: false, still: true }));
   const tmp = L.layerGroup().addTo(map);
   $('#go').onclick = async () => {
     if (watch == null) {
@@ -789,7 +877,8 @@ async function trailView(id) {
     '<label class="full" style="display:flex;flex-direction:row;gap:8px;align-items:center"><input type="checkbox" id="str" checked style="width:22px;height:22px"> Straight rows (best for planted rows)</label></div>' +
     '<div class="row"><button class="btn app" id="mk">Make these rows</button></div></div>';
   mapIn($('#map'));
-  draw(blockRows(), { labels: false });
+  await outline();
+  draw(blockRows(), { labels: false, still: true });
   const all = [];
   runs.forEach((r, i) => {
     L.polyline(r, { color: colors[i % colors.length], weight: 5 })
@@ -835,9 +924,10 @@ async function copyView() {
     kindSelect('kd', kindOf(rows[0] || {})) +
     '</label>' +
     '<label class="full">Side<select id="side"><option value="1">To the right (facing from start to end)</option><option value="-1">To the left</option></select></label></div><div id="map"></div>' +
-    '<div class="row bar"><button class="btn" id="prev">Preview</button><button class="btn app" id="mk">Make the rows</button></div>';
+    '<div class="tools"><button class="btn" id="prev">Preview</button><button class="btn app" id="mk">Make the rows</button></div>';
   mapIn($('#map'));
-  fit(draw(rows, { labels: false }));
+  await outline();
+  fit(draw(rows, { labels: false, still: true }));
   const tmp = L.layerGroup().addTo(map);
   const lines = () => {
     const r = rows.find(x => x.id === $('#src').value);
