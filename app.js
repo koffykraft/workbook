@@ -418,8 +418,23 @@ const LIB = (() => {
     const r = await ORIGIN.put(had ? { ...had, off } : { type: 'lib', list: n, name, off });
     own = own.filter(o => o.id !== r.id).concat(r);
   }
+  // a new name for an entry: the owner's own entry is changed; one of the app's is hidden and the
+  // new name added in its place
+  async function rename(n, old, name) {
+    name = String(name || '').trim();
+    if (!name) return;
+    const k = lower(old);
+    const mine = own.find(o => o.list === n && lower(o.name) === k && !o.off);
+    if (mine && !base(n).some(x => lower(x) === k)) {
+      const r = await ORIGIN.put({ ...mine, name });
+      own = own.filter(o => o.id !== r.id).concat(r);
+      return;
+    }
+    await hide(n, old, true);
+    await learn(n, name);
+  }
   const pick = (k, n, v, extra) => pickHtml(k, get(n, extra), v, n);
-  return { load, get, learn, hide, pick, names, label, base, own: () => own };
+  return { load, get, learn, hide, rename, pick, names, label, base, own: () => own };
 })();
 // pick lists: the choice goes into the text box beside it, which holds the value
 document.addEventListener('change', e => {

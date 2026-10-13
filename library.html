@@ -77,9 +77,11 @@ async function view() {
               '<div class="li"><span>' +
               esc(x) +
               (base.has(x.toLowerCase()) ? ' <span class="tag">app</span>' : '') +
-              '</span><button class="btn small" data-hide="' +
+              '</span><span class="row" style="gap:6px;flex:none"><button class="btn small" data-edit="' +
               esc(x) +
-              '">Hide</button></div>'
+              '">Edit</button><button class="btn small" data-hide="' +
+              esc(x) +
+              '">Hide</button></span></div>'
           )
           .join('')
       : '<div class="mini">Nothing in this list yet.</div>') +
@@ -98,7 +100,7 @@ async function view() {
           .join('') +
         '</div>'
       : '') +
-    '<div class="card mini">To rename, add the new name and hide the old one. Records already saved keep the name they were saved with. Lists follow your account to every phone you sign in on.</div>';
+    '<div class="card mini">Edit changes a name in the list. Records already saved keep the name they were saved with. Lists follow your account to every phone you sign in on.</div>';
   const add = async () => {
     const v = $('#nm').value.trim();
     if (!v) return;
@@ -111,6 +113,18 @@ async function view() {
   $('#nm').onkeydown = e => {
     if (e.key === 'Enter') add();
   };
+  document.querySelectorAll('[data-edit]').forEach(
+    b =>
+      (b.onclick = async () => {
+        const old = b.dataset.edit;
+        const v = (prompt('Change the name', old) || '').trim();
+        if (!v || v === old) return;
+        await LIB.rename(LIST, old, v);
+        recordsSync();
+        toast('Changed');
+        view();
+      })
+  );
   document
     .querySelectorAll('[data-hide]')
     .forEach(
