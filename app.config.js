@@ -272,7 +272,7 @@ const APP = {
       page: 'ledger',
       label: 'Sales and money',
       blurb:
-        "Sales sheet, receipts and payments: what each buyer owes, money in and out by month, and the month's wages from Team in one tap.",
+        "Sales sheet with due dates and dispatch, receipts and payments, UPI payment requests, what each buyer owes, money in and out by month, and the month's wages from Team in one tap.",
     },
     {
       name: 'land',

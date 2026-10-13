@@ -117,8 +117,8 @@ window.KK_CONTENTS = [
       ],
       [
         'Colour check',
-        'Record roast colour for any coffee: your roasts, bought coffee or samples.',
-        'Meters: Agtron Gourmet and Commercial, Lighttells, Javalytics, Tonino, SCA tiles, and ColorTrack, Colorette or Neotec learned from your own paired readings. Shows each reading on the other scales, and colour values as CIELAB, LCh, Hunter Lab, XYZ and sRGB or HEX. Or measure from a phone photo with a white card. Names the roast level on three charts, tracks the ground to whole-bean gap, ΔE against a reference and nearest matches. Saved like brews, with cloud sync.',
+        'Record roast colour for any coffee: your roasts, bought coffee or samples. With only a phone photo, get a ballpark roast level and Agtron.',
+        "A phone photo or a meter's L*a*b* alone gives a ballpark: roast name, Agtron Gourmet and Commercial, SCA tile, Tonino and Colorette, with a confidence level that tightens as you add meter readings. Type every number your meter screen shows (Agtron, Colorette, ColorTrack, roast name) and KoffyKraft learns its scales. Shows where the roast sits between first and second crack on the UC Davis colour curve. Meters: Agtron Gourmet and Commercial, Lighttells, Javalytics, Tonino, SCA tiles, and ColorTrack, Colorette or Neotec learned from your own paired readings. Shows each reading on the other scales, and colour values as CIELAB, LCh, Hunter Lab, XYZ and sRGB or HEX. Or measure from a phone photo with a white card. Names the roast level on three charts, tracks the ground to whole-bean gap, ΔE against a reference and nearest matches. Saved like brews, with cloud sync.",
         'colour.html',
       ],
       [
@@ -181,6 +181,55 @@ window.KK_CONTENTS = [
         'Mix hot and cold water to a set temperature, and make brewing water from two concentrates.',
         'Weight or volume, vessel loss, and published recipes.',
         'water.html',
+      ],
+    ],
+  ],
+  [
+    'estate',
+    'Running the estate',
+    'Weather, field work, people, money, land and the lists behind them.',
+    [
+      [
+        'Weather',
+        'Daily rain and temperature for each place, kept year after year.',
+        'From free weather services for each GPS point, topped up every night, or from your own rain gauge file.',
+        'weather.html',
+      ],
+      [
+        'Field log',
+        'Nutrients, watering, plant health and work done, per plot and date.',
+        'Nutrients per hectare from the fertiliser grade; plant health with GPS points and trees lost, shown on the map; work done such as weeding, spraying and pruning.',
+        'fieldlog.html',
+      ],
+      [
+        'Team and wages',
+        "Workers and their details, the daily muster with GPS, and the month's wages.",
+        'Pay by the day, month, hour or piece. Details: address, emergency contact, how wages are paid, skills and task. Leave, holidays, advances and bonuses; a changed mark keeps the old one with a reason.',
+        'team.html',
+      ],
+      [
+        'Field jobs and piece rates',
+        'Who did what work, how much and at what rate.',
+        "Paid by quantity, days, hours or a fixed sum; the rate last used fills in. Jobs done add to the month's wages.",
+        'jobs.html',
+      ],
+      [
+        'Sales and money',
+        'The sales sheet, money in and out, what each buyer owes, and payments due.',
+        "Due dates from each buyer's credit days; dispatch with transporter, vehicle, e-way bill and freight; Ask for payment with your UPI QR, by WhatsApp or share; Pay by UPI to a supplier.",
+        'ledger.html',
+      ],
+      [
+        'Land and dues',
+        'Land records, taxes and dues with the next due date, and licences to renew.',
+        'Due soon lists what falls due in the next two months; a payment can go straight to Sales and money.',
+        'land.html',
+      ],
+      [
+        'Library',
+        'The names the drop-downs offer: products, buyers, suppliers, transporters, units.',
+        'Add, edit or hide names; anything typed under Other joins the list. Buyers, suppliers and transporters keep GSTIN, address, phone, bank, UPI and credit days. My business holds your own GSTIN, UPI and bank for payment requests.',
+        'library.html',
       ],
     ],
   ],

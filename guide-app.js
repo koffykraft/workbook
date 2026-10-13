@@ -5,7 +5,7 @@ window.KK_LEARN = true;
 window.KK_GUIDE_APP = new Promise(done => {
   const make = () =>
     (window.KK_CONTENTS || [])
-      .filter(g => g[0] !== 'data')
+      .filter(g => g[0] !== 'data' && g[0] !== 'estate')
       .map(([id, title, what, items]) => {
         const pages = [
           ...new Set(

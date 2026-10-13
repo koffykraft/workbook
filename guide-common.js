@@ -73,12 +73,13 @@
       id: 'library',
       title: 'Library: the drop-down lists',
       open: 'library.html',
-      what: "Products, buyers, suppliers, units and the app's own lists, so everyone picks the same name instead of typing it their own way.",
+      what: "Products, buyers, suppliers, transporters, units and the app's own lists, so everyone picks the same name instead of typing it their own way. Buyers, suppliers and transporters also keep their details.",
       steps: [
         'Open Account › Library, or pick "Edit this list…" at the bottom of any drop-down.',
-        'Add a name once; it appears in every drop-down that uses that list.',
-        'Hide a name that is no longer used. To rename, add the new name and hide the old one.',
+        'Add a name once; it appears in every drop-down that uses that list. Edit renames it; Hide takes it off the lists.',
         'A name typed under "Other (type it)" joins the list on its own.',
+        'Tap a buyer, supplier or transporter to keep GSTIN, address, phone, bank, UPI and credit days.',
+        'My business (top of the Library): your own name, GSTIN, address, UPI ID and bank, used on payment requests.',
       ],
     },
     {
@@ -157,9 +158,11 @@
       open: 'ledger.html',
       what: 'The sales sheet, money received and money paid out, and what each buyer still owes.',
       steps: [
-        'Sale: buyer and product from the lists, quantity, rate; the amount works itself out. A lot can fill it.',
-        'Receipt: money in from a buyer. Payment: money out, with what it was for.',
-        'Summary: totals for the month and what each buyer owes. Export to CSV for the accountant.',
+        "Sale: buyer and product from the lists, quantity, rate; the amount works itself out. A lot can fill it. The buyer's GSTIN and credit days show, and the payment due date fills in.",
+        'Dispatch (inside a sale): transporter, vehicle, driver phone, e-way bill, LR number, freight, dispatched and delivered dates.',
+        'Open a saved sale › Ask for payment: a message with amount, due date and your bank, a UPI QR the buyer scans, sent by WhatsApp or share.',
+        'Receipt: money in from a buyer. Payment: money out; a supplier with a UPI ID gets a Pay by UPI link.',
+        'Summary: payments due and late, totals for each month, what each buyer owes. Export to CSV for the accountant.',
       ],
     },
     {
