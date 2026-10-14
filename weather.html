@@ -13,7 +13,7 @@
 <body data-page="weather"><main class="app">
 <header id="kh"></header>
 <h1>Weather</h1>
-<div class="sub">Daily rain and temperature for each place, kept in your account. Fetched on this phone from a free weather service, or brought in from your own station's file, and topped up every night.</div>
+<div class="sub">Daily rain and temperature for each place, kept in your account. Fetched on this phone from a free weather service, or brought in from your own station's file, and topped up early every morning.</div>
 <div id="view"></div>
 <div id="kf"></div>
 </main>
@@ -141,7 +141,7 @@ async function openSite(id) {
     '<label class="full" style="display:flex;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="auto" style="width:22px;height:22px"' +
     (s.auto ? ' checked' : '') +
     (s.source === 'file' ? ' disabled' : '') +
-    '> Keep up to date every night</label>' +
+    '> Keep up to date every morning</label>' +
     '<label>Get<select id="span"><option value="90">Last 3 months</option><option value="ytd">This year</option><option value="1">Last 12 months</option><option value="2">Last 2 years</option><option value="5">Last 5 years</option><option value="10">Last 10 years</option></select></label>' +
     '<div style="align-self:end"><button class="btn app" id="get"' +
     (s.source === 'file' ? ' disabled' : '') +
@@ -155,7 +155,7 @@ async function openSite(id) {
         ? t.days + ' days stored, ' + fmtDate(t.first_day) + ' to ' + fmtDate(t.last_day) + '. '
         : 'No days stored yet. ') +
       (t.last_error
-        ? '<span style="color:var(--bad)">Last nightly update failed: ' + esc(t.last_error) + '</span> '
+        ? '<span style="color:var(--bad)">Last morning update failed: ' + esc(t.last_error) + '</span> '
         : '') +
       (WXCORE.SOURCES[t.source] || {}).credit;
   };

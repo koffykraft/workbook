@@ -1165,7 +1165,7 @@ async function publicView(tok) {
         ' day' +
         (stamped > 1 ? 's' : '') +
         ' of entries stamped into the Bitcoin public record through OpenTimestamps' +
-        (pending ? '; ' + pending + " waiting for tonight's stamp" : '') +
+        (pending ? '; ' + pending + ' waiting for the morning stamp' : '') +
         '. ' +
         (inBtc
           ? inBtc +
@@ -1174,7 +1174,7 @@ async function publicView(tok) {
             '); those proofs check without any calendar.'
           : 'Full Bitcoin confirmation follows within a day or two.') +
         '</div>'
-      : '<div class="banner wait">Waiting for the daily public stamp. Entries are stamped into the Bitcoin record each night (India time).</div>';
+      : '<div class="banner wait">Waiting for the daily public stamp. Each day’s entries are stamped into the Bitcoin record the next morning, about 6 am India time.</div>';
   const bal = T.balance(P.events);
   h += bal.warnings.length
     ? '<div class="banner bad"><b>Weight check:</b><br>' + bal.warnings.map(esc).join('<br>') + '</div>'

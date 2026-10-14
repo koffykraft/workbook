@@ -432,7 +432,26 @@ check();
             '</div>'
         )
         .join('') || '<div class="meta">None yet.</div>') +
-      '</div>';
+      '</div>' +
+      '<div class="card"><b>Lot passports</b><div class="meta">Stamping runs every morning at about 05:40 India time for the previous day. Run it now if needed.</div><button class="btn small" id="stamp" style="margin-top:6px">Stamp passports now</button> <span class="meta" id="stampMsg"></span></div>';
+    document.getElementById('stamp').onclick = async () => {
+      const out = document.getElementById('stampMsg');
+      out.textContent = 'Stamping…';
+      try {
+        const s = await (
+          await fetch('/api/trace/anchor', {
+            method: 'POST',
+            headers: { authorization: 'Bearer ' + SYNC.getToken() },
+          })
+        ).json();
+        const a = s.anchored || [];
+        out.textContent = a.length
+          ? 'Stamped ' + a.map(x => x.day + (x.status === 'ok' ? '' : ' (failed)')).join(', ')
+          : 'Nothing new to stamp';
+      } catch (e) {
+        out.textContent = e.message;
+      }
+    };
   } catch (e) {}
 })();
 </script>
