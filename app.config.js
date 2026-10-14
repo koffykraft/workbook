@@ -7,7 +7,7 @@ const APP = {
   about: 'Coffee from plant to cup.',
   color: '#8d583b',
   bg: '#f7f5f0',
-  feedbackTo: 'info@koffykraft.coffee',
+  feedbackTo: 'info@koffykraft.com',
   account: 'profile.html',
   placesPage: 'origin',
   syncRecords: false,

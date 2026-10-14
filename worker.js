@@ -318,7 +318,7 @@ export default {
         contact = String(b.contact || '').slice(0, 200);
       const mail = sendEmail(
         e,
-        e.FEEDBACK_TO || 'info@koffykraft.coffee',
+        e.FEEDBACK_TO || 'info@koffykraft.com',
         'KoffyKraft feedback: ' + kind + (page ? ' (' + page + ')' : ''),
         msg +
           '\n\n---\nKind: ' +

@@ -77,7 +77,7 @@ export async function run(root, t) {
 
     // feedback
     await t.acheck('feedback is accepted without an account', async () => eq((await call('POST', '/api/feedback', { message: 'Great tool', kind: 'Thanks', page: 'home', contact: 'x@y.z' })).s, 200, 'status'));
-    await t.acheck('feedback is emailed to info@koffykraft.coffee', async () => { const m = mail.at(-1); if (!m) throw new Error('no email'); eq(m.to[0], 'info@koffykraft.coffee', 'to'); if (!m.text.includes('Great tool')) throw new Error('message missing') });
+    await t.acheck('feedback is emailed to info@koffykraft.com', async () => { const m = mail.at(-1); if (!m) throw new Error('no email'); eq(m.to[0], 'info@koffykraft.com', 'to'); if (!m.text.includes('Great tool')) throw new Error('message missing') });
     await t.acheck('feedback list is refused to users', async () => eq((await call('GET', '/api/feedback', null, owner)).s, 403, 'status'));
     await t.acheck('feedback list is refused without sign-in', async () => eq((await call('GET', '/api/feedback')).s, 401, 'status'));
     await t.acheck('feedback list works for admins', async () => { const r = await call('GET', '/api/feedback', null, admin); eq(r.s, 200, 'status'); eq(r.j.items.length, 1, 'items') });
