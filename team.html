@@ -426,9 +426,30 @@ function workerForm(id) {
     info('languages', 'Languages') +
     info('idNote', 'ID or welfare card held', '', '', 'Which card, not the number') +
     '</div></details>' +
-    '<div class="row sticky"><button class="btn app" id="save">Save</button><a class="btn" href="#workers">Cancel</a></div>';
+    '<div class="row sticky"><button class="btn app" id="save">Save</button><a class="btn" href="#workers">Cancel</a>' +
+    (w.id ? '<button class="btn danger" id="del" style="margin-left:auto">Delete</button>' : '') +
+    '</div>';
+  // one id for this form, so a second tap on a slow line updates the same worker, never adds another
+  const wid = w.id || uid('wk');
+  let busy = false;
+  if ($('#del'))
+    $('#del').onclick = async () => {
+      if (busy || !confirm('Delete ' + w.name + '? Only possible if nothing is recorded against them yet.'))
+        return;
+      busy = true;
+      try {
+        await API.del('/api/team/workers/' + encodeURIComponent(w.id));
+        WORKERS = WORKERS.filter(x => x.id !== w.id);
+        toast('Deleted');
+        location.hash = 'workers';
+      } catch (e) {
+        toast(e.message);
+      }
+      busy = false;
+    };
   $('#save').onclick = async () => {
-    const o = { ...w, id: w.id || uid('wk') };
+    if (busy) return;
+    const o = { ...w, id: wid };
     document.querySelectorAll('[data-k]').forEach(el => (o[el.dataset.k] = el.value.trim()));
     o.active = $('#act').checked;
     o.info = {};
@@ -439,7 +460,18 @@ function workerForm(id) {
       if (why === null) return;
       o.reason = why;
     }
-    const r = await API.post('/api/team/workers', o);
+    busy = true;
+    $('#save').disabled = true;
+    $('#save').textContent = 'Saving…';
+    let r;
+    try {
+      r = await API.post('/api/team/workers', o);
+    } catch (e) {
+      busy = false;
+      $('#save').disabled = false;
+      $('#save').textContent = 'Save';
+      return toast(e.message);
+    }
     toast(r.queued ? 'Saved on this phone; will send when online' : 'Saved');
     location.hash = 'workers';
   };

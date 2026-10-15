@@ -229,6 +229,38 @@ export async function api(r, e, p, me, H) {
     await e.DB.batch(stmts);
     return j({ ok: true, id });
   }
+  // a worker can be deleted only while nothing is recorded against them (a mistake or a double save);
+  // once there are muster days, leave, pay items or job lines, untick Still working instead
+  if (r.method === 'DELETE' && p.startsWith('/api/team/workers/')) {
+    const id = decodeURIComponent(p.split('/').pop());
+    const w = await e.DB.prepare('SELECT id, name FROM team_workers WHERE id=? AND owner_user_id=?')
+      .bind(id, me.id)
+      .first();
+    if (!w) return j({ ok: true });
+    const count = async t =>
+      (
+        await e.DB.prepare('SELECT COUNT(*) AS n FROM ' + t + ' WHERE worker_id=? AND owner_user_id=?')
+          .bind(id, me.id)
+          .first()
+          .catch(() => ({ n: 0 }))
+      ).n;
+    let used = 0;
+    for (const t of ['team_days', 'team_leave', 'team_items', 'job_lines']) used += await count(t);
+    if (used)
+      return j(
+        {
+          error:
+            w.name + ' has ' + used + ' records (muster, leave, pay or jobs). Untick Still working instead.',
+        },
+        409
+      );
+    await e.DB.batch([
+      e.DB.prepare('DELETE FROM team_workers WHERE id=? AND owner_user_id=?').bind(id, me.id),
+      e.DB.prepare('DELETE FROM team_worker_info WHERE id=? AND owner_user_id=?').bind(id, me.id),
+      audit('deleted ' + w.name, { id, name: w.name }, null, ''),
+    ]);
+    return j({ ok: true });
+  }
   // ---- the daily muster ----
   if (r.method === 'GET' && p === '/api/team/day') {
     const day = url.searchParams.get('day');
