@@ -26,7 +26,7 @@ function d1(db) {
 
 export async function run(root, t) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kk-api-'));
-  for (const f of ['worker.js', 'trace-api.js', 'trace-core.js', 'kk-modules.js', 'weather-core.js', ...fs.readdirSync(root).filter(f => /^(weather|fieldlog|team|jobs|ledger|land)-api\.js$/.test(f))]) fs.copyFileSync(path.join(root, f), path.join(tmp, f));
+  for (const f of ['worker.js', 'photos-api.js', 'trace-api.js', 'trace-core.js', 'kk-modules.js', 'weather-core.js', ...fs.readdirSync(root).filter(f => /^(weather|fieldlog|team|jobs|ledger|land)-api\.js$/.test(f))]) fs.copyFileSync(path.join(root, f), path.join(tmp, f));
   fs.writeFileSync(path.join(tmp, 'package.json'), '{"type":"module"}');
   const worker = (await import(path.join(tmp, 'worker.js'))).default;
   const { traceAnchor, traceUpgrade } = await import(path.join(tmp, 'trace-api.js'));
@@ -75,6 +75,14 @@ export async function run(root, t) {
     await t.acheck('root page goes to home', async () => { const r = await worker.fetch(new Request('https://test.local/'), env, ctx); eq(await r.text(), 'asset', 'body') });
     await t.acheck('private API needs sign-in', async () => eq((await call('GET', '/api/spaces')).s, 401, 'status'));
 
+    // photos
+    const jpg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 0xff, 0xd9]).toString('base64');
+    await t.acheck('photo is saved for its owner', async () => eq((await call('POST', '/api/photos', { id: 'ph-test-1', rec: 'r1', thumb: jpg, full: jpg }, owner)).s, 200, 'status'));
+    await t.acheck('photo is read back as an image', async () => { const r = await worker.fetch(new Request('https://test.local/api/photos/ph-test-1?s=t', { headers: { authorization: 'Bearer ' + owner } }), env, ctx); eq(r.status, 200, 'status'); eq(r.headers.get('content-type'), 'image/jpeg', 'type'); eq((await r.arrayBuffer()).byteLength, 9, 'bytes') });
+    await t.acheck('photo is hidden from others', async () => eq((await call('GET', '/api/photos/ph-test-1?s=f', null, stranger)).s, 404, 'status'));
+    await t.acheck('photo cannot be overwritten by others', async () => eq((await call('POST', '/api/photos', { id: 'ph-test-1', thumb: jpg, full: jpg }, stranger)).s, 403, 'status'));
+    await t.acheck('oversized photo is refused', async () => eq((await call('POST', '/api/photos', { id: 'ph-test-2', thumb: 'A'.repeat(100000), full: jpg }, owner)).s, 413, 'status'));
+    await t.acheck('photo is deleted', async () => { await call('DELETE', '/api/photos/ph-test-1', null, owner); eq((await call('GET', '/api/photos/ph-test-1', null, owner)).s, 404, 'status') });
     // feedback
     await t.acheck('feedback is accepted without an account', async () => eq((await call('POST', '/api/feedback', { message: 'Great tool', kind: 'Thanks', page: 'home', contact: 'x@y.z' })).s, 200, 'status'));
     await t.acheck('feedback is emailed to info@koffykraft.com', async () => { const m = mail.at(-1); if (!m) throw new Error('no email'); eq(m.to[0], 'info@koffykraft.com', 'to'); if (!m.text.includes('Great tool')) throw new Error('message missing') });

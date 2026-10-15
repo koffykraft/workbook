@@ -1,7 +1,8 @@
 // KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 // Share cards: turns one or more records into images (Instagram post or story) or a PDF (email, WhatsApp),
 // drawn on this phone and handed to the share sheet. Nothing is uploaded.
-// Use: KKCARD.open([{kind,title,sub,date,rows:[[label,value]],notes,loc,chips,qr}], {heading, brand})
+// Use: KKCARD.open([{kind,title,sub,date,rows:[[label,value]],notes,loc,chips,qr,pics}], {heading, brand})
+// pics: loaded <img> elements (record photos), drawn below the notes.
 // qr: a lot passport link, drawn as a QR code when qrcode.js is on the page.
 (function () {
   if (window.KKCARD) return;
@@ -198,6 +199,27 @@
         nl.forEach((l, i) => x.fillText(l, P + W * 0.02, y + W * 0.02 + i * W * 0.042 * s));
       }
       y += nh;
+    }
+    // photos (loaded <img> elements in it.pics), side by side, cropped to fill
+    if (it.pics && it.pics.length) {
+      y += W * 0.025;
+      const n = Math.min(3, it.pics.length),
+        gap = W * 0.015,
+        pw = (inner - gap * (n - 1)) / n,
+        ph = Math.min(W * 0.34, pw * 0.8) * s;
+      if (draw)
+        it.pics.slice(0, n).forEach((im, i) => {
+          const px = P + i * (pw + gap),
+            k = Math.max(pw / im.naturalWidth, ph / im.naturalHeight),
+            sw = pw / k,
+            sh = ph / k;
+          x.save();
+          rr(x, px, y, pw, ph, W * 0.018);
+          x.clip();
+          x.drawImage(im, (im.naturalWidth - sw) / 2, (im.naturalHeight - sh) / 2, sw, sh, px, y, pw, ph);
+          x.restore();
+        });
+      y += ph;
     }
     if (o.loc && it.loc) {
       y += W * 0.02;

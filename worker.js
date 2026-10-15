@@ -1,5 +1,6 @@
 // KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
 import { MODULES, MODULE_SETTINGS } from './kk-modules.js';
+import * as PHOTOS from './photos-api.js';
 import { tracePublic, traceApi, traceAnchor, traceUpgrade } from './trace-api.js';
 const REPLIES_SQL =
   'CREATE TABLE IF NOT EXISTS feedback_replies (id TEXT PRIMARY KEY, feedback_id TEXT NOT NULL, at TEXT NOT NULL, text TEXT NOT NULL, by_user TEXT)';
@@ -1020,6 +1021,10 @@ export default {
         events: JSON.parse(row.events_json || '[]'),
         readings: JSON.parse(row.readings_json || '{"exhaust":[],"bean":[]}'),
       });
+    }
+    {
+      const x = await PHOTOS.api(r, e, p, me, j);
+      if (x) return x;
     }
     for (const m of MODULES) {
       if (!p.startsWith('/api/' + m.NAME + '/') && p !== '/api/' + m.NAME) continue;

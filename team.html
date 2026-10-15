@@ -54,7 +54,7 @@
 <div id="view"></div>
 <div id="kf"></div>
 </main>
-<script src="app.js"></script><script src="sync.js"></script><script src="origin-db.js"></script><script src="places.js"></script>
+<script src="app.js"></script><script src="sync.js"></script><script src="origin-db.js"></script><script src="places.js"></script><script src="kk-crew.js"></script>
 <script>
 // Team: muster, workers, leave and holidays, and the month with wages.
 const $ = s => document.querySelector(s);
@@ -116,6 +116,62 @@ async function view() {
   ({ muster, workers, leave, month: monthView })[TAB]();
 }
 // ---------------- muster ----------------
+// People and hours logged on records (harvests, runs, leaf batches) for the chosen day.
+async function workLog(box) {
+  if (typeof ORIGIN === 'undefined' || typeof KKCREW === 'undefined') return;
+  const recs = (
+    await Promise.all(['harvest', 'process', 'leaf'].map(t => ORIGIN.all(t).catch(() => [])))
+  ).flat();
+  if (!recs.length) return;
+  const page = (t, id) =>
+    t === 'leaf'
+      ? 'leaf.html#edit/' + encodeURIComponent(id)
+      : (/^Koko/.test(APP.name || '') ? 'farm.html' : 'origin.html') +
+        '#edit/' +
+        t +
+        '/' +
+        encodeURIComponent(id);
+  const rows = recs
+    .flatMap(r => (r.crew || []).filter(x => x.day === DAY).map(x => ({ ...x, r })))
+    .sort((a, b) => String(a.start).localeCompare(String(b.start)));
+  const today = recs.filter(r => String(r.day || r.date || r.started || '').slice(0, 10) === DAY);
+  const tot = rows.reduce((a, x) => a + (KKCREW.hrs(x) || 0), 0);
+  const el = document.createElement('div');
+  el.innerHTML =
+    '<h2>Work log</h2><div class="card">' +
+    (rows.length
+      ? rows
+          .map(
+            x =>
+              '<div class="mini" style="margin:3px 0"><b>' +
+              esc(x.start || '?') +
+              (x.end ? ' to ' + esc(x.end) : '') +
+              '</b> · ' +
+              esc(x.who || 'someone') +
+              ' · ' +
+              esc(x.task || '') +
+              (KKCREW.hrs(x) != null ? ' · ' + Math.round(KKCREW.hrs(x) * 10) / 10 + ' h' : '') +
+              ' · <a href="' +
+              page(x.r.type, x.r.id) +
+              '">' +
+              esc(x.r.code || x.r.type) +
+              '</a></div>'
+          )
+          .join('') +
+        '<div class="mini" style="margin-top:6px">' +
+        new Set(rows.map(x => x.who).filter(Boolean)).size +
+        ' people · ' +
+        Math.round(tot * 10) / 10 +
+        ' h logged. Recorded only: wages still come from the muster.</div>'
+      : '<div class="mini">No people and hours logged on records for this day.</div>') +
+    (today.length
+      ? '<div class="mini" style="margin-top:6px">Add on: ' +
+        today.map(r => '<a href="' + page(r.type, r.id) + '">' + esc(r.code || r.type) + '</a>').join(' · ') +
+        '</div>'
+      : '') +
+    '</div>';
+  box.appendChild(el);
+}
 async function muster() {
   const box = $('#view');
   box.innerHTML = tabs() + '<div class="card mini">Loading…</div>';
@@ -223,6 +279,7 @@ async function muster() {
     } catch (e) {}
     muster();
   };
+  workLog(box);
   if (!here.length) return;
   box.querySelectorAll('.seg').forEach(g =>
     g.querySelectorAll('button').forEach(

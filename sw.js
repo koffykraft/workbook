@@ -70,6 +70,8 @@ const CORE = [
   './lang/pt.js',
   './howto.js',
   './sharecard.js',
+  './kk-photos.js',
+  './kk-crew.js',
   './kk-base.js',
   './kk-units.js',
   './kk-probe.js',

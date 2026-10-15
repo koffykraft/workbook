@@ -805,7 +805,7 @@ details.mini a {
 </main>
 <div class="toast" id="toast"></div>
 <script src="sync.js"></script>
-<script src="prefs.js"></script><script src="origin-db.js"></script><script src="sharecard.js"></script><script src="qrcode.js"></script><script src="export.js"></script><script src="varieties.js"></script><script src="cloud-ui.js"></script>
+<script src="prefs.js"></script><script src="origin-db.js"></script><script src="sharecard.js"></script><script src="kk-photos.js"></script><script src="kk-crew.js"></script><script src="qrcode.js"></script><script src="export.js"></script><script src="varieties.js"></script><script src="cloud-ui.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 const today = () => new Date().toISOString().slice(0, 10);
@@ -3085,6 +3085,7 @@ function listBody() {
 function renderListBody() {
   const b = listBody();
   $('#listBody').innerHTML = b.body;
+  KKPHOTO.hydrate($('#listBody'));
   const L = {
     farm: ['plot', 'plots'],
     harvest: ['harvest', 'harvests'],
@@ -3450,9 +3451,11 @@ async function openPassport(g0) {
   }
   location.href = 'trace.html#seal';
 }
-function shareCard() {
+async function shareCard() {
   const r = byId(CUR_T, CUR.id) || CUR;
-  KKCARD.open([cardData(CUR_T, r)], { heading: title(CUR_T, r), brand: (DB.estate[0] || {}).name });
+  const d = cardData(CUR_T, r);
+  d.pics = await KKPHOTO.images(CUR.photos || r.photos, 2);
+  KKCARD.open([d], { heading: title(CUR_T, r), brand: (DB.estate[0] || {}).name });
 }
 function cardData(t, r) {
   const d = cardData0(t, r);
@@ -3627,6 +3630,7 @@ function cardData0(t, r) {
       rows: [
         ['Picking', u(r.pickType)],
         ['Pickers', u(r.pickers)],
+        ['People and hours', KKCREW.summary(r)],
         [
           'Cherry',
           kg
@@ -3664,6 +3668,7 @@ function cardData0(t, r) {
       chips: [...new Set(ps.map(p => u(p.variety)).filter(Boolean))],
       rows: [
         ['From harvests', hs.map(h => u(h.code)).join(', ')],
+        ['People and hours', KKCREW.summary(r)],
         ['Cherry in', sm.cherry ? r1(sm.cherry) + ' kg' : ''],
         ['Green out', sm.green ? r1(sm.green) + ' kg' : ''],
         ['Outturn', sm.outturn ? r1(sm.outturn) + '%' : ''],
@@ -3720,6 +3725,9 @@ function card(t, r, sub, tags) {
     esc(title(t, r)) +
     '</b>' +
     (sub ? '<div class="m">' + esc(sub) + '</div>' : '') +
+    (r.photos && r.photos.length
+      ? '<div style="margin-top:6px">' + KKPHOTO.strip(r.photos, 3) + '</div>'
+      : '') +
     '<div class="tagrow">' +
     locTag(r) +
     tags
@@ -3794,6 +3802,10 @@ function editView(t, id) {
     (ex ? '<div id="cloudRow" class="cloudrow">' + cloudRowHtml(CUR) + '</div>' : '') +
     '<form id="form" class="f" onsubmit="return false">' +
     F[t].map(fieldHtml).join('') +
+    (t === 'harvest' || t === 'process'
+      ? '<div class="fhead">People and hours</div><div class="full" id="kkCrew"></div>'
+      : '') +
+    '<div class="fhead">Photos</div><div class="full" id="kkPhotos"></div>' +
     '</form><datalist id="varieties">' +
     VARIETIES.map(v => '<option value="' + esc(v) + '">').join('') +
     '</datalist>';
@@ -3809,6 +3821,12 @@ function editView(t, id) {
   bindCloudRow(CUR);
   if (ex) $('#del').onclick = del;
   bindForm();
+  KKPHOTO.mount($('#kkPhotos'), () => CUR);
+  KKCREW.mount(
+    $('#kkCrew'),
+    () => CUR,
+    () => String(CUR.date || CUR.started || '').slice(0, 10)
+  );
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', () => {
