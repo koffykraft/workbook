@@ -82,6 +82,9 @@ export async function run(root, t) {
     await t.acheck('photo is hidden from others', async () => eq((await call('GET', '/api/photos/ph-test-1?s=f', null, stranger)).s, 404, 'status'));
     await t.acheck('photo cannot be overwritten by others', async () => eq((await call('POST', '/api/photos', { id: 'ph-test-1', thumb: jpg, full: jpg }, stranger)).s, 403, 'status'));
     await t.acheck('oversized photo is refused', async () => eq((await call('POST', '/api/photos', { id: 'ph-test-2', thumb: 'A'.repeat(100000), full: jpg }, owner)).s, 413, 'status'));
+    await t.acheck('photo stays private until put on a passport', async () => { const r = await worker.fetch(new Request('https://test.local/api/public/photo/ph-test-1'), env, ctx); eq(r.status, 404, 'status') });
+    await t.acheck('photo put on a passport opens without sign-in', async () => { eq((await call('POST', '/api/photos/ph-test-1/public', { on: true }, owner)).s, 200, 'publish'); const r = await worker.fetch(new Request('https://test.local/api/public/photo/ph-test-1?s=f'), env, ctx); eq(r.status, 200, 'status') });
+    await t.acheck('others cannot make a photo public', async () => eq((await call('POST', '/api/photos/ph-test-1/public', { on: true }, stranger)).s, 404, 'status'));
     await t.acheck('photo is deleted', async () => { await call('DELETE', '/api/photos/ph-test-1', null, owner); eq((await call('GET', '/api/photos/ph-test-1', null, owner)).s, 404, 'status') });
     // feedback
     await t.acheck('feedback is accepted without an account', async () => eq((await call('POST', '/api/feedback', { message: 'Great tool', kind: 'Thanks', page: 'home', contact: 'x@y.z' })).s, 200, 'status'));

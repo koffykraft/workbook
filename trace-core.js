@@ -288,6 +288,7 @@
       typeof x === 'number' && isFinite(x) ? x : x != null && x !== '' && isFinite(+x) ? +x : null;
     const rec = {},
       roasts = {},
+      packs = {},
       sent = {},
       got = {},
       cancelled = new Set();
@@ -297,7 +298,9 @@
       const d = b.data || {},
         who = ev.party || 'A';
       if (b.kind === 'record') rec[d.rtype + ':' + d.rid] = d;
-      if (b.kind === 'roast') roasts[d.rid] = { kg: n(d.kg && d.kg.green), who };
+      if (b.kind === 'roast')
+        roasts[d.rid] = { kg: n(d.kg && d.kg.green), out: n(d.kg && d.kg.roasted), who };
+      if (b.kind === 'pack') packs[d.pid] = { kg: ((n(d.n) || 0) * (n(d.g) || 0)) / 1000, of: d.of, who };
       if (b.kind === 'transfer') sent[d.tid] = { kg: n(d.kg), who };
       if (b.kind === 'receive') got[d.tid] = { kg: n(d.kg), who };
       if (b.kind === 'cancel') cancelled.add(d.tid);
@@ -330,11 +333,25 @@
           W.push('Party ' + g.who + ' confirmed ' + r2(g.kg) + ' kg but only ' + r2(t.kg) + ' kg was sent.');
       }
     }
-    for (const r of Object.values(roasts)) P(r.who).roasted += r.kg || 0;
+    for (const r of Object.values(roasts)) {
+      P(r.who).roasted += r.kg || 0;
+      P(r.who).out = (P(r.who).out || 0) + (r.out || 0);
+    }
+    // packs: roasted packs come out of what was roasted; other packs out of what was held
+    for (const k of Object.values(packs)) {
+      const q = P(k.who);
+      if (k.of === 'roasted') q.packedR = (q.packedR || 0) + k.kg;
+      else q.packed = (q.packed || 0) + k.kg;
+    }
+    for (const [w, q] of Object.entries(parties))
+      if (q.packedR && q.out && q.packedR > q.out * 1.01 + 0.001)
+        W.push('Party ' + w + ' packed ' + r2(q.packedR) + ' kg but roasted only ' + r2(q.out) + ' kg.');
     for (const [w, p] of Object.entries(parties)) {
-      const used = p.sent + p.roasted;
+      const used = p.sent + p.roasted + (p.packed || 0);
       if ((w !== 'A' || green) && used > p.held * 1.01 + 0.001)
-        W.push('Party ' + w + ' sent and roasted ' + r2(used) + ' kg but held only ' + r2(p.held) + ' kg.');
+        W.push(
+          'Party ' + w + ' sent, used and packed ' + r2(used) + ' kg but held only ' + r2(p.held) + ' kg.'
+        );
     }
     return { warnings: W, cherry: cherry || null, green, out, parties };
   }

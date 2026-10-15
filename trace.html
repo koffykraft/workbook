@@ -490,7 +490,8 @@ async function append(lot, items, to) {
 async function route() {
   const h = decodeURIComponent(location.hash.slice(1));
   let m;
-  if ((m = h.match(/^p\/([a-f0-9]{32})$/))) return publicView(m[1]);
+  if ((m = h.match(/^p\/([a-f0-9]{32})(?:\/k\/([\w-]+)-(\d+))?$/)))
+    return publicView(m[1], m[2] ? { pid: m[2], i: +m[3] } : null);
   if (!signed()) {
     $('#view').innerHTML =
       '<h1>Lot passports</h1><div class="sub">A passport follows one coffee lot from the farm to the cup. Each step is signed on the phone that recorded it, linked to the step before, and stamped daily into the public Bitcoin record, so a buyer can check that nothing was changed later. Scan a passport QR to see one; no account is needed for that.</div><div class="card"><b>Sign in to make passports or receive lots.</b><div class="mini" style="margin:6px 0 10px">Handoffs between farms, processors and roasters go by email address.</div><a class="btn primary" href="account.html">Sign in</a></div>' +
@@ -847,6 +848,13 @@ async function lotView(id) {
         (bal.warnings.length > 1 ? 's' : '') +
         '</span>'
       : 'weights add up') +
+    (L.views
+      ? ' · opened ' +
+        L.views.total +
+        ' time' +
+        (L.views.total === 1 ? '' : 's') +
+        (L.views.total ? ' (' + L.views.last30 + ' in the last 30 days)' : '')
+      : '') +
     '</div></div>';
   if (local)
     h +=
@@ -866,6 +874,30 @@ async function lotView(id) {
         ' sealed: ' +
         photos.map(e => esc(e.body.data.name || 'photo')).join(', ') +
         '</div>'
+      : '') +
+    '</div>';
+  const packs = L.events.filter(e => e.body && e.body.kind === 'pack');
+  h +=
+    '<h2>Packs</h2><div class="card"><b>Split into packs</b><div class="mini">Each pack gets its own QR. It opens this passport and shows which pack it is. Pack weights are checked against what was roasted or held.</div><div class="row" style="gap:6px;flex-wrap:wrap"><label class="f" style="flex:1;min-width:90px">How many<input id="kN" type="number" min="1" max="5000" inputmode="numeric"></label><label class="f" style="flex:1;min-width:90px">Grams each<input id="kG" type="number" step="any" inputmode="decimal" placeholder="250"></label></div><label class="f">From<select id="kO"><option value="roasted">Roasted coffee (from roasts)</option><option value="held">Stock held (green, dry beans or leaf)</option></select></label><label class="f">Label (optional)<input id="kL" maxlength="80" placeholder="Retail 250 g, December roast"></label><button class="btn primary small" id="kS">Sign packs</button>' +
+    (packs.length
+      ? packs
+          .map(e => {
+            const d = e.body.data || {};
+            return (
+              '<div class="mini" style="margin-top:8px;font-size:13.5px"><b style="color:var(--ink)">' +
+              esc(String(d.n)) +
+              ' × ' +
+              esc(String(d.g)) +
+              ' g</b>' +
+              (d.label ? ' · ' + esc(d.label) : '') +
+              ' · ' +
+              when(e.body.at) +
+              ' <button class="btn small" data-kp="' +
+              esc(d.pid) +
+              '">Print pack labels</button></div>'
+            );
+          })
+          .join('')
       : '') +
     '</div>';
   h +=
@@ -933,6 +965,50 @@ async function lotView(id) {
       toast(e.message);
     }
   };
+  $('#kS').onclick = async () => {
+    const n = Math.round(+$('#kN').value),
+      g = +$('#kG').value;
+    if (!(n >= 1 && n <= 5000)) return toast('How many packs?');
+    if (!(g > 0)) return toast('Grams in each pack?');
+    $('#kS').disabled = true;
+    try {
+      const pid = 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      await append(id, [
+        { kind: 'pack', data: { pid, n, g, of: $('#kO').value, label: $('#kL').value.trim().slice(0, 80) } },
+      ]);
+      toast(n + ' packs signed');
+      lotView(id);
+    } catch (e) {
+      toast(e.message);
+      $('#kS').disabled = false;
+    }
+  };
+  document.querySelectorAll('[data-kp]').forEach(
+    b =>
+      (b.onclick = () => {
+        const ev = packs.find(e => e.body.data.pid === b.dataset.kp);
+        if (!ev) return;
+        const d = ev.body.data;
+        $('#labels').innerHTML = Array.from(
+          { length: Math.min(300, +d.n) },
+          (_, i) =>
+            '<div class="lab">' +
+            qrSvg(url + '/k/' + d.pid + '-' + (i + 1)) +
+            '<b>' +
+            esc(L.lot.title) +
+            '</b><small>Pack ' +
+            (i + 1) +
+            ' of ' +
+            d.n +
+            ' · ' +
+            d.g +
+            ' g' +
+            (d.label ? ' · ' + esc(d.label) : '') +
+            '</small><small>Scan to see where it comes from</small></div>'
+        ).join('');
+        setTimeout(() => window.print(), 100);
+      })
+  );
   $('#tS').onclick = async () => {
     const email = $('#tE').value.trim(),
       kg = +$('#tK').value,
@@ -1064,6 +1140,22 @@ function recCard(e, c, P, n) {
         '</div>'
       : '') +
     (k.notes ? '<div class="mini" style="margin-top:6px">' + esc(k.notes) + '</div>' : '') +
+    ((k.pics || []).length
+      ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">' +
+        k.pics
+          .map(
+            x =>
+              '<a href="/api/public/photo/' +
+              encodeURIComponent(x.id) +
+              '?s=f" target="_blank" rel="noopener"><img src="/api/public/photo/' +
+              encodeURIComponent(x.id) +
+              '?s=t" alt="' +
+              esc(x.cap || 'photo') +
+              '" loading="lazy" style="width:96px;height:96px;object-fit:cover;border-radius:8px;background:#eee"></a>'
+          )
+          .join('') +
+        '</div>'
+      : '') +
     (k.loc
       ? '<div class="mini" style="margin-top:6px">Location <a href="https://www.openstreetmap.org/?mlat=' +
         encodeURIComponent(k.loc.split(',')[0].trim()) +
@@ -1096,7 +1188,7 @@ function recCard(e, c, P, n) {
     '</div>'
   );
 }
-async function publicView(tok) {
+async function publicView(tok, pack) {
   const v = $('#view');
   v.innerHTML = '<div class="mini">Loading passport…</div>';
   let P;
@@ -1181,6 +1273,23 @@ async function publicView(tok) {
           : 'Full Bitcoin confirmation follows within a day or two.') +
         '</div>'
       : '<div class="banner wait">Waiting for the daily public stamp. Each day’s entries are stamped into the Bitcoin record the next morning, about 6 am India time.</div>';
+  const pk = pack && P.events.find(e => e.body && e.body.kind === 'pack' && e.body.data.pid === pack.pid);
+  if (pk) {
+    const d = pk.body.data;
+    h +=
+      '<div class="banner ok"><b>Your pack: ' +
+      pack.i +
+      ' of ' +
+      esc(String(d.n)) +
+      ', ' +
+      esc(String(d.g)) +
+      ' g</b>' +
+      (d.label ? ' · ' + esc(d.label) : '') +
+      '. Packed ' +
+      when(pk.body.at) +
+      (pack.i > +d.n ? '. <b>This pack number is higher than the number packed: ask the seller.</b>' : '') +
+      '</div>';
+  }
   const bal = T.balance(P.events);
   h += bal.warnings.length
     ? '<div class="banner bad"><b>Weight check:</b><br>' + bal.warnings.map(esc).join('<br>') + '</div>'
@@ -1238,6 +1347,25 @@ async function publicView(tok) {
     h +=
       '<h2>Roasts</h2>' +
       ro.map(i => recCard(P.events[i], chk[i], P, count[ikey(P.events[i].body.data)])).join('');
+  const pks = P.events.map((e, i) => [e, i]).filter(([e]) => e.body && e.body.kind === 'pack');
+  if (pks.length)
+    h +=
+      '<h2>Packs</h2>' +
+      pks
+        .map(([e, i]) => {
+          const d = e.body.data || {};
+          return (
+            '<div class="card"><span class="kind k-hand">Packed</span><b>' +
+            esc(String(d.n)) +
+            ' × ' +
+            esc(String(d.g)) +
+            ' g</b>' +
+            (d.label ? '<div class="mini">' + esc(d.label) + '</div>' : '') +
+            sigLine(e, chk[i], P) +
+            '</div>'
+          );
+        })
+        .join('');
   const notes = P.events.map((e, i) => [e, i]).filter(([e]) => e.body && e.body.kind === 'note');
   if (notes.length)
     h +=

@@ -343,6 +343,10 @@ export default {
       const x = await tracePublic(r, e, p, H);
       if (x) return x;
     }
+    {
+      const x = await PHOTOS.pub(r, e, p);
+      if (x) return x;
+    }
     if (r.method === 'GET' && p.startsWith('/api/public/profile/')) {
       const tok = p.split('/').pop();
       if (!/^[a-f0-9]{32}$/.test(tok)) return j({ error: 'not found' }, 404);

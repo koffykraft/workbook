@@ -4,7 +4,7 @@
 // users, and stamps each day's hashes into Bitcoin through OpenTimestamps calendars.
 import './trace-core.js';
 const T = globalThis.KKTRACE;
-const KINDS = ['record', 'roast', 'transfer', 'receive', 'cancel', 'note', 'photo'];
+const KINDS = ['record', 'roast', 'transfer', 'receive', 'cancel', 'note', 'photo', 'pack'];
 const CALS = ['https://a.pool.opentimestamps.org', 'https://b.pool.opentimestamps.org'];
 const tok16 = () => {
   const a = new Uint8Array(16);
@@ -13,6 +13,14 @@ const tok16 = () => {
 };
 // Tables are created on first use as well as by migrations/0015_trace.sql, so a deploy works
 // even where the deploy token cannot change the database.
+// opens of public passport pages, per lot and day; made when first needed
+let VIEWS = null;
+const views = e =>
+  (VIEWS ||= e.DB.prepare(
+    'CREATE TABLE IF NOT EXISTS trace_views ( lot_id TEXT NOT NULL, day TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (lot_id, day) )'
+  )
+    .run()
+    .catch(() => (VIEWS = null)));
 const SCHEMA = [
   'CREATE TABLE IF NOT EXISTS trace_names ( user_id TEXT PRIMARY KEY, label TEXT NOT NULL, updated_at TEXT NOT NULL )',
   'CREATE TABLE IF NOT EXISTS trace_keys ( id TEXT PRIMARY KEY, user_id TEXT NOT NULL, jwk TEXT NOT NULL, created_at TEXT NOT NULL )',
@@ -115,6 +123,14 @@ export async function tracePublic(r, e, p, H) {
   if ((m = p.match(/^\/api\/public\/trace\/([a-f0-9]{32})$/))) {
     const lot = await e.DB.prepare('SELECT * FROM trace_lots WHERE token=?').bind(m[1]).first();
     if (!lot) return H.j({ error: 'not found' }, 404);
+    // count opens of the public page (no personal data: the lot and the day only)
+    await views(e);
+    await e.DB.prepare(
+      'INSERT INTO trace_views (lot_id, day, n) VALUES (?, ?, 1) ON CONFLICT(lot_id, day) DO UPDATE SET n = n + 1'
+    )
+      .bind(lot.id, new Date().toISOString().slice(0, 10))
+      .run()
+      .catch(() => null);
     return H.j(await lotView(e, lot));
   }
   if ((m = p.match(/^\/api\/public\/trace-day\/(\d{4}-\d{2}-\d{2})\/(manifest|ots)$/))) {
@@ -252,6 +268,16 @@ export async function traceApi(r, e, p, me, H, isAdmin, ctx) {
               .bind(me.id, lot.id, me.id, me.id, em)
               .all();
       v.transfers = t.results || [];
+      if (ro === 'owner') {
+        await views(e);
+        const since = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+        v.views = await e.DB.prepare(
+          'SELECT COALESCE(SUM(n),0) AS total, COALESCE(SUM(CASE WHEN day >= ? THEN n ELSE 0 END),0) AS last30, MAX(day) AS last FROM trace_views WHERE lot_id=?'
+        )
+          .bind(since, lot.id)
+          .first()
+          .catch(() => null);
+      }
       return j(v);
     }
     if (r.method === 'DELETE') {
@@ -313,6 +339,13 @@ export async function traceApi(r, e, p, me, H, isAdmin, ctx) {
       if (ro === 'invited' && x.kind !== 'receive') return j({ error: 'confirm the handoff first' }, 403);
       if (x.kind === 'photo' && !/^[a-f0-9]{64}$/.test(String(d.sha || '')))
         return j({ error: 'photo fingerprint missing' }, 400);
+      if (
+        x.kind === 'pack' &&
+        (!/^[\w-]{6,64}$/.test(String(d.pid || '')) ||
+          !(Number.isInteger(+d.n) && +d.n >= 1 && +d.n <= 5000) ||
+          !(+d.g > 0 && +d.g <= 100000))
+      )
+        return j({ error: 'packs need a count and a weight' }, 400);
       if (x.kind === 'record' && ro !== 'owner')
         return j({ error: 'only the owner adds origin records' }, 403);
       const tid = String(d.tid || '');

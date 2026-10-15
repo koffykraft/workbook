@@ -201,14 +201,15 @@
       y += nh;
     }
     // photos (loaded <img> elements in it.pics), side by side, cropped to fill
-    if (it.pics && it.pics.length) {
+    const pics = (it.pics || []).filter(im => im && im.naturalWidth);
+    if (pics.length) {
       y += W * 0.025;
-      const n = Math.min(3, it.pics.length),
+      const n = Math.min(3, pics.length),
         gap = W * 0.015,
         pw = (inner - gap * (n - 1)) / n,
         ph = Math.min(W * 0.34, pw * 0.8) * s;
       if (draw)
-        it.pics.slice(0, n).forEach((im, i) => {
+        pics.slice(0, n).forEach((im, i) => {
           const px = P + i * (pw + gap),
             k = Math.max(pw / im.naturalWidth, ph / im.naturalHeight),
             sw = pw / k,

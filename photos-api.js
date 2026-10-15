@@ -13,10 +13,17 @@ const ready = e =>
       'CREATE TABLE IF NOT EXISTS kk_photos (id TEXT NOT NULL, size TEXT NOT NULL, owner_user_id TEXT NOT NULL, rec_id TEXT, data TEXT NOT NULL, bytes INTEGER NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (id, size))',
       'CREATE INDEX IF NOT EXISTS idx_kk_photos_owner ON kk_photos(owner_user_id)',
     ].map(s => e.DB.prepare(s))
-  ).catch(err => {
-    READY = null;
-    throw err;
-  }));
+  )
+    // photos chosen for a public passport can be opened without sign-in
+    .then(() =>
+      e.DB.prepare('ALTER TABLE kk_photos ADD COLUMN pub INTEGER NOT NULL DEFAULT 0')
+        .run()
+        .catch(() => null)
+    )
+    .catch(err => {
+      READY = null;
+      throw err;
+    }));
 const b64bytes = s => {
   const b = atob(s),
     a = new Uint8Array(b.length);
@@ -64,6 +71,18 @@ export async function api(r, e, p, me, j) {
     await e.DB.batch([put('t', t), put('f', f)]);
     return j({ ok: true, id });
   }
+  const pm = p.match(/^\/api\/photos\/([\w-]{6,80})\/public$/);
+  if (pm && r.method === 'POST') {
+    let b = {};
+    try {
+      b = await r.json();
+    } catch {}
+    const q = await e.DB.prepare('UPDATE kk_photos SET pub=? WHERE id=? AND owner_user_id=?')
+      .bind(b.on === false ? 0 : 1, pm[1], me.id)
+      .run();
+    if (!q.meta || !q.meta.changes) return j({ error: 'photo not sent yet' }, 404);
+    return j({ ok: true });
+  }
   const id = decodeURIComponent(p.slice('/api/photos/'.length));
   if (r.method === 'GET') {
     const size = new URL(r.url).searchParams.get('s') === 'f' ? 'f' : 't';
@@ -80,4 +99,19 @@ export async function api(r, e, p, me, j) {
     return j({ ok: true });
   }
   return j({ error: 'not found' }, 404);
+}
+
+// Public, no sign-in: a photo its owner put on a passport.
+export async function pub(r, e, p) {
+  const m = p.match(/^\/api\/public\/photo\/([\w-]{6,80})$/);
+  if (r.method !== 'GET' || !m) return null;
+  await ready(e);
+  const size = new URL(r.url).searchParams.get('s') === 'f' ? 'f' : 't';
+  const x = await e.DB.prepare('SELECT data FROM kk_photos WHERE id=? AND size=? AND pub=1')
+    .bind(m[1], size)
+    .first();
+  if (!x) return new Response('not found', { status: 404 });
+  return new Response(b64bytes(x.data), {
+    headers: { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=86400' },
+  });
 }

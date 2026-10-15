@@ -29,6 +29,7 @@ const APP = {
     ['roast-graph', 'Graph'],
     ['roasts', 'Roastbook'],
     ['cup', 'Cup'],
+    ['trace', 'Passports'],
     ['account', 'Account'],
   ],
   moduleNav: 'subnav',

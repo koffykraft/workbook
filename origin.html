@@ -3379,6 +3379,7 @@ async function openPassport(g0) {
         .map(x => [x[0], String(x[1])]),
       notes: c.notes || '',
       loc: c.loc || '',
+      pics: KKPHOTO.sealed(r.photos),
     };
   };
   const rec = (t, r, kg, geo) =>
@@ -3432,6 +3433,15 @@ async function openPassport(g0) {
       },
       kg: { green: gw ? gw / 1000 : null, roasted: rw ? rw / 1000 : null },
     });
+  }
+  // photos ticked 'On passport' become public; the rest stay private
+  if (own) {
+    toast('Preparing photos…');
+    await KKPHOTO.publish(
+      [...L.estates, ...L.plots, ...L.hs, L.p, T0 === 'green' ? g : null]
+        .filter(Boolean)
+        .flatMap(x => x.photos || [])
+    );
   }
   try {
     sessionStorage.setItem(

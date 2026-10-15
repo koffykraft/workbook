@@ -3,7 +3,8 @@
 // lists, and a larger view opened on tap (Small, Standard or Large, chosen here and remembered).
 // Both are kept on this phone and sent to your account so other phones see them. The original is
 // not uploaded; the record keeps its fingerprint (SHA-256) so an original sent later can be checked.
-// Use: KKPHOTO.mount(element, () => record). Photos live in record.photos.
+// Use: KKPHOTO.mount(element, () => record). Photos live in record.photos. A photo ticked
+// 'On passport' (pub) is shown on the public passport once the record is sealed.
 const KKPHOTO = (() => {
   const SIZES = { S: [1024, 'Small'], M: [1600, 'Standard'], L: [2400, 'Large'] };
   const MAX = 6;
@@ -193,7 +194,11 @@ const KKPHOTO = (() => {
               i +
               '" value="' +
               h(p.cap || '') +
-              '" placeholder="caption" maxlength="120" style="width:96px;font-size:12px;padding:4px;margin-top:4px;box-sizing:border-box"></div>'
+              '" placeholder="caption" maxlength="120" style="width:96px;font-size:12px;padding:4px;margin-top:4px;box-sizing:border-box"><label class="mini" style="display:flex;gap:4px;align-items:center;margin-top:2px"><input type="checkbox" data-ph-pub="' +
+              i +
+              '"' +
+              (p.pub ? ' checked' : '') +
+              ' style="width:16px;height:16px"> On passport</label></div>'
           )
           .join('') +
         '</div>' +
@@ -215,7 +220,7 @@ const KKPHOTO = (() => {
               .join('') +
             '</select></label></div>'
           : '<div class="mini">Up to ' + MAX + ' photos on one record.</div>') +
-        '<div class="mini" style="margin-top:4px">Shrunk on this phone, kept with your records. Tap a photo to see it large.</div>';
+        '<div class="mini" style="margin-top:4px">Shrunk on this phone, kept with your records. Tap a photo to see it large. Tick On passport to show it publicly when you seal the passport.</div>';
       hydrate(el);
       el.querySelectorAll('img[data-ph-i]').forEach(
         im =>
@@ -234,6 +239,14 @@ const KKPHOTO = (() => {
       );
       el.querySelectorAll('[data-ph-cap]').forEach(
         x => (x.oninput = e => (e.stopPropagation(), (get().photos[+x.dataset.phCap].cap = x.value.trim())))
+      );
+      el.querySelectorAll('[data-ph-pub]').forEach(
+        x =>
+          (x.onchange = e => {
+            e.stopPropagation();
+            get().photos[+x.dataset.phPub].pub = x.checked;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+          })
       );
       const sz = el.querySelector('[data-ph-size]');
       if (sz) sz.onchange = e => (e.stopPropagation(), setPref(sz.value));
@@ -289,5 +302,25 @@ const KKPHOTO = (() => {
           '" style="width:44px;height:44px;object-fit:cover;border-radius:6px;margin-right:4px" alt="">'
       )
       .join('');
-  return { mount, hydrate, images, strip, flush, view, url };
+  // before sealing a passport: send any waiting photos, then mark the chosen ones (pub) as public
+  // and the others as private. Returns the photos that are public now.
+  async function publish(photos) {
+    await flush();
+    const out = [];
+    for (const p of photos || []) {
+      try {
+        const r = await fetch('/api/photos/' + encodeURIComponent(p.id) + '/public', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', ...auth() },
+          body: JSON.stringify({ on: !!p.pub }),
+        });
+        if (r.ok && p.pub) out.push(p);
+      } catch (e) {}
+    }
+    return out;
+  }
+  // what a passport card holds for its public photos: id, caption and the original's fingerprint
+  const sealed = photos =>
+    (photos || []).filter(p => p.pub).map(p => ({ id: p.id, cap: p.cap || '', sha: p.sha || '' }));
+  return { mount, hydrate, images, strip, flush, view, url, publish, sealed };
 })();
