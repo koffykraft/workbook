@@ -506,7 +506,7 @@ window.addEventListener('hashchange', route);
 function how() {
   return (
     '<h2>How it works</h2><div class="card mini" style="font-size:13.5px">' +
-    '<b style="color:var(--ink)">1. Seal.</b> From a green lot in Origin, tap <i>Passport and QR</i>. You choose what is public: farm location and notes are off unless you turn them on.<br>' +
+    '<b style="color:var(--ink)">1. Seal.</b> From a plot, harvest, processing run or green lot in Origin, tap <i>Passport and QR</i>. You choose what is public: farm location and notes are off unless you turn them on.<br>' +
     '<b style="color:var(--ink)">2. Hand over.</b> Send the lot with its weight to the buyer\'s email. They confirm the weight they received on their own phone, and can add their roasts.<br>' +
     '<b style="color:var(--ink)">3. Check.</b> The QR page checks every signature and link in the buyer\'s own browser, adds up the weights, and shows when each day was stamped into Bitcoin through OpenTimestamps.<br><br>' +
     'What this proves: entries were made by the phones shown, in this order, and have not been changed since the day they were stamped. What it cannot prove: that what was typed in was true. Honest records, photos and buyers who visit still matter.</div>'
@@ -579,7 +579,7 @@ async function homeView() {
               '</div></a>'
           )
           .join('')
-      : '<div class="mini">None yet. Open a green lot in <a href="origin.html#green">Origin</a> and tap <i>Passport and QR</i>.</div>');
+      : '<div class="mini">None yet. Open a plot, harvest, processing run or green lot in <a href="origin.html#green">Origin</a> and tap <i>Passport and QR</i>.</div>');
   $('#hv').outerHTML = html + how();
   $('#nmS').onclick = async () => {
     try {
@@ -652,11 +652,13 @@ async function sealView() {
   } catch (e) {}
   if (!plan) {
     v.innerHTML =
-      '<h1>Lot passport</h1><div class="card">Open a green lot in <a href="origin.html#green">Origin</a> and tap <i>Passport and QR</i>.</div>';
+      '<h1>Lot passport</h1><div class="card">Open a plot, harvest, processing run or green lot in <a href="origin.html#green">Origin</a> and tap <i>Passport and QR</i>.</div>';
     return;
   }
   v.innerHTML =
-    '<a class="back" href="origin.html#edit/green/' +
+    '<a class="back" href="origin.html#edit/' +
+    (plan.rtype || 'green') +
+    '/' +
     encodeURIComponent(plan.greenId) +
     '">‹ Back</a><h1>' +
     esc(plan.title) +
@@ -800,7 +802,11 @@ async function lotView(id) {
     chk = await T.verifyChain(L.events, L.keys),
     bad = chk.filter(x => !x.ok && !x.withdrawn).length,
     bal = T.balance(L.events);
-  const local = (await ORIGIN.all('green').catch(() => [])).find(g => g.traceLot === id);
+  const local = (
+    await Promise.all(['green', 'process', 'harvest', 'plot'].map(t => ORIGIN.all(t).catch(() => [])))
+  )
+    .flat()
+    .find(g => g.traceLot === id);
   let h =
     '<a class="back" href="#">‹ Passports</a><h1>' +
     esc(L.lot.title) +

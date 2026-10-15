@@ -2631,7 +2631,7 @@ async function route() {
   if (m) return editView(m[1], m[2] === 'new' ? null : m[2]);
   const pm = h.match(/^passport\/(.+)$/);
   if (pm) {
-    const g = byId('green', pm[1]);
+    const g = ['green', 'process', 'harvest', 'plot'].map(t => byId(t, pm[1])).find(Boolean);
     if (g) return openPassport(g);
   }
   if (['farm', 'harvest', 'process', 'green'].includes(h)) TAB = h;
@@ -3337,11 +3337,33 @@ function shareSel(all) {
   });
 }
 // Lot passport: gather this lot's records (and roasts) as public cards for trace.html to sign.
-function openPassport(g0) {
-  const g = g0 || byId('green', CUR.id) || CUR;
+// Any record from the plot onward can carry a passport. A harvest, a processing run or a plot is
+// sealed with what led to it; a green lot later made from a sealed run carries on the same passport.
+function chainOf(t, r) {
+  if (t === 'green') return lineage(r);
+  const hs = t === 'process' ? harvestsOfProcess(r) : t === 'harvest' ? [r] : [];
+  const plots =
+    t === 'plot'
+      ? [r]
+      : [...new Set(hs.flatMap(h => h.plotIds || []))].map(id => byId('plot', id)).filter(Boolean);
+  const estates = [...new Set(plots.map(x => x.estateId))].map(id => byId('estate', id)).filter(Boolean);
+  return { p: t === 'process' ? r : null, hs, plots, estates };
+}
+async function openPassport(g0) {
+  const T0 = g0 ? g0.type || 'green' : CUR_T;
+  const g = g0 || byId(T0, CUR.id) || CUR;
   if (!g || !g.id) return;
   const own = g.traceRole !== 'received';
-  const L = lineage(g);
+  const L = chainOf(T0, g);
+  // carry on a passport already started on the run (or the harvest) this record came from
+  if (!g.traceLot) {
+    const up = T0 === 'green' ? [L.p] : T0 === 'process' ? L.hs : [];
+    const from = up.find(x => x && x.traceLot && x.traceRole !== 'received');
+    if (from) {
+      Object.assign(g, { traceLot: from.traceLot, traceToken: from.traceToken });
+      await ORIGIN.put({ ...g });
+    }
+  }
   const items = [];
   const card = (t, r) => {
     const c = cardData0(t, r);
@@ -3375,10 +3397,10 @@ function openPassport(g0) {
         out: outs.length ? outs[outs.length - 1] : null,
       });
     }
-    rec('green', g, { green: num(g.weightKg) });
+    if (T0 === 'green') rec('green', g, { green: num(g.weightKg) });
   }
   const ms = s => (s == null ? '' : Math.floor(s / 60) + ':' + String(Math.round(s % 60)).padStart(2, '0'));
-  for (const r of roastsFor(g)) {
+  for (const r of T0 === 'green' ? roastsFor(g) : []) {
     const ev = (Array.isArray(r.events) ? r.events : Object.values(r.events || {})).filter(Boolean);
     const f = ev.some(x => num(x.time) > 7200) || num(r.elapsed) > 7200 ? 1 / 1000 : 1;
     const tt = x => Math.round((num(x.time) || 0) * f);
@@ -3415,7 +3437,8 @@ function openPassport(g0) {
       'kk_trace_plan',
       JSON.stringify({
         greenId: g.id,
-        title: title('green', g),
+        rtype: T0,
+        title: title(T0, g),
         role: own ? 'owner' : 'buyer',
         lot: g.traceLot || null,
         items,
@@ -3454,6 +3477,61 @@ function cardData(t, r) {
   if (e && e.name) d.brand = e.name;
   if (t === 'green' && r.traceToken) d.qr = location.origin + '/trace.html#p/' + r.traceToken;
   return d;
+}
+// One line for a step on the card: everything that was filled in, readings as first to last
+// (temperatures as lowest to highest), so weights and heat are not lost.
+const RD_FMT = {
+  temp: [v => v + ' °C', 1],
+  air: [v => 'air ' + v + ' °C', 1],
+  ph: [v => 'pH ' + v],
+  brix: [v => v + ' °Brix'],
+  moisture: [v => v + '% moisture'],
+  aw: [v => 'aw ' + v],
+  rh: [v => v + '% RH', 1],
+  pressure: [v => v + ' bar'],
+  ec: [v => v + ' µS/cm'],
+};
+function stepLine(x, n2, u) {
+  const kg = k => (num(x[k]) != null ? n2(x[k]) : null);
+  const w = [];
+  if (kg('inKg') != null && kg('outKg') != null) w.push(kg('inKg') + ' to ' + kg('outKg') + ' kg');
+  else if (kg('inKg') != null) w.push(kg('inKg') + ' kg in');
+  else if (kg('outKg') != null) w.push(kg('outKg') + ' kg out');
+  const extra = [
+    ['floatKg', v => v + ' kg floaters'],
+    ['p1Kg', v => 'P1 ' + v + ' kg'],
+    ['p2Kg', v => 'P2 ' + v + ' kg'],
+    ['lightsKg', v => 'lights ' + v + ' kg'],
+  ]
+    .filter(([k]) => kg(k) != null)
+    .map(([k, f]) => f(kg(k)));
+  const rd = Object.entries(RD_FMT)
+    .map(([k, [f, range]]) => {
+      const v = (x.readings || []).map(r => num(r[k])).filter(v => v != null);
+      if (!v.length) return '';
+      const a = range ? Math.min(...v) : v[0],
+        b = range ? Math.max(...v) : v[v.length - 1];
+      return a === b ? f(a) : f(a + ' to ' + b);
+    })
+    .filter(Boolean);
+  return [
+    u(x.method),
+    x.start && x.end ? r1(hours(x.start, x.end)) + ' h' : '',
+    ...w,
+    ...extra,
+    x.water ? u(x.water) + ' L water' : '',
+    x.salt ? u(x.salt) + ' g salt' : '',
+    u(x.additive),
+    u(x.vessel),
+    u(x.location),
+    x.layer ? u(x.layer) + ' cm layer' : '',
+    x.turns ? u(x.turns) + ' turns a day' : '',
+    u(x.defects),
+    ...rd,
+    x.notes ? u(x.notes).slice(0, 80) : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
 }
 function cardData0(t, r) {
   const u = v => (v == null || v === '' ? '' : String(v).trim());
@@ -3575,14 +3653,8 @@ function cardData0(t, r) {
     const hs = (r.harvestIds || []).map(id => byId('harvest', id)).filter(Boolean);
     const ps = [...new Set(hs.flatMap(h => h.plotIds || []))].map(id => byId('plot', id)).filter(Boolean);
     const steps = (r.steps || []).map(x => [
-      x.type,
-      [
-        u(x.method),
-        x.start && x.end ? r1(hours(x.start, x.end)) + ' h' : '',
-        num(x.inKg) != null && num(x.outKg) != null ? n2(x.inKg) + ' to ' + n2(x.outKg) + ' kg' : '',
-      ]
-        .filter(Boolean)
-        .join(' · ') || 'logged',
+      x.type === 'Other' && x.name ? u(x.name) : x.type,
+      stepLine(x, n2, u) || 'logged',
     ]);
     return {
       kind: 'Processing',
@@ -3711,8 +3783,10 @@ function editView(t, id) {
       : '') +
     (ex
       ? '<div style="display:inline-block;margin-left:6px"><a class="sharebtn imgbtn" href="#" onclick="shareCard();return false">Image or PDF</a>' +
-        (t === 'green'
-          ? ' <a class="sharebtn passbtn" href="#" onclick="openPassport();return false">Passport and QR</a>'
+        (['plot', 'harvest', 'process', 'green'].includes(t)
+          ? ' <a class="sharebtn passbtn" href="#" onclick="openPassport();return false">' +
+            (ex.traceLot ? 'Passport: seal changes' : 'Passport and QR') +
+            '</a>'
           : '') +
         '</div>'
       : '') +
