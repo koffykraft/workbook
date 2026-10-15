@@ -1083,6 +1083,19 @@ const F = {
     { k: 'name', l: 'Name', t: 'text', ph: 'Heggadde washed Catuai' },
     { k: 'processId', l: 'From process', t: 'ref', ref: 'process', full: 1 },
     { k: 'lineageCalc', t: 'calc', fn: r => lineageHtml(r) },
+    { h: 'Bought coffee: origin as the seller states it' },
+    { k: 'farm', l: 'Farm or washing station', t: 'text', ph: 'Finca …' },
+    { k: 'producer', l: 'Producer', t: 'text' },
+    { k: 'originRegion', l: 'Region', t: 'text', ph: 'Boquete, Chiriquí' },
+    { k: 'originCountry', l: 'Country', t: 'text', ph: 'Panama' },
+    { k: 'gVariety', l: 'Variety', t: 'text', ph: 'Gesha', list: 'varieties' },
+    { k: 'gProcess', l: 'Process', t: 'text', ph: 'Washed, natural, anaerobic' },
+    { k: 'gAltitude', l: 'Altitude, m', t: 'num' },
+    { k: 'harvestYear', l: 'Harvest', t: 'text', ph: '2025/26' },
+    { k: 'seller', l: 'Bought from', t: 'text', ph: 'Importer or exporter' },
+    { k: 'lotRef', l: 'Lot or auction number', t: 'text' },
+    { k: 'invoiceDate', l: 'Invoice date', t: 'date' },
+    { h: 'This lot' },
     { k: 'weightKg', l: 'Green weight', t: 'num', unitLabel: 'kg', req: 1 },
     { k: 'date', l: 'Date', t: 'date', def: today },
     { k: 'bags', l: 'Bags', t: 'num' },
@@ -3693,14 +3706,26 @@ function cardData0(t, r) {
   if (t === 'green') {
     const L = lineage(r);
     const lf = greenLeft(r);
+    const bought = !L.p && (r.farm || r.originCountry || r.seller);
     return {
       kind: 'Green lot',
       title: title('green', r),
-      sub: L.estates.map(e => e.name).join(', '),
+      sub: bought
+        ? [u(r.farm), u(r.originRegion), u(r.originCountry)].filter(Boolean).join(', ')
+        : L.estates.map(e => e.name).join(', '),
       date: r.date ? fmtDate(r.date) : '',
-      chips: [...L.species, ...L.varieties.map(u)].filter(Boolean),
+      chips: (bought ? [u(r.gVariety), u(r.gProcess)] : [...L.species, ...L.varieties.map(u)]).filter(
+        Boolean
+      ),
       rows: [
         ['Process', L.p ? [u(L.p.pathway), u(L.p.code)].filter(Boolean).join(' · ') : ''],
+        ['Origin', bought ? 'As stated by the seller' : ''],
+        ['Producer', bought ? u(r.producer) : ''],
+        ['Altitude', bought && r.gAltitude ? u(r.gAltitude) + ' m' : ''],
+        ['Harvest', bought ? u(r.harvestYear) : ''],
+        ['Bought from', bought ? u(r.seller) : ''],
+        ['Lot or auction no.', bought ? u(r.lotRef) : ''],
+        ['Invoice date', bought && r.invoiceDate ? fmtDate(r.invoiceDate) : ''],
         ['Weight', r.weightKg ? u(r.weightKg) + ' kg' : ''],
         ['In stock', lf != null ? r1(lf) + ' kg' : ''],
         ['Bags', r.bags ? u(r.bags) + (r.bagKg ? ' × ' + u(r.bagKg) + ' kg' : '') : ''],

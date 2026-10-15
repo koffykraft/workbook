@@ -490,6 +490,8 @@ async function append(lot, items, to) {
 async function route() {
   const h = decodeURIComponent(location.hash.slice(1));
   let m;
+  if ((m = h.match(/^set\/([a-f0-9]{32}(?:\+[a-f0-9]{32}){1,5})(?:\/(.{0,80}))?$/)))
+    return setView(m[1].split('+'), m[2] || '');
   if ((m = h.match(/^p\/([a-f0-9]{32})(?:\/k\/([\w-]+)-(\d+))?$/)))
     return publicView(m[1], m[2] ? { pid: m[2], i: +m[3] } : null);
   if (!signed()) {
@@ -581,7 +583,39 @@ async function homeView() {
           )
           .join('')
       : '<div class="mini">None yet. Open a plot, harvest, processing run or green lot in <a href="origin.html#green">Origin</a> and tap <i>Passport and QR</i>.</div>');
+  if ((ls.items || []).filter(x => !x.withdrawn).length > 1)
+    html +=
+      '<h2>A set</h2><div class="card"><b>One QR for several lots</b><div class="mini">For a tasting set or a gift box: one QR opens a page with each lot and its own passport.</div>' +
+      ls.items
+        .filter(x => !x.withdrawn && x.token)
+        .map(
+          x =>
+            '<label class="mini" style="display:flex;gap:6px;align-items:center;margin-top:4px"><input type="checkbox" data-set="' +
+            esc(x.token) +
+            '" style="width:18px;height:18px"> ' +
+            esc(x.title) +
+            '</label>'
+        )
+        .join('') +
+      '<label class="f">Set name<input id="setN" maxlength="60" placeholder="Panama Gesha pair"></label><button class="btn small" id="setB">Make set QR</button><div id="setOut"></div></div>';
   $('#hv').outerHTML = html + how();
+  if ($('#setB'))
+    $('#setB').onclick = () => {
+      const t = [...document.querySelectorAll('[data-set]:checked')].map(x => x.dataset.set).slice(0, 6);
+      if (t.length < 2) return toast('Tick two or more lots');
+      const u =
+        location.origin +
+        '/trace.html#set/' +
+        t.join('+') +
+        '/' +
+        encodeURIComponent($('#setN').value.trim());
+      $('#setOut').innerHTML =
+        '<div style="text-align:center;margin-top:8px"><div class="qr">' +
+        qrSvg(u) +
+        '</div><a class="link" href="' +
+        esc(u) +
+        '">Open the set page</a></div>';
+    };
   $('#nmS').onclick = async () => {
     try {
       await api('/trace/me', { method: 'PUT', body: { label: $('#nm').value } });
@@ -877,8 +911,31 @@ async function lotView(id) {
       : '') +
     '</div>';
   const packs = L.events.filter(e => e.body && e.body.kind === 'pack');
+  // latest version of each roast (or brew) in this passport, for packs to point at
+  const roastsHere = Object.values(
+    Object.fromEntries(
+      L.events
+        .filter(e => e.body && e.body.kind === 'roast' && e.body.data && e.body.data.card)
+        .map(e => [e.body.data.rid, e])
+    )
+  );
   h +=
-    '<h2>Packs</h2><div class="card"><b>Split into packs</b><div class="mini">Each pack gets its own QR. It opens this passport and shows which pack it is. Pack weights are checked against what was roasted or held.</div><div class="row" style="gap:6px;flex-wrap:wrap"><label class="f" style="flex:1;min-width:90px">How many<input id="kN" type="number" min="1" max="5000" inputmode="numeric"></label><label class="f" style="flex:1;min-width:90px">Grams each<input id="kG" type="number" step="any" inputmode="decimal" placeholder="250"></label></div><label class="f">From<select id="kO"><option value="roasted">Roasted coffee (from roasts)</option><option value="held">Stock held (green, dry beans or leaf)</option></select></label><label class="f">Label (optional)<input id="kL" maxlength="80" placeholder="Retail 250 g, December roast"></label><button class="btn primary small" id="kS">Sign packs</button>' +
+    '<h2>Packs</h2><div class="card"><b>Split into packs</b><div class="mini">Each pack gets its own QR. It opens this passport and shows which pack it is. Pack weights are checked against what was roasted or held.</div><div class="row" style="gap:6px;flex-wrap:wrap"><label class="f" style="flex:1;min-width:90px">How many<input id="kN" type="number" min="1" max="5000" inputmode="numeric"></label><label class="f" style="flex:1;min-width:90px">Grams each<input id="kG" type="number" step="any" inputmode="decimal" placeholder="250"></label></div><label class="f">From<select id="kO"><option value="roasted">Roasted coffee (from roasts)</option><option value="held">Stock held (green, dry beans or leaf)</option></select></label><label class="f">Label (optional)<input id="kL" maxlength="80" placeholder="Retail 250 g, December roast"></label>' +
+    (roastsHere.length
+      ? '<label class="f">From which roast (optional)<select id="kR"><option value=""></option>' +
+        roastsHere
+          .map(
+            e =>
+              '<option value="' +
+              esc(e.body.data.rid) +
+              '">' +
+              esc([e.body.data.card.title, e.body.data.card.date].filter(Boolean).join(' · ')) +
+              '</option>'
+          )
+          .join('') +
+        '</select></label>'
+      : '') +
+    '<button class="btn primary small" id="kS">Sign packs</button>' +
     (packs.length
       ? packs
           .map(e => {
@@ -974,7 +1031,17 @@ async function lotView(id) {
     try {
       const pid = 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       await append(id, [
-        { kind: 'pack', data: { pid, n, g, of: $('#kO').value, label: $('#kL').value.trim().slice(0, 80) } },
+        {
+          kind: 'pack',
+          data: {
+            pid,
+            n,
+            g,
+            of: $('#kO').value,
+            label: $('#kL').value.trim().slice(0, 80),
+            ...($('#kR') && $('#kR').value ? { roast: $('#kR').value } : {}),
+          },
+        },
       ]);
       toast(n + ' packs signed');
       lotView(id);
@@ -1188,6 +1255,45 @@ function recCard(e, c, P, n) {
     '</div>'
   );
 }
+// a set: several passports behind one QR (a tasting set or gift box)
+async function setView(toks, name) {
+  const v = $('#view');
+  v.innerHTML = '<div class="mini">Loading…</div>';
+  const all = await Promise.all(toks.map(t => api('/public/trace/' + t).catch(() => null)));
+  let h =
+    '<h1>' +
+    esc(decodeURIComponent(name) || 'A set') +
+    '</h1><div class="sub">' +
+    toks.length +
+    ' lots, each with its own signed passport. Open one to check every step.</div>';
+  for (let i = 0; i < toks.length; i++) {
+    const P = all[i];
+    if (!P || P.lot.withdrawn) {
+      h += '<div class="card mini">This passport is not available.</div>';
+      continue;
+    }
+    const chk = await T.verifyChain(P.events, P.keys);
+    const bad = chk.filter(c => !c.ok).length;
+    const g = P.events.filter(e => e.body && e.body.kind === 'record' && e.body.data.rtype === 'green').pop();
+    const c = g ? g.body.data.card : null;
+    h +=
+      '<a class="card" style="display:block;text-decoration:none;color:inherit" href="#p/' +
+      toks[i] +
+      '"><b>' +
+      esc(P.lot.title) +
+      '</b>' +
+      (c && c.sub ? '<div class="mini">' + esc(c.sub) + '</div>' : '') +
+      (c && (c.chips || []).length
+        ? '<div>' + c.chips.map(x => '<span class="chip">' + esc(x) + '</span>').join('') + '</div>'
+        : '') +
+      '<div class="mini" style="margin-top:4px">' +
+      (bad
+        ? '<span class="badc">' + bad + ' entries do not check out</span>'
+        : '<span class="good">✓ ' + P.events.length + ' entries check out</span>') +
+      ' · open the passport ›</div></a>';
+  }
+  v.innerHTML = h + foot();
+}
 async function publicView(tok, pack) {
   const v = $('#view');
   v.innerHTML = '<div class="mini">Loading passport…</div>';
@@ -1276,18 +1382,38 @@ async function publicView(tok, pack) {
   const pk = pack && P.events.find(e => e.body && e.body.kind === 'pack' && e.body.data.pid === pack.pid);
   if (pk) {
     const d = pk.body.data;
+    const rs = d.roast
+      ? P.events
+          .filter(e => e.body && e.body.kind === 'roast' && e.body.data && e.body.data.rid === d.roast)
+          .pop()
+      : null;
+    const rc = rs && rs.body.data.card;
     h +=
-      '<div class="banner ok"><b>Your pack: ' +
+      '<div class="card" style="text-align:center;border:2px solid var(--ink,#1d1512)"><div class="mini" style="letter-spacing:.12em;text-transform:uppercase">Signed edition</div><div style="font-size:30px;font-weight:800;margin:4px 0">No. ' +
       pack.i +
-      ' of ' +
+      ' <span style="font-weight:400;font-size:18px">of ' +
       esc(String(d.n)) +
-      ', ' +
+      '</span></div><div>' +
       esc(String(d.g)) +
-      ' g</b>' +
+      ' g' +
       (d.label ? ' · ' + esc(d.label) : '') +
-      '. Packed ' +
+      '</div><div class="mini" style="margin-top:6px">Signed by <b>' +
+      esc(P.labels[pk.body.key] || 'the packer') +
+      '</b> · packed ' +
       when(pk.body.at) +
-      (pack.i > +d.n ? '. <b>This pack number is higher than the number packed: ask the seller.</b>' : '') +
+      '</div>' +
+      (rc
+        ? '<div class="kv" style="text-align:left;margin-top:10px"><span>' +
+          esc(rc.kind || 'Roast') +
+          '</span><div>' +
+          esc([rc.title, rc.date].filter(Boolean).join(' · ')) +
+          '</div>' +
+          (rc.rows || []).map(r => '<span>' + esc(r[0]) + '</span><div>' + esc(r[1]) + '</div>').join('') +
+          '</div>'
+        : '') +
+      (pack.i > +d.n || pack.i < 1
+        ? '<div class="banner bad" style="margin-top:8px"><b>This pack number is outside the edition: ask the seller.</b></div>'
+        : '') +
       '</div>';
   }
   const bal = T.balance(P.events);
