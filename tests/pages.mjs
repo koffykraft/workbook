@@ -219,6 +219,16 @@ export async function run(root, t) {
       const txt = await q.$eval('#steps', e => e.innerText); if (!/Coffee Board/.test(txt)) throw new Error('step guidance missing');
       const opts = await q.$$eval('#steps select[data-sk=method]', a => a.flatMap(s => [...s.options].map(o => o.text)));
       for (const m of ['Patio / barbecue (cement)', 'Polytunnel', 'Mechanical dryer, rotary drum', 'Enzyme (pectinase)']) if (!opts.some(o => o.includes(m))) throw new Error('method missing: ' + m);
+      // the PDF takes the record as data: readings as a table and a chart, no guidance text
+      const b64 = await q.evaluate(async () => {
+        CUR.code = 'P-TEST'; CUR.steps[1].readings = [{ at: '2026-10-15T19:22', temp: '28' }, { at: '2026-10-16T06:07', temp: '29.1' }, { at: '2026-10-16T11:05', temp: '31' }];
+        const doc = KKDOC.fromData(await window.KKDOC_DATA());
+        const u = new Uint8Array(await (await KKDOC.build(doc, { app: 'KoffyKraft Origin' })).arrayBuffer());
+        let s = ''; for (const x of u) s += String.fromCharCode(x); return btoa(s);
+      });
+      const pdf = Buffer.from(b64, 'base64').toString('latin1');
+      if (!/\(Readings, Temp/.test(pdf) || !/\(Temp .C  28 to 31\)/.test(pdf) || /Coffee Board/.test(pdf)) throw new Error('process pdf');
+      if (process.env.KKDOC_OUT) (await import('node:fs')).writeFileSync(process.env.KKDOC_OUT, Buffer.from(b64, 'base64'));
     });
     await t.acheck('Coffee words include world terms, grades and units; robusta clones listed', async () => {
       const r = await q.evaluate(() => ({ w: COFFEE_WORDS.map(x => x[1]).join('|'), v: KK_VARIETIES.map(x => x.n + '|' + (x.a || '')).join('|'), robusta: KK_VARIETIES.filter(x => x.sp === 'Robusta').length }));

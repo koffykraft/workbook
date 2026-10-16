@@ -3542,6 +3542,32 @@ async function shareCard() {
     }
   KKCARD.open([d], { heading: title(CUR_T, r), brand: (DB.estate[0] || {}).name });
 }
+// the PDF button (kk-doc.js) takes the record as data: what is on screen, with each step's
+// readings as charts and every photo
+window.KKDOC_DATA = async () => {
+  if (typeof CUR === 'undefined' || !CUR || !CUR_T) return null;
+  const saved = byId(CUR_T, CUR.id);
+  const r = { ...(saved || {}), ...CUR };
+  const d = cardData(CUR_T, r);
+  d.photos = r.photos || [];
+  if (CUR_T === 'process')
+    (d.sections || []).forEach((sec, i) => {
+      const x = (r.steps || [])[i];
+      if (!x) return;
+      sec.series = Object.keys(READ_LABELS)
+        .map(k => {
+          const pts = (x.readings || [])
+            .map(rd => [Date.parse(rd.at), num(rd[k])])
+            .filter(p => p[1] != null && !isNaN(p[0]))
+            .sort((a, b) => a[0] - b[0]);
+          const g = (typeof guide === 'function' && guide(x, k)) || {};
+          return { label: READ_LABELS[k], pts, line: g.warnHi != null ? g.warnHi : g.warnLo };
+        })
+        .filter(s => s.pts.length > 1)
+        .slice(0, 3);
+    });
+  return d;
+};
 function cardData(t, r) {
   const d = cardData0(t, r);
   const e =
