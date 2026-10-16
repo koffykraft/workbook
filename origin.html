@@ -540,6 +540,7 @@ details.mini a {
 }
 .srun {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
@@ -1957,7 +1958,10 @@ function runHtml(s, i) {
       ? '<button type="button" class="btn small" data-snow="' + i + ':start">Start now</button>'
       : running
         ? '<button type="button" class="btn small" data-snow="' + i + ':end">End now</button>'
-        : '') +
+        : '<button type="button" class="btn small" data-snow="' + i + ':reopen">Still running</button>') +
+    (s.start && s.end && s.end < s.start
+      ? '<div class="mini" style="color:#b4432f;flex-basis:100%">The end is before the start. Fix the end time, or tap Still running.</div>'
+      : '') +
     '</div>'
   );
 }
@@ -2499,7 +2503,11 @@ function processSummary(p) {
       .map(s => s.end || s.start)
       .filter(Boolean)
       .sort();
-  const days = starts.length && ends.length ? hours(starts[0], ends[ends.length - 1]) / 24 : null;
+  const running = steps.some(
+    s => s.start && !s.end && ((STEP_TYPES[s.type] || STEP_TYPES.Other).f || []).includes('end')
+  );
+  const last = running ? nowLocal() : ends[ends.length - 1];
+  const days = starts.length && last ? hours(starts[0], last) / 24 : null;
   let moist = null;
   for (const s of steps)
     for (const r of s.readings || []) if (num(r.moisture) != null) moist = num(r.moisture);
@@ -3757,6 +3765,26 @@ function cardData0(t, r) {
           k === 'start' || k === 'end' ? fmtDT(x[k]) : /Kg$/.test(k) ? n2(x[k]) + ' kg' : u(x[k]),
         ]);
       if (x.start && x.end) rows.push(['Duration', r1(hours(x.start, x.end)) + ' h']);
+      else if (x.start && (d.f || []).includes('end'))
+        rows.push(['Duration', 'running, ' + r1(hours(x.start, nowLocal())) + ' h so far']);
+      if (x.inoc) {
+        rows.push(['Inoculant', x.inoc === 'Other' ? u(x.inocName) || 'Other' : u(x.inoc)]);
+        if (num(x.inocG) != null)
+          rows.push([
+            'Grams used',
+            u(x.inocG) +
+              ' g' +
+              (num(x.inKg) ? ' (' + Math.round((num(x.inocG) / num(x.inKg)) * 100) / 100 + ' g per kg)' : ''),
+          ]);
+        if (x.inocWaterC || x.inocMin)
+          rows.push([
+            'Rehydration',
+            [x.inocWaterC ? u(x.inocWaterC) + ' °C' : '', x.inocMin ? u(x.inocMin) + ' min' : '']
+              .filter(Boolean)
+              .join(', '),
+          ]);
+        if (x.inocAt) rows.push(['Added to the tank', fmtDT(x.inocAt)]);
+      }
       (x.readings || []).forEach(rd => {
         const v = Object.entries(READ_LABELS)
           .filter(([k]) => rd[k] != null && rd[k] !== '')
@@ -4514,7 +4542,8 @@ function renderSteps(focusLast) {
     b =>
       (b.onclick = () => {
         const [si, k] = b.dataset.snow.split(':');
-        CUR.steps[+si][k] = nowLocal();
+        if (k === 'reopen') delete CUR.steps[+si].end;
+        else CUR.steps[+si][k] = nowLocal();
         renderSteps();
         refreshCalcs();
       })
