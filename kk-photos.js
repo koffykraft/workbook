@@ -176,8 +176,11 @@ const KKPHOTO = (() => {
     };
   }
   // ---- the editor on a record ----
-  function mount(el, get) {
+  // o.compact: a small row for one step of a process (photos as you go: colour, foam, beds)
+  function mount(el, get, o) {
     if (!el) return;
+    o = o || {};
+    const tw = o.compact ? 72 : 96;
     const draw = () => {
       const r = get(),
         ps = r.photos || [];
@@ -186,15 +189,38 @@ const KKPHOTO = (() => {
         ps
           .map(
             (p, i) =>
-              '<div style="width:96px"><img data-kkp="' +
+              '<div style="width:' +
+              tw +
+              'px"><img data-kkp="' +
               h(p.id) +
               '" data-ph-i="' +
               i +
-              '" style="width:96px;height:96px;object-fit:cover;border-radius:8px;background:#eee;display:block;cursor:pointer" alt=""><input data-ph-cap="' +
+              '" style="width:' +
+              tw +
+              'px;height:' +
+              tw +
+              'px;object-fit:cover;border-radius:8px;background:#eee;display:block;cursor:pointer" alt="">' +
+              (o.compact && p.at
+                ? '<div class="mini" style="font-size:11px">' +
+                  h(
+                    new Date(p.at).toLocaleString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  ) +
+                  '</div>'
+                : '') +
+              '<input data-ph-cap="' +
               i +
               '" value="' +
               h(p.cap || '') +
-              '" placeholder="caption" maxlength="120" style="width:96px;font-size:12px;padding:4px;margin-top:4px;box-sizing:border-box"><label class="mini" style="display:flex;gap:4px;align-items:center;margin-top:2px"><input type="checkbox" data-ph-pub="' +
+              '" placeholder="' +
+              (o.compact ? 'what you see' : 'caption') +
+              '" maxlength="120" style="width:' +
+              tw +
+              'px;font-size:12px;padding:4px;margin-top:4px;box-sizing:border-box"><label class="mini" style="display:flex;gap:4px;align-items:center;margin-top:2px"><input type="checkbox" data-ph-pub="' +
               i +
               '"' +
               (p.pub ? ' checked' : '') +
@@ -202,25 +228,29 @@ const KKPHOTO = (() => {
           )
           .join('') +
         '</div>' +
-        (ps.length < MAX
-          ? '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><label class="btn small" style="cursor:pointer">📷 Take a photo<input type="file" accept="image/*" capture="environment" hidden data-ph-add></label><label class="btn small" style="cursor:pointer">🖼 From gallery<input type="file" accept="image/*" multiple hidden data-ph-add></label><label class="mini" style="display:flex;gap:4px;align-items:center">Size<select data-ph-size style="width:auto;padding:4px">' +
-            Object.entries(SIZES)
-              .map(
-                ([k, [px, l]]) =>
-                  '<option value="' +
-                  k +
-                  '"' +
-                  (k === pref() ? ' selected' : '') +
-                  '>' +
-                  l +
-                  ' (' +
-                  px +
-                  ' px)</option>'
-              )
-              .join('') +
-            '</select></label></div>'
-          : '<div class="mini">Up to ' + MAX + ' photos on one record.</div>') +
-        '<div class="mini" style="margin-top:4px">Shrunk on this phone, kept with your records. Tap a photo to see it large. Tick On passport to show it publicly when you seal the passport.</div>';
+        (ps.length < MAX && o.compact
+          ? '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><label class="btn small" style="cursor:pointer">📷 Photo<input type="file" accept="image/*" capture="environment" hidden data-ph-add></label><label class="btn small" style="cursor:pointer">🖼<input type="file" accept="image/*" multiple hidden data-ph-add></label></div>'
+          : ps.length < MAX
+            ? '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><label class="btn small" style="cursor:pointer">📷 Take a photo<input type="file" accept="image/*" capture="environment" hidden data-ph-add></label><label class="btn small" style="cursor:pointer">🖼 From gallery<input type="file" accept="image/*" multiple hidden data-ph-add></label><label class="mini" style="display:flex;gap:4px;align-items:center">Size<select data-ph-size style="width:auto;padding:4px">' +
+              Object.entries(SIZES)
+                .map(
+                  ([k, [px, l]]) =>
+                    '<option value="' +
+                    k +
+                    '"' +
+                    (k === pref() ? ' selected' : '') +
+                    '>' +
+                    l +
+                    ' (' +
+                    px +
+                    ' px)</option>'
+                )
+                .join('') +
+              '</select></label></div>'
+            : '<div class="mini">Up to ' + MAX + ' photos here.</div>') +
+        (o.compact
+          ? ''
+          : '<div class="mini" style="margin-top:4px">Shrunk on this phone, kept with your records. Tap a photo to see it large. Tick On passport to show it publicly when you seal the passport.</div>');
       hydrate(el);
       el.querySelectorAll('img[data-ph-i]').forEach(
         im =>

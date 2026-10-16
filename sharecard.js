@@ -166,6 +166,28 @@
     const lw = inner * 0.36;
     for (const [k, v] of it.rows || []) {
       if (v == null || v === '') continue;
+      if (k === PICS) {
+        const ims = (Array.isArray(v) ? v : []).filter(im => im && im.naturalWidth).slice(0, 3);
+        if (!ims.length) continue;
+        const gap = W * 0.015,
+          pw = (inner - gap * 2) / 3,
+          ph = pw * 0.75 * s;
+        y += W * 0.012;
+        if (draw)
+          ims.forEach((im, i) => {
+            const px = P + i * (pw + gap),
+              k2 = Math.max(pw / im.naturalWidth, ph / im.naturalHeight),
+              sw = pw / k2,
+              sh = ph / k2;
+            x.save();
+            rr(x, px, y, pw, ph, W * 0.014);
+            x.clip();
+            x.drawImage(im, (im.naturalWidth - sw) / 2, (im.naturalHeight - sh) / 2, sw, sh, px, y, pw, ph);
+            x.restore();
+          });
+        y += ph + W * 0.015;
+        continue;
+      }
       if (k === SEC) {
         y += W * 0.022;
         f(W * 0.033, 800);
@@ -282,6 +304,8 @@
     return y < fy - W * 0.05 - (qs ? qs + W * 0.05 : 0);
   }
   const SEC = '\u00a7';
+  // a row of photos inside a section: [PICS, [loaded <img>, ...]]
+  const PICS = '\u00a7pics';
   // rows with section headings, and the key each line has in the show/hide list
   function lines(it) {
     let sec = 'Summary';
@@ -293,7 +317,7 @@
       .map(r => {
         if (r[0] === SEC) sec = String(r[1]).replace(/^\d+\.\s*/, '');
         // timed lines (Reading 15 Oct, 08:00) share one switch: Reading
-        const lab = String(r[0]).replace(/^(Reading)\b.*$/, '$1');
+        const lab = r[0] === PICS ? 'Photos' : String(r[0]).replace(/^(Reading)\b.*$/, '$1');
         return { r, sec, lab, key: r[0] === SEC ? SEC + sec : sec + '\u203a' + lab };
       });
   }
@@ -657,5 +681,5 @@
       if (each(i, c.toDataURL('image/jpeg', 0.72)) === false) return;
     }
   }
-  window.KKCARD = { open, render, pdf, thumbs };
+  window.KKCARD = { open, render, pdf, thumbs, PICS };
 })();

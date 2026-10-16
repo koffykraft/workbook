@@ -236,6 +236,9 @@ textarea {
   flex: 0 0 auto;
   padding: 11px 8px;
 }
+.stph {
+  margin-top: 8px;
+}
 .fhead {
   grid-column: 1/-1;
   font-size: 11px;
@@ -3392,7 +3395,7 @@ async function openPassport(g0) {
         .map(x => [x[0], String(x[1])]),
       notes: c.notes || '',
       loc: c.loc || '',
-      pics: KKPHOTO.sealed(r.photos),
+      pics: KKPHOTO.sealed([...(r.photos || []), ...(r.steps || []).flatMap(x => x.photos || [])]),
     };
   };
   const rec = (t, r, kg, geo) =>
@@ -3453,7 +3456,7 @@ async function openPassport(g0) {
     await KKPHOTO.publish(
       [...L.estates, ...L.plots, ...L.hs, L.p, T0 === 'green' ? g : null]
         .filter(Boolean)
-        .flatMap(x => x.photos || [])
+        .flatMap(x => [...(x.photos || []), ...(x.steps || []).flatMap(y => y.photos || [])])
     );
   }
   try {
@@ -3481,7 +3484,13 @@ async function shareCard() {
   if (saved && JSON.stringify(saved) !== JSON.stringify(CUR))
     toast('Includes changes not saved yet. Tap Save to keep them.');
   const d = cardData(CUR_T, r);
-  d.pics = await KKPHOTO.images(CUR.photos || r.photos, 2);
+  d.pics = await KKPHOTO.images(r.photos, 2);
+  // each step's photos, drawn under that step
+  for (const sec of d.sections || [])
+    if ((sec.photos || []).length) {
+      const ims = await KKPHOTO.images(sec.photos, 3);
+      if (ims.length) sec.rows = [...sec.rows, [KKCARD.PICS, ims]];
+    }
   KKCARD.open([d], { heading: title(CUR_T, r), brand: (DB.estate[0] || {}).name });
 }
 function cardData(t, r) {
@@ -3714,7 +3723,11 @@ function cardData0(t, r) {
           .join(' · ');
         if (v) rows.push(['Reading', (rd.at ? fmtDT(rd.at) + ' · ' : '') + v]);
       });
-      return { title: i + 1 + '. ' + (x.type === 'Other' && x.name ? u(x.name) : x.type), rows };
+      return {
+        title: i + 1 + '. ' + (x.type === 'Other' && x.name ? u(x.name) : x.type),
+        rows,
+        photos: x.photos || [],
+      };
     });
     if ((r.crew || []).length)
       sections.push({
@@ -4379,6 +4392,9 @@ function renderSteps(focusLast) {
       (steps.some(x => measuresFor(x).length) ? guideSourcesHtml() : '')
     : '<div class="empty">No steps yet. Add them as you go: each step keeps its own times, weights and readings.</div>';
   restoreDetails(box, _ds);
+  box
+    .querySelectorAll('[data-stph]')
+    .forEach(el => KKPHOTO.mount(el, () => CUR.steps[+el.dataset.stph] || {}, { compact: true }));
   box.querySelectorAll('[data-si]').forEach(el =>
     el.addEventListener('input', () => {
       const s = CUR.steps[+el.dataset.si];
@@ -4587,6 +4603,9 @@ function stepHtml(s, i) {
     '</div>' +
     (s.type === 'Fermentation' ? inocHtml(s, i) : '') +
     reads +
+    '<div class="stph"><b class="mini">Photos as you go</b><div data-stph="' +
+    i +
+    '"></div></div>' +
     '<div class="mini" data-scalc="' +
     i +
     '">' +
