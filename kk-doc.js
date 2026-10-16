@@ -19,7 +19,7 @@ const KKDOC = (() => {
     if ([...c.attributes].some(a => a.name.startsWith('data-ph-'))) return ''; // photo tools
     if (c.tagName === 'SELECT') {
       const o = c.selectedOptions && c.selectedOptions[0];
-      return o && c.value !== '' ? o.text.trim() : '';
+      return o && c.value !== '' && !/^__/.test(c.value) ? o.text.trim() : '';
     }
     const t = (c.type || '').toLowerCase();
     if (['button', 'submit', 'file', 'hidden', 'reset', 'image', 'range', 'color'].includes(t)) return '';
