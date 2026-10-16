@@ -8,6 +8,7 @@
     ['koko', 'Koko', 'https://koko.koffykraft.coffee/'],
     ['rabr', 'Rabr', 'https://rabr.koffykraft.coffee/'],
     ['buna', 'Buna', 'https://buna.koffykraft.coffee/'],
+    ['koji', 'Koji', 'https://koji.koffykraft.coffee/'],
   ];
   // a ? beside the account button on every page, opening this page's part of the guide
   function help() {
