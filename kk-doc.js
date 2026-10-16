@@ -3,7 +3,7 @@
 // repeated rows (logs, readings, people) one line each, and the record's photos. Read from the page
 // as it stands, so unsaved edits are included. A "PDF" button joins every Save bar by itself.
 // The PDF is written here, text and JPEG photos, no library and nothing sent anywhere.
-/* global KKPHOTO, APP */
+/* global KKPHOTO, APP, qrcode */
 const KKDOC = (() => {
   // ---------- reading the page ----------
   const vis = el => !!(el && el.getClientRects().length);
@@ -134,6 +134,14 @@ const KKDOC = (() => {
     const doc = {
       title: d.title || '',
       sub: [d.kind, d.sub, d.date, ...(d.chips || [])].filter(Boolean).join(' · '),
+      purpose: d.purpose || '',
+      intro: d.intro || '',
+      stats: (d.stats || []).filter(x => x && x[1] !== '' && x[1] != null),
+      flags: (d.flags || []).filter(Boolean),
+      qr: d.qr || '',
+      qrNote: d.qrNote || '',
+      hero: d.hero || '',
+      footnote: d.footnote || '',
       sections: [],
     };
     const items = (rows, photos, series) => {
@@ -164,10 +172,17 @@ const KKDOC = (() => {
       return out;
     };
     doc.sections.push({ title: '', items: items(d.rows, d.photos) });
-    if (d.notes) doc.sections[0].items.push({ t: 'kv', k: 'Notes', v: d.notes });
-    (d.sections || []).forEach(s =>
-      doc.sections.push({ title: s.title, items: items(s.rows, s.photos, s.series) })
-    );
+    if (d.notes && !d.purpose) doc.sections[0].items.push({ t: 'kv', k: 'Notes', v: d.notes });
+    (d.sections || []).forEach(s => {
+      const it = [];
+      if (s.text) it.push({ t: 'p', v: s.text });
+      it.push(...items(s.rows, null, s.series));
+      if (s.table && s.table.rows && s.table.rows.length) it.push({ t: 'table', ...s.table });
+      if (s.after) it.push({ t: 'p', v: s.after });
+      (s.photos || []).forEach(p => it.push({ t: 'img', id: p.id || p }));
+      doc.sections.push({ title: s.title, items: it });
+    });
+    if (d.notes && d.purpose) doc.sections.push({ title: 'Notes', items: [{ t: 'p', v: d.notes }] });
     return tidy(doc);
   }
 
@@ -294,6 +309,7 @@ const KKDOC = (() => {
   const KKDOC_r1 = v => String(Math.round(v * 10) / 10);
   async function build(doc, opt) {
     opt = opt || {};
+    doc = { stats: [], flags: [], ...doc };
     const PW = 595.28,
       PH = 841.89,
       M = 42,
@@ -344,7 +360,8 @@ const KKDOC = (() => {
       );
     page();
     // heading
-    text(M, y - 9, ansi(opt.app || ''), 9, true, accent);
+    const top = ansi((opt.app || '') + (doc.purpose ? '   |   ' + doc.purpose.toUpperCase() : ''));
+    text(M, y - 9, top, 9, true, accent);
     const when = fmtDate(new Date().toISOString(), true);
     text(
       PW - M - width(ansi('Exported ' + when), 9),
@@ -355,21 +372,134 @@ const KKDOC = (() => {
       '0.45 0.43 0.4'
     );
     y -= 20;
-    for (const l of wrap(doc.title || 'Record', 20, CW, true)) {
-      need(26);
-      text(M, y - 18, l, 20, true);
-      y -= 25;
+    // the passport QR sits top right; the title wraps beside it
+    const QS = 78,
+      TW = doc.qr ? CW - QS - 14 : CW,
+      yTop = y;
+    if (doc.qr && typeof qrcode !== 'undefined') {
+      try {
+        const q = qrcode(0, 'M');
+        q.addData(doc.qr);
+        q.make();
+        const n = q.getModuleCount(),
+          c = QS / n,
+          x0 = PW - M - QS;
+        let path = '0.1 0.1 0.1 rg';
+        for (let r = 0; r < n; r++)
+          for (let k = 0; k < n; k++)
+            if (q.isDark(r, k))
+              path +=
+                ' ' +
+                (x0 + k * c).toFixed(2) +
+                ' ' +
+                (yTop - (r + 1) * c).toFixed(2) +
+                ' ' +
+                (c + 0.05).toFixed(2) +
+                ' ' +
+                (c + 0.05).toFixed(2) +
+                ' re';
+        ops.push(path + ' f');
+        const qn = wrap(doc.qrNote || 'Scan for the signed record', 7.5, QS + 10);
+        qn.forEach((l, i) => text(PW - M - QS, yTop - QS - 10 - i * 9, l, 7.5, false, '0.45 0.43 0.4'));
+      } catch (e) {}
+    }
+    for (const l of wrap(doc.title || 'Record', 22, TW, true)) {
+      need(28);
+      text(M, y - 20, l, 22, true);
+      y -= 27;
     }
     if (opt.sub || doc.sub) {
-      for (const l of wrap(opt.sub || doc.sub, 10, CW)) {
+      for (const l of wrap(opt.sub || doc.sub, 10, TW)) {
         text(M, y - 9, l, 10, false, '0.45 0.43 0.4');
         y -= 13;
       }
     }
+    if (doc.intro) {
+      y -= 6;
+      for (const l of wrap(doc.intro, 11, TW)) {
+        text(M, y - 11, l, 11, false, '0.2 0.19 0.18');
+        y -= 15;
+      }
+    }
+    if (doc.qr) y = Math.min(y, yTop - QS - 26);
     y -= 4;
     rule(y, accent, 1.2);
     y -= 12;
     const LH = 13.5;
+    if (doc.hero) {
+      const g = await jpeg(doc.hero);
+      if (g) {
+        let w = CW,
+          h = (g.h / g.w) * w;
+        if (h > 250) {
+          h = 250;
+          w = (g.w / g.h) * h;
+        }
+        need(h + 10);
+        const n = imgs.push({ ...g });
+        ops.push(
+          'q ' +
+            w.toFixed(2) +
+            ' 0 0 ' +
+            h.toFixed(2) +
+            ' ' +
+            M +
+            ' ' +
+            (y - h).toFixed(2) +
+            ' cm /Im' +
+            n +
+            ' Do Q'
+        );
+        y -= h + 12;
+      }
+    }
+    // key figures as tiles, four to a row
+    if (doc.stats.length) {
+      const per = Math.min(4, doc.stats.length),
+        gap = 8,
+        tw = (CW - gap * (per - 1)) / per,
+        th = 44;
+      for (let i = 0; i < doc.stats.length; i += per) {
+        need(th + 8);
+        doc.stats.slice(i, i + per).forEach(([k, v], j) => {
+          const x = M + j * (tw + gap);
+          ops.push(
+            '0.965 0.955 0.935 rg ' +
+              x.toFixed(2) +
+              ' ' +
+              (y - th).toFixed(2) +
+              ' ' +
+              tw.toFixed(2) +
+              ' ' +
+              th +
+              ' re f'
+          );
+          ops.push(accent + ' rg ' + x.toFixed(2) + ' ' + (y - th).toFixed(2) + ' 2.5 ' + th + ' re f');
+          const vv = wrap(String(v), 14, tw - 14, true)[0] || '';
+          text(x + 9, y - 20, vv, 14, true);
+          text(x + 9, y - 35, wrap(String(k), 8, tw - 14)[0] || '', 8, false, '0.45 0.43 0.4');
+        });
+        y -= th + 8;
+      }
+      y -= 4;
+    }
+    // problems worth knowing, in a tinted box
+    if (doc.flags.length) {
+      const ls = doc.flags.map(f => wrap(f, 9.5, CW - 26));
+      const h = ls.reduce((a, l) => a + l.length * 12.5, 0) + 14;
+      need(Math.min(h, 200));
+      ops.push('0.99 0.94 0.92 rg ' + M + ' ' + (y - h).toFixed(2) + ' ' + CW + ' ' + h.toFixed(2) + ' re f');
+      ops.push('0.71 0.26 0.18 rg ' + M + ' ' + (y - h).toFixed(2) + ' 2.5 ' + h.toFixed(2) + ' re f');
+      let yy = y - 7;
+      ls.forEach(l =>
+        l.forEach((t, i) => {
+          if (!i) text(M + 10, yy - 9.5, ansi('!'), 9.5, true, '0.71 0.26 0.18');
+          text(M + 20, yy - 9.5, t, 9.5, false, '0.35 0.13 0.09');
+          yy -= 12.5;
+        })
+      );
+      y -= h + 10;
+    }
     let pics = [];
     const flushPics = async () => {
       if (!pics.length) return;
@@ -469,8 +599,10 @@ const KKDOC = (() => {
             ys = it.pts.map(p => p[1]);
           const x0 = Math.min(...xs),
             x1 = Math.max(...xs);
-          let y0 = Math.min(...ys, it.line != null ? it.line : Infinity),
-            y1 = Math.max(...ys, it.line != null ? it.line : -Infinity);
+          const lim = [...(it.lines || []), ...(it.line != null ? [it.line] : [])];
+          const oys = (it.also || []).flatMap(a => a.pts.map(p => p[1]));
+          let y0 = Math.min(...ys, ...oys, ...lim),
+            y1 = Math.max(...ys, ...oys, ...lim);
           if (y1 - y0 < 1) {
             y0 -= 0.5;
             y1 += 0.5;
@@ -499,18 +631,35 @@ const KKDOC = (() => {
           );
           text(M, py(y1 - pad) - 3, KKDOC_r1(y1 - pad), 7.5, false, '0.45 0.43 0.4');
           text(M, py(y0 + pad) - 3, KKDOC_r1(y0 + pad), 7.5, false, '0.45 0.43 0.4');
-          if (it.line != null)
+          lim.forEach(v => {
             ops.push(
               '[3 3] 0 d 0.85 0.55 0.1 RG 0.7 w ' +
                 L +
                 ' ' +
-                py(it.line).toFixed(2) +
+                py(v).toFixed(2) +
                 ' m ' +
                 R +
                 ' ' +
-                py(it.line).toFixed(2) +
+                py(v).toFixed(2) +
                 ' l S [] 0 d'
             );
+            text(R - width(KKDOC_r1(v), 7) - 1, py(v) + 2, KKDOC_r1(v), 7, false, '0.75 0.45 0.1');
+          });
+          (it.also || []).forEach(a => {
+            const pp = a.pts.filter(p => p[0] >= x0 && p[0] <= x1);
+            if (pp.length > 1)
+              ops.push(
+                '0.62 0.6 0.57 RG 0.9 w ' +
+                  pp
+                    .map((p, i) => px(p[0]).toFixed(2) + ' ' + py(p[1]).toFixed(2) + (i ? ' l' : ' m'))
+                    .join(' ') +
+                  ' S'
+              );
+          });
+          if ((it.also || []).length) {
+            const lg = ansi(it.label + ' (colour)   ' + it.also.map(a => a.label + ' (grey)').join('   '));
+            text(R - width(lg, 7.5), y - 10, lg, 7.5, false, '0.45 0.43 0.4');
+          }
           ops.push(
             accent +
               ' RG 1.4 w ' +
@@ -534,6 +683,56 @@ const KKDOC = (() => {
           text(L, B - 10, ansi(d0), 7.5, false, '0.45 0.43 0.4');
           text(R - width(ansi(d1), 7.5), B - 10, ansi(d1), 7.5, false, '0.45 0.43 0.4');
           y = B - 20;
+        } else if (it.t === 'table') {
+          const n = it.head.length,
+            w = it.w || it.head.map(() => 1),
+            tot = w.reduce((a, b) => a + b, 0),
+            cw = w.map(v => (v / tot) * CW),
+            xs = cw.map((_, i) => M + cw.slice(0, i).reduce((a, b) => a + b, 0));
+          const head = () => {
+            need(LH + 4);
+            it.head.forEach((h, i) =>
+              text(xs[i] + 4, y - 9.5, wrap(h, 8, cw[i] - 6, true)[0] || '', 8, true, '0.45 0.43 0.4')
+            );
+            y -= LH;
+            rule(y + 2);
+          };
+          head();
+          it.rows.forEach((r, ri) => {
+            const cells = r.map((c, i) => wrap(String(c == null ? '' : c), 9, cw[i] - 8));
+            const h = Math.max(1, ...cells.map(c => c.length)) * 11.5 + 3;
+            if (y - h < M + 24) {
+              page();
+              head();
+            }
+            if (ri % 2 === 1)
+              ops.push(
+                '0.965 0.955 0.935 rg ' +
+                  M +
+                  ' ' +
+                  (y - h).toFixed(2) +
+                  ' ' +
+                  CW +
+                  ' ' +
+                  h.toFixed(2) +
+                  ' re f'
+              );
+            const hot = it.mark && it.mark(r);
+            cells.forEach((c, i) =>
+              c.forEach((l, j) =>
+                text(
+                  xs[i] + 4,
+                  y - 9.5 - j * 11.5,
+                  l,
+                  9,
+                  hot && i === it.markCol,
+                  hot && i === it.markCol ? '0.71 0.26 0.18' : ''
+                )
+              )
+            );
+            y -= h;
+          });
+          y -= 8;
         } else if (it.t === 'row') {
           const ls = wrap(it.parts.join('  ·  '), 9.5, CW - 12);
           ls.forEach((l, i) => {
@@ -554,6 +753,17 @@ const KKDOC = (() => {
       }
     }
     await flushPics();
+    if (doc.footnote) {
+      y -= 6;
+      need(30);
+      rule(y);
+      y -= 4;
+      for (const l of wrap(doc.footnote, 8, CW)) {
+        need(11);
+        text(M, y - 8, l, 8, false, '0.45 0.43 0.4');
+        y -= 10.5;
+      }
+    }
     // footers
     const foot = ansi(opt.foot || location.host);
     pages.forEach((o, i) => {
@@ -658,14 +868,50 @@ const KKDOC = (() => {
     setTimeout(() => URL.revokeObjectURL(u), 60000);
   }
 
+  // who the PDF is for, when the page offers more than one design (window.KKDOC_VIEWS)
+  function choose() {
+    const V = window.KKDOC_VIEWS;
+    if (!Array.isArray(V) || !V.length) return Promise.resolve(null);
+    return new Promise(res => {
+      const bg = document.createElement('div');
+      bg.style.cssText =
+        'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+      const box = document.createElement('div');
+      box.style.cssText =
+        'background:var(--bg,#fff);color:inherit;width:100%;max-width:520px;border-radius:16px 16px 0 0;padding:16px 16px 22px;box-shadow:0 -4px 20px rgba(0,0,0,.2)';
+      box.innerHTML =
+        '<b style="font-size:17px">Who is this PDF for?</b>' +
+        V.map(
+          v =>
+            '<button type="button" data-v="' +
+            v.key +
+            '" style="display:block;width:100%;text-align:left;margin-top:10px;padding:12px 14px;border-radius:12px;border:1px solid rgba(0,0,0,.15);background:transparent;color:inherit;font:inherit"><b>' +
+            v.label +
+            '</b><div style="font-size:13px;opacity:.75;margin-top:2px">' +
+            v.desc +
+            '</div></button>'
+        ).join('') +
+        '<button type="button" data-v="" style="margin-top:12px;padding:10px 14px;border-radius:12px;border:0;background:transparent;color:inherit;font:inherit;opacity:.7">Cancel</button>';
+      bg.appendChild(box);
+      document.body.appendChild(bg);
+      bg.onclick = e => {
+        const b = e.target.closest('[data-v]');
+        if (!b && e.target !== bg) return;
+        bg.remove();
+        res(b ? b.dataset.v || false : false);
+      };
+    });
+  }
   async function exportPage(btn) {
+    const view = await choose();
+    if (view === false) return;
     const t = btn && btn.textContent;
     if (btn) {
       btn.disabled = true;
       btn.textContent = 'Making PDF…';
     }
     try {
-      const dd = typeof window.KKDOC_DATA === 'function' ? await window.KKDOC_DATA() : null;
+      const dd = typeof window.KKDOC_DATA === 'function' ? await window.KKDOC_DATA(view) : null;
       const doc = dd ? fromData(dd) : read();
       const app = (typeof APP !== 'undefined' && APP.name) || document.title.split(/[·|]/).pop().trim();
       const save = document.getElementById('save');
@@ -673,8 +919,10 @@ const KKDOC = (() => {
         app,
         accent: save ? getComputedStyle(save).backgroundColor : '',
       });
+      const vw = (window.KKDOC_VIEWS || []).find(v => v.key === view);
       const name =
-        (doc.title || 'record')
+        (doc.title || 'record') +
+        (vw ? ' ' + vw.label : '')
           .replace(/[^\w\- ]+/g, '')
           .trim()
           .replace(/\s+/g, '-')
