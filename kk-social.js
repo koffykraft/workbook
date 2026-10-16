@@ -588,10 +588,32 @@ const KKSOCIAL = (() => {
               '</button>'
           )
           .join('') +
-        '</div><div style="font-size:13px;opacity:.7;margin-bottom:8px">Tap a design to save or share it.</div><div id="kks" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div></div>';
+        '</div>' +
+        '<label style="display:block;font-size:13px;opacity:.8">Title<input data-ed="title" style="display:block;width:100%;box-sizing:border-box;margin:4px 0 10px;padding:9px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);color:inherit;font:inherit"></label>' +
+        '<label style="display:block;font-size:13px;opacity:.8">The line under it, in your words<textarea data-ed="line" rows="3" style="display:block;width:100%;box-sizing:border-box;margin:4px 0 10px;padding:9px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);color:inherit;font:inherit"></textarea></label>' +
+        '<div style="font-size:13px;opacity:.7;margin-bottom:8px">Written from the record; change it to say what this one is about. Tap a design to save or share it.</div><div id="kks" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div></div>';
+      bg.querySelector('[data-ed="title"]').value = d.title || '';
+      bg.querySelector('[data-ed="line"]').value = d.line || '';
+      let tm;
+      bg.querySelectorAll('[data-ed]').forEach(
+        el =>
+          (el.oninput = () => {
+            d[el.dataset.ed] = el.value;
+            clearTimeout(tm);
+            tm = setTimeout(previews, 500);
+          })
+      );
+      previews();
+    };
+    let gen = 0;
+    const previews = async () => {
+      const my = ++gen;
       const box = bg.querySelector('#kks');
+      if (!box) return;
+      box.innerHTML = '';
       for (const [k, l] of LOOKS) {
         const cv = await render(d, k, size, accent);
+        if (my !== gen) return;
         if (!cv) continue;
         const u = cv.toDataURL('image/jpeg', 0.7);
         const el = document.createElement('button');

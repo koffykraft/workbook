@@ -234,13 +234,15 @@ export async function run(root, t) {
         const enc = async blob => { const u = new Uint8Array(await blob.arrayBuffer()); let s = ''; for (const x of u) s += String.fromCharCode(x); return btoa(s); };
         CUR.photos = []; const res = {};
         for (const v of KKDOC_VIEWS) res['pdf-' + v.key] = await enc(await KKDOC.build(KKDOC.fromData(await KKDOC_DATA(v.key)), { app: 'KoffyKraft Origin' }));
-        const d = await KKSOCIAL_DATA();
+        const d = await KKSOCIAL_DATA(); res.line = d.line;
         for (const look of ['plate', 'figure']) for (const size of ['post', 'story']) { const c = await KKSOCIAL.render(d, look, size); if (c) res[look + '-' + size] = c.toDataURL('image/jpeg', 0.85).split(',')[1]; }
         return res;
       });
       for (const k of ['pdf-work', 'pdf-buyer', 'pdf-card', 'pdf-audit', 'plate-post']) if (!all[k]) throw new Error('origin export missing ' + k);
+      if (!/pulper/.test(all.line) || !/then/.test(all.line) || !/peaking at 31/.test(all.line)) throw new Error('story line: ' + all.line);
+      console.log('    story: ' + all.line);
       if (!/AUDIT RECORD/.test(Buffer.from(all['pdf-audit'], 'base64').toString('latin1'))) throw new Error('audit design');
-      if (process.env.KKDOC_DIR) { const fs = await import('node:fs'); for (const k in all) fs.writeFileSync(process.env.KKDOC_DIR + '/proc-' + k + (k.startsWith('pdf') ? '.pdf' : '.jpg'), Buffer.from(all[k], 'base64')); }
+      if (process.env.KKDOC_DIR) { const fs = await import('node:fs'); for (const k in all) if (k !== 'line') fs.writeFileSync(process.env.KKDOC_DIR + '/proc-' + k + (k.startsWith('pdf') ? '.pdf' : '.jpg'), Buffer.from(all[k], 'base64')); }
     });
     await t.acheck('The roast log draws a post: the curve with first crack and drop marked', async () => {
       await q.goto(base + 'roast-timer-v14.html'); await q.waitForTimeout(600);

@@ -3817,6 +3817,59 @@ window.KKDOC_DATA = async view => {
     footnote: 'Plot GPS as entered by the producer. Times ' + tz + '. Exported from KoffyKraft Origin.',
   };
 };
+// A sentence that tells this lot's story from its own record: how much cherry, which variety,
+// and what each step did (method, culture, hours, peak), so no two posts read alike.
+const odDur = h => (h == null || !isFinite(h) ? '' : h < 48 ? Math.round(h) + ' h' : r1(h / 24) + ' days');
+function odStory(proc, R, chips, max) {
+  if (!proc) return '';
+  const lc = v => String(v || '').toLowerCase();
+  const steps = (proc.steps || []).filter(x => x.type);
+  const ph = steps.map(x => {
+    const h = x.start && x.end && x.end > x.start ? hours(x.start, x.end) : null;
+    const run = x.start && !x.end && ((STEP_TYPES[x.type] || {}).f || []).includes('end');
+    const temps = (x.readings || []).map(rd => num(rd.temp)).filter(v => v != null);
+    const peak = temps.length > 1 ? Math.max(...temps) : null;
+    const inoc = x.inoc ? (x.inoc === 'Other' ? x.inocName : x.inoc) : '';
+    const time = run ? 'still running' : h != null ? 'for ' + odDur(h) : '';
+    const tail0 = [time, peak != null ? 'peaking at ' + r1(peak) + ' °C' : ''].filter(Boolean).join(', ');
+    const tail = !tail0 ? '' : time ? ' ' + tail0 : ', ' + tail0;
+    switch (x.type) {
+      case 'Sorting / floating':
+        return (
+          'floated and sorted' + (num(x.floatKg) ? ', ' + r1(num(x.floatKg)) + ' kg of floaters out' : '')
+        );
+      case 'Holding (paused)':
+        return 'held' + (x.method ? ' ' + lc(x.method) : '') + tail;
+      case 'Fermentation':
+        return (
+          (x.method && !/yeast|starter/i.test(x.method) ? lc(x.method) + ' ' : '') +
+          'fermentation' +
+          (inoc ? ' with ' + inoc : x.method && /yeast|starter/i.test(x.method) ? ' with a starter' : '') +
+          tail
+        );
+      case 'Drying':
+        return 'dried' + (x.method ? ' on ' + lc(x.method).replace(/^on /, '') : '') + tail;
+      default:
+        return (
+          lc(x.type === 'Other' && x.name ? x.name : x.type) +
+          (x.method ? ' (' + lc(x.method) + ')' : '') +
+          tail
+        );
+    }
+  });
+  const open = [R['Cherry in'], (chips || []).length ? chips.join(' and ') : '', 'cherry']
+    .filter(Boolean)
+    .join(' of ')
+    .replace(/ of cherry$/, ' cherry');
+  const shown = ph.slice(0, max || 3);
+  const more = ph.length - shown.length;
+  return (
+    (R['Cherry in'] ? open.replace(/^./, c => c.toUpperCase()) + ': ' : '') +
+    shown.join(', then ') +
+    (more > 0 ? ', and ' + more + ' more step' + (more > 1 ? 's' : '') : '') +
+    '.'
+  ).replace(/^[a-z]/, c => c.toUpperCase());
+}
 window.KKSOCIAL_DATA = async () => {
   if (typeof CUR === 'undefined' || !CUR || !['process', 'green'].includes(CUR_T)) return null;
   const r = odCur();
@@ -3827,6 +3880,10 @@ window.KKSOCIAL_DATA = async () => {
   const sr = ferm ? odSeries(ferm)[0] : null;
   const pic = (r.photos || [])[0] || ((proc && (proc.steps || []).flatMap(x => x.photos || [])) || [])[0];
   const est = (DB.estate[0] || {}).name || '';
+  const sm = proc ? processSummary(proc) : {};
+  const running =
+    !!proc &&
+    (proc.steps || []).some(x => x.start && !x.end && ((STEP_TYPES[x.type] || {}).f || []).includes('end'));
   return {
     kicker:
       (CUR_T === 'green' ? 'green lot' : 'process') + (proc && proc.pathway ? ' · ' + proc.pathway : ''),
@@ -3837,12 +3894,7 @@ window.KKSOCIAL_DATA = async () => {
         : [proc && proc.pathway ? proc.pathway : 'Processing', (d.chips || []).join(' and ')]
             .filter(Boolean)
             .join(', '),
-    line: proc
-      ? (proc.steps || [])
-          .map(x => (x.type === 'Other' && x.name ? x.name : x.type).toLowerCase())
-          .join(', ')
-          .replace(/^./, c => c.toUpperCase()) + '.'
-      : d.sub || '',
+    line: proc ? odStory(proc, CUR_T === 'process' ? R : {}, d.chips, 3) : d.sub || '',
     facts:
       CUR_T === 'green'
         ? [
@@ -3855,7 +3907,7 @@ window.KKSOCIAL_DATA = async () => {
             ['Cherry in', R['Cherry in']],
             ['Green out', R['Green out']],
             ['Outturn', R['Outturn']],
-            ['Days', R['Days']],
+            [running ? 'So far' : 'Took', odDur(sm.days != null ? sm.days * 24 : null)],
           ],
     series: sr
       ? {
@@ -3873,8 +3925,18 @@ window.KKSOCIAL_DATA = async () => {
           : R['Moisture']
             ? { v: R['Moisture'].replace('%', ''), unit: '%', label: 'moisture' }
             : null
-        : R['Days']
-          ? { v: R['Days'], unit: 'days', label: 'from cherry to green' }
+        : sm.days != null
+          ? sm.days < 2
+            ? {
+                v: Math.round(sm.days * 24),
+                unit: 'h',
+                label: running ? 'hours in, still running' : 'hours, cherry to green',
+              }
+            : {
+                v: r1(sm.days),
+                unit: 'days',
+                label: running ? 'days in, still running' : 'days, cherry to green',
+              }
           : null,
     maker: est,
     url: location.host,
