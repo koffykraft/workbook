@@ -1,5 +1,5 @@
 // KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
-const CACHE = 'koffykraft-roastbooks-v123';
+const CACHE = 'koffykraft-roastbooks-d87039a2ce';
 const CORE = [
   './app.config.js',
   './app.js',
@@ -80,11 +80,29 @@ const CORE = [
   './trace-core.js',
   './qrcode.js',
 ];
+// Cloudflare may answer page.html with a redirect to /page; a redirected answer cannot be handed to
+// a page load, so copy it into a plain one.
+async function clean(r) {
+  if (!r || !r.redirected) return r;
+  const b = await r.blob();
+  return new Response(b, { status: r.status, statusText: r.statusText, headers: r.headers });
+}
+// Install: save every file of this build. A file that fails is skipped, not fatal; it is fetched
+// and saved the first time a page asks for it.
 self.addEventListener('install', e =>
   e.waitUntil(
     caches
       .open(CACHE)
-      .then(c => c.addAll(CORE.map(u => new Request(u, { cache: 'reload' }))))
+      .then(c =>
+        Promise.all(
+          CORE.map(u =>
+            fetch(new Request(u, { cache: 'reload' }))
+              .then(clean)
+              .then(r => r && r.ok && c.put(u, r))
+              .catch(() => {})
+          )
+        )
+      )
       .then(() => self.skipWaiting())
   )
 );
@@ -92,91 +110,37 @@ self.addEventListener('activate', e =>
   e.waitUntil(
     caches
       .keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   )
 );
-// Newest first: ask the network, and use the saved copy when offline or when the network takes
-// more than 3 seconds. A slow answer still lands in the cache, and the page is told a newer copy
-// is ready so it can offer to reload. API calls and other sites are never touched here.
-async function clean(r) {
-  if (!r || !r.redirected) return r;
-  const b = await r.blob();
-  return new Response(b, { status: r.status, statusText: r.statusText, headers: r.headers });
-}
-const WAIT_MS = 3000;
-async function store(key, r) {
-  if (r && r.ok && r.type !== 'opaque') {
-    const c = await clean(r.clone());
-    await (await caches.open(CACHE)).put(key, c);
-  }
-  return r;
-}
-async function tell(id) {
-  for (let i = 0; i < 20; i++) {
-    const c = id && (await self.clients.get(id));
-    if (c) return c.postMessage({ kk: 'updated' });
-    await new Promise(z => setTimeout(z, 250));
-  }
-}
+// Saved copy first. Within one build every file is fixed, so pages open from this phone at once,
+// without waiting on a slow network. A new build changes this file (its cache name), so the phone
+// installs the new copy in the background and the page offers to reload ("A new version is ready").
+// API calls and other sites are never touched here.
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const u = new URL(req.url);
   if (u.origin !== location.origin || u.pathname.startsWith('/api/')) return;
   const nav = req.mode === 'navigate';
-  const key = nav ? new Request(u.origin + u.pathname) : req;
   e.respondWith(
     (async () => {
-      const net = fetch(nav ? u.origin + u.pathname : req, { cache: 'no-store' })
-        .then(r => store(key, r))
-        .catch(() => null);
-      let late = false;
-      const first = await Promise.race([
-        net,
-        new Promise(z =>
-          setTimeout(() => {
-            late = true;
-            z(null);
-          }, WAIT_MS)
-        ),
-      ]);
-      if (first && first.ok) return clean(first);
-      const hit =
-        (await caches.match(key, { ignoreSearch: true })) ||
-        (nav
-          ? await caches.match(u.pathname.endsWith('.html') ? u.pathname : u.pathname + '.html', {
-              ignoreSearch: true,
-            })
-          : null);
-      if (hit) {
-        // the network was slow: when it does answer, say a newer copy is ready
-        if (late && nav)
-          e.waitUntil(
-            net.then(async r => {
-              if (!r || !r.ok) return;
-              const [a, b] = await Promise.all([
-                r
-                  .clone()
-                  .text()
-                  .catch(() => ''),
-                hit
-                  .clone()
-                  .text()
-                  .catch(() => ''),
-              ]);
-              if (a && a !== b) await tell(e.resultingClientId || e.clientId);
-            })
-          );
-        else e.waitUntil(net);
-        return clean(hit);
+      const c = await caches.open(CACHE);
+      const p = u.pathname;
+      const keys = nav
+        ? [p, p.endsWith('/') ? p + 'index.html' : p.endsWith('.html') ? p : p + '.html']
+        : [req];
+      for (const k of keys) {
+        const hit = await c.match(k, { ignoreSearch: true });
+        if (hit) return hit;
       }
-      const r = first || (await net);
-      return r
-        ? clean(r)
-        : nav
-          ? (await caches.match('./roastbooks.html')) || Response.error()
-          : Response.error();
+      const r = await fetch(req)
+        .then(clean)
+        .catch(() => null);
+      if (r && r.ok && r.type !== 'opaque') await c.put(nav ? u.origin + p : req, r.clone());
+      if (r) return r;
+      return (nav && ((await c.match('./home.html')) || (await c.match('./index.html')))) || Response.error();
     })()
   );
 });
