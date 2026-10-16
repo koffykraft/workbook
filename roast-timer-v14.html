@@ -878,8 +878,8 @@ nav.kkh-nav {
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="bottom" style="grid-template-columns:repeat(5,1fr)">
- <button class="btn ghost" id="save">Save on device</button>
+<div class="bottom" style="grid-template-columns:repeat(6,1fr)">
+ <button class="btn ghost" id="save" data-kkdoc="image">Save on device</button>
  <button class="btn ghost" id="exportJson">JSON</button>
  <button class="btn ghost" id="exportCsv">CSV</button>
  <button class="btn ghost" id="printBtn">Print / PDF</button>
@@ -1604,6 +1604,66 @@ $('save').onclick = () => {
   saveState();
   toast('Saved in this browser on this device');
 };
+// The Image button (kk-social.js): the roast curve as a post, with first crack and drop marked
+window.KKSOCIAL_DATA = async () => {
+  const id = Object.fromEntries(fields().map(k => [k, $(k).value]));
+  const probe = state.readings.bean.length > 1 ? 'bean' : 'exhaust';
+  const rd = state.readings[probe].filter(x => x.temp != null && x.time != null);
+  if (rd.length < 2) return null;
+  const ev = n => state.events.find(e => e.name === n);
+  const fc = ev('First Crack'),
+    drop = ev('Drop');
+  const end = drop ? drop.time : rd[rd.length - 1].time;
+  const mm = ms => Math.floor(ms / 60000) + ':' + String(Math.floor((ms % 60000) / 1000)).padStart(2, '0');
+  const dtr = fc && drop && drop.time > 0 ? ((drop.time - fc.time) / drop.time) * 100 : null;
+  const g = parseFloat(id.greenWeight),
+    o = parseFloat(id.roastedWeight);
+  const loss = g && o ? ((g - o) / g) * 100 : null;
+  const T0 = Date.UTC(2000, 0, 1);
+  return {
+    kicker: 'roast · ' + (id.machineName || 'log'),
+    code: [id.coffeeCode, id.roastNo ? '#' + id.roastNo : ''].filter(Boolean).join(' '),
+    title: id.estate || id.coffeeCode || 'Roast',
+    line:
+      [
+        id.chargeTemp ? 'Charged at ' + id.chargeTemp + ' °C' : '',
+        fc ? 'first crack at ' + mm(fc.time) : '',
+        drop ? 'dropped at ' + mm(drop.time) + (drop.bean != null ? ', ' + drop.bean + ' °C' : '') : '',
+      ]
+        .filter(Boolean)
+        .join(', ')
+        .replace(/^./, c => c.toUpperCase()) + '.',
+    facts: [
+      ['Total', mm(end)],
+      ['First crack', fc ? mm(fc.time) : ''],
+      ['Development', dtr != null ? Math.round(dtr * 10) / 10 + '%' : ''],
+      ['Weight loss', loss != null ? Math.round(loss * 10) / 10 + '%' : ''],
+    ],
+    series: {
+      label: probe === 'bean' ? 'bean temp' : 'exhaust temp',
+      unit: ' °C',
+      elapsed: true,
+      pts: rd.map(x => [T0 + x.time, x.temp]),
+      events: state.events
+        .filter(e => ['First Crack', 'Second Crack', 'Drop', 'Yellow'].includes(e.name))
+        .map(e => ({ t: T0 + e.time, label: e.name })),
+      lines: [],
+    },
+    hero:
+      dtr != null
+        ? { v: Math.round(dtr * 10) / 10, unit: '%', label: 'development after first crack' }
+        : { v: mm(end), unit: 'min', label: 'roast time' },
+    maker: id.roasteryName || '',
+    url: location.host,
+    date: id.roastDate
+      ? new Date(id.roastDate + 'T00:00:00').toLocaleDateString('en-GB', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        })
+      : '',
+  };
+};
 $('exportJson').onclick = () => {
   saveState();
   const payload = { identity: Object.fromEntries(fields().map(k => [k, $(k).value])), ...state };
@@ -2026,6 +2086,6 @@ setInterval(() => {
 }, 1000);
 </script><script src="pv.js" defer></script>
 <script src="kk-family.js" defer></script>
-<script src="kk-doc.js"></script>
+<script src="kk-social.js"></script><script src="kk-doc.js"></script>
 </body>
 </html>

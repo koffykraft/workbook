@@ -229,6 +229,36 @@ export async function run(root, t) {
       const pdf = Buffer.from(b64, 'base64').toString('latin1');
       if (!/\(Readings, Temp/.test(pdf) || !/\(Temp .C  28 to 31\)/.test(pdf) || /Coffee Board/.test(pdf)) throw new Error('process pdf');
       if (process.env.KKDOC_OUT) (await import('node:fs')).writeFileSync(process.env.KKDOC_OUT, Buffer.from(b64, 'base64'));
+      // each reader's design, and the post images, for the process on screen
+      const all = await q.evaluate(async () => {
+        const enc = async blob => { const u = new Uint8Array(await blob.arrayBuffer()); let s = ''; for (const x of u) s += String.fromCharCode(x); return btoa(s); };
+        CUR.photos = []; const res = {};
+        for (const v of KKDOC_VIEWS) res['pdf-' + v.key] = await enc(await KKDOC.build(KKDOC.fromData(await KKDOC_DATA(v.key)), { app: 'KoffyKraft Origin' }));
+        const d = await KKSOCIAL_DATA();
+        for (const look of ['plate', 'figure']) for (const size of ['post', 'story']) { const c = await KKSOCIAL.render(d, look, size); if (c) res[look + '-' + size] = c.toDataURL('image/jpeg', 0.85).split(',')[1]; }
+        return res;
+      });
+      for (const k of ['pdf-work', 'pdf-buyer', 'pdf-card', 'pdf-audit', 'plate-post']) if (!all[k]) throw new Error('origin export missing ' + k);
+      if (!/AUDIT RECORD/.test(Buffer.from(all['pdf-audit'], 'base64').toString('latin1'))) throw new Error('audit design');
+      if (process.env.KKDOC_DIR) { const fs = await import('node:fs'); for (const k in all) fs.writeFileSync(process.env.KKDOC_DIR + '/proc-' + k + (k.startsWith('pdf') ? '.pdf' : '.jpg'), Buffer.from(all[k], 'base64')); }
+    });
+    await t.acheck('The roast log draws a post: the curve with first crack and drop marked', async () => {
+      await q.goto(base + 'roast-timer-v14.html'); await q.waitForTimeout(600);
+      if (!(await q.$('.kkdoc-btn'))) throw new Error('no Image button on the roast log');
+      if (await q.$('.kkdoc-btn:text("PDF")')) throw new Error('roast log has its own PDF; no second one');
+      const r = await q.evaluate(async () => {
+        $('estate').value = 'Thumpassery Estate'; $('coffeeCode').value = 'TE'; $('roastNo').value = '12'; $('greenWeight').value = '250'; $('roastedWeight').value = '212'; $('chargeTemp').value = '200';
+        const pts = [[0, 200], [60e3, 120], [120e3, 112], [240e3, 150], [360e3, 176], [480e3, 196], [540e3, 203], [600e3, 209]];
+        state.readings.bean = pts.map(([time, temp]) => ({ time, temp }));
+        state.events = [{ name: 'First Crack', time: 480e3, bean: 196 }, { name: 'Drop', time: 600e3, bean: 209 }];
+        const d = await KKSOCIAL_DATA();
+        const res = { d };
+        for (const look of ['plate', 'figure']) for (const size of ['post', 'story']) { const c = await KKSOCIAL.render(d, look, size); res[look + '-' + size] = c.toDataURL('image/jpeg', 0.85).split(',')[1]; }
+        return res;
+      });
+      if (r.d.facts[2][1] !== '20%' || r.d.facts[3][1] !== '15.2%') throw new Error('roast facts ' + JSON.stringify(r.d.facts));
+      if (process.env.KKDOC_DIR) { const fs = await import('node:fs'); for (const k in r) if (k !== 'd') fs.writeFileSync(process.env.KKDOC_DIR + '/roast-' + k + '.jpg', Buffer.from(r[k], 'base64')); }
+      await q.goto(base + 'origin.html#edit/process/new'); await q.waitForSelector('#preset');
     });
     await t.acheck('Coffee words include world terms, grades and units; robusta clones listed', async () => {
       const r = await q.evaluate(() => ({ w: COFFEE_WORDS.map(x => x[1]).join('|'), v: KK_VARIETIES.map(x => x.n + '|' + (x.a || '')).join('|'), robusta: KK_VARIETIES.filter(x => x.sp === 'Robusta').length }));

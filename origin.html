@@ -3542,31 +3542,344 @@ async function shareCard() {
     }
   KKCARD.open([d], { heading: title(CUR_T, r), brand: (DB.estate[0] || {}).name });
 }
-// the PDF button (kk-doc.js) takes the record as data: what is on screen, with each step's
-// readings as charts and every photo
-window.KKDOC_DATA = async () => {
-  if (typeof CUR === 'undefined' || !CUR || !CUR_T) return null;
+// The PDF button (kk-doc.js) takes the record as data, in a design for each reader; the Image
+// button (kk-social.js) draws a post from it. What is on screen counts, saved or not.
+const OD_VIEWS = [
+  {
+    key: 'work',
+    label: 'Work log',
+    desc: 'For you and the team: every step, readings as charts, people, photos.',
+  },
+  {
+    key: 'buyer',
+    label: 'Sample sheet',
+    desc: 'For a roaster or buyer: origin, process, the numbers that matter. No staff.',
+  },
+  {
+    key: 'card',
+    label: 'Lot card',
+    desc: 'For a customer or café: the story in plain words, with the passport QR.',
+  },
+  {
+    key: 'audit',
+    label: 'Audit record',
+    desc: 'For EU deforestation rules or an inspector: plots with GPS, dates, weights, chain.',
+  },
+];
+Object.defineProperty(window, 'KKDOC_VIEWS', {
+  get: () => (typeof CUR !== 'undefined' && CUR && ['process', 'green'].includes(CUR_T) ? OD_VIEWS : null),
+  configurable: true,
+});
+const odCur = () => {
   const saved = byId(CUR_T, CUR.id);
-  const r = { ...(saved || {}), ...CUR };
+  return { ...(saved || {}), ...CUR };
+};
+const odGeo = x =>
+  x && x.lat != null && x.lng != null ? (+x.lat).toFixed(5) + ', ' + (+x.lng).toFixed(5) : '';
+const odSeries = x =>
+  Object.keys(READ_LABELS)
+    .map(k => {
+      const pts = (x.readings || [])
+        .map(rd => [Date.parse(rd.at), num(rd[k])])
+        .filter(p => p[1] != null && !isNaN(p[0]))
+        .sort((a, b) => a[0] - b[0]);
+      const g = (typeof guide === 'function' && guide(x, k)) || {};
+      return { label: READ_LABELS[k], pts, line: g.warnHi != null ? g.warnHi : g.warnLo };
+    })
+    .filter(s => s.pts.length > 1)
+    .slice(0, 3);
+const odPass = r => (r.traceToken ? location.origin + '/trace.html#p/' + r.traceToken : '');
+window.KKDOC_DATA = async view => {
+  if (typeof CUR === 'undefined' || !CUR || !CUR_T) return null;
+  const r = odCur();
   const d = cardData(CUR_T, r);
+  const R = Object.fromEntries((d.rows || []).filter(x => x[0] !== KKCARD.SEC));
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
   d.photos = r.photos || [];
   if (CUR_T === 'process')
     (d.sections || []).forEach((sec, i) => {
       const x = (r.steps || [])[i];
-      if (!x) return;
-      sec.series = Object.keys(READ_LABELS)
-        .map(k => {
-          const pts = (x.readings || [])
-            .map(rd => [Date.parse(rd.at), num(rd[k])])
-            .filter(p => p[1] != null && !isNaN(p[0]))
-            .sort((a, b) => a[0] - b[0]);
-          const g = (typeof guide === 'function' && guide(x, k)) || {};
-          return { label: READ_LABELS[k], pts, line: g.warnHi != null ? g.warnHi : g.warnLo };
-        })
-        .filter(s => s.pts.length > 1)
-        .slice(0, 3);
+      if (x) sec.series = odSeries(x);
     });
-  return d;
+  if (!view || view === 'work' || !['process', 'green'].includes(CUR_T)) {
+    if (['process', 'green'].includes(CUR_T)) {
+      d.purpose = 'Work log';
+      d.stats =
+        CUR_T === 'process'
+          ? [
+              ['Cherry in', R['Cherry in']],
+              ['Green out', R['Green out']],
+              ['Outturn', R['Outturn']],
+              ['Days', R['Days']],
+            ]
+          : [
+              ['Weight', R['Weight']],
+              ['In stock', R['In stock']],
+              ['Moisture', R['Moisture']],
+              ['Cup score', R['Cup score']],
+            ];
+      const flags = [];
+      (r.steps || []).forEach((x, i) => {
+        if (x.start && x.end && x.end < x.start)
+          flags.push('Step ' + (i + 1) + ' (' + x.type + '): the end is before the start.');
+        if (x.inocWaterC && num(x.inocWaterC) > 40)
+          flags.push(
+            'Step ' +
+              (i + 1) +
+              ': rehydration water ' +
+              x.inocWaterC +
+              ' °C; yeast is usually rehydrated at 15 to 37 °C.'
+          );
+      });
+      d.flags = flags;
+    }
+    return d;
+  }
+  const L = CUR_T === 'green' ? lineage(r) : null;
+  const plots =
+    CUR_T === 'green'
+      ? L.plots
+      : [
+          ...new Set(
+            (r.harvestIds || [])
+              .map(id => byId('harvest', id))
+              .filter(Boolean)
+              .flatMap(h => h.plotIds || [])
+          ),
+        ]
+          .map(id => byId('plot', id))
+          .filter(Boolean);
+  const harvests =
+    CUR_T === 'green' ? L.hs : (r.harvestIds || []).map(id => byId('harvest', id)).filter(Boolean);
+  const proc = CUR_T === 'green' ? L.p : r;
+  const sm = proc ? processSummary(proc) : {};
+  const stepsOneLine = proc
+    ? (proc.steps || []).map((x, i) => [
+        i + 1 + '. ' + (x.type === 'Other' && x.name ? x.name : x.type),
+        stepLine(
+          x,
+          v => String(r1(num(v))),
+          v => (v == null ? '' : String(v))
+        ),
+      ])
+    : [];
+  const ferm = proc ? (proc.steps || []).find(x => odSeries(x).length) : null;
+  const series = ferm ? odSeries(ferm) : [];
+  const origin = d.sub || '';
+  const base = { title: d.title, sub: [d.kind, origin, d.date].filter(Boolean).join(' · '), photos: [] };
+  if (view === 'buyer')
+    return {
+      ...base,
+      purpose: 'Sample sheet',
+      stats:
+        CUR_T === 'green'
+          ? [
+              ['Moisture', R['Moisture']],
+              ['Density', R['Density']],
+              ['Screen', R['Screen']],
+              ['Cup score', R['Cup score']],
+            ]
+          : [
+              ['Outturn', R['Outturn']],
+              ['Days', R['Days']],
+              ['Last moisture', R['Last moisture']],
+              ['Green out', R['Green out']],
+            ],
+      sections: [
+        {
+          title: 'Origin',
+          rows: [
+            ['Variety', (d.chips || []).join(', ')],
+            ['Producer', R['Producer']],
+            ['Altitude', R['Altitude']],
+            ['Harvest', R['Harvest'] || harvests.map(h => fmtDate(h.date || h.day)).join(', ')],
+          ],
+        },
+        {
+          title: 'Process',
+          rows: [['Pathway', proc ? proc.pathway : R['Process']], ...stepsOneLine],
+          series,
+        },
+        {
+          title: 'Green',
+          rows: [
+            ['Grade', R['Grade']],
+            ['Screen', R['Screen']],
+            ['Water activity', R['Water activity']],
+            ['Storage', R['Storage']],
+          ],
+        },
+        { title: 'Photos', photos: (r.photos || []).slice(0, 3) },
+      ],
+      footnote: 'Recorded by the producer in KoffyKraft Origin; not a laboratory analysis.',
+    };
+  if (view === 'card')
+    return {
+      ...base,
+      purpose: CUR_T === 'green' ? 'Lot card' : 'Process card',
+      intro:
+        [
+          (d.chips || []).length ? d.chips.join(' and ') : 'Coffee',
+          plots.length
+            ? 'grown at ' +
+              [...new Set(plots.map(p => (byId('estate', p.estateId) || {}).name).filter(Boolean))].join(', ')
+            : CUR_T === 'green' && origin
+              ? 'from ' + origin
+              : '',
+          proc && proc.pathway ? 'and processed ' + String(proc.pathway).toLowerCase() : '',
+        ]
+          .filter(Boolean)
+          .join(' ') + '.',
+      hero: (r.photos || [])[0] ? r.photos[0].id || r.photos[0] : '',
+      qr: odPass(r),
+      qrNote: 'Scan for the signed journey of this lot',
+      sections: [
+        {
+          title: 'The journey',
+          rows: stepsOneLine.map(([k, v]) => [
+            k.replace(/^\d+\. /, ''),
+            v.split(' · ').slice(0, 3).join(' · '),
+          ]),
+        },
+        {
+          title: 'About this lot',
+          rows: [
+            ['Lot', d.title],
+            ['Altitude', R['Altitude']],
+            ['Harvest', R['Harvest']],
+            ['Cup score', R['Cup score']],
+          ],
+        },
+      ],
+      footnote: 'From KoffyKraft Origin.',
+    };
+  // audit
+  return {
+    ...base,
+    purpose: 'Audit record',
+    stats: [
+      ['Plots', String(plots.length)],
+      ['Harvests', String(harvests.length)],
+      ['Cherry in', sm.cherry ? r1(sm.cherry) + ' kg' : ''],
+      ['Green out', sm.green ? r1(sm.green) + ' kg' : ''],
+    ],
+    qr: odPass(r),
+    qrNote: 'Signed passport',
+    flags: [
+      !plots.length ? 'No plot is linked to this lot, so it cannot be traced to land.' : '',
+      plots.some(p => !odGeo(p)) ? 'Some plots have no GPS point.' : '',
+      !r.traceToken ? 'No signed passport yet.' : '',
+    ].filter(Boolean),
+    sections: [
+      {
+        title: 'Plots of production',
+        table: plots.length
+          ? {
+              head: ['Plot', 'Estate', 'GPS', 'Area', 'Variety'],
+              w: [1.4, 1.6, 2, 0.9, 1.3],
+              rows: plots.map(p => [
+                p.name || '',
+                (byId('estate', p.estateId) || {}).name || '',
+                odGeo(p) || 'not set',
+                p.area ? p.area + ' ' + (p.areaUnit || '') : '',
+                p.variety || '',
+              ]),
+              mark: row => row[2] === 'not set',
+              markCol: 2,
+            }
+          : null,
+      },
+      {
+        title: 'Harvests',
+        table: harvests.length
+          ? {
+              head: ['Code', 'Date', 'Weight'],
+              w: [1.5, 1.5, 1.2],
+              rows: harvests.map(h => [
+                h.code || '',
+                fmtDate(h.date || h.day || ''),
+                harvestKg(h) != null ? r1(harvestKg(h)) + ' kg' : '',
+              ]),
+            }
+          : null,
+      },
+      {
+        title: 'Processing',
+        rows: [
+          ['Process', proc ? proc.code || '' : ''],
+          ['Pathway', proc ? proc.pathway : ''],
+          ...stepsOneLine,
+        ],
+      },
+      { title: 'This lot', rows: (d.rows || []).filter(x => x[0] !== KKCARD.SEC && x[1]) },
+      { title: 'Passport', rows: [['Signed record', odPass(r) || 'not sealed']] },
+    ],
+    footnote: 'Plot GPS as entered by the producer. Times ' + tz + '. Exported from KoffyKraft Origin.',
+  };
+};
+window.KKSOCIAL_DATA = async () => {
+  if (typeof CUR === 'undefined' || !CUR || !['process', 'green'].includes(CUR_T)) return null;
+  const r = odCur();
+  const d = cardData(CUR_T, r);
+  const R = Object.fromEntries((d.rows || []).filter(x => x[0] !== KKCARD.SEC));
+  const proc = CUR_T === 'green' ? lineage(r).p : r;
+  const ferm = proc ? (proc.steps || []).find(x => odSeries(x).length) : null;
+  const sr = ferm ? odSeries(ferm)[0] : null;
+  const pic = (r.photos || [])[0] || ((proc && (proc.steps || []).flatMap(x => x.photos || [])) || [])[0];
+  const est = (DB.estate[0] || {}).name || '';
+  return {
+    kicker:
+      (CUR_T === 'green' ? 'green lot' : 'process') + (proc && proc.pathway ? ' · ' + proc.pathway : ''),
+    code: CUR_T === 'process' ? r.code || '' : d.title,
+    title:
+      CUR_T === 'green'
+        ? d.title
+        : [proc && proc.pathway ? proc.pathway : 'Processing', (d.chips || []).join(' and ')]
+            .filter(Boolean)
+            .join(', '),
+    line: proc
+      ? (proc.steps || [])
+          .map(x => (x.type === 'Other' && x.name ? x.name : x.type).toLowerCase())
+          .join(', ')
+          .replace(/^./, c => c.toUpperCase()) + '.'
+      : d.sub || '',
+    facts:
+      CUR_T === 'green'
+        ? [
+            ['Moisture', R['Moisture']],
+            ['Density', R['Density']],
+            ['Screen', R['Screen']],
+            ['Altitude', R['Altitude']],
+          ]
+        : [
+            ['Cherry in', R['Cherry in']],
+            ['Green out', R['Green out']],
+            ['Outturn', R['Outturn']],
+            ['Days', R['Days']],
+          ],
+    series: sr
+      ? {
+          ...sr,
+          label: ferm.type.toLowerCase() + ' ' + sr.label.replace(/ .*/, '').toLowerCase(),
+          unit: / °C/.test(sr.label) ? ' °C' : '',
+          lines: sr.line != null ? [sr.line] : [],
+        }
+      : null,
+    photo: pic ? pic.id || pic : '',
+    hero:
+      CUR_T === 'green'
+        ? R['Cup score']
+          ? { v: R['Cup score'], unit: 'pts', label: 'cup score' }
+          : R['Moisture']
+            ? { v: R['Moisture'].replace('%', ''), unit: '%', label: 'moisture' }
+            : null
+        : R['Days']
+          ? { v: R['Days'], unit: 'days', label: 'from cherry to green' }
+          : null,
+    maker: est,
+    url: location.host,
+    date: d.date || '',
+  };
 };
 function cardData(t, r) {
   const d = cardData0(t, r);
@@ -4829,6 +5142,6 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').ca
 </script>
 <script src="pv.js" defer></script>
 <script src="kk-family.js" defer></script>
-<script src="kk-doc.js"></script>
+<script src="kk-social.js"></script><script src="kk-doc.js"></script>
 </body>
 </html>

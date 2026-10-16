@@ -3,7 +3,7 @@
 // repeated rows (logs, readings, people) one line each, and the record's photos. Read from the page
 // as it stands, so unsaved edits are included. A "PDF" button joins every Save bar by itself.
 // The PDF is written here, text and JPEG photos, no library and nothing sent anywhere.
-/* global KKPHOTO, APP, qrcode */
+/* global KKPHOTO, APP, qrcode, KKSOCIAL */
 const KKDOC = (() => {
   // ---------- reading the page ----------
   const vis = el => !!(el && el.getClientRects().length);
@@ -945,6 +945,11 @@ const KKDOC = (() => {
   function attach() {
     const s = document.getElementById('save');
     if (!s || s.parentElement.querySelector('.kkdoc-btn')) return;
+    if (
+      s.dataset.kkdoc === 'image' &&
+      (typeof KKSOCIAL === 'undefined' || typeof window.KKSOCIAL_DATA !== 'function')
+    )
+      return;
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'btn kkdoc-btn';
@@ -954,7 +959,22 @@ const KKDOC = (() => {
       e.preventDefault();
       exportPage(b);
     };
-    s.insertAdjacentElement('afterend', b);
+    // a page with its own PDF (data-kkdoc="image" on Save) gets only the Image button
+    if (s.dataset.kkdoc !== 'image') s.insertAdjacentElement('afterend', b);
+    // an Image button too, where the page can describe its record for a post (kk-social.js)
+    if (typeof KKSOCIAL !== 'undefined' && typeof window.KKSOCIAL_DATA === 'function') {
+      const im = document.createElement('button');
+      im.type = 'button';
+      im.className = 'btn kkdoc-btn';
+      im.textContent = 'Image';
+      im.title = 'Image for Instagram or Facebook';
+      im.onclick = e => {
+        e.preventDefault();
+        KKSOCIAL.open(getComputedStyle(s).backgroundColor);
+      };
+      if (s.dataset.kkdoc === 'image') s.insertAdjacentElement('afterend', im);
+      else b.insertAdjacentElement('afterend', im);
+    }
   }
   if (typeof document !== 'undefined' && typeof MutationObserver !== 'undefined') {
     const go = () => {
