@@ -3387,7 +3387,7 @@ async function openPassport(g0) {
       sub: c.sub || '',
       date: c.date || '',
       chips: (c.chips || []).filter(Boolean),
-      rows: (c.rows || [])
+      rows: [...(c.rows || []), ...(c.stepLines || [])]
         .filter(x => x[1] !== '' && x[1] != null && !['In stock', 'Storage'].includes(x[0]))
         .map(x => [x[0], String(x[1])]),
       notes: c.notes || '',
@@ -3501,6 +3501,16 @@ function cardData(t, r) {
               )
             : lineage(r).estates[0];
   if (e && e.name) d.brand = e.name;
+  if (t === 'harvest' && (r.crew || []).length)
+    d.sections = [
+      {
+        title: 'People and hours',
+        rows: r.crew.map(c => [
+          c.who || 'Someone',
+          [c.task, c.start && c.end ? c.start + ' to ' + c.end : c.start].filter(Boolean).join(' · '),
+        ]),
+      },
+    ];
   if (t === 'green' && r.traceToken) d.qr = location.origin + '/trace.html#p/' + r.traceToken;
   return d;
 }
@@ -3683,6 +3693,33 @@ function cardData0(t, r) {
       x.type === 'Other' && x.name ? u(x.name) : x.type,
       stepLine(x, n2, u) || 'logged',
     ]);
+    // the full record of each step, for images and PDF (the passport keeps the one-line summary)
+    const sections = (r.steps || []).map((x, i) => {
+      const d = STEP_TYPES[x.type] || STEP_TYPES.Other;
+      const rows = (d.f || [])
+        .filter(k => k !== 'name' && x[k] != null && x[k] !== '')
+        .map(k => [
+          STEP_LABELS[k] || k,
+          k === 'start' || k === 'end' ? fmtDT(x[k]) : /Kg$/.test(k) ? n2(x[k]) + ' kg' : u(x[k]),
+        ]);
+      if (x.start && x.end) rows.push(['Duration', r1(hours(x.start, x.end)) + ' h']);
+      (x.readings || []).forEach(rd => {
+        const v = Object.entries(READ_LABELS)
+          .filter(([k]) => rd[k] != null && rd[k] !== '')
+          .map(([k, l]) => l + ' ' + rd[k])
+          .join(' · ');
+        if (v) rows.push(['Reading' + (rd.at ? ' ' + fmtDT(rd.at) : ''), v]);
+      });
+      return { title: i + 1 + '. ' + (x.type === 'Other' && x.name ? u(x.name) : x.type), rows };
+    });
+    if ((r.crew || []).length)
+      sections.push({
+        title: 'People and hours',
+        rows: r.crew.map(c => [
+          u(c.who) || 'Someone',
+          [u(c.task), c.start && c.end ? c.start + ' to ' + c.end : u(c.start)].filter(Boolean).join(' · '),
+        ]),
+      });
     return {
       kind: 'Processing',
       title: u(r.code) || 'Process',
@@ -3697,8 +3734,9 @@ function cardData0(t, r) {
         ['Outturn', sm.outturn ? r1(sm.outturn) + '%' : ''],
         ['Days', sm.days != null ? r1(sm.days) : ''],
         ['Last moisture', sm.moist != null ? sm.moist + '%' : ''],
-        ...steps,
       ],
+      sections,
+      stepLines: steps,
       notes: u(r.notes),
       loc: geo(ps[0]),
     };

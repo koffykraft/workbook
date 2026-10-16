@@ -3,6 +3,9 @@
 // drawn on this phone and handed to the share sheet. Nothing is uploaded.
 // Use: KKCARD.open([{kind,title,sub,date,rows:[[label,value]],notes,loc,chips,qr,pics}], {heading, brand})
 // pics: loaded <img> elements (record photos), drawn below the notes.
+// sections: [{title, rows}] drawn after rows under their own headings (for example one per
+// processing step). A record too long for one page runs on to more pages, and the sheet lets
+// you tick which sections and which lines to show (remembered on this phone).
 // qr: a lot passport link, drawn as a QR code when qrcode.js is on the page.
 (function () {
   if (window.KKCARD) return;
@@ -163,6 +166,16 @@
     const lw = inner * 0.36;
     for (const [k, v] of it.rows || []) {
       if (v == null || v === '') continue;
+      if (k === SEC) {
+        y += W * 0.022;
+        f(W * 0.033, 800);
+        if (draw) {
+          x.fillStyle = ac;
+          x.fillText(String(v), P, y);
+        }
+        y += W * 0.05 * s;
+        continue;
+      }
       f(W * 0.03, 500);
       let vl = (f(W * 0.032, 600), wrap(x, String(v), inner - lw - W * 0.02));
       if (vl.length > 4) {
@@ -267,6 +280,66 @@
       x.textAlign = 'left';
     }
     return y < fy - W * 0.05 - (qs ? qs + W * 0.05 : 0);
+  }
+  const SEC = '\u00a7';
+  // rows with section headings, and the key each line has in the show/hide list
+  function lines(it) {
+    let sec = 'Summary';
+    return [
+      ...(it.rows || []),
+      ...(it.sections || []).flatMap(x => ((x.rows || []).length ? [[SEC, x.title], ...x.rows] : [])),
+    ]
+      .filter(r => r[1] != null && r[1] !== '')
+      .map(r => {
+        if (r[0] === SEC) sec = String(r[1]).replace(/^\d+\.\s*/, '');
+        // timed lines (Reading 15 Oct, 08:00) share one switch: Reading
+        const lab = String(r[0]).replace(/^(Reading)\b.*$/, '$1');
+        return { r, sec, lab, key: r[0] === SEC ? SEC + sec : sec + '\u203a' + lab };
+      });
+  }
+  function applyHide(it, hide) {
+    const h = new Set(hide || []);
+    const keep = lines(it).filter(l => !h.has(l.key) && !h.has(SEC + l.sec));
+    // drop a heading left with nothing under it
+    const rows = keep
+      .filter((l, i) => l.r[0] !== SEC || (keep[i + 1] && keep[i + 1].r[0] !== SEC))
+      .map(l => l.r);
+    return { ...it, rows, sections: [] };
+  }
+  // split a long record over pages; notes, photos, location and QR go on its last page
+  function paginate(it, W, H, b, o) {
+    const x = document.createElement('canvas').getContext('2d');
+    const fit = p => layout(x, W, H, p, b, o, 0.8, false);
+    if (fit(it)) return [it];
+    const rows = it.rows || [],
+      out = [];
+    let i = 0;
+    for (;;) {
+      const first = !out.length;
+      const head = { ...it, chips: first ? it.chips : [], sub: first ? it.sub : '' };
+      const tail = { ...head, rows: rows.slice(i) };
+      if (i >= rows.length || fit(tail)) {
+        out.push(tail);
+        break;
+      }
+      const mid = { ...head, notes: '', pics: [], qr: '', loc: '' };
+      let lo = 0,
+        hi = rows.length - i;
+      while (lo < hi) {
+        const m = Math.ceil((lo + hi) / 2);
+        if (fit({ ...mid, rows: rows.slice(i, i + m) })) lo = m;
+        else hi = m - 1;
+      }
+      let n = Math.max(1, lo);
+      if (n > 1 && rows[i + n - 1][0] === SEC) n--;
+      out.push({ ...mid, rows: rows.slice(i, i + n) });
+      i += n;
+    }
+    if (out.length > 1)
+      out.forEach(
+        (p, k) => (p.date = [it.date, 'page ' + (k + 1) + ' of ' + out.length].filter(Boolean).join(' · '))
+      );
+    return out;
   }
   function render(it, W, H, b, o) {
     const c = document.createElement('canvas');
@@ -383,6 +456,47 @@
         '}#kkcard h3{margin:0 0 4px;font-size:18px}#kkcard .mini{font-size:12.5px;color:#77716a;line-height:1.45}#kkcard .chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}#kkcard .chips button{font:inherit;font-size:14px;border:1px solid #ddd8d0;background:#fff;border-radius:999px;padding:8px 13px;min-height:36px}#kkcard .chips button.on{background:#171512;color:#fff;border-color:#171512}#kkcard .pv{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px}#kkcard .pv img{height:300px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.12);flex:0 0 auto;background:#fff}#kkcard label{display:flex;gap:8px;align-items:center;font-size:14px;margin:6px 0}#kkcard label input{width:20px;height:20px}#kkcard .rb{display:flex;gap:8px;margin-top:10px}#kkcard .rb button{flex:1;font:inherit;font-size:15px;font-weight:600;border:1px solid #ddd8d0;background:#fff;border-radius:999px;padding:12px;min-height:44px}#kkcard .rb button.go{background:#171512;color:#fff;border-color:#171512}';
       document.head.appendChild(css);
     }
+    // the show/hide list: every section and line these records have, grouped by section
+    function pickHtml() {
+      const kinds = {};
+      items.forEach(it =>
+        lines(it).forEach(l => {
+          const g = ((kinds[it.kind] ||= {})[l.sec] ||= new Map());
+          if (l.r[0] !== SEC) g.set(l.key, l.lab === 'Reading' ? 'Readings' : l.lab);
+        })
+      );
+      const hid = k => new Set((st.hide || {})[k] || []);
+      const box = (kind, key, label, bold) =>
+        '<label style="margin:2px 0' +
+        (bold ? ';font-weight:700' : ';padding-left:22px;font-size:13px') +
+        '"><input type="checkbox" data-kind="' +
+        esc(kind) +
+        '" data-hk="' +
+        esc(key) +
+        '"' +
+        (hid(kind).has(key) ? '' : ' checked') +
+        '> ' +
+        esc(label) +
+        '</label>';
+      return (
+        '<details style="margin:8px 0"><summary style="font-size:14px;font-weight:600;cursor:pointer">Choose what to show</summary>' +
+        Object.entries(kinds)
+          .map(
+            ([kind, secs]) =>
+              '<div class="mini" style="margin-top:8px;font-weight:700;color:#171512">' +
+              esc(kind) +
+              '</div>' +
+              Object.entries(secs)
+                .map(
+                  ([sec, m]) =>
+                    box(kind, SEC + sec, sec, 1) + [...m].map(([k, l]) => box(kind, k, l)).join('')
+                )
+                .join('')
+          )
+          .join('') +
+        '<div class="mini">Remembered on this phone for each kind of record.</div></details>'
+      );
+    }
     let files = [];
     async function build() {
       const F = FMT[st.fmt];
@@ -390,9 +504,11 @@
       pv.innerHTML = '<div class="mini">Drawing…</div>';
       await new Promise(r => setTimeout(r, 20));
       const prof = brand('').name !== 'KoffyKraft';
-      const cs = items.map(it =>
-        render(it, F.w, F.h, prof || !it.brand ? b : Object.assign({}, b, { name: it.brand }), st)
-      );
+      const cs = items.flatMap(it0 => {
+        const bb = prof || !it0.brand ? b : Object.assign({}, b, { name: it0.brand });
+        const it = applyHide(it0, (st.hide || {})[it0.kind]);
+        return paginate(it, F.w, F.h, bb, st).map(p => render(p, F.w, F.h, bb, st));
+      });
       if (st.fmt === 'pdf' && items.length > 1) cs.unshift(overview(items, F.w, F.h, b, opt.heading));
       pv.innerHTML = '';
       cs.forEach(c => {
@@ -454,8 +570,20 @@
       '> Include notes</label><label><input type="checkbox" id="kcL"' +
       (st.loc ? ' checked' : '') +
       '> Include GPS location</label>' +
+      pickHtml() +
       '<div class="pv"></div><div class="mini" id="kcInfo"></div><div class="rb"><button type="button" id="kcX">Close</button><button type="button" id="kcS">Save</button><button type="button" class="go" id="kcG">Share</button></div></div>';
     el.style.display = 'flex';
+    el.querySelectorAll('[data-hk]').forEach(
+      c =>
+        (c.onchange = () => {
+          const hide = new Set((st.hide || {})[c.dataset.kind] || []);
+          if (c.checked) hide.delete(c.dataset.hk);
+          else hide.add(c.dataset.hk);
+          st.hide = { ...(st.hide || {}), [c.dataset.kind]: [...hide] };
+          save();
+          build();
+        })
+    );
     const save = () => {
       try {
         localStorage.setItem('kk_card_opts', JSON.stringify(st));
