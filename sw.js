@@ -1,5 +1,5 @@
 // KoffyKraft (C) 2026 T M Thomas. AGPL-3.0 with additional terms (attribution, names): see NOTICE.
-const CACHE = 'koffykraft-roastbooks-c487a86645';
+const CACHE = 'koffykraft-roastbooks-cda1895afb';
 const CORE = [
   './app.config.js',
   './app.js',

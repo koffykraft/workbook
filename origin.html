@@ -3475,7 +3475,11 @@ async function openPassport(g0) {
   location.href = 'trace.html#seal';
 }
 async function shareCard() {
-  const r = byId(CUR_T, CUR.id) || CUR;
+  // what is on screen, including readings and changes not saved yet
+  const saved = byId(CUR_T, CUR.id);
+  const r = { ...(saved || {}), ...CUR };
+  if (saved && JSON.stringify(saved) !== JSON.stringify(CUR))
+    toast('Includes changes not saved yet. Tap Save to keep them.');
   const d = cardData(CUR_T, r);
   d.pics = await KKPHOTO.images(CUR.photos || r.photos, 2);
   KKCARD.open([d], { heading: title(CUR_T, r), brand: (DB.estate[0] || {}).name });
@@ -3708,7 +3712,7 @@ function cardData0(t, r) {
           .filter(([k]) => rd[k] != null && rd[k] !== '')
           .map(([k, l]) => l + ' ' + rd[k])
           .join(' · ');
-        if (v) rows.push(['Reading' + (rd.at ? ' ' + fmtDT(rd.at) : ''), v]);
+        if (v) rows.push(['Reading', (rd.at ? fmtDT(rd.at) + ' · ' : '') + v]);
       });
       return { title: i + 1 + '. ' + (x.type === 'Other' && x.name ? u(x.name) : x.type), rows };
     });
