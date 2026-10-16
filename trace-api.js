@@ -123,14 +123,24 @@ export async function tracePublic(r, e, p, H) {
   if ((m = p.match(/^\/api\/public\/trace\/([a-f0-9]{32})$/))) {
     const lot = await e.DB.prepare('SELECT * FROM trace_lots WHERE token=?').bind(m[1]).first();
     if (!lot) return H.j({ error: 'not found' }, 404);
-    // count opens of the public page (no personal data: the lot and the day only)
-    await views(e);
-    await e.DB.prepare(
-      'INSERT INTO trace_views (lot_id, day, n) VALUES (?, ?, 1) ON CONFLICT(lot_id, day) DO UPDATE SET n = n + 1'
-    )
-      .bind(lot.id, new Date().toISOString().slice(0, 10))
-      .run()
-      .catch(() => null);
+    // count opens of the public page (no personal data: the lot and the day only).
+    // Opens by the owner or anyone who signed this lot, while signed in, are not counted.
+    const u = H.who ? await H.who().catch(() => null) : null;
+    const mine =
+      u &&
+      (u.id === lot.owner_user_id ||
+        !!(await e.DB.prepare('SELECT 1 FROM trace_events WHERE lot_id=? AND user_id=? LIMIT 1')
+          .bind(lot.id, u.id)
+          .first()
+          .catch(() => null)));
+    if (!mine) await views(e);
+    if (!mine)
+      await e.DB.prepare(
+        'INSERT INTO trace_views (lot_id, day, n) VALUES (?, ?, 1) ON CONFLICT(lot_id, day) DO UPDATE SET n = n + 1'
+      )
+        .bind(lot.id, new Date().toISOString().slice(0, 10))
+        .run()
+        .catch(() => null);
     return H.j(await lotView(e, lot));
   }
   if ((m = p.match(/^\/api\/public\/trace-day\/(\d{4}-\d{2}-\d{2})\/(manifest|ots)$/))) {
