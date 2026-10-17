@@ -14,6 +14,13 @@ const files = fs
   .readdirSync(root)
   .filter(x => /\.(html|js|css|json|svg|png|webp|ico|txt)$/.test(x) && x !== 'sw.js')
   .sort();
+// each file's own hash, so a phone re-downloads only the files that changed
+const per = {};
+const core = [...s.matchAll(/'\.\/([^']+)'/g)].map(m => m[1]);
+for (const x of [...new Set([...files, ...core])])
+  if (fs.existsSync(path.join(root, x)))
+    per[x] = crypto.createHash('sha256').update(fs.readFileSync(path.join(root, x))).digest('hex').slice(0, 12);
+s = s.replace(/const HASHES = .*?;\n/s, 'const HASHES = ' + JSON.stringify(per) + ';\n');
 const h = crypto.createHash('sha256');
 h.update(s.replace(/const CACHE = '[^']*';/, ''));
 for (const x of files) if (fs.existsSync(path.join(root, x))) h.update(x).update(fs.readFileSync(path.join(root, x)));
