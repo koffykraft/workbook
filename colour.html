@@ -601,7 +601,20 @@ function listView() {
   const ref = getRef();
   const rows = ALL.filter(r => !FILTER || r.kind === FILTER);
   let h =
-    '<h1>Colour check</h1><div class="sub">Record roast colour for any coffee: your own roasts, coffee you bought, or sample roasts. From a colour meter or a phone photo with a white card. Compare readings, name the roast level, and see how far apart two coffees are. <a href="methods.html#p-colour">How to take a reliable reading</a></div>';
+    '<h1>Colour check</h1><div class="sub">Record roast colour for any coffee: your own roasts, coffee you bought, or sample roasts. From a colour meter or a phone photo with a white card. Compare readings, name the roast level, and see how far apart two coffees are. <a href="methods.html#p-colour">How to take a reliable reading</a></div>' +
+    '<details class="card" style="margin:10px 0"><summary style="cursor:pointer;font-weight:700">Calibrate your phone to your meter</summary>' +
+    '<div class="mini" style="margin-top:8px;line-height:1.5">The app calibrates itself from readings that hold both a phone photo and a meter number for the same coffee. Nothing is sent anywhere; it learns on this account.' +
+    '<ol style="margin:8px 0 8px 18px;padding:0"><li>Grind the sample and level it in a dish. Same grind and dish every time (whole bean works, but then always whole bean).</li>' +
+    '<li>Read it on your meter. Note at least Agtron Gourmet; Colorette, ColorTrack and L*a*b* help too.</li>' +
+    '<li>Tap <b>New reading</b> for that coffee.</li>' +
+    '<li>In that reading, take the photo: white card beside the dish, no flash, steady light. Tap the white card, then the coffee.</li>' +
+    '<li>In the <b>same</b> reading, enter the meter numbers from step 2. Save.</li>' +
+    '<li>Repeat on more samples: light, medium and dark if you can.</li></ol>' +
+    '<b>What it does with them.</b> 0 paired readings: the starting curve, about ±15. 1 or 2: the curve shifted to your phone, about ±8. 3 or more: a curve of your own, marked “learned from N of your readings”, with a margin from how well they agree. Colorette and ColorTrack are learned the same way, from readings where you entered them.' +
+    '<br><b>Rules that matter.</b> Same phone, same light, same dish: a new phone or a new spot is a new set. Spread the roasts; three readings all at Gourmet 65 teach less than 50, 65 and 80. Photo and meter number belong in the same reading. Do not enter a number you are unsure of.' +
+    '<br><b>Old meter readings without photos</b> still teach the app your meter: enter them as meter readings with L*a*b*. Keep whole-bean and ground readings apart.' +
+    '<br><b>Visible-light meters.</b> Some roast meters (the Sensegood analyser, for one: 400 to 700 nm, white LEDs) see visible colour like a phone and estimate Agtron from it; a genuine Agtron reads near-infrared. Calibrating a phone to a visible meter matches like with like. Compare its Agtron numbers freely with your own roasts, carefully with someone using a genuine Agtron.' +
+    '</div></details>';
   h +=
     '<div class="row"><a class="btn primary" href="#new">+ New reading</a><label class="l" style="flex:1;min-width:180px">Roast names from<select id="scheme">' +
     Object.entries(K.SCHEMES)
