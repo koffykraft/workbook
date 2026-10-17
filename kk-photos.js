@@ -185,22 +185,24 @@ const KKPHOTO = (() => {
       const r = get(),
         ps = r.photos || [];
       el.innerHTML =
-        '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:6px 0">' +
+        '<div style="display:flex;flex-direction:column;gap:8px;margin:6px 0">' +
         ps
           .map(
             (p, i) =>
-              '<div style="width:' +
-              tw +
-              'px"><img data-kkp="' +
+              // one row per photo: the picture, and beside it what it shows
+              '<div style="display:flex;gap:10px;align-items:flex-start"><img data-kkp="' +
               h(p.id) +
               '" data-ph-i="' +
               i +
-              '" style="width:' +
+              '" style="flex:0 0 ' +
+              tw +
+              'px;width:' +
               tw +
               'px;height:' +
               tw +
               'px;object-fit:cover;border-radius:8px;background:#eee;display:block;cursor:pointer" alt="">' +
-              (o.compact && p.at
+              '<div style="flex:1;min-width:0">' +
+              (p.at
                 ? '<div class="mini" style="font-size:11px">' +
                   h(
                     new Date(p.at).toLocaleString('en-IN', {
@@ -212,19 +214,17 @@ const KKPHOTO = (() => {
                   ) +
                   '</div>'
                 : '') +
-              '<input data-ph-cap="' +
+              '<textarea data-ph-cap="' +
               i +
-              '" value="' +
-              h(p.cap || '') +
-              '" placeholder="' +
+              '" rows="2" placeholder="' +
               (o.compact ? 'what you see' : 'caption') +
-              '" maxlength="120" style="width:' +
-              tw +
-              'px;font-size:12px;padding:4px;margin-top:4px;box-sizing:border-box"><label class="mini" style="display:flex;gap:4px;align-items:center;margin-top:2px"><input type="checkbox" data-ph-pub="' +
+              '" maxlength="120" style="width:100%;font-size:14px;padding:6px;margin-top:2px;box-sizing:border-box;resize:vertical">' +
+              h(p.cap || '') +
+              '</textarea><label class="mini" style="display:flex;gap:6px;align-items:center;margin-top:2px"><input type="checkbox" data-ph-pub="' +
               i +
               '"' +
               (p.pub ? ' checked' : '') +
-              ' style="width:16px;height:16px"> On passport</label></div>'
+              ' style="width:16px;height:16px"> On passport</label></div></div>'
           )
           .join('') +
         '</div>' +
