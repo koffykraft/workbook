@@ -4174,8 +4174,12 @@ function cardData0(t, r) {
           STEP_LABELS[k] || k,
           k === 'start' || k === 'end' ? fmtDT(x[k]) : /Kg$/.test(k) ? n2(x[k]) + ' kg' : u(x[k]),
         ]);
-      if (x.start && x.end) rows.push(['Duration', r1(hours(x.start, x.end)) + ' h']);
-      else if (x.start && (d.f || []).includes('end'))
+      const hasEnd = (d.f || []).includes('end');
+      if (hasEnd && x.start && x.end && x.end > x.start)
+        rows.push(['Duration', r1(hours(x.start, x.end)) + ' h']);
+      else if (hasEnd && x.start && x.end)
+        rows.push(['Duration', 'end is before the start: check the times']);
+      else if (hasEnd && x.start)
         rows.push(['Duration', 'running, ' + r1(hours(x.start, nowLocal())) + ' h so far']);
       if (x.inoc) {
         rows.push(['Inoculant', x.inoc === 'Other' ? u(x.inocName) || 'Other' : u(x.inoc)]);
@@ -4185,6 +4189,11 @@ function cardData0(t, r) {
             u(x.inocG) +
               ' g' +
               (num(x.inKg) ? ' (' + Math.round((num(x.inocG) / num(x.inKg)) * 100) / 100 + ' g per kg)' : ''),
+          ]);
+        if (num(x.inocWaterC) > 45)
+          rows.push([
+            'Check',
+            'rehydration water ' + u(x.inocWaterC) + ' °C is above what yeast survives; usually 15 to 37 °C',
           ]);
         if (x.inocWaterC || x.inocMin)
           rows.push([
