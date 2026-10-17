@@ -2188,11 +2188,20 @@ function inocCalc(s, i) {
   if (dg)
     out.push(
       'Rehydrate in about <b>' +
-        r1((dg * 10) / 1000) +
-        ' L</b> clean water (10 times the weight), 15 to 37 °C, 20 to 30 minutes, then spread through the coffee as the tank fills.'
+        (dg * 10 < 1000 ? Math.round(dg * 10) + ' ml' : r1((dg * 10) / 1000) + ' L') +
+        '</b> clean water (10 times the weight), 15 to 37 °C, 20 to 30 minutes, then spread through the coffee as the tank fills.' +
+        (num(s.inocWaterMl) && g
+          ? ' Yours: ' + num(s.inocWaterMl) + ' ml, ' + r1(num(s.inocWaterMl) / g) + ' times the weight.'
+          : '')
     );
   const wt = num(s.inocWaterC);
-  if (wt != null && (wt < 15 || wt > 37))
+  if (wt != null && wt > 60 && !num(s.inocWaterMl))
+    out.push(
+      '<span class="flag-alarm">Water ' +
+        wt +
+        ' °C: is that the amount in ml? Put it in “Rehydration water, ml” and the temperature in °C.</span>'
+    );
+  else if (wt != null && (wt < 15 || wt > 37))
     out.push('<span class="flag-alarm">Water ' + wt + ' °C is outside 15 to 37 °C.</span>');
   const rm = num(s.inocMin);
   if (rm != null && P && P[1] === 'yeast' && (rm < 20 || rm > 30))
@@ -2278,6 +2287,7 @@ function inocHtml(s, i) {
     '</select></label>' +
     (s.inoc === 'Other' ? f('inocName', 'Product name', 'text') : '') +
     f('inocG', 'Grams used', 'number') +
+    f('inocWaterMl', 'Rehydration water, ml', 'number') +
     f('inocWaterC', 'Rehydration water °C', 'number') +
     f('inocMin', 'Rehydration minutes', 'number') +
     f(
@@ -4195,10 +4205,14 @@ function cardData0(t, r) {
             'Check',
             'rehydration water ' + u(x.inocWaterC) + ' °C is above what yeast survives; usually 15 to 37 °C',
           ]);
-        if (x.inocWaterC || x.inocMin)
+        if (x.inocWaterMl || x.inocWaterC || x.inocMin)
           rows.push([
             'Rehydration',
-            [x.inocWaterC ? u(x.inocWaterC) + ' °C' : '', x.inocMin ? u(x.inocMin) + ' min' : '']
+            [
+              x.inocWaterMl ? u(x.inocWaterMl) + ' ml' : '',
+              x.inocWaterC ? u(x.inocWaterC) + ' °C' : '',
+              x.inocMin ? u(x.inocMin) + ' min' : '',
+            ]
               .filter(Boolean)
               .join(', '),
           ]);
