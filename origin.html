@@ -4397,7 +4397,7 @@ function editView(t, id) {
     (t === 'harvest' || t === 'process'
       ? '<div class="fhead">People and hours</div><div class="full" id="kkCrew"></div>'
       : '') +
-    '<div class="fhead">Photos</div><div class="full" id="kkPhotos"></div>' +
+    '<div class="fhead">Photos</div><div class="full" id="kkPhotos" style="grid-column:1/-1"></div>' +
     '</form><datalist id="varieties">' +
     VARIETIES.map(v => '<option value="' + esc(v) + '">').join('') +
     '</datalist>';

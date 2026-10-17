@@ -218,9 +218,9 @@ const KKPHOTO = (() => {
               i +
               '" rows="2" placeholder="' +
               (o.compact ? 'what you see' : 'caption') +
-              '" maxlength="120" style="width:100%;font-size:14px;padding:6px;margin-top:2px;box-sizing:border-box;resize:vertical">' +
+              '" maxlength="120" style="width:100%;font-size:14px;padding:6px;margin-top:2px;box-sizing:border-box;resize:vertical;min-height:60px;border-radius:10px">' +
               h(p.cap || '') +
-              '</textarea><label class="mini" style="display:flex;gap:6px;align-items:center;margin-top:2px"><input type="checkbox" data-ph-pub="' +
+              '</textarea><label class="mini" style="display:flex;gap:6px;align-items:center;margin-top:2px;font-weight:400;font-size:13px;color:inherit"><input type="checkbox" data-ph-pub="' +
               i +
               '"' +
               (p.pub ? ' checked' : '') +
