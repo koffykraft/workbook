@@ -133,7 +133,7 @@ const KKSOCIAL = (() => {
       x.lineTo(x.canvas.width, py(v));
       x.stroke();
       x.setLineDash([]);
-      if (labels) caps(x, r1(v) + (s.unit || '°'), x.canvas.width - 40, py(v) - 10, 20, accent, 'right');
+      if (labels) caps(x, 'limit ' + r1(v) + (s.unit || '°'), 72, py(v) - 12, 20, accent, 'left');
     });
     (s.events || []).forEach(ev => {
       if (!isFinite(ev.t) || ev.t < t0 || ev.t > t1) return;

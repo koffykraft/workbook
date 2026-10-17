@@ -3880,7 +3880,16 @@ window.KKSOCIAL_DATA = async () => {
   const sr = ferm ? odSeries(ferm)[0] : null;
   const pic = (r.photos || [])[0] || ((proc && (proc.steps || []).flatMap(x => x.photos || [])) || [])[0];
   const est = (DB.estate[0] || {}).name || '';
-  const sm = proc ? processSummary(proc) : {};
+  const sm = proc ? { ...processSummary(proc) } : {};
+  // span over every step time and reading, so one wrong end time cannot shrink it
+  if (proc) {
+    const ts = (proc.steps || [])
+      .flatMap(x => [x.start, x.end, ...(x.readings || []).map(rd => rd.at)])
+      .filter(Boolean)
+      .map(v => Date.parse(v))
+      .filter(v => !isNaN(v));
+    if (ts.length > 1) sm.days = Math.max(sm.days || 0, (Math.max(...ts) - Math.min(...ts)) / 864e5);
+  }
   const running =
     !!proc &&
     (proc.steps || []).some(x => x.start && !x.end && ((STEP_TYPES[x.type] || {}).f || []).includes('end'));
